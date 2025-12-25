@@ -1,0 +1,37 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env.local
+
+
+# Service account / credentials (NEVER commit these)
+serviceAccount*.json
+*service-account*.json
+*admin-sdk*.json
+*firebase-admin*.json
+*.key.json
+
+# Local one-off migration scripts
+scripts/
+src/scripts/

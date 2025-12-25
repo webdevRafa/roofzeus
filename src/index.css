@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+.section-scroll {
+  max-height: 28rem;       /* ~384px, tweak as you like */
+  overflow-y: auto;        /* enable vertical scrolling when content exceeds max-height */
+  padding-right: 0.25rem;  /* tiny breathing room next to scrollbar */
+}
+
+/* Optional: hide scrollbar on WebKit (Chrome/Safari) while keeping scrollability */
+.section-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.section-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+}
+.section-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.section-scroll-invoices {
+  max-height: 30rem;       /* ~384px, tweak as you like */
+  overflow-y: auto;        /* enable vertical scrolling when content exceeds max-height */
+  padding-right: 0.25rem;  /* tiny breathing room next to scrollbar */
+}
+
+/* Optional: hide scrollbar on WebKit (Chrome/Safari) while keeping scrollability */
+.section-scroll-invoices::-webkit-scrollbar {
+  width: 6px;
+}
+.section-scroll-invoices::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+}
+.section-scroll-invoices::-webkit-scrollbar-track {
+  background: transparent;
+}
+@media print {
+  body {
+    margin: 0;
+  }
+
+  /* Hide everything under <body> except the paystub modal */
+  body > *:not(.paystub-print) {
+    display: none !important;
+  }
+
+  /* Make the modal behave like a normal single-page document */
+  .paystub-print {
+    position: static !important;
+    inset: auto !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .paystub-print-inner {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+
+:root {
+  --color-background: #FFFFFF;
+  --color-surface: #ECECE9;
+  --color-text: #040504;   /* dark black from logo */
+  --color-muted: #79726A;
+  --color-border: #B8B4AD;
+  --color-logo: #191919;
+  --color-brown: #422407;
+  --color-brown-hover: #703702;
+  --color-card: #FFFFFF;
+  --color-card-hover: #ECECE9;
+
+  --color-primary: #B10708;     /* red from logo */
+  --color-primary-600: #8E0808; /* darker red for hover */
+  --color-accent: #FCB500;      /* yellow from logo */
+  --color-blue: #19b6d9;
+  --btn-bg: var(--color-primary);
+  --btn-text: #FFFFFF;
+  --btn-hover-bg: var(--color-primary-600);
+  --btn-outline-border: var(--color-primary);
+  --btn-outline-text: var(--color-primary);
+  --btn-outline-hover-bg: rgba(177, 7, 8, 0.08);
+}
+
+
+.font-modern {
+  font-family: "minerva-modern", sans-serif;
+}
+.font-griffon {
+  font-family: "griffon", serif;
+}
+h1, h2, h3, p, button {
+  font-family: "poppins", sans-serif;
+  font-weight: 300;
+}
+.poppins {
+  font-family: "poppins", sans-serif;
+}
+/* ---- Fix Chrome autofill blue/yellow tint ---- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  /* match your Tailwind bg-neutral-100/60 vibe */
+  -webkit-box-shadow: 0 0 0px 1000px rgba(245, 245, 245, 0.6) inset;
+  box-shadow: 0 0 0px 1000px rgba(245, 245, 245, 0.6) inset;
+
+  /* keep text color consistent */
+  -webkit-text-fill-color: var(--color-text);
+
+  /* prevents the browser from animating back to its tint */
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* Standard-ish selector (supported in some browsers) */
+input:autofill,
+textarea:autofill,
+select:autofill {
+  box-shadow: 0 0 0px 1000px rgba(245, 245, 245, 0.6) inset;
+}
