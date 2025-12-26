@@ -93,7 +93,7 @@ export function GlobalPayoutStubModal({
       <div
         className={[
           "paystub-print-inner w-full max-w-3xl rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.55)] overflow-hidden",
-          "bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)]",
+          "bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]",
           "print:bg-white print:text-black print:border-transparent print:shadow-none print:rounded-none",
         ].join(" ")}
       >

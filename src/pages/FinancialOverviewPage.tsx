@@ -1,9 +1,8 @@
 // src/pages/FinancialOverviewPage.tsx
-// A comprehensive financial overview page for Roger's Roofing.
-// This page aggregates job earnings, expenses and payouts over
-// configurable time ranges and visualises them with rich charts.
+// A comprehensive financial overview page for Roger's Roofing / ROOFZEUS.
+// Upgraded to match the new dark command-center theme + Framer Motion + CountUp.
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   collection,
   onSnapshot,
@@ -25,6 +24,9 @@ import { jobConverter } from "../types/types";
 import { useOrg } from "../contexts/OrgContext";
 import JobDetailPage from "../pages/JobDetailPage";
 
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import CountUp from "react-countup";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,7 +44,89 @@ import {
 } from "chart.js";
 import { Line, Bar, Pie } from "react-chartjs-2";
 
-// Register necessary Chart.js modules once for all charts
+// ------------------------------
+// Theme helpers
+// ------------------------------
+const ease = [0.16, 1, 0.3, 1] as const;
+
+const stagger: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
+};
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 14, filter: "blur(8px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease },
+  },
+};
+
+const cardIn: Variants = {
+  hidden: { opacity: 0, y: 10, scale: 0.99, filter: "blur(10px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.65, ease },
+  },
+};
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+// CountUp helpers (all key numbers use CountUp)
+function MoneyCount({
+  cents,
+  className,
+  prefix = "$",
+  duration = 1.1,
+  decimals = 0,
+}: {
+  cents: number;
+  className?: string;
+  prefix?: string;
+  duration?: number;
+  decimals?: number;
+}) {
+  const dollars = cents / 100;
+  return (
+    <span className={className}>
+      <CountUp
+        start={0}
+        end={dollars}
+        duration={duration}
+        prefix={prefix}
+        separator=","
+        decimals={decimals}
+      />
+    </span>
+  );
+}
+
+function IntCount({
+  value,
+  className,
+  duration = 0.9,
+}: {
+  value: number;
+  className?: string;
+  duration?: number;
+}) {
+  return (
+    <span className={className}>
+      <CountUp start={0} end={value} duration={duration} separator="," />
+    </span>
+  );
+}
+
+// ------------------------------
+// Chart.js registration
+// ------------------------------
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -105,23 +189,15 @@ type RangeOption = "6months" | "12months" | "ytd" | "all";
 // Compute the start date corresponding to a range option
 function getRangeStart(option: RangeOption): Date | null {
   const now = new Date();
-  if (option === "6months") {
-    // 6 months inclusive: go back 5 months from current month start
+  if (option === "6months")
     return new Date(now.getFullYear(), now.getMonth() - 5, 1);
-  }
-  if (option === "12months") {
-    // 12 months inclusive: go back 11 months from current month start
+  if (option === "12months")
     return new Date(now.getFullYear(), now.getMonth() - 11, 1);
-  }
-  if (option === "ytd") {
-    // Year to date: start at Jan 1
-    return new Date(now.getFullYear(), 0, 1);
-  }
-  // 'all' means no filtering by date
+  if (option === "ytd") return new Date(now.getFullYear(), 0, 1);
   return null;
 }
 
-// Format a Date to a "Jan 2025" style label
+// Format a Date to a "Jan 2025" style label
 function formatMonth(date: Date): string {
   return date.toLocaleDateString(undefined, {
     month: "short",
@@ -129,20 +205,13 @@ function formatMonth(date: Date): string {
   });
 }
 
-// Format currency helper
-function formatCurrency(amountCents: number): string {
-  return (amountCents / 100).toLocaleString(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 2,
-  });
-}
-
 export default function FinancialOverviewPage() {
   const { orgId, loading: orgLoading } = useOrg();
+
   const [jobs, setJobs] = useState<Job[]>([]);
   const [payouts, setPayouts] = useState<PayoutDoc[]>([]);
   const [rangeOption, setRangeOption] = useState<RangeOption>("6months");
+
   const [invoices, setInvoices] = useState<InvoiceDoc[]>([]);
   const [quickViewJobId, setQuickViewJobId] = useState<string | null>(null);
 
@@ -167,10 +236,10 @@ export default function FinancialOverviewPage() {
     };
   }, [quickViewJobId]);
 
-  // Subscribe to jobs and payouts for the current organisation
+  // Subscribe to jobs, payouts, invoices (scoped by orgId)
   useEffect(() => {
     if (!orgId) return;
-    // Query jobs by org and order by updatedAt for recency
+
     const jobsQuery = query(
       collection(db, "jobs").withConverter(jobConverter),
       where("orgId", "==", orgId),
@@ -179,7 +248,7 @@ export default function FinancialOverviewPage() {
     const unsubJobs = onSnapshot(jobsQuery, (snap) => {
       setJobs(snap.docs.map((d) => d.data()));
     });
-    // Query payouts by org and order by creation date
+
     const payoutsQuery = query(
       collection(db, "payouts"),
       where("orgId", "==", orgId),
@@ -189,13 +258,11 @@ export default function FinancialOverviewPage() {
       setPayouts(snap.docs.map((d) => d.data() as PayoutDoc));
     });
 
-    // Query invoices by org and order by createdAt for reporting
     const invoicesQuery = query(
       collection(db, "invoices"),
       where("orgId", "==", orgId),
       orderBy("createdAt", "desc")
     );
-
     const unsubInvoices = onSnapshot(invoicesQuery, (snap) => {
       const list: InvoiceDoc[] = snap.docs.map((d) => ({
         id: d.id,
@@ -249,13 +316,14 @@ export default function FinancialOverviewPage() {
     let payoutsSum = 0;
     let materialsSum = 0;
     let netProfit = 0;
+
     for (const job of filteredJobs) {
       earnings += job.earnings?.totalEarningsCents ?? 0;
       payoutsSum += job.expenses?.totalPayoutsCents ?? 0;
       materialsSum += job.expenses?.totalMaterialsCents ?? 0;
       netProfit += job.computed?.netProfitCents ?? 0;
     }
-    // Sum payouts directly to compute pending vs paid across filtered range
+
     let pending = 0;
     let paid = 0;
     for (const p of filteredPayouts) {
@@ -263,8 +331,10 @@ export default function FinancialOverviewPage() {
       if (p.paidAt) paid += amt;
       else pending += amt;
     }
+
     const average =
       filteredJobs.length > 0 ? Math.round(netProfit / filteredJobs.length) : 0;
+
     return {
       totalEarningsCents: earnings,
       totalPayoutsCents: payoutsSum,
@@ -276,6 +346,14 @@ export default function FinancialOverviewPage() {
     };
   }, [filteredJobs, filteredPayouts]);
 
+  const paidRatePct = useMemo(() => {
+    if (totalPayoutsCents <= 0) return 0;
+    return Math.min(
+      100,
+      Math.round((paidPayoutsCents / totalPayoutsCents) * 100)
+    );
+  }, [paidPayoutsCents, totalPayoutsCents]);
+
   // Monthly trend aggregation
   const {
     labels: trendLabels,
@@ -283,20 +361,22 @@ export default function FinancialOverviewPage() {
     expenseTotals,
     netProfitTotals,
   } = useMemo(() => {
-    // Determine month boundaries between rangeStart (inclusive) and now
     const months: string[] = [];
     const monthDates: Date[] = [];
     let startDate = rangeStart ? new Date(rangeStart) : null;
+
     // If no range start, look back up to 11 months (12 months total)
     if (!startDate) {
       startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
     }
+
     if (startDate) {
       const startYear = startDate.getFullYear();
       const startMonth = startDate.getMonth();
       const endYear = now.getFullYear();
       const endMonth = now.getMonth();
       const count = (endYear - startYear) * 12 + (endMonth - startMonth);
+
       for (let i = 0; i <= count; i++) {
         const d = new Date(startYear, startMonth + i, 1);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
@@ -307,22 +387,27 @@ export default function FinancialOverviewPage() {
         monthDates.push(d);
       }
     }
+
     const earnMap: Record<string, number> = {};
     const expMap: Record<string, number> = {};
     const netMap: Record<string, number> = {};
+
     months.forEach((m) => {
       earnMap[m] = 0;
       expMap[m] = 0;
       netMap[m] = 0;
     });
+
     for (const job of filteredJobs) {
       const ms = toMillis((job as any).updatedAt ?? job.createdAt);
       if (ms == null) continue;
+
       const dt = new Date(ms);
       const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(
         2,
         "0"
       )}`;
+
       if (earnMap[key] != null) {
         earnMap[key] += job.earnings?.totalEarningsCents ?? 0;
         expMap[key] +=
@@ -331,10 +416,12 @@ export default function FinancialOverviewPage() {
         netMap[key] += job.computed?.netProfitCents ?? 0;
       }
     }
+
     const earningsTotals = months.map((m) => earnMap[m] / 100);
     const expenseTotals = months.map((m) => expMap[m] / 100);
     const netProfitTotals = months.map((m) => netMap[m] / 100);
     const labels = monthDates.map((d) => formatMonth(d));
+
     return { labels, earningsTotals, expenseTotals, netProfitTotals };
   }, [filteredJobs, rangeStart, now]);
 
@@ -345,6 +432,7 @@ export default function FinancialOverviewPage() {
       const cat = p.category ?? "other";
       payoutCats[cat] = (payoutCats[cat] || 0) + (p.amountCents ?? 0);
     }
+
     const materialCats: Record<string, number> = {};
     for (const job of filteredJobs) {
       const materials = job.expenses?.materials ?? [];
@@ -357,27 +445,31 @@ export default function FinancialOverviewPage() {
         materialCats[cat] = (materialCats[cat] || 0) + (m.amountCents ?? 0);
       }
     }
+
     const labels: string[] = [];
     const values: number[] = [];
     const colors: string[] = [];
-    // Colour palette roughly matching existing UI
+
+    // More “command-center” palette (gold + teal + accents)
     const palette = [
-      "#8d6b3d",
-      "#0e7490",
-      "#f59e0b",
+      "#cfae5d",
+      "#6aa9ff",
       "#10b981",
-      "#6366f1",
-      "#ec4899",
+      "#f59e0b",
       "#14b8a6",
+      "#ec4899",
+      "#a78bfa",
       "#f97316",
     ];
     let idx = 0;
+
     const pushCat = (name: string, cents: number) => {
       if (cents <= 0) return;
       labels.push(name);
       values.push(cents / 100);
       colors.push(palette[idx++ % palette.length]);
     };
+
     for (const [cat, cents] of Object.entries(payoutCats)) {
       const display = cat.charAt(0).toUpperCase() + cat.slice(1);
       pushCat(display + " (Payout)", cents);
@@ -388,6 +480,7 @@ export default function FinancialOverviewPage() {
         .replace(/^./, (s) => s.toUpperCase());
       pushCat(display + " (Mat.)", cents);
     }
+
     return {
       breakdownLabels: labels,
       breakdownValues: values,
@@ -433,10 +526,12 @@ export default function FinancialOverviewPage() {
       const name = payoutEmployeeName(p) || "Unknown";
       totals[name] = (totals[name] || 0) + (p.amountCents ?? 0);
     }
+
     const list = Object.entries(totals)
       .map(([name, cents]) => ({ name, cents }))
       .sort((a, b) => b.cents - a.cents)
       .slice(0, 5);
+
     return {
       topEmployeeLabels: list.map((x) => x.name),
       topEmployeeValues: list.map((x) => x.cents / 100),
@@ -490,6 +585,7 @@ export default function FinancialOverviewPage() {
 
   const reportRange = useMemo(() => {
     const now = new Date();
+
     if (reportPreset === "week") {
       const start = new Date(now);
       start.setDate(start.getDate() - 6);
@@ -511,10 +607,16 @@ export default function FinancialOverviewPage() {
     const e = parseInputDateValue(customEnd) ?? now;
     const start = startOfDay(s);
     const end = endOfDay(e);
+
     return start.getTime() <= end.getTime()
       ? { start, end }
-      : { start: endOfDay(e), end: startOfDay(s) }; // swap safety
+      : { start: endOfDay(e), end: startOfDay(s) };
   }, [reportPreset, customStart, customEnd]);
+
+  function invoiceBasisDate(inv: InvoiceDoc, mode: ReportInvoiceMode) {
+    if (mode === "paidOnly") return (inv as any).paidAt;
+    return (inv as any).sentAt ?? inv.createdAt;
+  }
 
   const invoicesForReport = useMemo(() => {
     const startMs = reportRange.start.getTime();
@@ -525,7 +627,7 @@ export default function FinancialOverviewPage() {
         ? ["paid"]
         : reportMode === "includeDrafts"
         ? ["draft", "sent", "paid"]
-        : ["sent", "paid"]; // sentPaid default
+        : ["sent", "paid"];
 
     return invoices
       .filter((inv) => allowedStatuses.includes(inv.status))
@@ -557,7 +659,6 @@ export default function FinancialOverviewPage() {
   }, [invoicesForReport]);
 
   function invoiceJobLabel(inv: InvoiceDoc): string {
-    // Prefer job doc address if loaded, then invoice snapshot, fallback jobId
     const job = jobs.find((j) => j.id === inv.jobId);
     if (job) {
       const a: any = job.address;
@@ -569,15 +670,6 @@ export default function FinancialOverviewPage() {
       return snap.fullLine ?? snap.line1 ?? inv.jobId;
     }
     return inv.jobId;
-  }
-
-  function invoiceBasisDate(inv: InvoiceDoc, mode: ReportInvoiceMode) {
-    // paidOnly = filter by paidAt
-    if (mode === "paidOnly") return (inv as any).paidAt;
-
-    // sentPaid/includeDrafts:
-    // If sentAt exists, use it. Otherwise fall back to createdAt
-    return (inv as any).sentAt ?? inv.createdAt;
   }
 
   function invoiceDateLabel(inv: InvoiceDoc, mode: ReportInvoiceMode): string {
@@ -629,7 +721,6 @@ export default function FinancialOverviewPage() {
         ]
           .map((cell) => {
             const v = String(cell ?? "");
-            // CSV escape
             if (/[,"\n]/.test(v)) return `"${v.replace(/"/g, '""')}"`;
             return v;
           })
@@ -650,42 +741,56 @@ export default function FinancialOverviewPage() {
     URL.revokeObjectURL(url);
   }
 
-  // Chart definitions
+  // ------------------------------
+  // Dark chart options
+  // ------------------------------
+  const tickColor = "rgba(245, 246, 248, 0.65)";
+  const gridColor = "rgba(58, 63, 75, 0.55)";
+  const legendColor = "rgba(245, 246, 248, 0.85)";
+
   const profitTrendData: ChartData<"line", number[], string> = {
     labels: trendLabels,
     datasets: [
       {
         label: "Earnings ($)",
         data: earningsTotals,
-        borderColor: "#0e7490",
-        backgroundColor: "rgba(14,116,144,0.2)",
-        tension: 0.3,
+        borderColor: "#6aa9ff",
+        backgroundColor: "rgba(106,169,255,0.18)",
+        tension: 0.28,
+        pointRadius: 2,
+        pointHoverRadius: 4,
       },
       {
         label: "Expenses ($)",
         data: expenseTotals,
-        borderColor: "#8d6b3d",
-        backgroundColor: "rgba(141,107,61,0.2)",
-        tension: 0.3,
+        borderColor: "#cfae5d",
+        backgroundColor: "rgba(207,174,93,0.16)",
+        tension: 0.28,
+        pointRadius: 2,
+        pointHoverRadius: 4,
       },
       {
         label: "Net Profit ($)",
         data: netProfitTotals,
-        borderColor: "#f59e0b",
-        backgroundColor: "rgba(245,158,11,0.2)",
-        tension: 0.3,
+        borderColor: "#10b981",
+        backgroundColor: "rgba(16,185,129,0.14)",
+        tension: 0.28,
+        pointRadius: 2,
+        pointHoverRadius: 4,
       },
     ],
   };
+
   const profitTrendOptions: ChartOptions<"line"> = {
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top",
         labels: {
-          boxWidth: 12,
-          font: { size: 12 },
-          color: "#333",
+          boxWidth: 10,
+          boxHeight: 10,
+          color: legendColor,
+          font: { size: 11 },
         },
       },
       title: { display: false },
@@ -703,11 +808,17 @@ export default function FinancialOverviewPage() {
       },
     },
     scales: {
+      x: {
+        ticks: { color: tickColor },
+        grid: { color: gridColor },
+      },
       y: {
         beginAtZero: true,
         ticks: {
+          color: tickColor,
           callback: (value: any) => `$${value}`,
         },
+        grid: { color: gridColor },
       },
     },
   };
@@ -719,17 +830,22 @@ export default function FinancialOverviewPage() {
         data: breakdownValues,
         backgroundColor: breakdownColors,
         hoverOffset: 4,
+        borderColor: "rgba(15, 18, 26, 0.85)",
+        borderWidth: 2,
       },
     ],
   };
+
   const expenseBreakdownOptions: ChartOptions<"pie"> = {
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "bottom",
         labels: {
-          font: { size: 11 },
-          color: "#333",
+          font: { size: 10 },
+          color: legendColor,
+          usePointStyle: true,
+          pointStyle: "circle",
         },
       },
       tooltip: {
@@ -753,12 +869,14 @@ export default function FinancialOverviewPage() {
       {
         label: "Net Profit ($)",
         data: topJobValues,
-        backgroundColor: "#8d6b3d",
-        borderColor: "#8d6b3d",
+        backgroundColor: "rgba(207,174,93,0.85)",
+        borderColor: "rgba(207,174,93,1)",
         borderWidth: 1,
+        borderRadius: 10,
       },
     ],
   };
+
   const topJobsOptions: ChartOptions<"bar"> = {
     indexAxis: "y",
     maintainAspectRatio: false,
@@ -777,7 +895,15 @@ export default function FinancialOverviewPage() {
       },
     },
     scales: {
-      x: { beginAtZero: true },
+      x: {
+        beginAtZero: true,
+        ticks: { color: tickColor },
+        grid: { color: gridColor },
+      },
+      y: {
+        ticks: { color: tickColor },
+        grid: { display: false },
+      },
     },
   };
 
@@ -787,12 +913,14 @@ export default function FinancialOverviewPage() {
       {
         label: "Total Payout ($)",
         data: topEmployeeValues,
-        backgroundColor: "#0e7490",
-        borderColor: "#0e7490",
+        backgroundColor: "rgba(106,169,255,0.85)",
+        borderColor: "rgba(106,169,255,1)",
         borderWidth: 1,
+        borderRadius: 10,
       },
     ],
   };
+
   const topEmployeesOptions: ChartOptions<"bar"> = {
     indexAxis: "y",
     maintainAspectRatio: false,
@@ -811,134 +939,218 @@ export default function FinancialOverviewPage() {
       },
     },
     scales: {
-      x: { beginAtZero: true },
+      x: {
+        beginAtZero: true,
+        ticks: { color: tickColor },
+        grid: { color: gridColor },
+      },
+      y: {
+        ticks: { color: tickColor },
+        grid: { display: false },
+      },
     },
   };
 
-  // Loading and guard states
+  // ------------------------------
+  // Guard states
+  // ------------------------------
   if (orgLoading) {
-    return <div className="p-4">Loading financial overview…</div>;
+    return (
+      <div className="p-6 text-[var(--color-muted)]">
+        Loading financial overview…
+      </div>
+    );
   }
   if (!orgId) {
     return (
-      <div className="p-8 text-red-600">
+      <div className="p-8 text-red-300">
         You are not linked to an organization. Please contact your admin.
       </div>
     );
   }
 
+  const StatCard = ({
+    label,
+    children,
+    hint,
+  }: {
+    label: string;
+    children: React.ReactNode;
+    hint?: string;
+  }) => (
+    <motion.div
+      variants={cardIn}
+      className={cx(
+        "rounded-2xl border border-white/10 bg-[var(--color-card)] shadow-[0_20px_60px_rgba(0,0,0,0.35)]",
+        "p-4 hover:bg-[var(--color-card-hover)] transition-colors"
+      )}
+    >
+      <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+        {label}
+      </div>
+      <div className="mt-1 text-xl sm:text-2xl font-semibold text-[var(--color-text)]">
+        {children}
+      </div>
+      {hint ? (
+        <div className="mt-1 text-xs text-[var(--color-muted)]">{hint}</div>
+      ) : null}
+    </motion.div>
+  );
+
   return (
-    <div className="mx-auto w-full py-6 sm:py-10 md:px-4 grid grid-cols-1 gap-6 lg:grid-cols-12">
-      {/* Summary cards */}
-      <div className="lg:col-span-12">
-        <section className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
-          <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-            <div className="text-xl font-semibold text-[var(--color-text)]">
-              {formatCurrency(totalEarningsCents)}
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={stagger}
+      className="mx-auto w-full py-6 sm:py-10 md:px-4"
+    >
+      {/* Page header */}
+      <motion.div variants={fadeUp} className="mb-6 flex flex-col gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="text-sm text-[var(--color-muted)]">
+              Financial Overview
             </div>
-            <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-              Total Earnings
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--color-text)]">
+              Profit, expenses, payouts, and reporting
+            </h1>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">
+              Use the range filter to review trends and performance. Drill into
+              jobs from the top lists or from invoice reporting.
+            </p>
           </div>
-          <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-            <div className="text-xl font-semibold text-[var(--color-text)]">
-              {formatCurrency(totalPayoutsCents)}
-            </div>
-            <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-              Total Payouts
-            </div>
+
+          {/* Range selector */}
+          <div className="flex flex-wrap items-center gap-2">
+            {(
+              [
+                { label: "Last 6 months", value: "6months" },
+                { label: "Last 12 months", value: "12months" },
+                { label: "Year to date", value: "ytd" },
+                { label: "All time", value: "all" },
+              ] as { label: string; value: RangeOption }[]
+            ).map((opt) => {
+              const active = rangeOption === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => setRangeOption(opt.value)}
+                  className={cx(
+                    "rounded-full px-3 py-1 text-xs border transition",
+                    active
+                      ? "bg-[var(--color-accent-gold)] text-black border-transparent"
+                      : "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
-          <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-            <div className="text-xl font-semibold text-[var(--color-text)]">
-              {formatCurrency(totalMaterialsCents)}
-            </div>
-            <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-              Total Materials
-            </div>
-          </div>
-          <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-            <div className="text-xl font-semibold text-[var(--color-text)]">
-              {formatCurrency(totalNetProfitCents)}
-            </div>
-            <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-              Net Profit
-            </div>
-          </div>
-          <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-            <div className="text-xl font-semibold text-[var(--color-text)]">
-              {formatCurrency(averageProfitCents)}
-            </div>
-            <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-              Avg. Profit/Job
-            </div>
-          </div>
-          <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-            <div className="text-xl font-semibold text-[var(--color-text)]">
-              {formatCurrency(pendingPayoutsCents)}
-            </div>
-            <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-              Pending Payouts
-            </div>
-          </div>
-        </section>
-      </div>
-      {/* Range selector */}
-      <div className="lg:col-span-12">
-        <div className="flex flex-wrap items-center gap-2 text-sm mb-4">
-          <span className="font-semibold text-[var(--color-text)]">
-            Time Range:
-          </span>
-          {(
-            [
-              { label: "Last 6 months", value: "6months" },
-              { label: "Last 12 months", value: "12months" },
-              { label: "Year to date", value: "ytd" },
-              { label: "All time", value: "all" },
-            ] as { label: string; value: RangeOption }[]
-          ).map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setRangeOption(opt.value)}
-              className={
-                " px-3 py-1 border text-xs transition duration-300 ease-in-out cursor-pointer " +
-                (rangeOption === opt.value
-                  ? "bg-[var(--color-brown-hover)] hover:bg-[var(--color-brown)] text-white"
-                  : "bg-white/50 border-[var(--color-border)] text-[var(--color-text)] hover:bg-white")
-              }
-            >
-              {opt.label}
-            </button>
-          ))}
         </div>
-      </div>
-      {/* Profit trend chart section */}
-      <div className="lg:col-span-12">
-        <section className="rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg">
-          <h2 className="mb-4 text-xl font-semibold text-[var(--color-text)]">
-            Earnings, Expenses &amp; Profit Trend
-          </h2>
-          <div className="relative h-72 w-full">
-            <Line data={profitTrendData} options={profitTrendOptions} />
+      </motion.div>
+
+      {/* Summary */}
+      <motion.section variants={fadeUp} className="mb-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8">
+          <StatCard label="Total earnings">
+            <MoneyCount cents={totalEarningsCents} decimals={0} />
+          </StatCard>
+
+          <StatCard label="Net profit">
+            <MoneyCount cents={totalNetProfitCents} decimals={0} />
+          </StatCard>
+
+          <StatCard
+            label="Avg profit / job"
+            hint={`${filteredJobs.length} job(s) in range`}
+          >
+            <MoneyCount cents={averageProfitCents} decimals={0} />
+          </StatCard>
+
+          <StatCard label="Materials">
+            <MoneyCount cents={totalMaterialsCents} decimals={0} />
+          </StatCard>
+
+          <StatCard label="Total payouts">
+            <MoneyCount cents={totalPayoutsCents} decimals={0} />
+          </StatCard>
+
+          <StatCard label="Paid payouts">
+            <MoneyCount cents={paidPayoutsCents} decimals={0} />
+          </StatCard>
+
+          <StatCard label="Pending payouts">
+            <MoneyCount cents={pendingPayoutsCents} decimals={0} />
+          </StatCard>
+
+          {/* Replaces the old misplaced bottom-left “Paid payouts” box */}
+          <motion.div
+            variants={cardIn}
+            className={cx(
+              "col-span-2 sm:col-span-3 lg:col-span-2 xl:col-span-1",
+              "rounded-2xl border border-white/10 bg-[var(--color-card)]",
+              "p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors"
+            )}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+                Payout health
+              </div>
+              <div className="text-xs font-semibold text-[var(--color-text)]">
+                <IntCount value={paidRatePct} duration={0.8} />%
+              </div>
+            </div>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/25">
+              <div
+                className="h-full rounded-full bg-[var(--color-accent-gold)] transition-all"
+                style={{ width: `${paidRatePct}%` }}
+              />
+            </div>
+            <div className="mt-2 text-[11px] text-[var(--color-muted)]">
+              Paid vs total payouts (range)
+            </div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Trend chart */}
+      <motion.section
+        variants={fadeUp}
+        className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-[var(--color-text)]">
+              Earnings, Expenses &amp; Profit Trend
+            </h2>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">
+              Activity-based trend (jobs updated in the selected range).
+            </p>
           </div>
-          <p className="mt-3 text-xs text-[var(--color-muted)]">
-            This line chart shows how your total earnings, expenses and net
-            profit have changed over the selected period.
-          </p>
-        </section>
-      </div>
+        </div>
+
+        <div className="mt-4 relative h-80 w-full">
+          <Line data={profitTrendData} options={profitTrendOptions} />
+        </div>
+
+        <div className="mt-3 text-xs text-[var(--color-muted)]">
+          Tip: use this to spot profitability dips (materials spikes, payout
+          surges, or lower earnings).
+        </div>
+      </motion.section>
 
       {/* Financial Reporting (Invoice-based) */}
-      <div className="lg:col-span-12">
-        <section className="rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg border border-[var(--color-border)]/40">
+      <motion.section variants={fadeUp} className="mt-6">
+        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-[var(--color-text)]">
                 Financial Reporting
               </h2>
-              <p className="mt-1 text-xs text-[var(--color-muted)]">
-                Based on invoice creation date (when you generated / sent the
-                invoice). Use this for reporting—separate from the
-                activity-based trend above.
+              <p className="mt-1 text-sm text-[var(--color-muted)]">
+                Invoice-based reporting (uses invoice dates). Great for
+                real-world accounting.
               </p>
             </div>
 
@@ -946,7 +1158,10 @@ export default function FinancialOverviewPage() {
               <button
                 type="button"
                 onClick={downloadInvoiceCSV}
-                className="rounded-full px-3 py-1 border text-xs transition bg-white/60 border-[var(--color-border)] text-[var(--color-text)] hover:bg-white"
+                className={cx(
+                  "rounded-full px-3 py-1 text-xs border transition",
+                  "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
+                )}
               >
                 Download CSV
               </button>
@@ -969,20 +1184,23 @@ export default function FinancialOverviewPage() {
                     { label: "Year", value: "year" },
                     { label: "Custom", value: "custom" },
                   ] as { label: string; value: ReportPreset }[]
-                ).map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setReportPreset(opt.value)}
-                    className={
-                      "rounded-full px-3 py-1 border text-xs transition " +
-                      (reportPreset === opt.value
-                        ? "bg-[var(--color-brown)] text-white"
-                        : "bg-white/50 border-[var(--color-border)] text-[var(--color-text)] hover:bg-white")
-                    }
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                ).map((opt) => {
+                  const active = reportPreset === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setReportPreset(opt.value)}
+                      className={cx(
+                        "rounded-full px-3 py-1 text-xs border transition",
+                        active
+                          ? "bg-[var(--color-accent-gold)] text-black border-transparent"
+                          : "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Custom date inputs */}
@@ -996,7 +1214,11 @@ export default function FinancialOverviewPage() {
                       type="date"
                       value={customStart}
                       onChange={(e) => setCustomStart(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                      className={cx(
+                        "mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none",
+                        "border-white/10 bg-[var(--color-surface)] text-[var(--color-text)]",
+                        "focus:ring-2 focus:ring-[var(--color-accent-gold)]"
+                      )}
                     />
                   </div>
                   <div>
@@ -1007,7 +1229,11 @@ export default function FinancialOverviewPage() {
                       type="date"
                       value={customEnd}
                       onChange={(e) => setCustomEnd(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                      className={cx(
+                        "mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none",
+                        "border-white/10 bg-[var(--color-surface)] text-[var(--color-text)]",
+                        "focus:ring-2 focus:ring-[var(--color-accent-gold)]"
+                      )}
                     />
                   </div>
                 </div>
@@ -1023,24 +1249,27 @@ export default function FinancialOverviewPage() {
 
                 {(
                   [
-                    { label: "Issued ", value: "sentPaid" },
+                    { label: "Issued", value: "sentPaid" },
                     { label: "Paid only", value: "paidOnly" },
                     { label: "Include drafts", value: "includeDrafts" },
                   ] as { label: string; value: ReportInvoiceMode }[]
-                ).map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setReportMode(opt.value)}
-                    className={
-                      "rounded-full px-3 py-1 border text-xs transition " +
-                      (reportMode === opt.value
-                        ? "bg-[var(--color-brown)] text-white"
-                        : "bg-white/50 border-[var(--color-border)] text-[var(--color-text)] hover:bg-white")
-                    }
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                ).map((opt) => {
+                  const active = reportMode === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setReportMode(opt.value)}
+                      className={cx(
+                        "rounded-full px-3 py-1 text-xs border transition",
+                        active
+                          ? "bg-[var(--color-accent-gold)] text-black border-transparent"
+                          : "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="mt-2 text-[11px] text-[var(--color-muted)]">
@@ -1055,47 +1284,50 @@ export default function FinancialOverviewPage() {
 
           {/* Summary row */}
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(reportSummary.totalCents)}
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+                Invoiced revenue
               </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Invoiced Revenue
+              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                <MoneyCount cents={reportSummary.totalCents} decimals={0} />
               </div>
             </div>
 
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(reportSummary.paidCents)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
                 Paid
               </div>
+              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                <MoneyCount cents={reportSummary.paidCents} decimals={0} />
+              </div>
             </div>
 
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(reportSummary.outstandingCents)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
                 Outstanding
               </div>
+              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                <MoneyCount
+                  cents={reportSummary.outstandingCents}
+                  decimals={0}
+                />
+              </div>
             </div>
 
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {reportSummary.invoiceCount}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
+              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
                 Invoices
+              </div>
+              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                <IntCount value={reportSummary.invoiceCount} />
               </div>
             </div>
           </div>
 
           {/* Table */}
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-[var(--color-border)]/60 bg-white/70 section-scroll-invoices">
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-[var(--color-surface)] section-scroll-invoices">
             <table className="min-w-full text-sm">
-              <thead className="bg-[var(--color-card)] text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+              <thead className="bg-black/15 text-[11px] uppercase tracking-wide text-[var(--color-muted)] sticky top-0">
                 <tr>
                   <th className="px-3 py-2 text-left">Invoice</th>
                   <th className="px-3 py-2 text-left">Job</th>
@@ -1104,6 +1336,7 @@ export default function FinancialOverviewPage() {
                   <th className="px-3 py-2 text-right">Total</th>
                 </tr>
               </thead>
+
               <tbody>
                 {invoicesForReport.length === 0 ? (
                   <tr>
@@ -1118,7 +1351,7 @@ export default function FinancialOverviewPage() {
                   invoicesForReport.slice(0, 50).map((inv) => (
                     <tr
                       key={inv.id}
-                      className="border-t border-[var(--color-border)]/40 hover:bg-[var(--color-card)]"
+                      className="border-t border-white/10 hover:bg-white/5"
                     >
                       <td className="px-3 py-2">
                         <div className="font-semibold text-[var(--color-text)]">
@@ -1142,28 +1375,34 @@ export default function FinancialOverviewPage() {
                         </button>
                       </td>
 
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 text-[var(--color-muted)]">
                         {invoiceDateLabel(inv, reportMode)}
                       </td>
 
                       <td className="px-3 py-2">
                         <span
-                          className={
+                          className={cx(
+                            "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border",
                             inv.status === "paid"
-                              ? "inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
+                              ? "bg-emerald-500/15 text-emerald-200 border-emerald-500/25"
                               : inv.status === "sent"
-                              ? "inline-block rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"
+                              ? "bg-amber-500/15 text-amber-200 border-amber-500/25"
                               : inv.status === "draft"
-                              ? "inline-block rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-700"
-                              : "inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800"
-                          }
+                              ? "bg-white/10 text-[var(--color-muted)] border-white/10"
+                              : "bg-rose-500/15 text-rose-200 border-rose-500/25"
+                          )}
                         >
                           {inv.status}
                         </span>
                       </td>
 
-                      <td className="px-3 py-2 text-right font-semibold">
-                        {formatCurrency(inv.money?.totalCents ?? 0)}
+                      <td className="px-3 py-2 text-right font-semibold text-[var(--color-text)]">
+                        {/* CountUp for row totals (short duration to stay snappy) */}
+                        <MoneyCount
+                          cents={inv.money?.totalCents ?? 0}
+                          decimals={0}
+                          duration={0.45}
+                        />
                       </td>
                     </tr>
                   ))
@@ -1177,150 +1416,142 @@ export default function FinancialOverviewPage() {
               </div>
             )}
           </div>
-        </section>
-      </div>
+        </div>
+      </motion.section>
 
       {/* 3-up charts row */}
-      <div className="lg:col-span-12 xl:col-span-4">
-        <section className="rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg">
-          <h2 className="mb-4 text-xl font-semibold text-[var(--color-text)]">
+      <motion.div
+        variants={fadeUp}
+        className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3"
+      >
+        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
+          <h2 className="text-xl font-semibold text-[var(--color-text)]">
             Expense Breakdown
           </h2>
-          <div className="relative h-64 w-full">
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            Categories include payouts + materials.
+          </p>
+          <div className="mt-4 relative h-64 w-full">
             {breakdownValues.length > 0 ? (
               <Pie
                 data={expenseBreakdownData}
                 options={expenseBreakdownOptions}
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-[var(--color-muted)]">
+              <div className="flex items-center justify-center h-full text-sm text-[var(--color-muted)]">
                 No expenses in selected range
               </div>
             )}
           </div>
-          <p className="mt-3 text-xs text-[var(--color-muted)]">
-            Categories include payouts and materials. Hover slices to see
-            values.
-          </p>
-        </section>
-      </div>
+        </div>
 
-      <div className="lg:col-span-12 xl:col-span-4">
-        <section className="rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg">
-          <h2 className="mb-4 text-xl font-semibold text-[var(--color-text)]">
+        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
+          <h2 className="text-xl font-semibold text-[var(--color-text)]">
             Top Jobs by Profit
           </h2>
-          <div className="relative h-64 w-full">
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            Click a job to quick-view details.
+          </p>
+
+          <div className="mt-4 relative h-64 w-full">
             {topJobLabels.length > 0 ? (
               <Bar data={topJobsData} options={topJobsOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-[var(--color-muted)]">
+              <div className="flex items-center justify-center h-full text-sm text-[var(--color-muted)]">
                 No jobs in selected range
               </div>
             )}
           </div>
 
-          {/* Clickable list for quick job viewing */}
           {topJobsList.length > 0 && (
-            <div className="mt-3 space-y-1">
+            <div className="mt-4 space-y-1">
               {topJobsList.map((j) => (
                 <button
                   key={j.jobId}
                   type="button"
                   onClick={() => openJobQuickView(j.jobId)}
-                  className="w-full text-left text-sm px-2 py-1 rounded-lg hover:bg-white/60 transition"
+                  className="w-full text-left text-sm px-2 py-1.5 rounded-xl hover:bg-white/5 transition"
                   title="Quick view job"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="truncate  text-[var(--color-text)] hover:underline">
+                    <span className="truncate text-[var(--color-text)] hover:underline">
                       {j.label}
                     </span>
                     <span className="shrink-0 text-[11px] text-[var(--color-muted)]">
-                      {formatCurrency(j.profit)}
+                      {/* CountUp for list values */}
+                      <MoneyCount
+                        cents={j.profit}
+                        decimals={0}
+                        duration={0.5}
+                      />
                     </span>
                   </div>
                 </button>
               ))}
             </div>
           )}
-        </section>
-      </div>
+        </div>
 
-      <div className="lg:col-span-12 xl:col-span-4">
-        <section className="rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg">
-          <h2 className="mb-4 text-xl font-semibold text-[var(--color-text)]">
+        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
+          <h2 className="text-xl font-semibold text-[var(--color-text)]">
             Top Employees by Payout
           </h2>
-          <div className="relative h-64 w-full">
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            Total payouts by employee (range).
+          </p>
+
+          <div className="mt-4 relative h-64 w-full">
             {topEmployeeLabels.length > 0 ? (
               <Bar data={topEmployeesData} options={topEmployeesOptions} />
             ) : (
-              <div className="flex items-center justify-center h-full text-xs text-[var(--color-muted)]">
+              <div className="flex items-center justify-center h-full text-sm text-[var(--color-muted)]">
                 No payouts in selected range
               </div>
             )}
           </div>
-        </section>
-      </div>
-
-      <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-        <div className="text-xl font-semibold text-[var(--color-text)]">
-          {formatCurrency(paidPayoutsCents)}
         </div>
-
-        <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-          Paid Payouts
-        </div>
-
-        <div className="mt-2">
-          <div className="flex items-center justify-between text-[11px] text-[var(--color-muted)]">
-            <span>Paid rate</span>
-            <span className="font-semibold text-[var(--color-text)]">
-              {totalPayoutsCents > 0
-                ? Math.round((paidPayoutsCents / totalPayoutsCents) * 100)
-                : 0}
-              %
-            </span>
-          </div>
-
-          <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-black/10">
-            <div
-              className="h-full rounded-full bg-[var(--color-brown)] transition-all"
-              style={{
-                width: `${
-                  totalPayoutsCents > 0
-                    ? Math.min(
-                        100,
-                        Math.round((paidPayoutsCents / totalPayoutsCents) * 100)
-                      )
-                    : 0
-                }%`,
-              }}
-            />
-          </div>
-        </div>
-      </div>
+      </motion.div>
 
       {/* Quick Job View Modal */}
-      {quickViewJobId && (
-        <div
-          className="fixed inset-0 z-[200] bg-black/50 p-3 sm:p-6 flex items-center justify-center"
-          onMouseDown={(e) => {
-            // click outside closes
-            if (e.target === e.currentTarget) closeJobQuickView();
-          }}
-        >
-          <div className="w-full max-w-[1200px] h-[92vh] overflow-hidden rounded-2xl bg-white shadow-2xl border border-white/10">
-            <div className="h-full overflow-y-auto">
-              <JobDetailPage
-                jobId={quickViewJobId}
-                variant="modal"
-                onClose={closeJobQuickView}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {quickViewJobId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.18 } }}
+            exit={{ opacity: 0, transition: { duration: 0.16 } }}
+            className="fixed inset-0 z-[200] bg-black/70 p-3 sm:p-6 flex items-center justify-center"
+            onMouseDown={(e) => {
+              // click outside closes
+              if (e.target === e.currentTarget) closeJobQuickView();
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.99 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: { duration: 0.28, ease },
+              }}
+              exit={{
+                opacity: 0,
+                y: 10,
+                scale: 0.99,
+                transition: { duration: 0.18, ease },
+              }}
+              className="w-full max-w-[1200px] h-[92vh] overflow-hidden rounded-2xl bg-[var(--color-surface)] shadow-2xl border border-white/10"
+            >
+              <div className="h-full overflow-y-auto">
+                <JobDetailPage
+                  jobId={quickViewJobId}
+                  variant="modal"
+                  onClose={closeJobQuickView}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

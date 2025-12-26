@@ -168,6 +168,31 @@ export default function JobsPage() {
     return () => unsub();
   }, [orgId]);
 
+  // Floating sort (pinned when header scrolls away)
+  const sortSentinelRef = useRef<HTMLDivElement | null>(null);
+  const [sortPinned, setSortPinned] = useState(false);
+  const [mobileSortOpen, setMobileSortOpen] = useState(false);
+
+  useEffect(() => {
+    if (!sortPinned) setMobileSortOpen(false);
+  }, [sortPinned]);
+
+  useEffect(() => {
+    const el = sortSentinelRef.current;
+    if (!el) return;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        // If sentinel is NOT visible, we are scrolled past the header -> pin sort
+        setSortPinned(!entry.isIntersecting);
+      },
+      { root: null, threshold: 0 }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   // Load active employees for assignment list
   useEffect(() => {
     if (!orgId) return;
@@ -644,25 +669,184 @@ export default function JobsPage() {
 
             {/* Sort control (kept same logic) */}
             <div className="flex items-center gap-2">
-              <div
-                className="inline-flex items-center gap-2 rounded-xl border px-3 py-2"
-                style={{
-                  borderColor: "rgba(58,63,75,0.75)",
-                  backgroundColor: "rgba(11,14,20,0.35)",
-                }}
-              >
-                <SlidersHorizontal className="h-4 w-4 text-white/60" />
-                <label className="text-xs font-semibold text-white/70">
-                  Sort
-                </label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="inline-flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-white/60" />
+                  <label className="text-xs font-semibold text-white/70">
+                    Sort
+                  </label>
+                </div>
+
                 <SortMenu
+                  key={`pinned-${sortOption}`}
                   value={sortOption}
                   onChange={(v) => setSortOption(v)}
                 />
               </div>
             </div>
           </div>
+          <div ref={sortSentinelRef} className="h-px w-full" />
         </section>
+
+        <AnimatePresence>
+          {sortPinned && (
+            <>
+              {/* ✅ Desktop pinned bar (unchanged behavior) */}
+              <motion.div
+                initial={{ opacity: 0, y: -12, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -12, filter: "blur(6px)" }}
+                transition={{ duration: 0.22, ease }}
+                className="fixed right-4 top-20 z-[300] hidden md:block"
+              >
+                <div
+                  className="rounded-2xl border px-3 py-2 shadow-[0_22px_60px_rgba(0,0,0,0.65)] backdrop-blur"
+                  style={{
+                    borderColor: "rgba(58,63,75,0.85)",
+                    backgroundColor: "rgba(11,14,20,0.70)",
+                  }}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="inline-flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4 text-white/60" />
+                      <label className="text-xs font-semibold text-white/70">
+                        Sort
+                      </label>
+                    </div>
+
+                    <SortMenu
+                      key={`desk-pinned-${sortOption}`}
+                      value={sortOption}
+                      onChange={(v) => setSortOption(v)}
+                    />
+                  </div>
+
+                  <div className="mt-1 text-[11px] text-white/45">
+                    Sorting:{" "}
+                    <span className="font-semibold text-white/70">
+                      {sortOption === "recent"
+                        ? "Most recent"
+                        : sortOption === "netDesc"
+                        ? "Highest net"
+                        : "Lowest net"}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ✅ Mobile floating FAB + popover (no navbar conflict) */}
+              <motion.div
+                initial={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: 14, filter: "blur(6px)" }}
+                transition={{ duration: 0.22, ease }}
+                className="fixed bottom-4 right-4 z-[300] md:hidden"
+              >
+                <div className="relative">
+                  {/* Popover */}
+                  <AnimatePresence>
+                    {mobileSortOpen && (
+                      <motion.div
+                        initial={{
+                          opacity: 0,
+                          y: 8,
+                          scale: 0.985,
+                          filter: "blur(6px)",
+                        }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                          scale: 1,
+                          filter: "blur(0px)",
+                        }}
+                        exit={{
+                          opacity: 0,
+                          y: 8,
+                          scale: 0.985,
+                          filter: "blur(6px)",
+                        }}
+                        transition={{ duration: 0.18, ease }}
+                        className="absolute bottom-14 right-0 w-[min(92vw,320px)]"
+                      >
+                        <div
+                          className="rounded-2xl border p-3 shadow-[0_22px_60px_rgba(0,0,0,0.65)] backdrop-blur"
+                          style={{
+                            borderColor: "rgba(58,63,75,0.9)",
+                            backgroundColor: "rgba(11,14,20,0.90)",
+                          }}
+                        >
+                          <div className="mb-2 flex items-center justify-between">
+                            <div className="inline-flex items-center gap-2">
+                              <SlidersHorizontal className="h-4 w-4 text-white/60" />
+                              <div className="text-xs font-semibold text-white/80">
+                                Sort jobs
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setMobileSortOpen(false)}
+                              className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/70"
+                            >
+                              Close
+                            </button>
+                          </div>
+
+                          {/* Reuse existing themed dropdown */}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-[11px] text-white/50">
+                              Current
+                            </div>
+                            <SortMenu
+                              key={`mob-pinned-${sortOption}`}
+                              value={sortOption}
+                              onChange={(v) => setSortOption(v)}
+                            />
+                          </div>
+
+                          <div className="mt-2 text-[11px] text-white/45">
+                            Sorting:{" "}
+                            <span className="font-semibold text-white/70">
+                              {sortOption === "recent"
+                                ? "Most recent"
+                                : sortOption === "netDesc"
+                                ? "Highest net"
+                                : "Lowest net"}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* FAB button */}
+                  <button
+                    type="button"
+                    onClick={() => setMobileSortOpen((v) => !v)}
+                    className="inline-flex items-center gap-2 rounded-full border px-4 py-3 text-xs font-semibold shadow-[0_18px_40px_rgba(0,0,0,0.55)]"
+                    style={{
+                      borderColor: "rgba(58,63,75,0.85)",
+                      backgroundColor: "rgba(11,14,20,0.80)",
+                      color: "rgba(245,246,248,0.92)",
+                    }}
+                    aria-label="Sort jobs"
+                  >
+                    <SlidersHorizontal className="h-4 w-4 text-white/70" />
+                    Sort
+                    <span className="text-white/50">
+                      •{" "}
+                      {sortOption === "recent"
+                        ? "Recent"
+                        : sortOption === "netDesc"
+                        ? "High net"
+                        : "Low net"}
+                    </span>
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* Overview KPIs + charts */}
         <section
