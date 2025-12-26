@@ -4,13 +4,20 @@ import { motion, type Variants } from "framer-motion";
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
 
+const COLORS = {
+  bg: "#0b0e14",
+  surface: "#1f2430",
+  border: "#3a3f4b",
+  gold: "#cfae5d",
+  text: "#f5f6f8",
+  black: "#000000",
+} as const;
+
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const stagger: Variants = {
   hidden: {},
-  show: {
-    transition: { staggerChildren: 0.08, delayChildren: 0.06 },
-  },
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
 };
 
 const fadeUp: Variants = {
@@ -24,11 +31,11 @@ const fadeUp: Variants = {
 };
 
 const fadeIn: Variants = {
-  hidden: { opacity: 0, filter: "blur(6px)" },
+  hidden: { opacity: 0, filter: "blur(8px)" },
   show: {
     opacity: 1,
     filter: "blur(0px)",
-    transition: { duration: 0.7, ease },
+    transition: { duration: 0.8, ease },
   },
 };
 
@@ -43,19 +50,36 @@ const cardIn: Variants = {
   },
 };
 
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+type MoneyValueMode = "cents" | "dollars";
+
+/**
+ * Money stat that supports either cents (recommended for app data)
+ * or dollars (quick demo numbers). Prevents “cents prop” mismatch pain.
+ */
 function StatMoney({
-  cents,
+  value,
+  mode = "cents",
   className,
+  prefix = "$",
 }: {
-  cents: number;
+  value: number;
+  mode?: MoneyValueMode;
   className?: string;
+  prefix?: string;
 }) {
+  const dollars = mode === "cents" ? value / 100 : value;
+  const end = Math.round(dollars);
+
   return (
     <span className={className}>
       <CountUp
         start={0}
-        end={Math.round(cents / 100)}
-        prefix="$"
+        end={end}
+        prefix={prefix}
         separator=","
         duration={1.2}
       />
@@ -71,17 +95,115 @@ function StatInt({ value, className }: { value: number; className?: string }) {
   );
 }
 
+function LightningMark({ className }: { className?: string }) {
+  // small inline “bolt” mark to reinforce your logo idea without overdoing it
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="16"
+      viewBox="0 0 14 16"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M8.5 0.8L1.4 9.2H6.9L5.5 15.2L12.6 6.8H7.1L8.5 0.8Z"
+        fill={COLORS.gold}
+        opacity="0.95"
+      />
+    </svg>
+  );
+}
+
+function ShellPill({
+  children,
+  active,
+}: {
+  children: React.ReactNode;
+  active?: boolean;
+}) {
+  return (
+    <span
+      className={cx(
+        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] tracking-wide",
+        active
+          ? `border-[${COLORS.gold}]/35 bg-[${COLORS.gold}]/10 text-[${COLORS.gold}]`
+          : `border-[${COLORS.border}] bg-white/5 text-white/70`
+      )}
+      style={
+        active
+          ? {
+              borderColor: "rgba(207,174,93,0.35)",
+              backgroundColor: "rgba(207,174,93,0.10)",
+              color: COLORS.gold,
+            }
+          : { borderColor: COLORS.border }
+      }
+    >
+      {children}
+    </span>
+  );
+}
+
+function MetricCard({
+  label,
+  valueCents,
+  sub,
+  tone = "neutral",
+}: {
+  label: string;
+  valueCents: number;
+  sub: string;
+  tone?: "neutral" | "gold";
+}) {
+  const isGold = tone === "gold";
+  return (
+    <motion.div
+      variants={fadeUp}
+      whileHover={{ y: -2, transition: { duration: 0.25, ease } }}
+      className="rounded-xl border p-4"
+      style={{
+        borderColor: COLORS.border,
+        backgroundColor: "rgba(11,14,20,0.55)",
+      }}
+    >
+      <div className="text-[11px] uppercase tracking-wider text-white/50">
+        {label}
+      </div>
+      <div
+        className="mt-1 text-xl font-semibold"
+        style={{ color: COLORS.text }}
+      >
+        <StatMoney value={valueCents} mode="cents" />
+      </div>
+      <div
+        className="mt-1 text-[12px]"
+        style={{
+          color: isGold ? "rgba(207,174,93,0.80)" : "rgba(245,246,248,0.55)",
+        }}
+      >
+        {sub}
+      </div>
+    </motion.div>
+  );
+}
+
 function DashboardPreview() {
   const kpis = [
-    { label: "Net Profit", cents: 1842000, sub: "+12% vs last period" },
-    { label: "Revenue", cents: 4290000, sub: "12 jobs" },
-    { label: "Crew Payouts", cents: 1930000, sub: "8 stubs generated" },
-    { label: "Materials", cents: 518000, sub: "Receipts logged" },
-  ] as const;
+    {
+      label: "Net Profit",
+      valueCents: 1842000,
+      sub: "↑ 12% vs last period",
+      tone: "gold" as const,
+    },
+    { label: "Revenue", valueCents: 4290000, sub: "12 jobs in range" },
+    { label: "Crew Payouts", valueCents: 1930000, sub: "8 stubs generated" },
+    { label: "Materials", valueCents: 518000, sub: "Receipts logged" },
+  ];
 
   const schedule = [
     {
-      stage: "Felt",
+      stage: "Dry-in (felt)",
       address: "7421 Ridge Trail",
       when: "Mon • Jan 06",
       badge: "Scheduled",
@@ -98,14 +220,14 @@ function DashboardPreview() {
       when: "Thu • Jan 09",
       badge: "Scheduled",
     },
-  ] as const;
+  ];
 
   const pipeline = [
     {
       status: "Active",
       address: "7421 Ridge Trail",
       profitCents: 312400,
-      note: "Dry-in ready",
+      note: "Ready for dry-in",
     },
     {
       status: "Pending",
@@ -117,7 +239,7 @@ function DashboardPreview() {
       status: "Invoiced",
       address: "2087 Brookside",
       profitCents: 441100,
-      note: "Sent yesterday",
+      note: "Invoice sent yesterday",
     },
     {
       status: "Paid",
@@ -125,25 +247,38 @@ function DashboardPreview() {
       profitCents: 388600,
       note: "Paid • stub created",
     },
-  ] as const;
+  ];
 
   const activity: Array<{ t: string; m: string; cents?: number }> = [
     { t: "2h ago", m: "Pay stub created • Jose Martinez", cents: 286000 },
     { t: "Today", m: "Materials logged • shingles + ridge cap", cents: 86000 },
-    { t: "Yesterday", m: "Job scheduled • Dry-in • 7421 Ridge Trail" },
+    { t: "Yesterday", m: "Dry-in scheduled • 7421 Ridge Trail" },
   ];
 
-  const pill = (text: string) => (
-    <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/50 px-2.5 py-1 text-[11px] text-[#cfae5d]/80">
-      {text}
-    </span>
-  );
-
-  const statusStyles: Record<string, string> = {
-    Active: "bg-[#cfae5d]/10 text-[#cfae5d] border-[#cfae5d]/25",
-    Pending: "bg-white/5 text-white/70 border-white/10",
-    Invoiced: "bg-white/5 text-white/70 border-white/10",
-    Paid: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
+  const statusStyles: Record<
+    string,
+    { bg: string; border: string; text: string }
+  > = {
+    Active: {
+      bg: "rgba(207,174,93,0.10)",
+      border: "rgba(207,174,93,0.28)",
+      text: COLORS.gold,
+    },
+    Pending: {
+      bg: "rgba(255,255,255,0.05)",
+      border: "rgba(255,255,255,0.10)",
+      text: "rgba(245,246,248,0.75)",
+    },
+    Invoiced: {
+      bg: "rgba(255,255,255,0.05)",
+      border: "rgba(255,255,255,0.10)",
+      text: "rgba(245,246,248,0.75)",
+    },
+    Paid: {
+      bg: "rgba(207,174,93,0.10)",
+      border: "rgba(207,174,93,0.20)",
+      text: "rgba(207,174,93,0.90)",
+    },
   };
 
   return (
@@ -152,48 +287,93 @@ function DashboardPreview() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.25 }}
-      className="relative overflow-hidden rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+      className="relative overflow-hidden rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+      style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
     >
-      {/* ambient glow */}
-      <div className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full bg-[#cfae5d]/12 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-white/6 blur-3xl" />
+      {/* ambient glows */}
+      <div
+        className="pointer-events-none absolute -top-32 -right-28 h-80 w-80 rounded-full blur-3xl"
+        style={{ backgroundColor: "rgba(207,174,93,0.12)" }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-28 -left-28 h-80 w-80 rounded-full blur-3xl"
+        style={{ backgroundColor: "rgba(245,246,248,0.06)" }}
+      />
 
-      {/* “app frame” header */}
-      <div className="flex items-center justify-between gap-3 border-b border-[#3a3f4b] px-5 py-4">
+      {/* app header */}
+      <div
+        className="flex items-center justify-between gap-3 border-b px-5 py-4"
+        style={{ borderColor: COLORS.border }}
+      >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-xl bg-[#0b0e14] border border-[#3a3f4b] flex items-center justify-center">
-            <div className="h-2 w-2 rounded-full bg-[#cfae5d]" />
+          <div
+            className="h-9 w-9 rounded-xl flex items-center justify-center"
+            style={{
+              backgroundColor: COLORS.bg,
+              border: `1px solid ${COLORS.border}`,
+            }}
+          >
+            <LightningMark className="opacity-90" />
           </div>
+
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-[#f5f6f8] truncate">
+            <div
+              className="text-sm font-semibold truncate"
+              style={{ color: COLORS.text }}
+            >
               Command Center
             </div>
-            <div className="text-[12px] text-[#cfae5d]/70 truncate">
+            <div
+              className="text-[12px] truncate"
+              style={{ color: "rgba(207,174,93,0.72)" }}
+            >
               Last 7 days • All jobs • Org scoped
             </div>
           </div>
         </div>
 
         <div className="hidden sm:flex items-center gap-2">
-          <div className="rounded-full border border-[#3a3f4b] bg-[#0b0e14]/40 px-3 py-1 text-[11px] text-white/70">
-            Jobs
-          </div>
-          <div className="rounded-full border border-[#3a3f4b] bg-[#0b0e14]/40 px-3 py-1 text-[11px] text-white/70">
-            Payouts
-          </div>
-          <div className="rounded-full border border-[#cfae5d]/30 bg-[#cfae5d]/10 px-3 py-1 text-[11px] text-[#cfae5d]">
-            Finance
-          </div>
+          <ShellPill>Jobs</ShellPill>
+          <ShellPill>Payouts</ShellPill>
+          <ShellPill active>Finance</ShellPill>
         </div>
       </div>
 
       {/* content */}
       <div className="p-5">
-        {/* filter chips row */}
+        {/* chip row */}
         <div className="flex flex-wrap items-center gap-2">
-          {pill("Date: Last 7 days")}
-          {pill("Status: Active + Pending")}
-          {pill("Crew: All")}
+          <span
+            className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px]"
+            style={{
+              borderColor: COLORS.border,
+              backgroundColor: "rgba(11,14,20,0.55)",
+              color: "rgba(207,174,93,0.80)",
+            }}
+          >
+            Date: Last 7 days
+          </span>
+          <span
+            className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px]"
+            style={{
+              borderColor: COLORS.border,
+              backgroundColor: "rgba(11,14,20,0.55)",
+              color: "rgba(207,174,93,0.80)",
+            }}
+          >
+            Status: Active + Pending
+          </span>
+          <span
+            className="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px]"
+            style={{
+              borderColor: COLORS.border,
+              backgroundColor: "rgba(11,14,20,0.55)",
+              color: "rgba(207,174,93,0.80)",
+            }}
+          >
+            Crew: All
+          </span>
+
           <span className="ml-auto hidden md:inline-flex items-center text-[11px] text-white/45">
             Live preview • static demo data
           </span>
@@ -204,42 +384,50 @@ function DashboardPreview() {
           variants={stagger}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: true, amount: 0.35 }}
           className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3"
         >
           {kpis.map((k) => (
-            <motion.div
+            <MetricCard
               key={k.label}
-              variants={fadeUp}
-              whileHover={{ y: -2, transition: { duration: 0.25, ease } }}
-              className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/45 p-4"
-            >
-              <div className="text-[11px] uppercase tracking-wide text-white/50">
-                {k.label}
-              </div>
-              <div className="mt-1 text-xl font-semibold text-[#f5f6f8]">
-                <StatMoney cents={k.cents} />
-              </div>
-              <div className="mt-1 text-[12px] text-[#cfae5d]/70">{k.sub}</div>
-            </motion.div>
+              label={k.label}
+              valueCents={k.valueCents}
+              sub={k.sub}
+              tone={k.tone ?? "neutral"}
+            />
           ))}
         </motion.div>
 
-        {/* middle row */}
+        {/* rows */}
         <div className="mt-3 grid lg:grid-cols-12 gap-3">
-          {/* Schedule */}
+          {/* schedule */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.25 }}
-            className="lg:col-span-7 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35"
+            className="lg:col-span-7 rounded-xl border"
+            style={{
+              borderColor: COLORS.border,
+              backgroundColor: "rgba(11,14,20,0.35)",
+            }}
           >
-            <div className="flex items-center justify-between border-b border-[#3a3f4b] px-4 py-3">
-              <div className="text-sm font-semibold text-[#f5f6f8]">
+            <div
+              className="flex items-center justify-between border-b px-4 py-3"
+              style={{ borderColor: COLORS.border }}
+            >
+              <div
+                className="text-sm font-semibold"
+                style={{ color: COLORS.text }}
+              >
                 Scheduled Work
               </div>
-              <div className="text-[12px] text-[#cfae5d]/70">Next 7 days</div>
+              <div
+                className="text-[12px]"
+                style={{ color: "rgba(207,174,93,0.70)" }}
+              >
+                Next 7 days
+              </div>
             </div>
 
             <div className="px-2 py-2">
@@ -250,20 +438,32 @@ function DashboardPreview() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.4 }}
                   transition={{ duration: 0.55, ease, delay: idx * 0.06 }}
-                  className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/5 transition"
+                  className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 transition"
+                  style={{ backgroundColor: "transparent" }}
+                  whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-white truncate">
                       {s.address}
                     </div>
-                    <div className="text-[12px] text-[#cfae5d]/70">
+                    <div
+                      className="text-[12px]"
+                      style={{ color: "rgba(207,174,93,0.70)" }}
+                    >
                       {s.stage}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-[12px] text-white/55">{s.when}</div>
-                    <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/70">
+                    <span
+                      className="inline-flex items-center rounded-full border px-2 py-1 text-[11px]"
+                      style={{
+                        borderColor: "rgba(255,255,255,0.10)",
+                        backgroundColor: "rgba(255,255,255,0.05)",
+                        color: "rgba(245,246,248,0.75)",
+                      }}
+                    >
                       {s.badge}
                     </span>
                   </div>
@@ -272,19 +472,31 @@ function DashboardPreview() {
             </div>
           </motion.div>
 
-          {/* Profit sparkline + quick insights */}
+          {/* profit + quick insights */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.25 }}
-            className="lg:col-span-5 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-4"
+            className="lg:col-span-5 rounded-xl border p-4"
+            style={{
+              borderColor: COLORS.border,
+              backgroundColor: "rgba(11,14,20,0.35)",
+            }}
           >
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-[#f5f6f8]">
+              <div
+                className="text-sm font-semibold"
+                style={{ color: COLORS.text }}
+              >
                 Profit Trend
               </div>
-              <div className="text-[12px] text-[#cfae5d]/70">7-day</div>
+              <div
+                className="text-[12px]"
+                style={{ color: "rgba(207,174,93,0.70)" }}
+              >
+                7-day
+              </div>
             </div>
 
             <motion.div
@@ -292,25 +504,30 @@ function DashboardPreview() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, amount: 0.35 }}
               transition={{ duration: 0.65, ease }}
-              className="mt-3 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/45 p-3"
+              className="mt-3 rounded-xl border p-3"
+              style={{
+                borderColor: COLORS.border,
+                backgroundColor: "rgba(11,14,20,0.55)",
+              }}
             >
               <svg viewBox="0 0 240 72" className="w-full h-[72px]">
                 <defs>
-                  <linearGradient id="g1" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0" stopColor="rgba(207,174,93,0.15)" />
-                    <stop offset="1" stopColor="rgba(207,174,93,0.55)" />
+                  <linearGradient id="roofzeusGold" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0" stopColor="rgba(207,174,93,0.10)" />
+                    <stop offset="1" stopColor="rgba(207,174,93,0.60)" />
                   </linearGradient>
                 </defs>
+
                 <path
                   d="M6,54 C26,44 34,56 54,42 C74,28 84,36 104,30 C124,24 134,36 154,22 C174,8 194,18 234,10"
                   fill="none"
-                  stroke="rgba(207,174,93,0.85)"
+                  stroke="rgba(207,174,93,0.90)"
                   strokeWidth="3"
                   strokeLinecap="round"
                 />
                 <path
                   d="M6,54 C26,44 34,56 54,42 C74,28 84,36 104,30 C124,24 134,36 154,22 C174,8 194,18 234,10 L234,72 L6,72 Z"
-                  fill="url(#g1)"
+                  fill="url(#roofzeusGold)"
                   opacity="0.35"
                 />
               </svg>
@@ -322,7 +539,7 @@ function DashboardPreview() {
                 <div className="text-[12px] text-white/55">
                   Avg net:{" "}
                   <span className="text-white/80">
-                    <StatMoney cents={263000} />
+                    <StatMoney value={263000} mode="cents" />
                   </span>
                 </div>
               </div>
@@ -331,9 +548,13 @@ function DashboardPreview() {
             <div className="mt-3 grid grid-cols-2 gap-3">
               <motion.div
                 whileHover={{ y: -2, transition: { duration: 0.25, ease } }}
-                className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/45 p-3"
+                className="rounded-xl border p-3"
+                style={{
+                  borderColor: COLORS.border,
+                  backgroundColor: "rgba(11,14,20,0.55)",
+                }}
               >
-                <div className="text-[11px] uppercase tracking-wide text-white/50">
+                <div className="text-[11px] uppercase tracking-wider text-white/50">
                   Punch Ready
                 </div>
                 <div className="mt-1 text-lg font-semibold text-white">
@@ -346,9 +567,13 @@ function DashboardPreview() {
 
               <motion.div
                 whileHover={{ y: -2, transition: { duration: 0.25, ease } }}
-                className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/45 p-3"
+                className="rounded-xl border p-3"
+                style={{
+                  borderColor: COLORS.border,
+                  backgroundColor: "rgba(11,14,20,0.55)",
+                }}
               >
-                <div className="text-[11px] uppercase tracking-wide text-white/50">
+                <div className="text-[11px] uppercase tracking-wider text-white/50">
                   Stubs This Week
                 </div>
                 <div className="mt-1 text-lg font-semibold text-white">
@@ -362,79 +587,111 @@ function DashboardPreview() {
           </motion.div>
         </div>
 
-        {/* bottom row */}
         <div className="mt-3 grid lg:grid-cols-12 gap-3">
-          {/* Pipeline */}
+          {/* pipeline */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.25 }}
-            className="lg:col-span-7 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35"
+            className="lg:col-span-7 rounded-xl border"
+            style={{
+              borderColor: COLORS.border,
+              backgroundColor: "rgba(11,14,20,0.35)",
+            }}
           >
-            <div className="flex items-center justify-between border-b border-[#3a3f4b] px-4 py-3">
-              <div className="text-sm font-semibold text-[#f5f6f8]">
+            <div
+              className="flex items-center justify-between border-b px-4 py-3"
+              style={{ borderColor: COLORS.border }}
+            >
+              <div
+                className="text-sm font-semibold"
+                style={{ color: COLORS.text }}
+              >
                 Job Pipeline
               </div>
-              <div className="text-[12px] text-[#cfae5d]/70">
+              <div
+                className="text-[12px]"
+                style={{ color: "rgba(207,174,93,0.70)" }}
+              >
                 Profit + status
               </div>
             </div>
 
             <div className="px-2 py-2">
-              {pipeline.map((j, idx) => (
-                <motion.div
-                  key={j.address + j.status}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.35 }}
-                  transition={{ duration: 0.55, ease, delay: idx * 0.06 }}
-                  className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/5 transition"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={
-                          "inline-flex items-center rounded-full border px-2 py-1 text-[11px] " +
-                          (statusStyles[j.status] ??
-                            "bg-white/5 text-white/70 border-white/10")
-                        }
-                      >
-                        {j.status}
-                      </span>
-                      <div className="text-sm font-semibold text-white truncate">
-                        {j.address}
+              {pipeline.map((j, idx) => {
+                const st = statusStyles[j.status] ?? statusStyles.Pending;
+                return (
+                  <motion.div
+                    key={j.address + j.status}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.35 }}
+                    transition={{ duration: 0.55, ease, delay: idx * 0.06 }}
+                    className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 transition"
+                    whileHover={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-flex items-center rounded-full border px-2 py-1 text-[11px]"
+                          style={{
+                            backgroundColor: st.bg,
+                            borderColor: st.border,
+                            color: st.text,
+                          }}
+                        >
+                          {j.status}
+                        </span>
+                        <div className="text-sm font-semibold text-white truncate">
+                          {j.address}
+                        </div>
+                      </div>
+                      <div className="mt-1 text-[12px] text-white/50 truncate">
+                        {j.note}
                       </div>
                     </div>
-                    <div className="mt-1 text-[12px] text-white/50 truncate">
-                      {j.note}
-                    </div>
-                  </div>
 
-                  <div className="shrink-0 text-right">
-                    <div className="text-[11px] text-white/45">Net</div>
-                    <div className="text-sm font-semibold text-white">
-                      <StatMoney cents={j.profitCents} />
+                    <div className="shrink-0 text-right">
+                      <div className="text-[11px] text-white/45">Net</div>
+                      <div className="text-sm font-semibold text-white">
+                        <StatMoney value={j.profitCents} mode="cents" />
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
 
-          {/* Activity */}
+          {/* activity */}
           <motion.div
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.25 }}
-            className="lg:col-span-5 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35"
+            className="lg:col-span-5 rounded-xl border"
+            style={{
+              borderColor: COLORS.border,
+              backgroundColor: "rgba(11,14,20,0.35)",
+            }}
           >
-            <div className="flex items-center justify-between border-b border-[#3a3f4b] px-4 py-3">
-              <div className="text-sm font-semibold text-[#f5f6f8]">
+            <div
+              className="flex items-center justify-between border-b px-4 py-3"
+              style={{ borderColor: COLORS.border }}
+            >
+              <div
+                className="text-sm font-semibold"
+                style={{ color: COLORS.text }}
+              >
                 Latest Activity
               </div>
-              <div className="text-[12px] text-[#cfae5d]/70">Live updates</div>
+              <div
+                className="text-[12px]"
+                style={{ color: "rgba(207,174,93,0.70)" }}
+              >
+                Live updates
+              </div>
             </div>
 
             <div className="px-4 py-3 space-y-3">
@@ -447,15 +704,18 @@ function DashboardPreview() {
                   transition={{ duration: 0.55, ease, delay: idx * 0.06 }}
                   className="flex gap-3"
                 >
-                  <div className="mt-2 h-2 w-2 rounded-full bg-[#cfae5d]/80 shrink-0" />
+                  <div
+                    className="mt-2 h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: "rgba(207,174,93,0.85)" }}
+                  />
                   <div className="min-w-0">
                     <div className="text-[12px] text-white/45">{a.t}</div>
                     <div className="text-sm text-white/80 leading-snug">
                       {a.m}
                       {typeof a.cents === "number" ? (
-                        <span className="text-[#cfae5d]/85">
+                        <span style={{ color: "rgba(207,174,93,0.90)" }}>
                           {" "}
-                          • <StatMoney cents={a.cents} />
+                          • <StatMoney value={a.cents} mode="cents" />
                         </span>
                       ) : null}
                     </div>
@@ -463,7 +723,10 @@ function DashboardPreview() {
                 </motion.div>
               ))}
 
-              <div className="pt-2 text-[12px] text-[#cfae5d]/70">
+              <div
+                className="pt-2 text-[12px]"
+                style={{ color: "rgba(207,174,93,0.72)" }}
+              >
                 Jobs • Notes • Photos • Pay stubs — all scoped per company.
               </div>
             </div>
@@ -474,78 +737,268 @@ function DashboardPreview() {
   );
 }
 
+function FeatureCard({
+  title,
+  desc,
+  eyebrow,
+}: {
+  title: string;
+  desc: string;
+  eyebrow: string;
+}) {
+  return (
+    <motion.div
+      variants={cardIn}
+      whileHover={{ y: -4, transition: { duration: 0.25, ease } }}
+      className="group rounded-2xl border p-6 relative overflow-hidden"
+      style={{
+        borderColor: COLORS.border,
+        backgroundColor: "rgba(11,14,20,0.55)",
+      }}
+    >
+      {/* hover glow */}
+      <div
+        className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ backgroundColor: "rgba(207,174,93,0.14)" }}
+      />
+      <div className="text-[11px] uppercase tracking-wider text-white/50">
+        {eyebrow}
+      </div>
+      <div
+        className="mt-2 text-lg font-semibold"
+        style={{ color: COLORS.text }}
+      >
+        {title}
+      </div>
+      <p
+        className="mt-2 text-sm leading-relaxed"
+        style={{ color: "rgba(207,174,93,0.75)" }}
+      >
+        {desc}
+      </p>
+    </motion.div>
+  );
+}
+
+function MiniStep({
+  n,
+  title,
+  desc,
+}: {
+  n: string;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <motion.div
+      variants={cardIn}
+      className="rounded-2xl border p-6"
+      style={{
+        borderColor: COLORS.border,
+        backgroundColor: "rgba(11,14,20,0.40)",
+      }}
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className="h-9 w-9 rounded-xl border flex items-center justify-center text-sm font-semibold"
+          style={{
+            borderColor: "rgba(207,174,93,0.30)",
+            backgroundColor: "rgba(207,174,93,0.10)",
+            color: COLORS.gold,
+          }}
+        >
+          {n}
+        </div>
+        <div className="text-sm font-semibold" style={{ color: COLORS.text }}>
+          {title}
+        </div>
+      </div>
+      <p className="mt-3 text-sm" style={{ color: "rgba(245,246,248,0.60)" }}>
+        {desc}
+      </p>
+    </motion.div>
+  );
+}
+
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
+    <main
+      className="min-h-screen"
+      style={{ backgroundColor: COLORS.bg, color: COLORS.text }}
+    >
       {/* HERO */}
       <section className="relative overflow-hidden">
-        {/* subtle background texture */}
+        {/* layered gradients */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(207,174,93,0.10),transparent_55%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,255,255,0.05),transparent_55%)]" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at top, rgba(207,174,93,0.14), transparent 55%)",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at bottom, rgba(245,246,248,0.06), transparent 60%)",
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-60"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.25), rgba(0,0,0,0.55))",
+            }}
+          />
         </div>
 
         <motion.div
           variants={stagger}
           initial="hidden"
           animate="show"
-          className="max-w-7xl mx-auto px-6 pt-28 pb-24 relative"
+          className="max-w-7xl mx-auto px-6 pt-24 pb-20 relative"
         >
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <motion.div variants={fadeUp}>
+          <div className="grid lg:grid-cols-12 gap-12 items-center">
+            {/* left */}
+            <motion.div variants={fadeUp} className="lg:col-span-5">
               <motion.img
                 variants={fadeIn}
-                className="max-w-[300px] mb-3"
+                className="max-w-[260px] sm:max-w-[300px] mb-4 select-none"
                 src={logo}
                 alt="ROOFZEUS"
                 draggable={false}
               />
 
+              <motion.div
+                variants={fadeUp}
+                className="flex items-center gap-2 text-[12px] tracking-wide"
+              >
+                <span
+                  className="inline-flex items-center rounded-full border px-3 py-1"
+                  style={{
+                    borderColor: "rgba(207,174,93,0.25)",
+                    backgroundColor: "rgba(207,174,93,0.08)",
+                    color: "rgba(207,174,93,0.95)",
+                  }}
+                >
+                  Built for real roofing operations
+                </span>
+                <span className="text-white/45 hidden sm:inline-flex">•</span>
+                <span className="text-white/55 hidden sm:inline-flex">
+                  Jobs • Schedules • Payouts • Finances
+                </span>
+              </motion.div>
+
               <motion.h1
                 variants={fadeUp}
-                className="text-3xl md:text-4xl font-poppins"
+                className="mt-5 text-4xl sm:text-5xl font-extrabold leading-[1.05]"
               >
-                The best system for roofing contractors.
+                Run every job like a{" "}
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, rgba(207,174,93,1), rgba(245,246,248,0.95))",
+                  }}
+                >
+                  command center.
+                </span>
               </motion.h1>
 
               <motion.p
                 variants={fadeUp}
-                className="mt-6 text-lg text-[#cfae5d]/80 max-w-xl"
+                className="mt-5 text-lg leading-relaxed max-w-xl"
+                style={{ color: "rgba(245,246,248,0.68)" }}
               >
-                ROOFZEUS gives roofing contractors total control over jobs,
-                schedules, crew payouts, and financial performance — all in one
-                powerful dashboard.
+                ROOFZEUS gives contractors total control over{" "}
+                <span style={{ color: "rgba(207,174,93,0.92)" }}>jobs</span>,{" "}
+                <span style={{ color: "rgba(207,174,93,0.92)" }}>
+                  scheduling
+                </span>
+                ,{" "}
+                <span style={{ color: "rgba(207,174,93,0.92)" }}>
+                  crew payouts
+                </span>
+                , and{" "}
+                <span style={{ color: "rgba(207,174,93,0.92)" }}>profit</span> —
+                organized, searchable, and scoped to each company.
               </motion.p>
 
-              <motion.div variants={fadeUp} className="mt-10 flex gap-4">
-                <motion.a
-                  whileHover={{ y: -1, scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  href="http://app.localhost:5173/login"
-                  className="bg-[#cfae5d] text-black px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+              {/* hero stats */}
+              <motion.div
+                variants={fadeUp}
+                className="mt-7 grid grid-cols-3 gap-3 max-w-xl"
+              >
+                {[
+                  { label: "Jobs tracked", value: 142 },
+                  { label: "Stubs generated", value: 86 },
+                  { label: "Days scheduled", value: 31 },
+                ].map((s) => (
+                  <div
+                    key={s.label}
+                    className="rounded-xl border px-4 py-3"
+                    style={{
+                      borderColor: COLORS.border,
+                      backgroundColor: "rgba(11,14,20,0.55)",
+                    }}
+                  >
+                    <div className="text-[11px] uppercase tracking-wider text-white/50">
+                      {s.label}
+                    </div>
+                    <div className="mt-1 text-lg font-semibold text-white">
+                      <StatInt value={s.value} />
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+
+              {/* CTAs */}
+              <motion.div
+                variants={fadeUp}
+                className="mt-8 flex flex-wrap gap-3"
+              >
+                {/* Use Link for same-domain routing; change to your actual app route if needed */}
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold transition"
+                  style={{ backgroundColor: COLORS.gold, color: COLORS.black }}
                 >
                   Get Started
-                </motion.a>
+                  <LightningMark className="opacity-90" />
+                </Link>
 
-                <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
-                  <Link
-                    to="/pricing"
-                    className="inline-block border border-[#3a3f4b] px-6 py-3 rounded-lg text-[#f5f6f8] hover:border-[#cfae5d] transition"
-                  >
-                    View Pricing
-                  </Link>
-                </motion.div>
+                <Link
+                  to="/pricing"
+                  className="inline-flex items-center justify-center rounded-xl border px-6 py-3 font-semibold transition"
+                  style={{
+                    borderColor: COLORS.border,
+                    color: COLORS.text,
+                    backgroundColor: "rgba(11,14,20,0.35)",
+                  }}
+                >
+                  View Pricing
+                </Link>
+
+                <span className="inline-flex items-center text-[12px] text-white/50 pl-1">
+                  No spreadsheets. No guesswork.
+                </span>
               </motion.div>
             </motion.div>
 
-            {/* Preview */}
-            <DashboardPreview />
+            {/* right */}
+            <motion.div variants={fadeUp} className="lg:col-span-7">
+              <DashboardPreview />
+            </motion.div>
           </div>
         </motion.div>
       </section>
 
-      {/* PAIN → SOLUTION */}
-      <section className="bg-[#1f2430] border-t border-[#3a3f4b]">
+      {/* SECTION: WHY (pain → control) */}
+      <section
+        className="border-t"
+        style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
+      >
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -553,112 +1006,267 @@ export default function HomePage() {
           viewport={{ once: true, amount: 0.25 }}
           className="max-w-7xl mx-auto px-6 py-20"
         >
-          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-10">
-            Stop running jobs from memory, texts, and spreadsheets
-          </motion.h2>
+          <motion.div variants={fadeUp} className="max-w-3xl">
+            <div
+              className="text-[12px] tracking-wide"
+              style={{ color: "rgba(207,174,93,0.90)" }}
+            >
+              CONTROL
+            </div>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-bold">
+              Stop running jobs from memory, texts, and spreadsheets.
+            </h2>
+            <p
+              className="mt-4 text-base sm:text-lg"
+              style={{ color: "rgba(245,246,248,0.62)" }}
+            >
+              ROOFZEUS is built for the real workflow: from setting up a job, to
+              scheduling the crew, to tracking materials and payouts — with
+              clean reporting at every step.
+            </p>
+          </motion.div>
 
-          <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            variants={stagger}
+            className="mt-10 grid md:grid-cols-3 gap-6"
+          >
+            <FeatureCard
+              eyebrow="JOB"
+              title="Job-level control"
+              desc="Square footage, price per square, profit, notes, photos, and status — organized per job, not scattered across devices."
+            />
+            <FeatureCard
+              eyebrow="SCHEDULE"
+              title="Scheduling clarity"
+              desc="Plan dry-ins, shingles, and punch work with date visibility across your entire pipeline — and keep everyone aligned."
+            />
+            <FeatureCard
+              eyebrow="CREW"
+              title="Crew accountability"
+              desc="Invite team members, assign work, and keep a clean paper trail with pay stubs and job activity scoped to your company."
+            />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* SECTION: MONEY */}
+      <section className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, rgba(207,174,93,0.10), transparent 60%)",
+            }}
+          />
+        </div>
+
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.25 }}
+          className="max-w-7xl mx-auto px-6 py-22 sm:py-24 relative"
+        >
+          <div className="grid lg:grid-cols-12 gap-10 items-start">
+            <motion.div variants={fadeUp} className="lg:col-span-5">
+              <div
+                className="text-[12px] tracking-wide"
+                style={{ color: "rgba(207,174,93,0.90)" }}
+              >
+                FINANCE
+              </div>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-bold">
+                Know exactly where your money is.
+              </h2>
+              <p
+                className="mt-4 text-base sm:text-lg"
+                style={{ color: "rgba(245,246,248,0.62)" }}
+              >
+                Filter by any date range and instantly see earnings, expenses,
+                payouts, materials, and profit — across all jobs or down to a
+                single one.
+              </p>
+
+              <motion.div
+                variants={fadeUp}
+                className="mt-8 grid grid-cols-2 gap-4"
+              >
+                <div
+                  className="rounded-2xl border p-5"
+                  style={{
+                    borderColor: COLORS.border,
+                    backgroundColor: "rgba(11,14,20,0.55)",
+                  }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-white/50">
+                    This month net
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold text-white">
+                    <StatMoney value={1842000} mode="cents" />
+                  </div>
+                  <div
+                    className="mt-1 text-[12px]"
+                    style={{ color: "rgba(207,174,93,0.75)" }}
+                  >
+                    Clean profit snapshot
+                  </div>
+                </div>
+
+                <div
+                  className="rounded-2xl border p-5"
+                  style={{
+                    borderColor: COLORS.border,
+                    backgroundColor: "rgba(11,14,20,0.55)",
+                  }}
+                >
+                  <div className="text-[11px] uppercase tracking-wider text-white/50">
+                    Crew paid
+                  </div>
+                  <div className="mt-2 text-2xl font-semibold text-white">
+                    <StatMoney value={1930000} mode="cents" />
+                  </div>
+                  <div
+                    className="mt-1 text-[12px]"
+                    style={{ color: "rgba(207,174,93,0.75)" }}
+                  >
+                    With printable stubs
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="lg:col-span-7">
+              <div className="grid md:grid-cols-2 gap-6">
+                {[
+                  {
+                    title: "Financial Overview",
+                    desc: "A dedicated page for real-time insight across your operation — totals, trends, and filters that match how contractors think.",
+                  },
+                  {
+                    title: "Payouts & Pay Stubs",
+                    desc: "Generate, track, filter, and export stubs for your crew — with a clean history you can trust.",
+                  },
+                  {
+                    title: "Materials & Receipts",
+                    desc: "Track material spending per job and keep receipts attached to the work — no more hunting through camera rolls.",
+                  },
+                  {
+                    title: "Job Profit Snapshots",
+                    desc: "See profit per job and across ranges so you always know what’s working, what’s bleeding, and what to fix.",
+                  },
+                ].map((x) => (
+                  <motion.div
+                    key={x.title}
+                    variants={cardIn}
+                    whileHover={{ y: -4, transition: { duration: 0.25, ease } }}
+                    className="rounded-2xl border p-6"
+                    style={{
+                      borderColor: COLORS.border,
+                      backgroundColor: "rgba(31,36,48,0.70)",
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <LightningMark className="opacity-80" />
+                      <div className="text-lg font-semibold text-white">
+                        {x.title}
+                      </div>
+                    </div>
+                    <p
+                      className="mt-2 text-sm leading-relaxed"
+                      style={{ color: "rgba(245,246,248,0.62)" }}
+                    >
+                      {x.desc}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* SECTION: DOCUMENTS */}
+      <section
+        className="border-t"
+        style={{ borderColor: COLORS.border, backgroundColor: COLORS.surface }}
+      >
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.25 }}
+          className="max-w-7xl mx-auto px-6 py-20"
+        >
+          <motion.div
+            variants={fadeUp}
+            className="flex items-end justify-between flex-wrap gap-6"
+          >
+            <div className="max-w-2xl">
+              <div
+                className="text-[12px] tracking-wide"
+                style={{ color: "rgba(207,174,93,0.90)" }}
+              >
+                DOCUMENTS
+              </div>
+              <h2 className="mt-2 text-3xl sm:text-4xl font-bold">
+                Professional docs, built-in.
+              </h2>
+              <p
+                className="mt-4 text-base sm:text-lg"
+                style={{ color: "rgba(245,246,248,0.62)" }}
+              >
+                Generate clean records tied to the work — so your paperwork
+                looks as strong as your production.
+              </p>
+            </div>
+
+            <motion.div variants={fadeUp} className="flex items-center gap-2">
+              <ShellPill active>Printable</ShellPill>
+              <ShellPill>Stored per job</ShellPill>
+              <ShellPill>Org scoped</ShellPill>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            variants={stagger}
+            className="mt-10 grid md:grid-cols-3 gap-6"
+          >
             {[
               {
-                title: "Job-level control",
-                desc: "Track square footage, price per square, materials, notes, photos, and status — all in one place.",
+                title: "Invoices",
+                desc: "Presentable invoices tied to jobs and customers — keep the paper trail clean.",
               },
               {
-                title: "Scheduling clarity",
-                desc: "Plan dry-ins, shingles, and punch work with full visibility across all jobs.",
+                title: "Pay Stubs",
+                desc: "Transparent crew payouts with clear line items and history.",
               },
               {
-                title: "Crew accountability",
-                desc: "Invite crew members, assign jobs, and track contributions with full transparency.",
+                title: "Warranty / 3rd Party",
+                desc: "Printable packets for claims and third-party workflows — attached to the job.",
               },
-            ].map((f) => (
+            ].map((doc) => (
               <motion.div
-                key={f.title}
+                key={doc.title}
                 variants={cardIn}
-                whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-                className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
+                whileHover={{ y: -4, transition: { duration: 0.25, ease } }}
+                className="rounded-2xl border p-6"
+                style={{
+                  borderColor: COLORS.border,
+                  backgroundColor: "rgba(11,14,20,0.55)",
+                }}
               >
-                <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                <p className="text-sm text-[#cfae5d]/70">{f.desc}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* FINANCIAL POWER */}
-      <section className="max-w-7xl mx-auto px-6 py-24">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
-        >
-          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
-            Know exactly where your money is
-          </motion.h2>
-
-          <motion.p
-            variants={fadeUp}
-            className="max-w-2xl text-[#cfae5d]/80 mb-12"
-          >
-            Filter by any date range and instantly see earnings, expenses,
-            payouts, materials, and profit — across all jobs or down to a single
-            one.
-          </motion.p>
-
-          <motion.div variants={stagger} className="grid md:grid-cols-2 gap-8">
-            <motion.div
-              variants={cardIn}
-              whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-              className="bg-[#1f2430] rounded-xl p-6 border border-[#3a3f4b]"
-            >
-              <h3 className="font-semibold mb-2">Financial Overview</h3>
-              <p className="text-sm text-[#cfae5d]/70">
-                A dedicated page for real-time financial insight across your
-                operation.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={cardIn}
-              whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-              className="bg-[#1f2430] rounded-xl p-6 border border-[#3a3f4b]"
-            >
-              <h3 className="font-semibold mb-2">Payouts & Pay Stubs</h3>
-              <p className="text-sm text-[#cfae5d]/70">
-                Generate, track, filter, and export pay stubs for your crew —
-                pending or paid.
-              </p>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* DOCUMENTS */}
-      <section className="bg-[#1f2430] border-t border-[#3a3f4b]">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
-          className="max-w-7xl mx-auto px-6 py-20"
-        >
-          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-10">
-            Professional documents, built-in
-          </motion.h2>
-
-          <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
-            {["Invoices", "Pay Stubs", "Warranty Reports"].map((doc) => (
-              <motion.div
-                key={doc}
-                variants={cardIn}
-                whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-                className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
-              >
-                <h3 className="font-semibold">{doc}</h3>
-                <p className="text-sm text-[#cfae5d]/70 mt-2">
-                  Printable, emailable, and stored with each job.
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-semibold text-white">
+                    {doc.title}
+                  </div>
+                  <LightningMark className="opacity-75" />
+                </div>
+                <p
+                  className="mt-2 text-sm leading-relaxed"
+                  style={{ color: "rgba(207,174,93,0.75)" }}
+                >
+                  {doc.desc}
                 </p>
               </motion.div>
             ))}
@@ -666,31 +1274,123 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="max-w-7xl mx-auto px-6 py-24 text-center">
+      {/* SECTION: PROCESS */}
+      <section className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at top, rgba(245,246,248,0.05), transparent 60%)",
+            }}
+          />
+        </div>
+
         <motion.div
           variants={stagger}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
+          className="max-w-7xl mx-auto px-6 py-22 sm:py-24 relative"
         >
-          <motion.h2 variants={fadeUp} className="text-4xl font-extrabold">
-            Built for real roofing operations
+          <motion.div variants={fadeUp} className="max-w-2xl">
+            <div
+              className="text-[12px] tracking-wide"
+              style={{ color: "rgba(207,174,93,0.90)" }}
+            >
+              WORKFLOW
+            </div>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-bold">
+              A roofing-first flow that feels obvious.
+            </h2>
+            <p
+              className="mt-4 text-base sm:text-lg"
+              style={{ color: "rgba(245,246,248,0.62)" }}
+            >
+              Contractors don’t need generic software. They need a system
+              designed around the job lifecycle.
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={stagger}
+            className="mt-10 grid md:grid-cols-3 gap-6"
+          >
+            <MiniStep
+              n="1"
+              title="Create the job"
+              desc="Square footage, pricing, notes, photos — everything begins with the job."
+            />
+            <MiniStep
+              n="2"
+              title="Schedule production"
+              desc="Dry-in, shingles, punch — visibility across your calendar and pipeline."
+            />
+            <MiniStep
+              n="3"
+              title="Close + pay out"
+              desc="Track materials, generate pay stubs, and keep your profit clear."
+            />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="border-t" style={{ borderColor: COLORS.border }}>
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.25 }}
+          className="max-w-7xl mx-auto px-6 py-20 text-center"
+        >
+          <motion.h2
+            variants={fadeUp}
+            className="text-3xl sm:text-4xl font-extrabold"
+          >
+            Built for real roofing operations.
           </motion.h2>
 
-          <motion.p variants={fadeUp} className="mt-4 text-[#cfae5d]/80">
-            Not generic software. Not spreadsheets. ROOFZEUS.
+          <motion.p
+            variants={fadeUp}
+            className="mt-4 text-base sm:text-lg"
+            style={{ color: "rgba(245,246,248,0.62)" }}
+          >
+            Not generic software. Not spreadsheets.{" "}
+            <span style={{ color: "rgba(207,174,93,0.92)" }}>ROOFZEUS.</span>
           </motion.p>
 
-          <motion.a
+          <motion.div
             variants={fadeUp}
-            whileHover={{ y: -1, scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            href="http://app.localhost:5173/login"
-            className="inline-block mt-10 bg-[#cfae5d] text-black px-8 py-4 rounded-lg font-semibold hover:opacity-90 transition"
+            className="mt-8 flex items-center justify-center gap-3 flex-wrap"
           >
-            Start Using ROOFZEUS
-          </motion.a>
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-8 py-4 font-semibold transition"
+              style={{ backgroundColor: COLORS.gold, color: COLORS.black }}
+            >
+              Start Using ROOFZEUS
+              <LightningMark className="opacity-90" />
+            </Link>
+            <Link
+              to="/pricing"
+              className="inline-flex items-center justify-center rounded-xl border px-8 py-4 font-semibold transition"
+              style={{
+                borderColor: COLORS.border,
+                color: COLORS.text,
+                backgroundColor: "rgba(11,14,20,0.35)",
+              }}
+            >
+              See Pricing
+            </Link>
+          </motion.div>
+
+          <motion.div
+            variants={fadeUp}
+            className="mt-10 text-[12px] text-white/50"
+          >
+            Secure • Org-scoped • Built for contractors who want control
+          </motion.div>
         </motion.div>
       </section>
     </main>

@@ -15,7 +15,7 @@ export default function App() {
   const showApp = isAppHost();
 
   return (
-    <div className="relative z-30">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
       <BrowserRouter>
         <ScrollToTop />
         {showApp ? <AppRouter /> : <MarketingRouter />}

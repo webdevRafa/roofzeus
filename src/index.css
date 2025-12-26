@@ -1,4 +1,14 @@
 @import "tailwindcss";
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+
 
 .section-scroll {
   max-height: 28rem;       /* ~384px, tweak as you like */
@@ -10,9 +20,9 @@
 .section-scroll::-webkit-scrollbar {
   width: 6px;
 }
-.section-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.15);
-  border-radius: 999px;
+.section-scroll::-webkit-scrollbar-thumb,
+.section-scroll-invoices::-webkit-scrollbar-thumb {
+  background-color: rgba(245, 246, 248, 0.18);
 }
 .section-scroll::-webkit-scrollbar-track {
   background: transparent;
@@ -64,28 +74,31 @@
 
 
 :root {
-  --color-background: #FFFFFF;
-  --color-surface: #ECECE9;
-  --color-text: #040504;   /* dark black from logo */
-  --color-muted: #79726A;
-  --color-border: #B8B4AD;
-  --color-logo: #191919;
-  --color-brown: #422407;
-  --color-brown-hover: #703702;
-  --color-card: #FFFFFF;
-  --color-card-hover: #ECECE9;
+  /* ROOFZEUS dark command-center theme */
+  --color-background: #0b0e14; /* page canvas */
+  --color-surface: #1f2430;    /* elevated surfaces */
+  --color-card: rgba(31, 36, 48, 0.55);
+  --color-card-hover: rgba(31, 36, 48, 0.75);
 
-  --color-primary: #B10708;     /* red from logo */
-  --color-primary-600: #8E0808; /* darker red for hover */
-  --color-accent: #FCB500;      /* yellow from logo */
-  --color-blue: #19b6d9;
-  --btn-bg: var(--color-primary);
-  --btn-text: #FFFFFF;
-  --btn-hover-bg: var(--color-primary-600);
-  --btn-outline-border: var(--color-primary);
-  --btn-outline-text: var(--color-primary);
-  --btn-outline-hover-bg: rgba(177, 7, 8, 0.08);
+  --color-text: #f5f6f8;
+  --color-muted: rgba(245, 246, 248, 0.65);
+  --color-border: rgba(58, 63, 75, 0.9);
+
+  --color-accent-gold: #cfae5d;
+  --color-accent-gold-2: #b9973f;
+
+  /* buttons */
+  --btn-bg: var(--color-accent-gold);
+  --btn-text: #0b0e14;
+  --btn-hover-bg: var(--color-accent-gold-2);
+
+  /* keep these for compatibility if older components reference them */
+  --color-primary: var(--color-accent-gold);
+  --color-primary-600: var(--color-accent-gold-2);
+  --color-accent: var(--color-accent-gold);
+  --color-blue: #6aa9ff;
 }
+
 
 .font-bebas {
   font-family: "bebas-neue-pro", sans-serif;
