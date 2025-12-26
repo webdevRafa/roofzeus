@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+
+import CountUp from "react-countup";
+
 import {
   collection,
   doc,
@@ -84,15 +89,6 @@ function formatYmdForChip(ymd: string | ""): string {
 
 type StatusFilter = "all" | JobStatus;
 
-/** Format cents into dollar string (e.g. $1,234.56). */
-function formatCurrency(cents: number | null | undefined): string {
-  const value = (cents ?? 0) / 100;
-  return `$${value.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
 /** Pick a displayable address line from a Job's address. */
 function pickAddressLine(a: Job["address"]): string {
   if (typeof a === "string") return a;
@@ -102,6 +98,24 @@ function pickAddressLine(a: Job["address"]): string {
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
+const ease = [0.16, 1, 0.3, 1] as const;
+
+const stagger: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.06, delayChildren: 0.03 },
+  },
+};
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 10, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.55, ease },
+  },
+};
 
 export default function JobsPage() {
   const { orgId, loading: membershipLoading } = useOrg();
@@ -554,7 +568,7 @@ export default function JobsPage() {
       <div className="mx-auto w-[min(1200px,94vw)] space-y-8 py-8">
         {/* Page header */}
         <section
-          className="relative overflow-hidden rounded-2xl border px-5 sm:px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+          className="relative overflow-visible rounded-2xl border px-5 sm:px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
           style={{
             borderColor: "var(--color-border)",
             backgroundColor: "rgba(31,36,48,0.55)",
@@ -641,15 +655,10 @@ export default function JobsPage() {
                 <label className="text-xs font-semibold text-white/70">
                   Sort
                 </label>
-                <select
+                <SortMenu
                   value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as any)}
-                  className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
-                >
-                  <option value="recent">Most recent</option>
-                  <option value="netDesc">Highest net profit</option>
-                  <option value="netAsc">Lowest net profit</option>
-                </select>
+                  onChange={(v) => setSortOption(v)}
+                />
               </div>
             </div>
           </div>
@@ -675,31 +684,41 @@ export default function JobsPage() {
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <KpiCard label="Total jobs" value={String(totalJobs)} />
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            animate="show"
+            className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
+          >
+            <KpiCard label="Total jobs" value={totalJobs} kind="int" />
             <KpiCard
               label="Total earnings"
-              value={formatCurrency(totalEarnings)}
+              value={totalEarnings}
+              kind="cents"
               accent="gold"
             />
             <KpiCard
               label="Total expenses"
-              value={formatCurrency(totalExpenses)}
+              value={totalExpenses}
+              kind="cents"
             />
             <KpiCard
               label="Net profit"
-              value={formatCurrency(totalNet)}
+              value={totalNet}
+              kind="cents"
               accent={totalNet >= 0 ? "green" : "red"}
             />
             <KpiCard
               label="Avg. profit/job"
-              value={formatCurrency(Math.round(averageProfit))}
+              value={Math.round(averageProfit)}
+              kind="cents"
             />
             <KpiCard
               label="Highest profit"
-              value={formatCurrency(highestProfit)}
+              value={highestProfit}
+              kind="cents"
             />
-          </div>
+          </motion.div>
 
           <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div
@@ -843,10 +862,12 @@ export default function JobsPage() {
 function KpiCard({
   label,
   value,
+  kind,
   accent,
 }: {
   label: string;
-  value: string;
+  value: number;
+  kind: "int" | "cents";
   accent?: "gold" | "green" | "red";
 }) {
   const accentCls =
@@ -859,7 +880,9 @@ function KpiCard({
       : "text-white";
 
   return (
-    <div
+    <motion.div
+      variants={fadeUp}
+      whileHover={{ y: -2, transition: { duration: 0.22, ease } }}
       className="rounded-2xl border px-4 py-3"
       style={{
         borderColor: "rgba(58,63,75,0.75)",
@@ -869,7 +892,203 @@ function KpiCard({
       <div className="text-[11px] uppercase tracking-wide text-white/55">
         {label}
       </div>
-      <div className={cx("mt-1 text-lg font-semibold", accentCls)}>{value}</div>
+
+      <div className={cx("mt-1 text-lg font-semibold tabular-nums", accentCls)}>
+        {kind === "int" ? (
+          <CountUp start={0} end={value} duration={0.9} separator="," />
+        ) : (
+          <>
+            $
+            <CountUp
+              start={0}
+              end={value / 100}
+              duration={0.9}
+              decimals={2}
+              separator=","
+              decimal="."
+            />
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function SortMenu({
+  value,
+  onChange,
+}: {
+  value: "recent" | "netDesc" | "netAsc";
+  onChange: (v: "recent" | "netDesc" | "netAsc") => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  const options: Array<{
+    value: "recent" | "netDesc" | "netAsc";
+    label: string;
+    hint: string;
+  }> = [
+    { value: "recent", label: "Most recent", hint: "Latest updates first" },
+    {
+      value: "netDesc",
+      label: "Highest net profit",
+      hint: "Top margin jobs first",
+    },
+    {
+      value: "netAsc",
+      label: "Lowest net profit",
+      hint: "Find weak jobs fast",
+    },
+  ];
+
+  const active = options.find((o) => o.value === value) ?? options[0];
+
+  // close on click outside
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (!open) return;
+      const t = e.target as Node | null;
+      if (!t) return;
+      if (btnRef.current?.contains(t)) return;
+      if (panelRef.current?.contains(t)) return;
+      setOpen(false);
+    }
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  // close on escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!open) return;
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const ease = [0.16, 1, 0.3, 1] as const;
+
+  return (
+    <div className="relative">
+      <motion.button
+        ref={btnRef}
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        whileTap={{ scale: 0.98 }}
+        className="group inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold outline-none transition"
+        style={{
+          borderColor: open ? "rgba(207,174,93,0.55)" : "rgba(58,63,75,0.85)",
+          backgroundColor: "rgba(11,14,20,0.55)",
+          color: "rgba(245,246,248,0.92)",
+          boxShadow: open ? "0 0 0 3px rgba(207,174,93,0.18)" : "none",
+        }}
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <span className="whitespace-nowrap">{active.label}</span>
+
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.18, ease }}
+          className="text-white/60"
+          aria-hidden="true"
+        >
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </motion.span>
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            ref={panelRef}
+            initial={{ opacity: 0, y: 8, scale: 0.985, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 10, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: 8, scale: 0.985, filter: "blur(6px)" }}
+            transition={{ duration: 0.18, ease }}
+            className="absolute right-0 z-50 mt-2 w-[240px] overflow-hidden rounded-2xl border shadow-[0_22px_60px_rgba(0,0,0,0.65)]"
+            style={{
+              borderColor: "rgba(58,63,75,0.9)",
+              backgroundColor: "rgba(11,14,20,0.92)",
+            }}
+            role="menu"
+          >
+            <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-white/45">
+              Sort jobs
+            </div>
+
+            <div className="pb-2">
+              {options.map((opt) => {
+                const selected = opt.value === value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onChange(opt.value);
+                      setOpen(false);
+                    }}
+                    className="w-full px-3 py-2 text-left transition"
+                    style={{
+                      backgroundColor: selected
+                        ? "rgba(207,174,93,0.14)"
+                        : "transparent",
+                    }}
+                    role="menuitem"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div
+                          className="text-xs font-semibold"
+                          style={{
+                            color: selected
+                              ? "rgba(207,174,93,0.95)"
+                              : "rgba(245,246,248,0.88)",
+                          }}
+                        >
+                          {opt.label}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-white/45">
+                          {opt.hint}
+                        </div>
+                      </div>
+
+                      {selected && (
+                        <span
+                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border"
+                          style={{
+                            borderColor: "rgba(207,174,93,0.45)",
+                            backgroundColor: "rgba(207,174,93,0.12)",
+                            color: "rgba(207,174,93,0.95)",
+                          }}
+                          aria-hidden="true"
+                        >
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div
+              className="border-t px-3 py-2 text-[11px] text-white/45"
+              style={{ borderColor: "rgba(58,63,75,0.65)" }}
+            >
+              Tip: use “Highest net profit” to find your best patterns fast.
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
