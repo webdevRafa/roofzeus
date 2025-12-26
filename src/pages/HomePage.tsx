@@ -961,8 +961,7 @@ export default function HomePage() {
                 {/* Use Link for same-domain routing; change to your actual app route if needed */}
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-semibold transition"
-                  style={{ backgroundColor: COLORS.gold, color: COLORS.black }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2 transition bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)] font-bold"
                 >
                   Get Started
                   <LightningMark className="opacity-90" />
@@ -970,7 +969,7 @@ export default function HomePage() {
 
                 <Link
                   to="/pricing"
-                  className="inline-flex items-center justify-center rounded-xl border px-6 py-3 font-semibold transition"
+                  className="inline-flex items-center justify-center rounded-xl border px-6 py-2 font-semibold transition"
                   style={{
                     borderColor: COLORS.border,
                     color: COLORS.text,
