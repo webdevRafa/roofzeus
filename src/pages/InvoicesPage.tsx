@@ -1,11 +1,6 @@
 // src/pages/InvoicesPage.tsx
-// A complete invoice management page for Roger's Roofing.
-//
-// This page allows admins/managers to view, filter and create
-// invoices tied to jobs. It also includes rich summary cards,
-// printable invoice previews and status controls. The design
-// matches other pages (JobsPage, FinancialOverviewPage) using
-// the same Tailwind aesthetics and patterns.
+// Upgraded to ROOFZEUS dark command-center theme + Framer Motion + CountUp.
+// Preserves all existing helper functions, listeners, Firestore mappings, and modal logic.
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -22,7 +17,23 @@ import {
   getDocs,
 } from "firebase/firestore";
 import type { FieldValue } from "firebase/firestore";
-import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  X,
+  FileText,
+  CheckCircle,
+  Plus,
+  Printer,
+  Search,
+  Filter,
+} from "lucide-react";
+import { createPortal } from "react-dom";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import CountUp from "react-countup";
+
 import { useOrg } from "../contexts/OrgContext";
 import { db } from "../firebase/firebaseConfig";
 import type {
@@ -33,12 +44,6 @@ import type {
 } from "../types/types";
 import { jobConverter } from "../types/types";
 
-import { X, FileText, CheckCircle, Plus, Printer } from "lucide-react";
-import { createPortal } from "react-dom";
-// Import Firebase functions to call our invoice email cloud function.
-import { getFunctions, httpsCallable } from "firebase/functions";
-
-// Import logo for invoice printing. Using import rather than require avoids bundler issues and ensures the asset is included properly.
 import logo from "../assets/rogers-roofing.webp";
 
 // Helper to format money from cents to dollars
@@ -55,7 +60,6 @@ function money(cents: number | null | undefined): string {
 // Generate a human friendly invoice number like INV-2025-000123
 async function generateInvoiceNumber(orgId: string): Promise<string> {
   const year = new Date().getFullYear();
-  // Query invoices for this org and this year to find the max sequence
   const prefix = `INV-${year}-`;
   try {
     const q = query(
@@ -65,12 +69,11 @@ async function generateInvoiceNumber(orgId: string): Promise<string> {
       where("number", "<=", prefix + "\uffff"),
       orderBy("number", "desc"),
       orderBy("createdAt", "desc")
-      // fetch just a few
     );
     const snap = await getDocs(q);
     let maxSeq = 0;
-    snap.forEach((doc) => {
-      const num = (doc.data() as InvoiceDoc).number;
+    snap.forEach((d) => {
+      const num = (d.data() as InvoiceDoc).number;
       const parts = num.split("-");
       const seqStr = parts[2];
       const seq = Number(seqStr);
@@ -79,18 +82,14 @@ async function generateInvoiceNumber(orgId: string): Promise<string> {
     const nextSeq = (maxSeq + 1).toString().padStart(6, "0");
     return `${prefix}${nextSeq}`;
   } catch {
-    // fallback to timestamp based id
     const ts = Date.now().toString().slice(-6);
     return `${prefix}${ts}`;
   }
 }
 
 /**
- * Modal for creating a new invoice. Accepts a list of jobs so the user can
- * choose which job to invoice. It derives default line items from the selected
- * job (labor and materials) and allows adding custom extras. A description
- * and customer details may also be provided. On save it creates a new
- * InvoiceDoc in Firestore.
+ * Modal for creating a new invoice.
+ * (Logic preserved; styling upgraded to dark theme.)
  */
 function NewInvoiceModal({
   orgId,
@@ -111,7 +110,6 @@ function NewInvoiceModal({
 }) {
   if (typeof document === "undefined") return null;
 
-  // Basic form state
   const [jobId, setJobId] = useState<string>(jobs[0]?.id ?? "");
   const [customerName, setCustomerName] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
@@ -120,7 +118,6 @@ function NewInvoiceModal({
   const [extras, setExtras] = useState<{ label: string; amount: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [savingMode, setSavingMode] = useState<InvoiceStatus | null>(null);
-
   const [formError, setFormError] = useState<string | null>(null);
 
   const selectedJob = useMemo(
@@ -128,9 +125,9 @@ function NewInvoiceModal({
     [jobs, jobId]
   );
 
-  // Derived line amounts for labor and materials
   const laborCents = selectedJob?.expenses?.totalPayoutsCents ?? 0;
   const materialsCents = selectedJob?.expenses?.totalMaterialsCents ?? 0;
+
   const extraCents = useMemo(() => {
     return extras.reduce((sum, ex) => {
       const amt = Number(ex.amount);
@@ -138,11 +135,11 @@ function NewInvoiceModal({
       return sum;
     }, 0);
   }, [extras]);
+
   const subtotalCents = laborCents + materialsCents + extraCents;
   const taxCents = 0; // reserved for future
   const totalCents = subtotalCents + taxCents;
 
-  // Helper to add a new empty extra line
   function addExtra() {
     setExtras((prev) => [...prev, { label: "", amount: "" }]);
   }
@@ -162,7 +159,6 @@ function NewInvoiceModal({
       return;
     }
 
-    // Build invoice lines: labor, materials, extras (only if > 0)
     const lines: InvoiceLine[] = [];
     if (laborCents > 0) {
       lines.push({
@@ -194,7 +190,6 @@ function NewInvoiceModal({
       return;
     }
 
-    // ✅ Toast: show immediate feedback (modal can close but user still sees status)
     pushToast({
       status: "loading",
       title: status === "sent" ? "Sending invoice…" : "Saving invoice…",
@@ -207,22 +202,16 @@ function NewInvoiceModal({
     setSavingMode(status);
     setSaving(true);
 
-    // ✅ helper: sleep
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-    // ✅ helper: confirm delivery by polling invoice doc audit fields
     async function confirmEmailDelivery(invoiceId: string): Promise<boolean> {
-      // Poll up to ~8 seconds (tweak if you want)
       const maxAttempts = 8;
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
           const invSnap = await getDoc(doc(db, "invoices", invoiceId));
           if (invSnap.exists()) {
             const invData = invSnap.data() as any;
-
             const resendId = invData?.lastEmailResendId ?? null;
             const sentAt = invData?.lastEmailSentAt ?? null;
-
             if (resendId) return true;
 
             const sentMs =
@@ -230,7 +219,6 @@ function NewInvoiceModal({
                 ? sentAt.toDate().getTime()
                 : null;
 
-            // Consider confirmed if lastEmailSentAt exists and is recent-ish
             if (
               sentMs &&
               Date.now() - sentMs >= 0 &&
@@ -240,27 +228,22 @@ function NewInvoiceModal({
             }
           }
         } catch {
-          // ignore transient read errors
+          // ignore
         }
-
-        // wait longer each time (small backoff)
         await sleep(250 + attempt * 250);
       }
       return false;
     }
 
     try {
-      // Pre-generate invoice number
       const number = await generateInvoiceNumber(orgId);
-
-      // Prepare invoice doc
       const docRef = doc(collection(db, "invoices"));
+
       const custName = customerName.trim();
       const custEmail = customerEmail.trim();
       const custPhone = customerPhone.trim();
       const desc = description.trim();
 
-      // Build customer only if at least one value exists
       const customer =
         custName || custEmail || custPhone
           ? {
@@ -270,7 +253,6 @@ function NewInvoiceModal({
             }
           : undefined;
 
-      // Build an address snapshot with NO undefined values (use "" defaults)
       const addressSnapshot =
         typeof selectedJob.address === "string"
           ? {
@@ -293,13 +275,9 @@ function NewInvoiceModal({
         kind: "invoice",
         jobId: selectedJob.id,
         number,
-
         ...(customer ? { customer } : {}),
-
         addressSnapshot,
-
         ...(desc ? { description: desc } : {}),
-
         lines,
         money: {
           materialsCents,
@@ -314,15 +292,12 @@ function NewInvoiceModal({
         ...(status === "sent"
           ? { sentAt: serverTimestamp() as unknown as FieldValue }
           : {}),
-
         status,
         orgId,
       };
 
-      // ✅ 1) Persist invoice
       await setDoc(docRef, invoice as any);
 
-      // ✅ 2) If "sent", attempt email
       if (status === "sent") {
         const email = customerEmail.trim();
 
@@ -339,7 +314,6 @@ function NewInvoiceModal({
               functions,
               "sendInvoiceEmail"
             );
-
             const res = await sendInvoiceEmail({ invoiceId: docRef.id, email });
             const data = res?.data as any;
 
@@ -363,9 +337,7 @@ function NewInvoiceModal({
             // eslint-disable-next-line no-console
             console.error("sendInvoiceEmail callable threw:", emailErr);
 
-            // ✅ Robust confirmation: wait for server audit fields
             const confirmed = await confirmEmailDelivery(docRef.id);
-
             if (confirmed) {
               pushToast({
                 status: "success",
@@ -383,7 +355,6 @@ function NewInvoiceModal({
           }
         }
       } else {
-        // Draft (or other statuses if you ever call them)
         pushToast({
           status: "success",
           title: "Invoice saved",
@@ -397,7 +368,6 @@ function NewInvoiceModal({
     } catch (e: any) {
       const msg = e?.message ?? String(e);
       setFormError(msg);
-
       pushToast({
         status: "error",
         title: status === "sent" ? "Send failed" : "Save failed",
@@ -409,7 +379,6 @@ function NewInvoiceModal({
     }
   }
 
-  // Close on Escape
   useEffect(() => {
     const handler = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") onClose();
@@ -419,56 +388,64 @@ function NewInvoiceModal({
   }, [onClose]);
 
   const content = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-3">
-      {/* click-away overlay */}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-3">
       <button
         type="button"
         onClick={onClose}
         className="absolute inset-0 cursor-default"
         aria-label="Close"
       />
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-xl">
+
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+        transition={{ duration: 0.2 }}
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-surface)] shadow-2xl"
+      >
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border)]/60 px-6 py-5">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--color-accent-gold)]/15 text-[var(--color-accent-gold)]">
               <FileText className="h-5 w-5" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-[var(--color-text)]">
-                Create invoices
+                Create invoice
               </h2>
               <p className="mt-1 text-xs text-[var(--color-muted)]">
-                Generate an invoice from a job
+                Generate an invoice from a job.
               </p>
             </div>
           </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-gray-300 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-100"
+            className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-2 py-1 text-[11px] text-[var(--color-text)]/80 hover:bg-[var(--color-card-hover)]"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
+
         {/* Body */}
         <div className="px-6 py-5">
           {formError && (
-            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
               {formError}
             </div>
           )}
+
           <div className="grid gap-3 sm:grid-cols-2">
-            {/* Job select */}
             <div className="sm:col-span-2">
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
+              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                 Job
               </label>
               <select
                 value={jobId}
                 onChange={(e) => setJobId(e.target.value)}
                 disabled={saving || jobs.length === 0}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
+                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
               >
                 {jobs.length === 0 && <option>No jobs available</option>}
                 {jobs.map((j) => (
@@ -480,9 +457,9 @@ function NewInvoiceModal({
                 ))}
               </select>
             </div>
-            {/* Customer name */}
+
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
+              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                 Customer name
               </label>
               <input
@@ -490,13 +467,13 @@ function NewInvoiceModal({
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 disabled={saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
+                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
                 placeholder="e.g. Jane Doe"
               />
             </div>
-            {/* Customer email */}
+
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
+              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                 Customer email
               </label>
               <input
@@ -504,13 +481,13 @@ function NewInvoiceModal({
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 disabled={saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
+                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
                 placeholder="email@example.com"
               />
             </div>
-            {/* Customer phone */}
+
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
+              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                 Customer phone
               </label>
               <input
@@ -518,13 +495,13 @@ function NewInvoiceModal({
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 disabled={saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
-                placeholder="(555) 123‑4567"
+                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
+                placeholder="(555) 123-4567"
               />
             </div>
-            {/* Description */}
+
             <div className="sm:col-span-2">
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
+              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                 Description
               </label>
               <textarea
@@ -533,12 +510,12 @@ function NewInvoiceModal({
                 disabled={saving}
                 rows={2}
                 placeholder="Describe the work performed"
-                className="mt-1 w-full resize-none rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
+                className="mt-1 w-full resize-none rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
               />
             </div>
-            {/* Labor and materials preview */}
+
             <div>
-              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2">
+              <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                   Labor
                 </div>
@@ -547,8 +524,9 @@ function NewInvoiceModal({
                 </div>
               </div>
             </div>
+
             <div>
-              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2">
+              <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                   Materials
                 </div>
@@ -557,33 +535,35 @@ function NewInvoiceModal({
                 </div>
               </div>
             </div>
-            {/* Extras editor */}
+
             <div className="sm:col-span-2">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase tracking-wide text-gray-500">
+                <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                   Extras
                 </label>
                 <button
                   type="button"
                   onClick={addExtra}
                   disabled={saving}
-                  className="flex items-center gap-1 text-sm text-[var(--color-muted)] hover:underline disabled:opacity-60"
+                  className="flex items-center gap-1 text-xs text-[var(--color-text)]/80 hover:text-[var(--color-text)] disabled:opacity-60"
                 >
                   <Plus className="h-4 w-4" /> Add
                 </button>
               </div>
+
               {extras.length === 0 && (
                 <p className="mt-1 text-xs text-[var(--color-muted)]">
                   No extras added
                 </p>
               )}
+
               {extras.map((ex, idx) => (
                 <div
                   key={idx}
                   className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end"
                 >
                   <div className="flex-1">
-                    <label className="text-[10px] uppercase tracking-wide text-gray-500">
+                    <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                       Label
                     </label>
                     <input
@@ -598,12 +578,13 @@ function NewInvoiceModal({
                         );
                       }}
                       disabled={saving}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
+                      className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
                       placeholder="e.g. Dumpster rental"
                     />
                   </div>
+
                   <div className="w-32">
-                    <label className="text-[10px] uppercase tracking-wide text-gray-500">
+                    <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                       Amount ($)
                     </label>
                     <input
@@ -620,16 +601,17 @@ function NewInvoiceModal({
                         );
                       }}
                       disabled={saving}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
+                      className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
                       placeholder="0.00"
                     />
                   </div>
+
                   <div className="flex items-center justify-center sm:justify-start">
                     <button
                       type="button"
                       onClick={() => removeExtra(idx)}
                       disabled={saving}
-                      className="ml-2 inline-flex items-center justify-center rounded-md bg-red-50 px-2 py-2 text-xs text-red-600 hover:bg-red-100 disabled:opacity-60"
+                      className="ml-2 inline-flex items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-2 py-2 text-xs text-red-200 hover:bg-red-500/15 disabled:opacity-60"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -637,9 +619,9 @@ function NewInvoiceModal({
                 </div>
               ))}
             </div>
-            {/* Totals preview */}
+
             <div className="sm:col-span-2 mt-3">
-              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2">
+              <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                   Subtotal
                 </div>
@@ -655,45 +637,48 @@ function NewInvoiceModal({
             </div>
           </div>
         </div>
+
         {/* Footer */}
-        <div className="flex flex-col-reverse gap-2 border-t border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)]/60 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="transition duration-300 ease-in-out cursor-pointer border border-gray-300 px-4 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+            className="rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-4 py-2 text-sm text-[var(--color-text)]/85 hover:bg-[var(--color-card-hover)] disabled:opacity-60"
           >
             Cancel
           </button>
+
           <div className="flex flex-col sm:flex-row gap-2">
             <button
               type="button"
               onClick={() => submit("draft")}
               disabled={saving}
-              className=" bg-gray-200 px-4 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-300 disabled:opacity-60 cursor-pointer transition duration-300 ease-in-out"
+              className="rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-card-hover)] disabled:opacity-60"
             >
               {saving && savingMode === "draft" ? "Saving…" : "Save draft"}
             </button>
+
             <button
               type="button"
               onClick={() => submit("sent")}
               disabled={saving}
-              className=" bg-[var(--color-brown-hover)] cursor-pointer transition duration-300 ease-in-out hover:bg-[var(--color-brown)] px-4 py-1.5 text-sm font-semibold text-white  disabled:opacity-60"
+              className="rounded-xl bg-[var(--color-accent-gold)] px-4 py-2 text-sm font-semibold text-[var(--btn-text)] hover:bg-[var(--btn-hover-bg)] disabled:opacity-60"
             >
               {saving && savingMode === "sent" ? "Sending…" : "Save & Send"}
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
+
   return createPortal(content, document.body);
 }
 
 /**
- * Modal to preview and print an invoice. Renders a professional invoice
- * layout with company branding, customer/job details and line items. It
- * includes actions to print/save to PDF and mark the invoice as paid.
+ * Modal to preview and print an invoice.
+ * (Printable document stays white; outer shell upgraded to match dark UI.)
  */
 function InvoicePreviewModal({
   invoice,
@@ -709,13 +694,12 @@ function InvoicePreviewModal({
   saving: boolean;
 }) {
   if (typeof document === "undefined") return null;
-  // Helper to display address
+
   const jobAddr = useMemo(() => {
     if (!job) return { display: "", city: "", state: "", zip: "" };
     const a = job.address;
-    if (typeof a === "string") {
+    if (typeof a === "string")
       return { display: a, city: "", state: "", zip: "" };
-    }
     return {
       display: a.fullLine ?? "",
       city: a.city ?? "",
@@ -743,18 +727,20 @@ function InvoicePreviewModal({
 
   const content = (
     <div
-      className="paystub-print fixed inset-0 z-50 grid place-items-center bg-black/40 p-4
+      className="paystub-print fixed inset-0 z-50 grid place-items-center bg-black/70 p-4
       print:static print:bg-transparent print:p-0 print:m-0 print:w-auto print:z-auto"
     >
-      <div
-        className="paystub-print-inner w-full max-w-3xl rounded-md bg-white p-6 shadow-xl
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 10, scale: 0.99 }}
+        transition={{ duration: 0.2 }}
+        className="paystub-print-inner w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl
         print:max-w-none print:rounded-none print:shadow-none print:border-none print:p-0 print:w-full print:mx-0 print:m-0"
       >
-        {/* Header: company info and invoice meta */}
         <div className="mb-4 flex flex-col sm:flex-row items-start justify-between gap-4">
           <div>
             <div className="flex gap-2 items-center">
-              {/* Company branding - adapt your logo path */}
               <img src={logo} className="max-w-[100px]" alt="Company Logo" />
               <div>
                 <h2 className="text-2xl font-semibold">
@@ -764,7 +750,7 @@ function InvoicePreviewModal({
                 <p className="mt-0 text-xs">San Antonio, Texas 75245</p>
               </div>
             </div>
-            {/* Customer details */}
+
             {invoice.customer && (
               <div className="mt-4">
                 <h3 className="text-sm font-medium">Bill To:</h3>
@@ -779,7 +765,7 @@ function InvoicePreviewModal({
                 )}
               </div>
             )}
-            {/* Job address */}
+
             {job && (
               <div className="mt-3 text-sm">
                 <h3 className="font-medium">Job Address:</h3>
@@ -794,14 +780,16 @@ function InvoicePreviewModal({
               </div>
             )}
           </div>
+
           <div className="text-right text-sm">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-300 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-100 print:hidden"
+              className="rounded-xl border border-gray-300 px-3 py-2 text-[11px] text-gray-700 hover:bg-gray-100 print:hidden"
             >
               Close
             </button>
+
             <div className="mt-6">
               <p className="text-xs text-gray-500">Invoice #</p>
               <p className="text-base font-semibold">{invoice.number}</p>
@@ -810,14 +798,14 @@ function InvoicePreviewModal({
             </div>
           </div>
         </div>
-        {/* Description */}
+
         {invoice.description && (
           <div className="mb-4 text-sm">
             <p className="font-medium">Description</p>
             <p>{invoice.description}</p>
           </div>
         )}
-        {/* Line items table */}
+
         <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
           <table className="min-w-full text-xs sm:text-sm">
             <thead className="bg-gray-50 text-[11px] uppercase tracking-wide text-gray-500">
@@ -840,7 +828,7 @@ function InvoicePreviewModal({
             </tbody>
           </table>
         </div>
-        {/* Totals */}
+
         <div className="mt-4 flex flex-col items-end">
           <div className="text-right text-sm">
             <div className="flex justify-between gap-4">
@@ -861,40 +849,43 @@ function InvoicePreviewModal({
             </div>
           </div>
         </div>
-        {/* Actions */}
+
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => window.print()}
-            className="rounded-md border border-gray-300 px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 print:hidden"
+            className="rounded-xl border border-gray-300 px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 print:hidden"
           >
             <Printer className="inline-block h-4 w-4 mr-1" /> Print / Save PDF
           </button>
+
           {invoice.status !== "paid" && (
             <button
               type="button"
               onClick={onMarkPaid}
               disabled={saving}
-              className="rounded-md bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-60 print:hidden"
+              className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-60 print:hidden"
             >
               {saving ? "Marking…" : "Mark as paid"}
             </button>
           )}
+
           {invoice.status === "paid" && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-green-100 px-3 py-2 text-xs font-medium text-green-700">
+            <span className="inline-flex items-center gap-1 rounded-xl bg-green-100 px-3 py-2 text-xs font-medium text-green-700">
               <CheckCircle className="h-4 w-4" /> Paid
             </span>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
+
   return createPortal(content, document.body);
 }
 
 /**
- * Main InvoicesPage component. Displays summary cards, invoice list with
- * filters and actions, and modals for creating and printing invoices.
+ * Main InvoicesPage component.
+ * Upgraded: dark theme, animated layout, CountUp summary, better UX hierarchy.
  */
 export default function InvoicesPage() {
   const { orgId, loading: orgLoading } = useOrg();
@@ -914,7 +905,7 @@ export default function InvoicesPage() {
   const INVOICES_PER_PAGE = 10;
   const [invoicesPage, setInvoicesPage] = useState<number>(1);
 
-  // ---- Global toast (match JobDetailPage styling) ----
+  // ---- Global toast (kept) ----
   type ToastStatus = "success" | "error" | "loading";
   type ToastState = {
     status: ToastStatus;
@@ -931,7 +922,6 @@ export default function InvoicesPage() {
   useEffect(() => {
     if (!toast) return;
     if (toast.status === "loading") return;
-
     const id = setTimeout(() => setToast(null), 3500);
     return () => clearTimeout(id);
   }, [toast]);
@@ -987,9 +977,8 @@ export default function InvoicesPage() {
   // Filtered invoices
   const filteredInvoices = useMemo(() => {
     let list = invoices;
-    if (statusFilter !== "all") {
+    if (statusFilter !== "all")
       list = list.filter((inv) => inv.status === statusFilter);
-    }
     const term = searchTerm.trim().toLowerCase();
     if (term) {
       list = list.filter((inv) => {
@@ -1013,7 +1002,6 @@ export default function InvoicesPage() {
   }, [filteredInvoices.length]);
 
   useEffect(() => {
-    // clamp page when filters/search change
     setInvoicesPage((p: number) =>
       Math.min(Math.max(1, p), invoicesTotalPages)
     );
@@ -1024,7 +1012,6 @@ export default function InvoicesPage() {
     return filteredInvoices.slice(start, start + INVOICES_PER_PAGE);
   }, [filteredInvoices, invoicesPage]);
 
-  // When previewing invoice, we need its associated job
   const selectedInvoiceJob = useMemo(() => {
     if (!selectedInvoice) return null;
     return jobs.find((j) => j.id === selectedInvoice.jobId) ?? null;
@@ -1049,97 +1036,250 @@ export default function InvoicesPage() {
     }
   }
 
-  // Loading and guard states
   if (orgLoading) {
-    return <div className="p-4">Loading invoices…</div>;
+    return (
+      <div className="min-h-screen bg-[var(--color-background)] p-6 text-[var(--color-text)]">
+        Loading invoices…
+      </div>
+    );
   }
   if (!orgId) {
     return (
-      <div className="p-8 text-red-600">
+      <div className="min-h-screen bg-[var(--color-background)] p-8 text-red-200">
         You are not linked to an organization. Please contact your admin.
       </div>
     );
   }
 
+  const ease = [0.16, 1, 0.3, 1] as const;
+  const stagger: Variants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.06 } },
+  };
+  const fadeUp: Variants = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease } },
+  };
+
+  function StatusPill({ status }: { status: InvoiceStatus }) {
+    const base =
+      "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold capitalize";
+    if (status === "paid")
+      return (
+        <span
+          className={`${base} border-emerald-400/30 bg-emerald-400/10 text-emerald-100`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+          paid
+        </span>
+      );
+    if (status === "sent")
+      return (
+        <span
+          className={`${base} border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-text)]`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-gold)]" />
+          sent
+        </span>
+      );
+    if (status === "draft")
+      return (
+        <span
+          className={`${base} border-white/15 bg-white/5 text-[var(--color-text)]/80`}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
+          draft
+        </span>
+      );
+    return (
+      <span className={`${base} border-red-400/30 bg-red-400/10 text-red-100`}>
+        <span className="h-1.5 w-1.5 rounded-full bg-red-300" />
+        {status}
+      </span>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b ">
-      <div className="mx-auto w-[min(1100px,94vw)] space-y-8 py-8">
-        {/* Summary cards */}
-        <section className="rounded-2xl border border-[var(--color-border)]/60 bg-white/90 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-[var(--color-text)]">
-            Invoices Overview
-          </h2>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {totalInvoices}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Total Invoices
-              </div>
-            </div>
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {money(totalAmount)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Total Amount
-              </div>
-            </div>
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {money(outstandingAmount)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Outstanding
-              </div>
-            </div>
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {money(paidAmount)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Paid
-              </div>
-            </div>
-          </div>
-        </section>
-        {/* Filters and actions */}
-        <section className="flex flex-col gap-3 sm:flex-row sm:items-end justify-between">
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <input
-              type="text"
-              placeholder="Search invoices…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-            />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-            >
-              <option value="all">All statuses</option>
-              <option value="draft">Draft</option>
-              <option value="sent">Sent</option>
-              <option value="paid">Paid</option>
-              <option value="void">Void</option>
-            </select>
-          </div>
-          <button
-            type="button"
-            onClick={() => setOpenForm(true)}
-            className="inline-flex items-center gap-1 max-w-[140px] bg-[var(--color-brown-hover)] hover:bg-[var(--color-brown)] transition ease-in-out duration-300  text-white cursor-pointer   border border-[var(--color-border)]/30 px-2 py-1.5 text-xs "
+    <div className="min-h-screen bg-[var(--color-background)]">
+      <div className="mx-auto w-[min(1180px,94vw)] space-y-6 py-8">
+        {/* Header */}
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="space-y-4"
+        >
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
           >
-            <Plus className="h-4 w-4" /> New Invoice
-          </button>
-        </section>
-        {/* Invoice list table */}
-        <section className="rounded-2xl border border-[var(--color-border)]/60 bg-white/90 p-4 shadow-sm">
-          {/* IMPORTANT: scrolling must be on a wrapper div, not the section, for sticky header/footer */}
+            <div>
+              <h1 className="text-2xl font-semibold text-[var(--color-text)]">
+                Invoices
+              </h1>
+              <p className="mt-1 text-sm text-[var(--color-muted)]">
+                Create, send, and track customer invoices for your jobs.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setOpenForm(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent-gold)] px-4 py-2 text-sm font-semibold text-[var(--btn-text)] hover:bg-[var(--btn-hover-bg)]"
+              >
+                <Plus className="h-4 w-4" />
+                New Invoice
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Summary cards */}
+          <motion.section
+            variants={fadeUp}
+            className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                  Overview
+                </h2>
+                <p className="mt-1 text-xs text-[var(--color-muted)]">
+                  Live totals across your organization.
+                </p>
+              </div>
+
+              <div className="text-xs text-[var(--color-muted)]">
+                {filteredInvoices.length} visible / {totalInvoices} total
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                  Total invoices
+                </div>
+                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                  <CountUp end={totalInvoices} duration={0.7} />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                  Total amount
+                </div>
+                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                  <CountUp
+                    end={totalAmount / 100}
+                    decimals={2}
+                    prefix="$"
+                    duration={0.85}
+                    separator=","
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                  Outstanding
+                </div>
+                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                  <CountUp
+                    end={outstandingAmount / 100}
+                    decimals={2}
+                    prefix="$"
+                    duration={0.85}
+                    separator=","
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                  Paid
+                </div>
+                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                  <CountUp
+                    end={paidAmount / 100}
+                    decimals={2}
+                    prefix="$"
+                    duration={0.85}
+                    separator=","
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* Filters */}
+          <motion.section
+            variants={fadeUp}
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+                <input
+                  type="text"
+                  placeholder="Search invoices… (number, customer, email)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full min-w-[280px] rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] py-2 pl-9 pr-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-muted)] focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                />
+              </div>
+
+              <div className="relative">
+                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  className="w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] py-2 pl-9 pr-8 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                >
+                  <option value="all">All statuses</option>
+                  <option value="draft">Draft</option>
+                  <option value="sent">Sent</option>
+                  <option value="paid">Paid</option>
+                  <option value="void">Void</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="text-xs text-[var(--color-muted)]">
+              Tip: click <span className="text-[var(--color-text)]">View</span>{" "}
+              to print or mark as paid.
+            </div>
+          </motion.section>
+        </motion.div>
+
+        {/* Table */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease }}
+          className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur"
+        >
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--color-text)]">
+                Invoices
+              </h3>
+              <p className="mt-1 text-xs text-[var(--color-muted)]">
+                Showing the most recent invoices first.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-xs text-[var(--color-muted)]">
+              Page{" "}
+              <span className="font-semibold text-[var(--color-text)]">
+                {invoicesPage}
+              </span>{" "}
+              / {invoicesTotalPages}
+            </div>
+          </div>
+
           <div className="relative overflow-auto section-scroll-invoices">
             <table className="min-w-full text-sm">
-              <thead className="sticky top-0 z-30 bg-[var(--color-card)] text-[11px] uppercase tracking-wide text-[var(--color-muted)] border-b border-[var(--color-border)]/40">
+              <thead className="sticky top-0 z-30 border-b border-white/10 bg-[var(--color-surface)]/60 text-[11px] uppercase tracking-wide text-[var(--color-muted)] backdrop-blur">
                 <tr>
                   <th className="px-3 py-2 text-left">Number</th>
                   <th className="px-3 py-2 text-left">Job</th>
@@ -1156,7 +1296,7 @@ export default function InvoicesPage() {
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-3 py-4 text-center text-[var(--color-muted)] text-sm"
+                      className="px-3 py-8 text-center text-[var(--color-muted)]"
                     >
                       No invoices found
                     </td>
@@ -1179,69 +1319,68 @@ export default function InvoicesPage() {
                     dateStr = dtAny.toLocaleDateString();
 
                   return (
-                    <tr
+                    <motion.tr
                       key={inv.id}
-                      className="border-t border-[var(--color-border)]/40 hover:bg-[var(--color-card)]"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, ease }}
+                      className="border-t border-white/10 hover:bg-white/5"
                     >
-                      <td className="px-3 py-2 align-top">{inv.number}</td>
+                      <td className="px-3 py-3 align-top text-[var(--color-text)]/90">
+                        {inv.number}
+                      </td>
 
-                      <td className="px-3 py-2 align-top">
+                      <td className="px-3 py-3 align-top">
                         <div className="font-medium text-[var(--color-text)]">
                           {address}
                         </div>
+                        <div className="mt-0.5 text-xs text-[var(--color-muted)]">
+                          Job ID: {inv.jobId}
+                        </div>
                       </td>
 
-                      <td className="px-3 py-2 align-top">
+                      <td className="px-3 py-3 align-top text-[var(--color-text)]/85">
                         {inv.customer?.name || inv.customer?.email || "—"}
                       </td>
 
-                      <td className="px-3 py-2 align-top">{dateStr}</td>
-
-                      <td className="px-3 py-2 align-top">
-                        <span
-                          className={
-                            inv.status === "paid"
-                              ? "inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
-                              : inv.status === "sent"
-                              ? "inline-block rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"
-                              : inv.status === "draft"
-                              ? "inline-block rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-700"
-                              : "inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800"
-                          }
-                        >
-                          {inv.status}
-                        </span>
+                      <td className="px-3 py-3 align-top text-[var(--color-text)]/80">
+                        {dateStr || "—"}
                       </td>
 
-                      <td className="px-3 py-2 align-top text-right font-semibold">
+                      <td className="px-3 py-3 align-top">
+                        <StatusPill status={inv.status} />
+                      </td>
+
+                      <td className="px-3 py-3 align-top text-right font-semibold text-[var(--color-text)]">
                         {money(inv.money?.totalCents)}
                       </td>
 
-                      <td className="px-3 py-2 align-top text-right space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedInvoice(inv)}
-                          className="rounded-md border border-gray-300 px-2 py-1 text-[11px] text-gray-700 hover:bg-gray-100"
-                        >
-                          View
-                        </button>
-
-                        {inv.status !== "paid" && (
+                      <td className="px-3 py-3 align-top text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
-                            onClick={() => markInvoicePaid(inv)}
-                            disabled={markingPaid}
-                            className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 disabled:opacity-60"
+                            onClick={() => setSelectedInvoice(inv)}
+                            className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-black/30"
                           >
-                            {markingPaid ? "Updating…" : "Mark paid"}
+                            View
                           </button>
-                        )}
+
+                          {inv.status !== "paid" && (
+                            <button
+                              type="button"
+                              onClick={() => markInvoicePaid(inv)}
+                              disabled={markingPaid}
+                              className="rounded-xl bg-emerald-500/90 px-3 py-2 text-[11px] font-semibold text-black hover:bg-emerald-400 disabled:opacity-60"
+                            >
+                              {markingPaid ? "Updating…" : "Mark paid"}
+                            </button>
+                          )}
+                        </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })}
 
-                {/* spacer so last row doesn't hide behind sticky footer */}
                 <tr aria-hidden="true">
                   <td colSpan={7} className="h-14" />
                 </tr>
@@ -1249,7 +1388,7 @@ export default function InvoicesPage() {
             </table>
 
             {/* Sticky pagination footer */}
-            <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/40 bg-white/95 px-3 py-2 backdrop-blur">
+            <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-white/10 bg-[var(--color-surface)]/70 px-3 py-2 backdrop-blur">
               <div className="text-xs text-[var(--color-muted)]">
                 {filteredInvoices.length === 0 ? (
                   "0 results"
@@ -1281,7 +1420,7 @@ export default function InvoicesPage() {
                   onClick={() =>
                     setInvoicesPage((p: number) => Math.max(1, p - 1))
                   }
-                  className="rounded-md border border-[var(--color-border)]/50 bg-white px-2 py-1 text-[11px] font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] disabled:opacity-50"
+                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-black/30 disabled:opacity-50"
                 >
                   Prev
                 </button>
@@ -1302,84 +1441,97 @@ export default function InvoicesPage() {
                       Math.min(invoicesTotalPages, p + 1)
                     )
                   }
-                  className="rounded-md border border-[var(--color-border)]/50 bg-white px-2 py-1 text-[11px] font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] disabled:opacity-50"
+                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-black/30 disabled:opacity-50"
                 >
                   Next
                 </button>
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
       </div>
+
       {/* Create invoice modal */}
-      {openForm && (
-        <NewInvoiceModal
-          orgId={orgId}
-          jobs={jobs}
-          onClose={() => setOpenForm(false)}
-          onCreated={() => {
-            // optional: refresh, analytics, etc
-          }}
-          pushToast={pushToast}
-        />
-      )}
+      <AnimatePresence>
+        {openForm && (
+          <NewInvoiceModal
+            orgId={orgId}
+            jobs={jobs}
+            onClose={() => setOpenForm(false)}
+            onCreated={() => {
+              // optional hook
+            }}
+            pushToast={pushToast}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Invoice preview modal */}
-      {selectedInvoice && (
-        <InvoicePreviewModal
-          invoice={selectedInvoice}
-          job={selectedInvoiceJob}
-          onClose={() => setSelectedInvoice(null)}
-          onMarkPaid={async () => {
-            await markInvoicePaid(selectedInvoice);
-          }}
-          saving={markingPaid}
-        />
-      )}
+      <AnimatePresence>
+        {selectedInvoice && (
+          <InvoicePreviewModal
+            invoice={selectedInvoice}
+            job={selectedInvoiceJob}
+            onClose={() => setSelectedInvoice(null)}
+            onMarkPaid={async () => {
+              await markInvoicePaid(selectedInvoice);
+            }}
+            saving={markingPaid}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* ===== Global Toast (matches JobDetailPage) ===== */}
-      {toast && (
-        <div className="fixed right-4 top-20 z-50">
-          <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-white/95 px-4 py-3 text-sm shadow-lg">
-            <div className="mt-0.5">
-              {toast.status === "loading" ? (
-                <Loader2 className="h-5 w-5 animate-spin text-[var(--color-muted)]" />
-              ) : toast.status === "success" ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              ) : (
-                <AlertTriangle className="h-5 w-5 text-red-500" />
-              )}
-            </div>
+      {/* Global Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="fixed right-4 top-20 z-50"
+          >
+            <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-[var(--color-surface)]/80 px-4 py-3 text-sm shadow-2xl backdrop-blur">
+              <div className="mt-0.5">
+                {toast.status === "loading" ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-[var(--color-muted)]" />
+                ) : toast.status === "success" ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-red-300" />
+                )}
+              </div>
 
-            <div className="flex-1">
-              <div
-                className={
-                  "font-semibold " +
-                  (toast.status === "success"
-                    ? "text-emerald-700"
-                    : toast.status === "error"
-                    ? "text-red-600"
-                    : "text-[var(--color-text)]")
-                }
+              <div className="flex-1">
+                <div
+                  className={
+                    "font-semibold " +
+                    (toast.status === "success"
+                      ? "text-emerald-200"
+                      : toast.status === "error"
+                      ? "text-red-200"
+                      : "text-[var(--color-text)]")
+                  }
+                >
+                  {toast.title}
+                </div>
+                <div className="mt-0.5 text-xs text-[var(--color-muted)]">
+                  {toast.message}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setToast(null)}
+                className="ml-2 rounded-full p-1 text-[var(--color-muted)] hover:bg-white/10 hover:text-[var(--color-text)]"
+                aria-label="Dismiss"
               >
-                {toast.title}
-              </div>
-              <div className="mt-0.5 text-xs text-[var(--color-muted)]">
-                {toast.message}
-              </div>
+                <X className="h-4 w-4" />
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setToast(null)}
-              className="ml-2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-              aria-label="Dismiss"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

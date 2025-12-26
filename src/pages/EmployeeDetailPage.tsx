@@ -21,12 +21,17 @@ import type {
   PayoutStubDoc,
   PayoutStubLine,
 } from "../types/types";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronLeft, Search, ReceiptText } from "lucide-react";
 import { GlobalPayoutStubModal } from "../components/GlobalPayoutStubModal";
 import { PayoutStubViewerModal } from "../components/PayoutStubViewerModal";
 import { useOrg } from "../contexts/OrgContext";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import CountUp from "react-countup";
 
 // ---------- Small helpers ----------
+function cx(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(" ");
+}
 
 function money(cents: number | undefined | null): string {
   const v = typeof cents === "number" ? cents : 0;
@@ -95,6 +100,57 @@ function fmtDate(x: unknown): string {
 }
 
 type PayoutFilter = "all" | "pending" | "paid";
+
+const ease = [0.16, 1, 0.3, 1] as const;
+
+const pageVariants: Variants = {
+  hidden: { opacity: 0, y: 10, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.5, ease },
+  },
+};
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease } },
+};
+
+function StatMoney({
+  label,
+  cents,
+  hint,
+}: {
+  label: string;
+  cents: number;
+  hint?: string;
+}) {
+  const dollars = cents / 100;
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] uppercase tracking-wide text-white/55">
+          {label}
+        </p>
+      </div>
+
+      <div className="mt-2 text-xl font-semibold text-white">
+        <CountUp
+          key={`${label}-${cents}`}
+          end={dollars}
+          prefix="$"
+          decimals={2}
+          separator=","
+          duration={0.8}
+        />
+      </div>
+
+      {hint ? <p className="mt-1 text-xs text-white/45">{hint}</p> : null}
+    </div>
+  );
+}
 
 export default function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -218,6 +274,7 @@ export default function EmployeeDetailPage() {
         console.error(err);
         setPayoutsError(err.message || String(err));
         setPayoutsLoading(false);
+        setPayoutsLoading(false);
       }
     );
 
@@ -258,6 +315,7 @@ export default function EmployeeDetailPage() {
       setSaving(false);
     }
   }
+
   // subscribe to payoutStubs for this employee (ORG SCOPED)
   useEffect(() => {
     if (!id) return;
@@ -358,6 +416,31 @@ export default function EmployeeDetailPage() {
     [payouts, selectedIds]
   );
 
+  const stats = useMemo(() => {
+    const pending = payouts.filter((p) => !p.paidAt);
+    const paid = payouts.filter((p) => !!p.paidAt);
+
+    const pendingTotal = pending.reduce(
+      (sum, p) => sum + (typeof p.amountCents === "number" ? p.amountCents : 0),
+      0
+    );
+    const paidTotal = paid.reduce(
+      (sum, p) => sum + (typeof p.amountCents === "number" ? p.amountCents : 0),
+      0
+    );
+
+    const latestPaidAt = paid.map((p) => p.paidAt).filter(Boolean)[0];
+
+    return {
+      pendingCount: pending.length,
+      paidCount: paid.length,
+      pendingTotal,
+      paidTotal,
+      latestPaidAt,
+      stubCount: stubs.length,
+    };
+  }, [payouts, stubs.length]);
+
   async function markSelectedAsPaid() {
     if (!employee) return;
 
@@ -428,8 +511,6 @@ export default function EmployeeDetailPage() {
       await setDoc(stubRef, stubDoc);
       setViewStubId(stubRef.id);
 
-      setViewStubId(stubRef.id);
-
       // 2) Mark payouts paid + backref stub id
       await Promise.all(
         payoutsToMark.map((p) =>
@@ -461,454 +542,641 @@ export default function EmployeeDetailPage() {
     );
   }
 
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
-  if (!employee) return <div className="p-6">Not found.</div>;
+  if (error) {
+    return (
+      <div className="min-h-[70vh] bg-[#070A10]">
+        <div className="mx-auto w-[min(1100px,94vw)] py-10">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-red-200">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!employee) {
+    return (
+      <div className="min-h-[70vh] bg-[#070A10]">
+        <div className="mx-auto w-[min(1100px,94vw)] py-10">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-white/70">
+            Not found.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto w-[min(900px,94vw)] py-8">
-      <div
-        onClick={() => navigate("/employees")}
-        className="flex gap-0 items-center mb-10 cursor-pointer hover:underline group"
+    <div className="min-h-[calc(100vh-72px)] bg-[#070A10]">
+      {/* ambient gradient */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_20%_15%,rgba(252,181,0,0.12),transparent_60%),radial-gradient(900px_500px_at_80%_20%,rgba(177,7,8,0.16),transparent_55%),radial-gradient(900px_600px_at_50%_90%,rgba(25,182,217,0.10),transparent_60%)]" />
+      </div>
+
+      <motion.div
+        variants={pageVariants}
+        initial="hidden"
+        animate="show"
+        className="mx-auto w-[min(1100px,94vw)] py-8"
       >
-        <button className="text-sm text-blue-600 opacity-60 group-hover:opacity-100 transition duration-200 ease-in-out ">
-          <ChevronLeft />
-        </button>
-        <p>Back to Employees</p>
-      </div>
-
-      {/* Employee profile card (collapsible) */}
-      <div className="rounded-2xl bg-white/50 shadow hover:bg-white transition duration-300 ease-in-out">
-        {/* Header / toggle */}
-        <button
-          type="button"
-          onClick={() => setProfileOpen((v) => !v)}
-          className="flex w-full items-center justify-between px-6 py-4 text-left"
-        >
-          <div>
-            <h1 className="text-xl font-semibold">Employee profile</h1>
-            <p className="mt-1 text-xs text-gray-500">
-              Click to {profileOpen ? "hide" : "view / edit"} employee details.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Small status pill in header */}
-            <span
-              className={
-                "inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase " +
-                (isActive
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-gray-200 text-gray-600")
-              }
-            >
-              {isActive ? "Active" : "Inactive"}
-            </span>
-
-            <ChevronDown
-              className={
-                "h-5 w-5 text-gray-500 transition-transform " +
-                (profileOpen ? "rotate-180" : "")
-              }
-            />
-          </div>
-        </button>
-
-        {/* Body (only visible when expanded) */}
-        {profileOpen && (
-          <div className="border-t border-gray-100 px-6 pb-6">
-            <div className="mt-4 space-y-4">
-              {/* Name */}
-              <div>
-                <label className="text-xs text-gray-600">Name</label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label className="text-xs text-gray-600">Status</label>
-                <div className="mt-2 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsActive(true)}
-                    className={
-                      "rounded-full px-3 py-1 text-xs font-semibold uppercase " +
-                      (isActive
-                        ? "bg-emerald-600 text-white"
-                        : "bg-gray-100 text-gray-600")
-                    }
-                  >
-                    Active
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsActive(false)}
-                    className={
-                      "rounded-full px-3 py-1 text-xs font-semibold uppercase " +
-                      (!isActive
-                        ? "bg-gray-700 text-white"
-                        : "bg-gray-100 text-gray-600")
-                    }
-                  >
-                    Inactive
-                  </button>
-                </div>
-                <p className="mt-1 text-[11px] text-gray-500">
-                  Inactive employees stay in history and past payouts, but they
-                  won&apos;t be selectable on new jobs.
-                </p>
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="text-xs text-gray-600">
-                  Address (optional, for your own records)
-                </label>
-                <input
-                  value={address.fullLine}
-                  onChange={(e) =>
-                    setAddress((s) => ({ ...s, fullLine: e.target.value }))
-                  }
-                  placeholder="Full address line"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-3">
-                <input
-                  value={address.city}
-                  onChange={(e) =>
-                    setAddress((s) => ({ ...s, city: e.target.value }))
-                  }
-                  placeholder="City"
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-                <input
-                  value={address.state}
-                  onChange={(e) =>
-                    setAddress((s) => ({ ...s, state: e.target.value }))
-                  }
-                  placeholder="State"
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-                <input
-                  value={address.zip}
-                  onChange={(e) =>
-                    setAddress((s) => ({ ...s, zip: e.target.value }))
-                  }
-                  placeholder="ZIP"
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                />
-              </div>
-
-              <button
-                onClick={save}
-                disabled={saving}
-                className="mt-2 rounded-lg bg-cyan-800 px-4 py-2 text-sm text-white hover:bg-cyan-700 disabled:opacity-60"
-              >
-                {saving ? "Saving…" : "Save changes"}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Payouts section */}
-      <section className="mt-8 rounded-2xl bg-white/50 hover:bg-white transition duration-300 ease-in-out p-6 shadow">
-        {/* HEADER */}
-        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold">
-                Payouts for {employee.name}
-              </h2>
-
-              <button
-                type="button"
-                onClick={() => setPayoutsOpen((v) => !v)}
-                className="inline-flex items-center  border border-[var(--color-border)] bg-[var(--color-brown-hover)] cursor-pointer hover:bg-[var(--color-brown)] transition duration-300 ease-in-out px-3 py-1 text-xs font-medium text-white"
-              >
-                <ChevronDown
-                  className={`mr-1 h-4 w-4 transition-transform ${
-                    payoutsOpen ? "rotate-0" : "-rotate-90"
-                  }`}
-                />
-                <span className="hidden sm:inline">
-                  {payoutsOpen ? "Collapse" : "Expand"}
-                </span>
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-500">
-              Track all jobs this employee has worked on. Use tabs to view
-              pending vs paid payouts.
-            </p>
-          </div>
-
-          {/* Search by address */}
-          <div className="flex flex-col items-end gap-1">
-            <label className="text-[10px] uppercase tracking-wide text-gray-500">
-              Search by address
-            </label>
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Address, city, state, or ZIP…"
-              className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-            />
-          </div>
+        {/* Back */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate("/employees")}
+            className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/75 shadow-sm hover:bg-white/[0.06] hover:text-white transition"
+          >
+            <ChevronLeft className="h-4 w-4 opacity-80 group-hover:opacity-100" />
+            Back to Members
+          </button>
         </div>
 
-        {/* ✅ START: COLLAPSIBLE BODY */}
-        {payoutsOpen && (
-          <>
-            {/* Tabs: All / Pending / Paid */}
-            <div className="mb-3 inline-flex rounded-full border border-gray-200 bg-white p-1 text-xs">
-              {(["all", "pending", "paid"] as PayoutFilter[]).map((f) => (
+        {/* Header */}
+        <motion.div variants={fadeUp} className="mb-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/[0.04]">
+                <ReceiptText className="h-5 w-5 text-[var(--color-accent)]" />
+              </div>
+
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-semibold text-white">
+                    {employee.name}
+                  </h1>
+                  <span
+                    className={cx(
+                      "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                      isActive
+                        ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+                        : "border-white/10 bg-white/5 text-white/60"
+                    )}
+                  >
+                    {isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                <p className="mt-1 text-sm text-white/55">
+                  Employee profile, payouts, and pay stub history — scoped per
+                  organization.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/70">
+                <span className="text-white/45">Pending:</span>
+                <span className="font-semibold text-white">
+                  {stats.pendingCount}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/70">
+                <span className="text-white/45">Paid:</span>
+                <span className="font-semibold text-white">
+                  {stats.paidCount}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/70">
+                <span className="text-white/45">Stubs:</span>
+                <span className="font-semibold text-white">
+                  {stats.stubCount}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <StatMoney
+              label="Pending payouts"
+              cents={stats.pendingTotal}
+              hint="Unpaid payouts currently on this employee."
+            />
+            <StatMoney
+              label="Paid payouts"
+              cents={stats.paidTotal}
+              hint="Total paid out (all time) for this employee."
+            />
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+              <p className="text-[11px] uppercase tracking-wide text-white/55">
+                Last paid
+              </p>
+              <div className="mt-2 text-sm font-semibold text-white">
+                {stats.latestPaidAt
+                  ? fmtDate(stats.latestPaidAt as unknown)
+                  : "—"}
+              </div>
+              <p className="mt-1 text-xs text-white/45">
+                Helpful for checking recent payroll activity.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Employee profile card (collapsible) */}
+        <motion.div
+          variants={fadeUp}
+          className="rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
+        >
+          <button
+            type="button"
+            onClick={() => setProfileOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+          >
+            <div>
+              <h2 className="text-lg font-semibold text-white">
+                Employee profile
+              </h2>
+              <p className="mt-1 text-xs text-white/50">
+                Click to {profileOpen ? "hide" : "view / edit"} employee
+                details.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span
+                className={cx(
+                  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  isActive
+                    ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
+                    : "border-white/10 bg-white/5 text-white/60"
+                )}
+              >
+                {isActive ? "Active" : "Inactive"}
+              </span>
+
+              <ChevronDown
+                className={cx(
+                  "h-5 w-5 text-white/60 transition-transform",
+                  profileOpen ? "rotate-180" : ""
+                )}
+              />
+            </div>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {profileOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{
+                  height: "auto",
+                  opacity: 1,
+                  transition: { duration: 0.35, ease },
+                }}
+                exit={{
+                  height: 0,
+                  opacity: 0,
+                  transition: { duration: 0.25, ease },
+                }}
+                className="overflow-hidden"
+              >
+                <div className="border-t border-white/10 px-6 pb-6">
+                  <div className="mt-4 grid gap-4">
+                    {/* Name */}
+                    <div>
+                      <label className="text-xs text-white/60">Name</label>
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                      />
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                      <label className="text-xs text-white/60">Status</label>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsActive(true)}
+                          className={cx(
+                            "rounded-full px-3 py-1 text-xs font-semibold uppercase transition",
+                            isActive
+                              ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/25"
+                              : "bg-white/[0.03] text-white/60 border border-white/10 hover:bg-white/[0.06]"
+                          )}
+                        >
+                          Active
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsActive(false)}
+                          className={cx(
+                            "rounded-full px-3 py-1 text-xs font-semibold uppercase transition",
+                            !isActive
+                              ? "bg-white/10 text-white border border-white/15"
+                              : "bg-white/[0.03] text-white/60 border border-white/10 hover:bg-white/[0.06]"
+                          )}
+                        >
+                          Inactive
+                        </button>
+                      </div>
+                      <p className="mt-1 text-[11px] text-white/45">
+                        Inactive employees stay for history, but won’t be
+                        selectable on new jobs.
+                      </p>
+                    </div>
+
+                    {/* Address */}
+                    <div>
+                      <label className="text-xs text-white/60">
+                        Address (optional, for your own records)
+                      </label>
+                      <input
+                        value={address.fullLine}
+                        onChange={(e) =>
+                          setAddress((s) => ({
+                            ...s,
+                            fullLine: e.target.value,
+                          }))
+                        }
+                        placeholder="Full address line"
+                        className="mt-1 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                      />
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <input
+                        value={address.city}
+                        onChange={(e) =>
+                          setAddress((s) => ({ ...s, city: e.target.value }))
+                        }
+                        placeholder="City"
+                        className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                      />
+                      <input
+                        value={address.state}
+                        onChange={(e) =>
+                          setAddress((s) => ({ ...s, state: e.target.value }))
+                        }
+                        placeholder="State"
+                        className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                      />
+                      <input
+                        value={address.zip}
+                        onChange={(e) =>
+                          setAddress((s) => ({ ...s, zip: e.target.value }))
+                        }
+                        placeholder="ZIP"
+                        className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[var(--color-accent)]/40 focus:ring-2 focus:ring-[var(--color-accent)]/15"
+                      />
+                    </div>
+
+                    <div className="pt-1">
+                      <button
+                        onClick={save}
+                        disabled={saving}
+                        className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white shadow hover:bg-[var(--color-primary-600)] disabled:opacity-60 transition"
+                      >
+                        {saving ? "Saving…" : "Save changes"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Payouts section */}
+        <motion.section
+          variants={fadeUp}
+          className="mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
+        >
+          {/* HEADER */}
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-lg font-semibold text-white">
+                  Payouts for {employee.name}
+                </h2>
+
                 <button
-                  key={f}
                   type="button"
-                  onClick={() => setPayoutFilter(f)}
-                  className={
-                    "px-3 py-1 rounded-full capitalize transition duraiton-300 ease-in-out " +
-                    (payoutFilter === f
-                      ? "bg-[var(--color-brown-hover)] hover:bg-[var(--color-brown)] text-white"
-                      : "text-gray-700 hover:bg-gray-100")
-                  }
+                  onClick={() => setPayoutsOpen((v) => !v)}
+                  className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-semibold text-white/75 hover:bg-white/[0.06] transition"
                 >
-                  {f}
+                  <ChevronDown
+                    className={cx(
+                      "mr-1 h-4 w-4 transition-transform",
+                      payoutsOpen ? "rotate-0" : "-rotate-90"
+                    )}
+                  />
+                  <span className="hidden sm:inline">
+                    {payoutsOpen ? "Collapse" : "Expand"}
+                  </span>
                 </button>
+              </div>
+
+              <p className="mt-1 text-xs text-white/50">
+                Pending payouts can be selected to create a pay stub (which also
+                marks them as paid).
+              </p>
+            </div>
+
+            {/* Search by address */}
+            <div className="w-full sm:w-auto">
+              <label className="text-[10px] uppercase tracking-wide text-white/45">
+                Search by address
+              </label>
+              <div className="mt-1 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                <Search className="h-4 w-4 text-white/45" />
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Address, city, state, or ZIP…"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/35 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ✅ START: COLLAPSIBLE BODY */}
+          <AnimatePresence initial={false}>
+            {payoutsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  transition: { duration: 0.25, ease },
+                }}
+                exit={{ opacity: 0, y: 6, transition: { duration: 0.2, ease } }}
+              >
+                {/* Tabs */}
+                <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1 text-xs">
+                  {(["all", "pending", "paid"] as PayoutFilter[]).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setPayoutFilter(f)}
+                      className={cx(
+                        "px-3 py-1 rounded-full capitalize transition",
+                        payoutFilter === f
+                          ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)] border border-[var(--color-accent)]/25"
+                          : "text-white/70 hover:bg-white/[0.06]"
+                      )}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Pending tab actions */}
+                {payoutFilter === "pending" && selectedIds.length > 0 && (
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="text-xs text-white/50">
+                      Selected:{" "}
+                      <span className="font-semibold text-white">
+                        {selectedIds.length}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setStubOpen(true)}
+                        className="rounded-xl bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-100 border border-emerald-400/25 hover:bg-emerald-500/25 transition"
+                      >
+                        Create stub ({selectedIds.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedIds([])}
+                        className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/75 hover:bg-white/[0.06] transition"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* List states */}
+                {payoutsLoading && (
+                  <p className="text-sm text-white/60">Loading payouts…</p>
+                )}
+                {payoutsError && (
+                  <p className="text-sm text-red-200">{payoutsError}</p>
+                )}
+                {!payoutsLoading &&
+                  !payoutsError &&
+                  filteredPayouts.length === 0 && (
+                    <p className="text-sm text-white/60">
+                      No payouts match the current filters.
+                    </p>
+                  )}
+
+                {!payoutsLoading &&
+                  !payoutsError &&
+                  filteredPayouts.length > 0 && (
+                    <div className="mt-2 max-h-[55vh] md:max-h-[440px] overflow-y-auto overscroll-contain pr-1">
+                      <ul className="space-y-2">
+                        {filteredPayouts.map((p) => {
+                          const addr = normalizeJobAddress(
+                            p.jobAddressSnapshot
+                          );
+                          const isChecked = selectedIds.includes(p.id);
+
+                          return (
+                            <li
+                              key={p.id}
+                              className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.05] transition"
+                            >
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="flex items-start gap-3">
+                                  {payoutFilter === "pending" && (
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => toggleSelected(p.id)}
+                                      className="mt-1 h-4 w-4 rounded border-white/20 bg-transparent text-[var(--color-accent)]"
+                                    />
+                                  )}
+
+                                  <div>
+                                    <div className="font-semibold text-white">
+                                      {addr.display || "—"}
+                                    </div>
+
+                                    {(addr.city || addr.state || addr.zip) && (
+                                      <div className="text-xs text-white/55">
+                                        {[addr.city, addr.state, addr.zip]
+                                          .filter(Boolean)
+                                          .join(", ")}
+                                      </div>
+                                    )}
+
+                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/60">
+                                      <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/70">
+                                        {p.category || "payout"}
+                                      </span>
+
+                                      {typeof p.sqft === "number" &&
+                                        typeof p.ratePerSqFt === "number" && (
+                                          <span>
+                                            {p.sqft.toLocaleString()} sq.ft @ $
+                                            {p.ratePerSqFt.toFixed(2)}/sq.ft
+                                          </span>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-1 text-[11px] text-white/45">
+                                      Created: {fmtDate(p.createdAt as unknown)}
+                                      {p.paidAt && (
+                                        <>
+                                          {" "}
+                                          • Paid: {fmtDate(p.paidAt as unknown)}
+                                        </>
+                                      )}
+                                      {!p.paidAt && (
+                                        <span className="ml-2 inline-flex items-center rounded-full border border-yellow-400/25 bg-yellow-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-yellow-200">
+                                          Pending
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
+                                  <div className="text-right">
+                                    <div className="text-[11px] text-white/45">
+                                      Total
+                                    </div>
+                                    <div className="text-base font-semibold text-white">
+                                      {money(p.amountCents)}
+                                    </div>
+                                  </div>
+
+                                  {p.jobId && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        navigate(`/job/${p.jobId}`)
+                                      }
+                                      className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/75 hover:bg-white/[0.06] transition"
+                                    >
+                                      View Job
+                                    </button>
+                                  )}
+
+                                  {p.paidAt ? (
+                                    <span className="inline-flex items-center rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-200">
+                                      Paid
+                                    </span>
+                                  ) : payoutFilter !== "pending" ? (
+                                    <span className="inline-flex items-center rounded-full border border-yellow-400/25 bg-yellow-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-yellow-200">
+                                      Pending
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {/* ✅ END: COLLAPSIBLE BODY */}
+        </motion.section>
+
+        {/* Pay stubs history */}
+        <motion.section
+          variants={fadeUp}
+          className="mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
+        >
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-white">
+                Pay Stubs History
+              </h2>
+              <p className="mt-1 text-xs text-white/50">
+                Saved pay stubs created when you mark payouts as paid.
+              </p>
+            </div>
+
+            <div className="w-full sm:w-auto">
+              <label className="text-[10px] uppercase tracking-wide text-white/45">
+                Search stubs
+              </label>
+              <div className="mt-1 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
+                <Search className="h-4 w-4 text-white/45" />
+                <input
+                  value={stubSearch}
+                  onChange={(e) => setStubSearch(e.target.value)}
+                  placeholder="Stub #, address, city, state, ZIP…"
+                  className="w-full bg-transparent text-sm text-white placeholder:text-white/35 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {stubsLoading && (
+            <div className="text-sm text-white/60">Loading stubs…</div>
+          )}
+          {stubsError && (
+            <div className="text-sm text-red-200">{stubsError}</div>
+          )}
+
+          {!stubsLoading && !stubsError && filteredStubs.length === 0 && (
+            <div className="text-sm text-white/60">No stubs yet.</div>
+          )}
+
+          {!stubsLoading && !stubsError && filteredStubs.length > 0 && (
+            <div className="space-y-2">
+              {filteredStubs.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.05] transition sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <div className="text-sm font-semibold text-white">
+                      {s.number}
+                    </div>
+                    <div className="text-[11px] text-white/50">
+                      {s.lines.length} payouts • Created {fmtDate(s.createdAt)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                    <div className="text-sm font-semibold text-white">
+                      {money(s.totalCents)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setViewStubId(s.id)}
+                      className="rounded-xl bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/15 transition"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
+          )}
+        </motion.section>
 
-            {/* Create stub button (pending only, when items selected) */}
-            {/* Pending tab actions (Create stub + Clear all) */}
-            {payoutFilter === "pending" && selectedIds.length > 0 && (
-              <div className="mb-3 flex justify-between items-center">
-                <div />
-
-                <div className="flex items-center gap-2">
-                  {/* CREATE STUB — match JobsPage green button */}
-                  <button
-                    type="button"
-                    onClick={() => setStubOpen(true)}
-                    className="rounded-lg bg-emerald-800 hover:bg-emerald-700 transition duration-300 ease-in-out px-3 py-1.5 text-xs font-semibold text-white"
-                  >
-                    Create stub ({selectedIds.length})
-                  </button>
-
-                  {/* CLEAR ALL — match JobsPage purple/brown button */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedIds([])}
-                    className="rounded-lg border border-[var(--color-border)] bg-[var(--color-primary-600)] hover:bg-[var(--color-primary)] px-3 py-1.5 text-xs font-medium text-white"
-                  >
-                    Clear all
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* List */}
-            {payoutsLoading && (
-              <p className="text-sm text-gray-500">Loading payouts…</p>
-            )}
-            {payoutsError && (
-              <p className="text-sm text-red-600">{payoutsError}</p>
-            )}
-            {!payoutsLoading &&
-              !payoutsError &&
-              filteredPayouts.length === 0 && (
-                <p className="text-sm text-gray-500">
-                  No payouts match the current filters.
-                </p>
-              )}
-
-            {!payoutsLoading && !payoutsError && filteredPayouts.length > 0 && (
-              <div className="mt-2 max-h-[55vh] md:max-h-[420px] overflow-y-auto overscroll-contain rounded-xl bg-white/60 pr-2">
-                <ul className="mt-1 divide-y divide-gray-100 rounded-xl bg-white/60">
-                  {filteredPayouts.map((p) => {
-                    const addr = normalizeJobAddress(p.jobAddressSnapshot);
-                    const isChecked = selectedIds.includes(p.id);
-
-                    return (
-                      <li
-                        key={p.id}
-                        className="flex flex-col gap-2 px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
-                      >
-                        <div className="flex items-start gap-2">
-                          {payoutFilter === "pending" && (
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => toggleSelected(p.id)}
-                              className="mt-1 h-4 w-4 rounded border-gray-300 text-cyan-700"
-                            />
-                          )}
-
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {addr.display || "—"}
-                            </div>
-                            {(addr.city || addr.state || addr.zip) && (
-                              <div className="text-xs text-gray-500">
-                                {[addr.city, addr.state, addr.zip]
-                                  .filter(Boolean)
-                                  .join(", ")}
-                              </div>
-                            )}
-                            <div className="mt-1 text-xs text-gray-600">
-                              <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-                                {p.category || "payout"}
-                              </span>
-                              {typeof p.sqft === "number" &&
-                                typeof p.ratePerSqFt === "number" && (
-                                  <span className="ml-2">
-                                    {p.sqft.toLocaleString()} sq.ft @ $
-                                    {p.ratePerSqFt.toFixed(2)}/sq.ft
-                                  </span>
-                                )}
-                            </div>
-                            <div className="mt-1 text-[11px] text-gray-500">
-                              Created: {fmtDate(p.createdAt as unknown)}
-                              {p.paidAt && (
-                                <> • Paid: {fmtDate(p.paidAt as unknown)}</>
-                              )}
-                              {!p.paidAt && (
-                                <span className="ml-1 inline-flex items-center rounded-full bg-yellow-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-yellow-800">
-                                  Pending
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                          <div className="text-right">
-                            <div className="text-[11px] text-gray-500">
-                              Total
-                            </div>
-                            <div className="text-sm font-semibold text-gray-900">
-                              {money(p.amountCents)}
-                            </div>
-                          </div>
-                          {p.jobId && (
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/job/${p.jobId}`)}
-                              className="rounded-md border border-gray-300 px-3 py-1 text-[11px] text-gray-700 hover:bg-gray-100"
-                            >
-                              View Job
-                            </button>
-                          )}
-                          {p.paidAt && (
-                            <span className="mt-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">
-                              Paid
-                            </span>
-                          )}
-                          {!p.paidAt && payoutFilter !== "pending" && (
-                            <span className="mt-1 inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-yellow-800">
-                              Pending
-                            </span>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-          </>
-        )}
-        {/* ✅ END: COLLAPSIBLE BODY */}
-      </section>
-
-      <section className="mt-8 rounded-2xl bg-white/50 hover:bg-white transition duration-300 ease-in-out p-6 shadow">
-        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Pay Stubs History</h2>
-            <p className="text-xs text-gray-500">
-              Saved pay stubs created when you mark payouts as paid.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-end gap-1">
-            <label className="text-[10px] uppercase tracking-wide text-gray-500">
-              Search stubs
-            </label>
-            <input
-              value={stubSearch}
-              onChange={(e) => setStubSearch(e.target.value)}
-              placeholder="Stub #, address, city, state, ZIP…"
-              className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-            />
-          </div>
-        </div>
-
-        {stubsLoading && (
-          <div className="text-sm text-gray-600">Loading stubs…</div>
-        )}
-        {stubsError && <div className="text-sm text-red-600">{stubsError}</div>}
-
-        {!stubsLoading && !stubsError && filteredStubs.length === 0 && (
-          <div className="text-sm text-gray-600">No stubs yet.</div>
+        {/* Stub modal */}
+        {stubOpen && employee && selectedPayouts.length > 0 && (
+          <GlobalPayoutStubModal
+            employee={employee}
+            payouts={selectedPayouts}
+            onClose={() => setStubOpen(false)}
+            onConfirmPaid={markSelectedAsPaid}
+            saving={stubSaving}
+          />
         )}
 
-        {!stubsLoading && !stubsError && filteredStubs.length > 0 && (
-          <div className="space-y-2">
-            {filteredStubs.map((s) => (
-              <div
-                key={s.id}
-                className="flex flex-col gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {s.number}
-                  </div>
-                  <div className="text-[11px] text-gray-500">
-                    {s.lines.length} payouts • Created {fmtDate(s.createdAt)}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-3">
-                  <div className="text-sm font-semibold text-gray-900">
-                    {money(s.totalCents)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setViewStubId(s.id)}
-                    className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800"
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+        {stubToView && (
+          <PayoutStubViewerModal
+            stub={stubToView}
+            employeeNameOverride={employee?.name}
+            onClose={() => setViewStubId(null)}
+          />
         )}
-      </section>
-
-      {/* Stub modal – now uses the same portal-based layout as JobsPage */}
-      {stubOpen && employee && selectedPayouts.length > 0 && (
-        <GlobalPayoutStubModal
-          employee={employee}
-          payouts={selectedPayouts}
-          onClose={() => setStubOpen(false)}
-          onConfirmPaid={markSelectedAsPaid}
-          saving={stubSaving}
-        />
-      )}
-
-      {stubToView && (
-        <PayoutStubViewerModal
-          stub={stubToView}
-          employeeNameOverride={employee?.name}
-          onClose={() => setViewStubId(null)}
-        />
-      )}
+      </motion.div>
     </div>
   );
 }
@@ -920,5 +1188,3 @@ function normalizeEmployeeAddress(
   if (typeof a === "string") return { fullLine: a, line1: a };
   return a as EmployeeAddress;
 }
-
-// ---------- Stub Modal ----------
