@@ -145,7 +145,7 @@ export function DashboardProgressSection({
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
             <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-text)] tracking-wide">
-              IN PROGRESS
+              JOB PIPELINE
             </h2>
             <div className="text-[12px] text-[var(--color-accent-gold)]/70">
               Scheduled production & punch readiness

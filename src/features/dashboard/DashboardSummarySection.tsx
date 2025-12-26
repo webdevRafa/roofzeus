@@ -102,11 +102,9 @@ export default function DashboardSummarySection({
       {/* Optional little header row to match the “Command Center” vibe */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-[#f5f6f8]">
-            Command Summary
-          </div>
+          <div className="text-sm font-semibold text-[#f5f6f8]">Overview</div>
           <div className="text-[12px] text-[#cfae5d]/70">
-            Jobs • Scheduling • Payout readiness
+            Jobs • Pipeline • Payouts
           </div>
         </div>
 

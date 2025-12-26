@@ -297,7 +297,7 @@ export function DashboardJobsSection({
             <div className="min-w-0">
               <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-text)] tracking-wide">
                 <Link to="/jobs" className="hover:underline">
-                  JOB PIPELINE
+                  ALL JOBS
                 </Link>
               </h2>
               <div className="text-[12px] text-[var(--color-accent-gold)]/70">

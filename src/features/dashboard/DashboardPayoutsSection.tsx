@@ -269,7 +269,7 @@ export function DashboardPayoutsSection({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg sm:text-xl font-semibold text-white">
-                    Payouts
+                    PAYOUTS
                   </h2>
 
                   <button

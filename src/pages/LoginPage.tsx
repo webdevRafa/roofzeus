@@ -418,7 +418,7 @@ const LoginPage = () => {
                           : { y: 0, scale: 0.99, filter: "brightness(0.98)" }
                       }
                       className={[
-                        "w-full mt-2 rounded-xl px-4 py-3 text-sm font-semibold transition",
+                        "w-full mt-2 rounded-xl cursor-pointer px-4 py-3 text-sm font-semibold transition",
                         "bg-[#cfae5d] text-black hover:brightness-110 active:brightness-95",
                         "disabled:opacity-70 disabled:cursor-not-allowed",
                         "shadow-[0_10px_25px_rgba(207,174,93,0.18)]",

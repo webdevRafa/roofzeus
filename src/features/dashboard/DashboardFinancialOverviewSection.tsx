@@ -259,7 +259,7 @@ export default function DashboardFinancialOverviewSection({
                     to="/financial-overview"
                     className="hover:underline underline-offset-4"
                   >
-                    Financial Overview
+                    FINANCIAL OVERVIEW
                   </Link>
                 </h2>
 
