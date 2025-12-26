@@ -1,34 +1,38 @@
-import { type Dispatch, type SetStateAction } from "react";
+import { type Dispatch, type SetStateAction, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  Search,
+  User,
+  MapPin,
+  BadgeDollarSign,
+} from "lucide-react";
 import type { PayoutDoc } from "../../types/types";
 import type { Job } from "../../types/types";
 
 // Same payout filter union as DashboardPage
 export type PayoutFilter = "all" | "pending" | "paid";
 
-// ---- Helpers (copied from DashboardPage) ----
-
 // ---- Animation helpers ----
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.35, ease: EASE, delay },
+  initial: { opacity: 0, y: 12, filter: "blur(6px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  transition: { duration: 0.45, ease: EASE, delay },
 });
 
 const staggerParent = {
   initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    transition: { staggerChildren: 0.04, delayChildren: 0.05 },
+    transition: { staggerChildren: 0.045, delayChildren: 0.05 },
   },
 };
 
 const item = {
-  initial: { opacity: 0, y: 6 },
-  animate: { opacity: 1, y: 0 },
+  initial: { opacity: 0, y: 6, filter: "blur(4px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
 };
 
 // Simple money formatter
@@ -153,6 +157,41 @@ export interface DashboardPayoutsSectionProps {
   onViewJob: (jobId: string) => void;
 }
 
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function Pill({
+  active,
+  children,
+  onClick,
+}: {
+  active?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cx(
+        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] tracking-wide transition",
+        active
+          ? "text-[var(--color-accent-gold)]"
+          : "text-white/70 hover:text-white"
+      )}
+      style={{
+        borderColor: active ? "rgba(207,174,93,0.30)" : "rgba(58,63,75,0.75)",
+        backgroundColor: active
+          ? "rgba(207,174,93,0.10)"
+          : "rgba(255,255,255,0.04)",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function DashboardPayoutsSection({
   payoutsOpen,
   setPayoutsOpen,
@@ -177,304 +216,483 @@ export function DashboardPayoutsSection({
   setStubOpen,
   onViewJob,
 }: DashboardPayoutsSectionProps) {
+  const showingFrom = useMemo(() => {
+    if (filteredPayoutsCount === 0) return 0;
+    return (payoutsPage - 1) * PAYOUTS_PER_PAGE + 1;
+  }, [filteredPayoutsCount, payoutsPage, PAYOUTS_PER_PAGE]);
+
+  const showingTo = useMemo(() => {
+    if (filteredPayoutsCount === 0) return 0;
+    return Math.min(payoutsPage * PAYOUTS_PER_PAGE, filteredPayoutsCount);
+  }, [filteredPayoutsCount, payoutsPage, PAYOUTS_PER_PAGE]);
+
   return (
     <motion.section
-      className="mt-10 mb-40 rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg"
       {...fadeUp(0.08)}
+      className="mt-10 mb-40 rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.55)] overflow-hidden"
+      style={{
+        borderColor: "var(--color-border)",
+        backgroundColor: "rgba(31,36,48,0.55)",
+      }}
     >
-      {/* Header + controls */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <div>
-            <div className="flex gap-5">
-              <h2 className="text-2xl font-semibold text-[var(--color-text)]">
-                Payouts
-              </h2>
+      {/* Header */}
+      <div
+        className="relative px-4 sm:px-6 py-4 border-b"
+        style={{ borderColor: "rgba(58,63,75,0.75)" }}
+      >
+        {/* soft ambient glow */}
+        <div
+          className="pointer-events-none absolute -top-28 -right-28 h-64 w-64 rounded-full blur-3xl"
+          style={{ backgroundColor: "rgba(207,174,93,0.10)" }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-28 -left-28 h-64 w-64 rounded-full blur-3xl"
+          style={{ backgroundColor: "rgba(245,246,248,0.06)" }}
+        />
+
+        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              <div
+                className="h-9 w-9 rounded-xl border flex items-center justify-center"
+                style={{
+                  backgroundColor: "rgba(11,14,20,0.55)",
+                  borderColor: "rgba(58,63,75,0.9)",
+                }}
+              >
+                <BadgeDollarSign
+                  className="h-5 w-5"
+                  style={{ color: "var(--color-accent-gold)" }}
+                />
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">
+                    Payouts
+                  </h2>
+
+                  <button
+                    type="button"
+                    onClick={() => setPayoutsOpen((v) => !v)}
+                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition"
+                    style={{
+                      borderColor: "rgba(58,63,75,0.85)",
+                      backgroundColor: "rgba(255,255,255,0.04)",
+                      color: "rgba(245,246,248,0.80)",
+                    }}
+                  >
+                    <ChevronDown
+                      className={cx(
+                        "h-4 w-4 transition-transform",
+                        payoutsOpen ? "rotate-0" : "-rotate-90"
+                      )}
+                    />
+                    <span className="hidden sm:inline">
+                      {payoutsOpen ? "Collapse" : "Expand"}
+                    </span>
+                  </button>
+                </div>
+
+                <p
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--color-muted)" }}
+                >
+                  Search payouts by employee or address. In{" "}
+                  <span style={{ color: "rgba(207,174,93,0.9)" }}>Pending</span>
+                  , select payouts to generate a stub and mark them paid.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-col gap-2 sm:items-end">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-[280px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/45" />
+                <input
+                  value={payoutSearch}
+                  onChange={(e) => setPayoutSearch(e.target.value)}
+                  placeholder="Search employee or address…"
+                  className="w-full rounded-xl border pl-9 pr-3 py-2 text-sm outline-none focus:ring-2"
+                  style={{
+                    borderColor: "rgba(58,63,75,0.85)",
+                    backgroundColor: "rgba(11,14,20,0.45)",
+                    color: "rgba(245,246,248,0.92)",
+                  }}
+                />
+              </div>
+
               <button
                 type="button"
-                onClick={() => setPayoutsOpen((v) => !v)}
-                className="ml-1 inline-flex items-center text-xs  border border-[var(--color-border)] bg-[var(--color-brown-hover)] hover:bg-[var(--color-brown)] cursor-pointer transition duration-300 ease-in-out px-2 py-0 text-white "
+                onClick={onOpenPayTechnician}
+                className="inline-flex items-center justify-center rounded-xl px-2 py-2 text-xs font-semibold transition"
+                style={{
+                  backgroundColor: "rgba(207,174,93,0.95)",
+                  color: "#0b0e14",
+                }}
               >
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${
-                    payoutsOpen ? "rotate-0" : "-rotate-90"
-                  }`}
-                />
-                <span className="ml-1 hidden sm:inline">
-                  {payoutsOpen ? "Collapse" : "Expand"}
-                </span>
+                Pay tech
               </button>
             </div>
 
-            <p className="mt-3 text-xs text-[var(--color-muted)]">
-              View payouts across all employees. Use the Pending tab to select
-              payouts, generate a stub, and mark them as paid.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            value={payoutSearch}
-            onChange={(e) => setPayoutSearch(e.target.value)}
-            placeholder="Search by address or employee…"
-            className="w-full sm:w-72 max-w-[200px] border border-[var(--color-border)] bg-white/80 px-3 py-1.5 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-          />
-          <button
-            type="button"
-            onClick={onOpenPayTechnician}
-            className=" bg-[var(--color-brown-hover)] hover:bg-[var(--color-brown)] transition duration-300 ease-in-out px-1 py-1 text-xs font-semibold w-[70px] text-white"
-          >
-            Pay tech
-          </button>
-
-          <div className="inline-flex rounded-full border border-[var(--color-border)] bg-white/80 p-1 text-xs">
-            {(["all", "pending", "paid"] as PayoutFilter[]).map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => setPayoutFilter(f)}
-                className={
-                  "px-3 py-1 rounded-full capitalize transition duration-300 ease-in-out " +
-                  (payoutFilter === f
-                    ? "bg-[var(--color-brown-hover)] hover:bg-[var(--color-brown)] text-white"
-                    : "text-[var(--color-text)] hover:bg-[var(--color-card-hover)]")
-                }
+            <div className="flex flex-wrap items-center gap-2">
+              <Pill
+                active={payoutFilter === "all"}
+                onClick={() => setPayoutFilter("all")}
               >
-                {f}
-              </button>
-            ))}
+                All
+              </Pill>
+              <Pill
+                active={payoutFilter === "pending"}
+                onClick={() => setPayoutFilter("pending")}
+              >
+                Pending
+              </Pill>
+              <Pill
+                active={payoutFilter === "paid"}
+                onClick={() => setPayoutFilter("paid")}
+              >
+                Paid
+              </Pill>
+
+              <span className="ml-auto inline-flex items-center gap-2 text-[11px] text-white/50">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: "rgba(207,174,93,0.85)" }}
+                />
+                Org scoped
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Collapsible content */}
       {payoutsOpen && (
-        <div className="mt-2 relative overflow-auto section-scroll max-h-[420px]">
-          {/* Inner content spacing/stack */}
-          <div className="space-y-3">
-            {/* Create stub CTA (pending only, single employee only) */}
-            {payoutFilter === "pending" && selectedPayoutIds.length > 0 && (
-              <div className="bg-white sticky top-0 z-20 mb-1 flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-between">
-                {selectedEmployeeIds.length > 1 && (
-                  <p className="text-xs text-red-700">
-                    Please select payouts for a single employee to create a
-                    stub.
-                  </p>
+        <div className="relative">
+          {/* scrolling list area */}
+          <div className="relative overflow-auto section-scroll max-h-[520px] px-4 sm:px-6 py-4">
+            <div className="space-y-3">
+              {/* Create stub CTA (pending only, single employee only) */}
+              {payoutFilter === "pending" && selectedPayoutIds.length > 0 && (
+                <div
+                  className="sticky top-0 z-20 rounded-2xl border px-4 py-3 backdrop-blur"
+                  style={{
+                    borderColor: "rgba(58,63,75,0.75)",
+                    backgroundColor: "rgba(11,14,20,0.75)",
+                  }}
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-xs">
+                      {selectedEmployeeIds.length > 1 ? (
+                        <span className="text-red-300">
+                          Please select payouts for a single employee to create
+                          a stub.
+                        </span>
+                      ) : (
+                        <span className="text-white/60">
+                          Selected{" "}
+                          <span style={{ color: "rgba(207,174,93,0.95)" }}>
+                            {selectedPayoutIds.length}
+                          </span>{" "}
+                          payout{selectedPayoutIds.length === 1 ? "" : "s"}.
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {canCreateStub && (
+                        <button
+                          type="button"
+                          onClick={() => setStubOpen(true)}
+                          className="rounded-xl px-3 py-2 text-xs font-semibold transition"
+                          style={{
+                            backgroundColor: "rgba(16,185,129,0.85)",
+                            color: "white",
+                          }}
+                        >
+                          Create stub ({selectedPayoutIds.length})
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={clearSelectedPayouts}
+                        className="rounded-xl border px-3 py-2 text-xs font-semibold transition"
+                        style={{
+                          borderColor: "rgba(58,63,75,0.85)",
+                          backgroundColor: "rgba(255,255,255,0.04)",
+                          color: "rgba(245,246,248,0.85)",
+                        }}
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* States */}
+              {payoutsLoading && (
+                <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+                  Loading payouts…
+                </p>
+              )}
+              {payoutsError && (
+                <p className="text-sm text-red-300">{payoutsError}</p>
+              )}
+              {!payoutsLoading &&
+                !payoutsError &&
+                pagedPayouts.length === 0 && (
+                  <div
+                    className="rounded-2xl border p-4"
+                    style={{
+                      borderColor: "rgba(58,63,75,0.75)",
+                      backgroundColor: "rgba(11,14,20,0.35)",
+                      color: "var(--color-muted)",
+                    }}
+                  >
+                    No payouts match the current filters.
+                  </div>
                 )}
 
-                <div className="flex flex-wrap items-center gap-2">
-                  {canCreateStub && (
-                    <button
-                      type="button"
-                      onClick={() => setStubOpen(true)}
-                      className="rounded-lg bg-emerald-800 hover:bg-emerald-700 transition duration-300 ease-in-out px-3 py-1.5 text-xs font-semibold text-white"
-                    >
-                      Create stub ({selectedPayoutIds.length})
-                    </button>
-                  )}
+              {/* List */}
+              {!payoutsLoading && !payoutsError && pagedPayouts.length > 0 && (
+                <motion.ul
+                  className="divide-y rounded-2xl border overflow-hidden"
+                  style={{
+                    borderColor: "rgba(58,63,75,0.75)",
+                    backgroundColor: "rgba(11,14,20,0.35)",
+                  }}
+                  variants={staggerParent}
+                  initial="initial"
+                  animate="animate"
+                >
+                  {pagedPayouts.map((p) => {
+                    const a = addr((p as any).jobAddressSnapshot as any);
+                    const employeeName = payoutEmployeeName(p);
+                    const isPending = !p.paidAt;
+                    const isSelected = selectedPayoutIds.includes(p.id);
+                    const amountCents = (p as any).amountCents ?? 0;
+                    const jobId = (p as any).jobId as string | undefined;
 
-                  <button
-                    type="button"
-                    onClick={clearSelectedPayouts}
-                    className="rounded-lg border border-[var(--color-border)] bg-[var(--color-primary-600)] hover:bg-[var(--color-primary)] px-3 py-1.5 text-xs font-medium text-white "
-                  >
-                    Clear all
-                  </button>
-                </div>
-              </div>
-            )}
+                    const sqft = p.sqft;
+                    const ratePerSqFt = p.ratePerSqFt;
+                    const category = p.category;
 
-            {/* States */}
-            {payoutsLoading && (
-              <p className="text-sm text-[var(--color-muted)]">
-                Loading payouts…
-              </p>
-            )}
-            {payoutsError && (
-              <p className="text-sm text-red-600">{payoutsError}</p>
-            )}
-            {!payoutsLoading && !payoutsError && pagedPayouts.length === 0 && (
-              <p className="text-sm text-[var(--color-muted)]">
-                No payouts match the current filters.
-              </p>
-            )}
+                    const hasSqft =
+                      typeof sqft === "number" && !Number.isNaN(sqft);
+                    const hasRate =
+                      typeof ratePerSqFt === "number" &&
+                      !Number.isNaN(ratePerSqFt);
 
-            {/* List */}
-            {!payoutsLoading && !payoutsError && pagedPayouts.length > 0 && (
-              <motion.ul
-                className="divide-y divide-[var(--color-border)] rounded-xl bg-white/70"
-                variants={staggerParent}
-                initial="initial"
-                animate="animate"
-              >
-                {pagedPayouts.map((p) => {
-                  const a = addr((p as any).jobAddressSnapshot as any);
-                  const employeeName = payoutEmployeeName(p);
-                  const isPending = !p.paidAt;
-                  const isSelected = selectedPayoutIds.includes(p.id);
-                  const amountCents = (p as any).amountCents ?? 0;
-                  const jobId = (p as any).jobId as string | undefined;
+                    const categoryLabel =
+                      category === "shingles"
+                        ? "Shingles labor"
+                        : category === "felt"
+                        ? "Felt labor"
+                        : category === "technician"
+                        ? "Technician"
+                        : undefined;
 
-                  const sqft = p.sqft;
-                  const ratePerSqFt = p.ratePerSqFt;
-                  const category = p.category;
+                    return (
+                      <motion.li
+                        key={p.id}
+                        variants={item}
+                        className="px-4 py-3"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          {/* Left */}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <User className="h-4 w-4 text-white/45 shrink-0" />
+                              <div className="text-sm font-semibold text-white truncate">
+                                {employeeName || "Unknown employee"}
+                              </div>
 
-                  const hasSqft =
-                    typeof sqft === "number" && !Number.isNaN(sqft);
-                  const hasRate =
-                    typeof ratePerSqFt === "number" &&
-                    !Number.isNaN(ratePerSqFt);
-
-                  const categoryLabel =
-                    category === "shingles"
-                      ? "Shingles labor"
-                      : category === "felt"
-                      ? "Felt labor"
-                      : category === "technician"
-                      ? "Technician"
-                      : undefined;
-
-                  return (
-                    <motion.li
-                      key={p.id}
-                      variants={item}
-                      className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between"
-                    >
-                      <div>
-                        <div className="text-sm font-medium text-[var(--color-text)]">
-                          {employeeName || "Unknown employee"}
-                        </div>
-
-                        <div className="text-xs text-[var(--color-muted)]">
-                          {a.display || "—"}
-                        </div>
-
-                        {(a.city || a.state || a.zip) && (
-                          <div className="text-[11px] text-[var(--color-muted)]">
-                            {[a.city, a.state, a.zip]
-                              .filter(Boolean)
-                              .join(", ")}
-                          </div>
-                        )}
-
-                        {(categoryLabel || hasSqft || hasRate) && (
-                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--color-muted)]">
-                            {categoryLabel && (
-                              <span className="inline-flex items-center rounded-full bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">
-                                {categoryLabel}
+                              <span
+                                className="ml-2 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                                style={{
+                                  borderColor: isPending
+                                    ? "rgba(207,174,93,0.28)"
+                                    : "rgba(16,185,129,0.28)",
+                                  backgroundColor: isPending
+                                    ? "rgba(207,174,93,0.10)"
+                                    : "rgba(16,185,129,0.10)",
+                                  color: isPending
+                                    ? "rgba(207,174,93,0.95)"
+                                    : "rgba(16,185,129,0.95)",
+                                }}
+                              >
+                                {isPending ? "Pending" : "Paid"}
                               </span>
+                            </div>
+
+                            <div className="mt-1 flex items-start gap-2 text-xs text-white/60 min-w-0">
+                              <MapPin className="h-3.5 w-3.5 mt-[1px] shrink-0 text-white/35" />
+                              <div className="min-w-0">
+                                <div className="truncate">
+                                  {a.display || "—"}
+                                </div>
+                                {(a.city || a.state || a.zip) && (
+                                  <div className="text-[11px] text-white/45">
+                                    {[a.city, a.state, a.zip]
+                                      .filter(Boolean)
+                                      .join(", ")}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {(categoryLabel || hasSqft || hasRate) && (
+                              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-white/55">
+                                {categoryLabel && (
+                                  <span
+                                    className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                                    style={{
+                                      borderColor: "rgba(58,63,75,0.85)",
+                                      backgroundColor: "rgba(255,255,255,0.04)",
+                                      color: "rgba(245,246,248,0.80)",
+                                    }}
+                                  >
+                                    {categoryLabel}
+                                  </span>
+                                )}
+                                {hasSqft && (
+                                  <span>{sqft!.toLocaleString()} sq ft</span>
+                                )}
+                                {hasSqft && hasRate && (
+                                  <span className="text-white/30">•</span>
+                                )}
+                                {hasRate && (
+                                  <span>
+                                    @{" "}
+                                    {ratePerSqFt!.toLocaleString(undefined, {
+                                      style: "currency",
+                                      currency: "USD",
+                                    })}
+                                    /sq ft
+                                  </span>
+                                )}
+                              </div>
                             )}
 
-                            {hasSqft && (
-                              <span>{sqft!.toLocaleString()} sq ft</span>
+                            <div className="mt-2 text-[11px] text-white/45">
+                              Created {fmtDateTime(p.createdAt)}{" "}
+                              {p.paidAt
+                                ? `• Paid ${fmtDateTime(p.paidAt)}`
+                                : "• Pending"}
+                            </div>
+                          </div>
+
+                          {/* Right */}
+                          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                            <div
+                              className="rounded-xl border px-3 py-2 text-right"
+                              style={{
+                                borderColor: "rgba(58,63,75,0.75)",
+                                backgroundColor: "rgba(11,14,20,0.45)",
+                              }}
+                            >
+                              <div className="text-[11px] text-white/45">
+                                Amount
+                              </div>
+                              <div className="text-sm font-semibold text-white">
+                                {money(amountCents)}
+                              </div>
+                            </div>
+
+                            {jobId && (
+                              <button
+                                type="button"
+                                onClick={() => onViewJob(jobId)}
+                                className="rounded-xl border px-3 py-2 text-xs font-semibold transition"
+                                style={{
+                                  borderColor: "rgba(58,63,75,0.85)",
+                                  backgroundColor: "rgba(255,255,255,0.04)",
+                                  color: "rgba(245,246,248,0.85)",
+                                }}
+                              >
+                                View Job
+                              </button>
                             )}
-                            {hasSqft && hasRate && <span>•</span>}
-                            {hasRate && (
-                              <span>
-                                @{" "}
-                                {ratePerSqFt!.toLocaleString(undefined, {
-                                  style: "currency",
-                                  currency: "USD",
-                                })}
-                                /sq ft
-                              </span>
+
+                            {payoutFilter === "pending" && (
+                              <label className="flex items-center gap-2 text-xs text-white/60 select-none">
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 rounded border"
+                                  style={{
+                                    borderColor: "rgba(58,63,75,0.85)",
+                                    accentColor: "var(--color-accent-gold)",
+                                  }}
+                                  checked={isSelected}
+                                  onChange={() => togglePayoutSelected(p.id)}
+                                />
+                                Select
+                              </label>
                             )}
                           </div>
-                        )}
-
-                        <div className="mt-1 text-[11px] text-[var(--color-muted)]">
-                          Created {fmtDateTime(p.createdAt)}{" "}
-                          {p.paidAt
-                            ? `• Paid ${fmtDateTime(p.paidAt)}`
-                            : "• Pending"}
                         </div>
-                      </div>
+                      </motion.li>
+                    );
+                  })}
+                </motion.ul>
+              )}
 
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="text-[11px] text-[var(--color-muted)]">
-                            Amount
-                          </div>
-                          <div className="text-sm font-semibold text-[var(--color-text)]">
-                            {money(amountCents)}
-                          </div>
-                        </div>
-
-                        {jobId && (
-                          <button
-                            type="button"
-                            onClick={() => onViewJob(jobId)}
-                            className="rounded-md border border-[var(--color-border)] px-3 py-1 text-[11px] text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                          >
-                            View Job
-                          </button>
-                        )}
-
-                        {isPending ? (
-                          <span className="rounded-full bg-yellow-100 px-2 py-1 text-[10px] font-semibold uppercase text-yellow-800">
-                            Pending
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold uppercase text-emerald-700">
-                            Paid
-                          </span>
-                        )}
-
-                        {payoutFilter === "pending" && (
-                          <label className="flex items-center gap-2 text-xs text-[var(--color-muted)]">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 rounded border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-accent)]"
-                              checked={isSelected}
-                              onChange={() => togglePayoutSelected(p.id)}
-                            />
-                            Select
-                          </label>
-                        )}
-                      </div>
-                    </motion.li>
-                  );
-                })}
-              </motion.ul>
-            )}
-
-            {/* Spacer so last item can scroll above sticky footer */}
-            <div aria-hidden className="h-12" />
+              <div aria-hidden className="h-14" />
+            </div>
           </div>
 
           {/* Sticky pagination footer (always visible) */}
           {filteredPayoutsCount > 0 && (
-            <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/40 bg-white/95 px-4 py-2 backdrop-blur text-xs text-[var(--color-muted)]">
-              <span>
-                Showing{" "}
-                {filteredPayoutsCount === 0
-                  ? 0
-                  : (payoutsPage - 1) * PAYOUTS_PER_PAGE + 1}{" "}
-                –{" "}
-                {Math.min(payoutsPage * PAYOUTS_PER_PAGE, filteredPayoutsCount)}{" "}
-                of {filteredPayoutsCount} payouts
+            <div
+              className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t px-4 sm:px-6 py-3 backdrop-blur"
+              style={{
+                borderColor: "rgba(58,63,75,0.75)",
+                backgroundColor: "rgba(11,14,20,0.88)",
+              }}
+            >
+              <span className="text-xs text-white/55">
+                Showing <span className="text-white/80">{showingFrom}</span> –{" "}
+                <span className="text-white/80">{showingTo}</span> of{" "}
+                <span className="text-white/80">{filteredPayoutsCount}</span>
               </span>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-xs text-white/65">
                 <button
                   type="button"
                   disabled={payoutsPage === 1}
                   onClick={() => setPayoutsPage((p) => Math.max(1, p - 1))}
-                  className="rounded border border-[var(--color-border)] px-2 py-1 disabled:opacity-40"
+                  className="rounded-xl border px-3 py-2 disabled:opacity-40 transition"
+                  style={{
+                    borderColor: "rgba(58,63,75,0.85)",
+                    backgroundColor: "rgba(255,255,255,0.04)",
+                    color: "rgba(245,246,248,0.85)",
+                  }}
                 >
                   Prev
                 </button>
-                <span>
-                  Page {payoutsPage} / {payoutsTotalPages}
+
+                <span className="hidden sm:inline">
+                  Page <span className="text-white/85">{payoutsPage}</span> /{" "}
+                  <span className="text-white/85">{payoutsTotalPages}</span>
                 </span>
+
                 <button
                   type="button"
                   disabled={payoutsPage === payoutsTotalPages}
                   onClick={() =>
                     setPayoutsPage((p) => Math.min(payoutsTotalPages, p + 1))
                   }
-                  className="rounded border border-[var(--color-border)] px-2 py-1 disabled:opacity-40"
+                  className="rounded-xl border px-3 py-2 disabled:opacity-40 transition"
+                  style={{
+                    borderColor: "rgba(58,63,75,0.85)",
+                    backgroundColor: "rgba(255,255,255,0.04)",
+                    color: "rgba(245,246,248,0.85)",
+                  }}
                 >
                   Next
                 </button>

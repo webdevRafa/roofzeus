@@ -16,6 +16,7 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import { Link } from "react-router-dom";
+import { TrendingUp } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
@@ -27,7 +28,7 @@ ChartJS.register(
   Legend
 );
 
-// Convert Firestore/Date/number/string to milliseconds
+// Convert Firestore/Date/number/string to milliseconds (UNCHANGED)
 function toMillis(x: unknown): number | null {
   if (x == null) return null;
   let dt: Date | null = null;
@@ -48,7 +49,7 @@ function toMillis(x: unknown): number | null {
   return dt ? dt.getTime() : null;
 }
 
-// Format a month like “Jan 2025”
+// Format a month like “Jan 2025” (UNCHANGED)
 function formatMonth(date: Date): string {
   return date.toLocaleDateString(undefined, {
     month: "short",
@@ -66,7 +67,7 @@ export default function DashboardFinancialOverviewSection({
   jobs,
   payouts,
 }: Props) {
-  // Aggregate data for the past six months
+  // Aggregate data for the past six months (UNCHANGED)
   const { labels, netProfits, payoutTotals } = useMemo(() => {
     const now = new Date();
     const months: string[] = [];
@@ -124,6 +125,15 @@ export default function DashboardFinancialOverviewSection({
     return { labels, netProfits, payoutTotals };
   }, [jobs, payouts]);
 
+  // Theme tokens (canvas colors must be explicit strings)
+  const GOLD = "#cfae5d";
+  const BLUE = "#6aa9ff";
+  const GRID = "rgba(245,246,248,0.10)";
+  const TICK = "rgba(245,246,248,0.60)";
+  const LEGEND = "rgba(245,246,248,0.70)";
+  const TOOLTIP_BG = "rgba(11,14,20,0.92)";
+  const TOOLTIP_BORDER = "rgba(58,63,75,0.85)";
+
   // ✅ Strongly-type chart data so TS doesn't widen literals
   const chartData: ChartData<"line", number[], string> = {
     labels,
@@ -131,16 +141,26 @@ export default function DashboardFinancialOverviewSection({
       {
         label: "Net Profit ($)",
         data: netProfits,
-        borderColor: "#8d6b3d",
-        backgroundColor: "rgba(141,107,61,0.2)",
-        tension: 0.3,
+        borderColor: GOLD,
+        backgroundColor: "rgba(207,174,93,0.18)",
+        pointBackgroundColor: GOLD,
+        pointBorderColor: "rgba(11,14,20,0.75)",
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 4,
+        tension: 0.32,
       },
       {
         label: "Payouts ($)",
         data: payoutTotals,
-        borderColor: "#0e7490",
-        backgroundColor: "rgba(14,116,144,0.2)",
-        tension: 0.3,
+        borderColor: BLUE,
+        backgroundColor: "rgba(106,169,255,0.14)",
+        pointBackgroundColor: BLUE,
+        pointBorderColor: "rgba(11,14,20,0.75)",
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 4,
+        tension: 0.32,
       },
     ],
   };
@@ -150,15 +170,24 @@ export default function DashboardFinancialOverviewSection({
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top", // <-- now correctly typed (not widened to string)
+        position: "top",
         labels: {
-          boxWidth: 12,
+          boxWidth: 10,
+          boxHeight: 10,
+          padding: 14,
           font: { size: 12 },
-          color: "#333",
+          color: LEGEND,
         },
       },
       title: { display: false },
       tooltip: {
+        backgroundColor: TOOLTIP_BG,
+        borderColor: TOOLTIP_BORDER,
+        borderWidth: 1,
+        titleColor: "rgba(245,246,248,0.92)",
+        bodyColor: "rgba(245,246,248,0.85)",
+        displayColors: true,
+        padding: 10,
         callbacks: {
           label: (context: TooltipItem<"line">) => {
             const label = context.dataset.label ?? "";
@@ -169,32 +198,114 @@ export default function DashboardFinancialOverviewSection({
       },
     },
     scales: {
+      x: {
+        grid: { color: GRID },
+        ticks: { color: TICK, font: { size: 11 } },
+      },
       y: {
         beginAtZero: true,
+        grid: { color: GRID },
         ticks: {
+          color: TICK,
           callback: (value) => `$${value}`,
+          font: { size: 11 },
         },
       },
     },
   };
 
   return (
-    <section className="mt-10 mb-40 rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg">
-      <h1 className="text-xl sm:text-2xl poppins text-[var(--color-text)]">
-        <Link to="/financial-overview" className="hover:underline">
-          Financial Overview
-        </Link>
-      </h1>
+    <section
+      className="mt-10 mb-40 rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.55)] overflow-hidden"
+      style={{
+        borderColor: "var(--color-border)",
+        backgroundColor: "rgba(31,36,48,0.55)",
+      }}
+    >
+      {/* Header (matches the new command-center sections) */}
+      <div
+        className="relative px-4 sm:px-6 py-4 border-b"
+        style={{ borderColor: "rgba(58,63,75,0.75)" }}
+      >
+        {/* ambient glow */}
+        <div
+          className="pointer-events-none absolute -top-28 -right-28 h-64 w-64 rounded-full blur-3xl"
+          style={{ backgroundColor: "rgba(207,174,93,0.10)" }}
+        />
+        <div
+          className="pointer-events-none absolute -bottom-28 -left-28 h-64 w-64 rounded-full blur-3xl"
+          style={{ backgroundColor: "rgba(245,246,248,0.06)" }}
+        />
 
-      <div className="relative h-64 w-full">
-        <Line data={chartData} options={chartOptions} />
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              <div
+                className="h-9 w-9 rounded-xl border flex items-center justify-center"
+                style={{
+                  backgroundColor: "rgba(11,14,20,0.55)",
+                  borderColor: "rgba(58,63,75,0.9)",
+                }}
+              >
+                <TrendingUp
+                  className="h-5 w-5"
+                  style={{ color: "var(--color-accent-gold)" }}
+                />
+              </div>
+
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">
+                  <Link
+                    to="/financial-overview"
+                    className="hover:underline underline-offset-4"
+                  >
+                    Financial Overview
+                  </Link>
+                </h2>
+
+                <p
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--color-muted)" }}
+                >
+                  Net profit vs total payouts over the last six months — use
+                  this to spot trends and keep margins under control.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <span className="hidden sm:inline-flex items-center gap-2 text-[11px] text-white/50">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: "rgba(207,174,93,0.85)" }}
+            />
+            Org scoped
+          </span>
+        </div>
       </div>
 
-      <p className="mt-3 text-xs text-[var(--color-muted)]">
-        This chart summarises your net profit versus total payouts over the last
-        six months. Use it to spot trends and ensure your roofing business
-        remains profitable.
-      </p>
+      {/* Chart body */}
+      <div className="px-4 sm:px-6 py-4">
+        <div
+          className="relative h-72 w-full rounded-2xl border"
+          style={{
+            borderColor: "rgba(58,63,75,0.75)",
+            backgroundColor: "rgba(11,14,20,0.35)",
+          }}
+        >
+          <div className="absolute inset-0 p-3 sm:p-4">
+            <Line data={chartData} options={chartOptions} />
+          </div>
+        </div>
+
+        <div
+          className="mt-3 text-[12px]"
+          style={{ color: "rgba(245,246,248,0.55)" }}
+        >
+          Tip: if payouts rise faster than net profit, drill into jobs to check
+          material spend, rates, or unexpected labor.
+        </div>
+      </div>
     </section>
   );
 }
