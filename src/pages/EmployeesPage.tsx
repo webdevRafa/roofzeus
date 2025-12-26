@@ -262,7 +262,7 @@ export default function EmployeesPage() {
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Employee name"
+                placeholder="Member name"
                 className="w-full max-w-[300px] rounded-lg border border-[var(--color-border)]/50 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               />
 
@@ -308,7 +308,7 @@ export default function EmployeesPage() {
         {/* List */}
         <section className="rounded-xl bg-white/30 p-4 shadow">
           <div className="mb-2 flex flex-col md:flex-row items-start md:items-center justify-between md:justify-start gap-5">
-            <h2 className="text-xl font-medium">All employees</h2>
+            <h2 className="text-xl font-medium">All members</h2>
             <p className="text-xs text-gray-500">
               Active employees can be selected on jobs. Inactive stay for
               history only.

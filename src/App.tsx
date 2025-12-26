@@ -1,76 +1,24 @@
 // src/App.tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 
-import LoginPage from "./pages/LoginPage";
-// Use our new role-based guards
-import AdminGuard from "../src/components/AdminGuard";
-import RoleGuard from "../src/components/RoleGuard";
-import CrewLayout from "../src/layouts/CrewLayout";
-import CrewDashboardPage from "../src/pages/CrewDashboardPage";
-import CrewJobDetailPage from "../src/pages/CrewJobDetailPage";
 import ScrollToTop from "./components/ScrollToTop";
-import JobsPage from "./pages/JobsPage";
-import AdminLayout from "./layouts/AdminLayout";
-import FinancialOverviewPage from "./pages/FinancialOverviewPage";
-import DashboardPage from "./pages/DashboardPage";
-import EmployeesPage from "./pages/EmployeesPage";
-import EmployeeDetailPage from "./pages/EmployeeDetailPage";
-import PunchCalendarPage from "./pages/PunchCalendarPage";
-import PunchDayPage from "./pages/PunchDayPage";
-import JobDetailPage from "./pages/JobDetailPage";
-import InvoiceViewer from "./pages/InvoiceViewer";
-import AcceptInvitePage from "./pages/AcceptInvitePage";
-import CompleteSignupPage from "./pages/CompleteSignupPage";
-import InvoicesPage from "./pages/InvoicesPage";
+import AppRouter from "./routers/AppRouter";
+import MarketingRouter from "./routers/MarketingRouter";
+
+function isAppHost() {
+  const host = window.location.hostname.toLowerCase();
+  return host === "app.localhost" || host === "app.roofzeus.com";
+}
 
 export default function App() {
+  const showApp = isAppHost();
+
   return (
-    <div className="relative z-30 ">
+    <div className="relative z-30">
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/accept-invite" element={<AcceptInvitePage />} />
-          <Route path="/complete-signup" element={<CompleteSignupPage />} />
-          <Route path="/invoice/:id" element={<InvoiceViewer />} />
-
-          {/* ✅ Admin routes protected by AdminGuard */}
-          <Route
-            element={
-              <AdminGuard>
-                <AdminLayout />
-              </AdminGuard>
-            }
-          >
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/invoices-page" element={<InvoicesPage />} />
-            <Route
-              path="/financial-overview"
-              element={<FinancialOverviewPage />}
-            />
-            <Route path="/schedule" element={<PunchCalendarPage />} />
-            <Route path="/jobs" element={<JobsPage />} />
-            <Route path="/schedule/:date" element={<PunchDayPage />} />
-            <Route path="/employees" element={<EmployeesPage />} />
-            <Route path="/employees/:id" element={<EmployeeDetailPage />} />
-            <Route path="/job/:id" element={<JobDetailPage />} />
-            <Route path="/invoices/:id" element={<InvoiceViewer />} />
-          </Route>
-
-          {/* ✅ Crew routes accessible to crew, manager, readOnly roles */}
-          <Route
-            element={
-              <RoleGuard allowedRoles={["crew", "manager", "readOnly"]}>
-                <CrewLayout />
-              </RoleGuard>
-            }
-          >
-            <Route path="/crew" element={<CrewDashboardPage />} />
-            <Route path="/crew/job/:id" element={<CrewJobDetailPage />} />
-          </Route>
-        </Routes>
+        {showApp ? <AppRouter /> : <MarketingRouter />}
       </BrowserRouter>
     </div>
   );

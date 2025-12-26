@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import roofing from "../assets/roofing.webp";
-import logo from "../assets/rogers-roofing-logo-hero.png";
+import logo from "../assets/roofzeus.png";
 import { Eye, EyeOff } from "lucide-react";
 
 // Assumes you export `auth` from ../firebase/firebaseConfig

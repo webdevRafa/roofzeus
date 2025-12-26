@@ -131,7 +131,7 @@ export default function AdminLayout() {
                   className={({ isActive }) => navLinkBase(isActive)}
                 >
                   <Users className="h-4 w-4" />
-                  Employees
+                  Members
                 </NavLink>
 
                 {/* Optional route (keep if you want invoices in global nav) */}
@@ -205,7 +205,7 @@ export default function AdminLayout() {
                     className={({ isActive }) => navLinkBase(isActive)}
                   >
                     <Users className="h-4 w-4" />
-                    Employees
+                    Members
                   </NavLink>
                   <NavLink
                     to="/financial-overview"
