@@ -32,6 +32,7 @@ import {
   type TooltipItem,
 } from "chart.js";
 import { Bar, Pie } from "react-chartjs-2";
+import { Briefcase, SlidersHorizontal } from "lucide-react";
 
 // Register chart modules
 ChartJS.register(
@@ -98,7 +99,10 @@ function pickAddressLine(a: Job["address"]): string {
   return a?.fullLine ?? "";
 }
 
-/* Main page component */
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
 export default function JobsPage() {
   const { orgId, loading: membershipLoading } = useOrg();
 
@@ -393,6 +397,15 @@ export default function JobsPage() {
     return counts;
   }, [jobs]);
 
+  // ---------------------------
+  // Chart styling (dark theme)
+  // ---------------------------
+  const GRID = "rgba(245,246,248,0.10)";
+  const TICK = "rgba(245,246,248,0.60)";
+  const LEGEND = "rgba(245,246,248,0.70)";
+  const TOOLTIP_BG = "rgba(11,14,20,0.92)";
+  const TOOLTIP_BORDER = "rgba(58,63,75,0.85)";
+
   // Chart: status distribution
   const statusLabels = useMemo(() => Object.keys(statusCounts), [statusCounts]);
   const statusValues = useMemo(
@@ -400,19 +413,19 @@ export default function JobsPage() {
     [statusLabels, statusCounts]
   );
   const statusColors = useMemo(() => {
-    // simple palette; cycle through if more statuses
     const palette = [
-      "#fbbf24",
-      "#34d399",
-      "#60a5fa",
-      "#c084fc",
-      "#f87171",
-      "#facc15",
-      "#818cf8",
-      "#f472b6",
+      "rgba(207,174,93,0.95)", // gold
+      "rgba(52,211,153,0.90)", // green
+      "rgba(106,169,255,0.90)", // blue
+      "rgba(192,132,252,0.85)", // purple
+      "rgba(248,113,113,0.85)", // red
+      "rgba(250,204,21,0.85)", // amber
+      "rgba(129,140,248,0.85)", // indigo
+      "rgba(244,114,182,0.85)", // pink
     ];
     return statusLabels.map((_, idx) => palette[idx % palette.length]);
   }, [statusLabels]);
+
   const statusChartData: ChartData<"pie", number[], string> = {
     labels: statusLabels,
     datasets: [
@@ -421,22 +434,33 @@ export default function JobsPage() {
         data: statusValues,
         backgroundColor: statusColors,
         borderWidth: 1,
+        borderColor: "rgba(31,36,48,0.55)",
       },
     ],
   };
+
   const statusChartOptions: ChartOptions<"pie"> = {
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "bottom",
         labels: {
-          boxWidth: 12,
-          font: { size: 10 },
-          color: "#333",
+          boxWidth: 10,
+          boxHeight: 10,
+          color: LEGEND,
+          font: { size: 11 },
+          padding: 14,
         },
       },
       title: { display: false },
-      tooltip: {},
+      tooltip: {
+        backgroundColor: TOOLTIP_BG,
+        borderColor: TOOLTIP_BORDER,
+        borderWidth: 1,
+        titleColor: "rgba(245,246,248,0.92)",
+        bodyColor: "rgba(245,246,248,0.85)",
+        padding: 10,
+      },
     },
   };
 
@@ -449,6 +473,7 @@ export default function JobsPage() {
     );
     return arr.slice(0, 5);
   }, [sortedJobs]);
+
   const topJobLabels = topJobs.map((j) => {
     const line = pickAddressLine(j.address);
     return line.length > 30 ? line.slice(0, 27) + "…" : line;
@@ -456,26 +481,33 @@ export default function JobsPage() {
   const topJobValues = topJobs.map(
     (j) => (j.computed?.netProfitCents ?? 0) / 100
   );
+
   const topJobsData: ChartData<"bar", number[], string> = {
     labels: topJobLabels,
     datasets: [
       {
         label: "Net Profit ($)",
         data: topJobValues,
-        backgroundColor: "#0e7490",
-        borderColor: "#0e7490",
+        backgroundColor: "rgba(207,174,93,0.55)",
+        borderColor: "rgba(207,174,93,0.90)",
         borderWidth: 1,
+        borderRadius: 10,
       },
     ],
   };
+
   const topJobsOptions: ChartOptions<"bar"> = {
     indexAxis: "y",
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       tooltip: {
+        backgroundColor: TOOLTIP_BG,
+        borderColor: TOOLTIP_BORDER,
+        borderWidth: 1,
+        titleColor: "rgba(245,246,248,0.92)",
+        bodyColor: "rgba(245,246,248,0.85)",
+        padding: 10,
         callbacks: {
           label: (context: TooltipItem<"bar">) => {
             const value = context.parsed.x;
@@ -488,14 +520,12 @@ export default function JobsPage() {
     scales: {
       x: {
         beginAtZero: true,
-        ticks: {
-          callback: (value) => `$${value}`,
-        },
+        grid: { color: GRID },
+        ticks: { color: TICK, callback: (v) => `$${v}` },
       },
       y: {
-        ticks: {
-          autoSkip: false,
-        },
+        grid: { color: "transparent" },
+        ticks: { color: TICK, autoSkip: false },
       },
     },
   };
@@ -503,138 +533,263 @@ export default function JobsPage() {
   // Guard: show loading or no org message
   const isBusy = membershipLoading;
   const hasOrg = Boolean(orgId);
-  if (isBusy) return <div className="p-6 text-sm">Loading organization…</div>;
+  if (isBusy)
+    return (
+      <div className="p-6 text-sm" style={{ color: "var(--color-muted)" }}>
+        Loading organization…
+      </div>
+    );
   if (!hasOrg)
     return (
-      <div className="p-6 text-sm">
+      <div className="p-6 text-sm" style={{ color: "var(--color-muted)" }}>
         You are not linked to an organization. Please contact your admin.
       </div>
     );
 
+  // Derived KPIs
+  const totalJobs = sortedJobs.length;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b ">
-      {/* Main content */}
-      <div className="mx-auto w-[min(1100px,94vw)] space-y-8 py-8">
-        {/* Jobs overview section */}
-        <section className="rounded-2xl border border-[var(--color-border)]/60 bg-white/90 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-[var(--color-text)]">
-            Jobs Overview
-          </h2>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {/* Total jobs */}
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {sortedJobs.length}
+    <div className="min-h-screen bg-[var(--color-background)]">
+      <div className="mx-auto w-[min(1200px,94vw)] space-y-8 py-8">
+        {/* Page header */}
+        <section
+          className="relative overflow-hidden rounded-2xl border px-5 sm:px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+          style={{
+            borderColor: "var(--color-border)",
+            backgroundColor: "rgba(31,36,48,0.55)",
+          }}
+        >
+          <div
+            className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full blur-3xl"
+            style={{ backgroundColor: "rgba(207,174,93,0.10)" }}
+          />
+          <div
+            className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full blur-3xl"
+            style={{ backgroundColor: "rgba(245,246,248,0.06)" }}
+          />
+
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <div
+                  className="h-10 w-10 rounded-xl border flex items-center justify-center"
+                  style={{
+                    backgroundColor: "rgba(11,14,20,0.55)",
+                    borderColor: "rgba(58,63,75,0.9)",
+                  }}
+                >
+                  <Briefcase
+                    className="h-5 w-5"
+                    style={{ color: "var(--color-accent-gold)" }}
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-semibold text-white">
+                    Jobs
+                  </h1>
+                  <p
+                    className="mt-1 text-xs sm:text-[13px]"
+                    style={{ color: "var(--color-muted)" }}
+                  >
+                    Review performance, audit margin, and manage job pipeline —
+                    org scoped.
+                  </p>
+                </div>
               </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Total Jobs
+
+              <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
+                  Showing:{" "}
+                  <span className="ml-1 font-semibold text-white/85">
+                    {totalJobs}
+                  </span>
+                </span>
+                <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
+                  Sort:{" "}
+                  <span className="ml-1 font-semibold text-white/85">
+                    {sortOption === "recent"
+                      ? "Most recent"
+                      : sortOption === "netDesc"
+                      ? "Highest net"
+                      : "Lowest net"}
+                  </span>
+                </span>
+                {hasActiveDateFilter ? (
+                  <span className="inline-flex items-center rounded-full border border-[var(--color-accent-gold)]/25 bg-[var(--color-accent-gold)]/10 px-3 py-1 text-[var(--color-accent-gold)]/85">
+                    Date: {rangeLabel || "Custom range"}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
+                    Date: All time
+                  </span>
+                )}
               </div>
             </div>
-            {/* Total earnings */}
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(totalEarnings)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Total Earnings
-              </div>
-            </div>
-            {/* Total expenses */}
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(totalExpenses)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Total Expenses
-              </div>
-            </div>
-            {/* Net profit */}
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(totalNet)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Net Profit
-              </div>
-            </div>
-            {/* Avg. profit */}
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(Math.round(averageProfit))}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Avg. Profit/Job
-              </div>
-            </div>
-            {/* Highest profit */}
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <div className="text-xl font-semibold text-[var(--color-text)]">
-                {formatCurrency(highestProfit)}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
-                Highest Profit
+
+            {/* Sort control (kept same logic) */}
+            <div className="flex items-center gap-2">
+              <div
+                className="inline-flex items-center gap-2 rounded-xl border px-3 py-2"
+                style={{
+                  borderColor: "rgba(58,63,75,0.75)",
+                  backgroundColor: "rgba(11,14,20,0.35)",
+                }}
+              >
+                <SlidersHorizontal className="h-4 w-4 text-white/60" />
+                <label className="text-xs font-semibold text-white/70">
+                  Sort
+                </label>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as any)}
+                  className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
+                >
+                  <option value="recent">Most recent</option>
+                  <option value="netDesc">Highest net profit</option>
+                  <option value="netAsc">Lowest net profit</option>
+                </select>
               </div>
             </div>
           </div>
-          {/* Charts row */}
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <h3 className="mb-2 text-sm font-semibold text-[var(--color-text)]">
+        </section>
+
+        {/* Overview KPIs + charts */}
+        <section
+          className="rounded-2xl border p-4 sm:p-5 shadow-[0_18px_50px_rgba(0,0,0,0.35)]"
+          style={{
+            borderColor: "var(--color-border)",
+            backgroundColor: "rgba(31,36,48,0.55)",
+          }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-white/90">
+              Jobs Overview
+            </h2>
+            <span
+              className="text-[11px]"
+              style={{ color: "var(--color-muted)" }}
+            >
+              Totals reflect current filters + sort
+            </span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <KpiCard label="Total jobs" value={String(totalJobs)} />
+            <KpiCard
+              label="Total earnings"
+              value={formatCurrency(totalEarnings)}
+              accent="gold"
+            />
+            <KpiCard
+              label="Total expenses"
+              value={formatCurrency(totalExpenses)}
+            />
+            <KpiCard
+              label="Net profit"
+              value={formatCurrency(totalNet)}
+              accent={totalNet >= 0 ? "green" : "red"}
+            />
+            <KpiCard
+              label="Avg. profit/job"
+              value={formatCurrency(Math.round(averageProfit))}
+            />
+            <KpiCard
+              label="Highest profit"
+              value={formatCurrency(highestProfit)}
+            />
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div
+              className="rounded-2xl border p-4"
+              style={{
+                borderColor: "rgba(58,63,75,0.75)",
+                backgroundColor: "rgba(11,14,20,0.35)",
+              }}
+            >
+              <h3 className="mb-2 text-sm font-semibold text-white/90">
                 Job Status Distribution
               </h3>
               <div className="relative h-64 w-full">
                 <Pie data={statusChartData} options={statusChartOptions} />
               </div>
+              <p
+                className="mt-2 text-[12px]"
+                style={{ color: "var(--color-muted)" }}
+              >
+                Use this to spot bottlenecks (e.g., too many pending or invoiced
+                jobs).
+              </p>
             </div>
-            <div className="rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40">
-              <h3 className="mb-2 text-sm font-semibold text-[var(--color-text)]">
+
+            <div
+              className="rounded-2xl border p-4"
+              style={{
+                borderColor: "rgba(58,63,75,0.75)",
+                backgroundColor: "rgba(11,14,20,0.35)",
+              }}
+            >
+              <h3 className="mb-2 text-sm font-semibold text-white/90">
                 Top Jobs by Profit
               </h3>
               <div className="relative h-64 w-full">
                 <Bar data={topJobsData} options={topJobsOptions} />
               </div>
+              <p
+                className="mt-2 text-[12px]"
+                style={{ color: "var(--color-muted)" }}
+              >
+                Great for identifying high-margin patterns you can repeat.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Job status summary */}
-        <section className="rounded-2xl border border-[var(--color-border)]/60 bg-white/90 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-[var(--color-text)]">
-            Job Status Summary
-          </h2>
-          <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {/* Status summary */}
+        <section
+          className="rounded-2xl border p-4 sm:p-5 shadow-[0_18px_50px_rgba(0,0,0,0.35)]"
+          style={{
+            borderColor: "var(--color-border)",
+            backgroundColor: "rgba(31,36,48,0.55)",
+          }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-white/90">
+              Job Status Summary
+            </h2>
+            <span
+              className="text-[11px]"
+              style={{ color: "var(--color-muted)" }}
+            >
+              Counts across all jobs in org
+            </span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {Object.entries(statusCounts).map(([status, count]) => (
               <div
                 key={status}
-                className="flex flex-col rounded-lg border border-[var(--color-border)] bg-white/70 p-3 shadow-sm"
+                className="rounded-xl border p-3"
+                style={{
+                  borderColor: "rgba(58,63,75,0.75)",
+                  backgroundColor: "rgba(11,14,20,0.30)",
+                }}
               >
-                <span className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+                <div className="text-[11px] uppercase tracking-wide text-white/55">
                   {status}
-                </span>
-                <span className="mt-1 text-xl font-bold text-[var(--color-text)]">
+                </div>
+                <div className="mt-1 text-xl font-semibold text-white">
                   {count}
-                </span>
+                </div>
               </div>
             ))}
           </div>
         </section>
-        {/* Sort options */}
-        <div className="rounded-xl border border-[var(--color-border)]/60 bg-white/90 p-3 shadow-sm flex flex-col sm:flex-row sm:items-center gap-3">
-          <label className="text-sm font-medium text-[var(--color-text)]">
-            Sort by:
-          </label>
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value as any)}
-            className="rounded border border-[var(--color-border)] bg-white px-3 py-1.5 text-sm text-[var(--color-text)] focus:outline-none"
-          >
-            <option value="recent">Most recent</option>
-            <option value="netDesc">Highest net profit</option>
-            <option value="netAsc">Lowest net profit</option>
-          </select>
-        </div>
-        {/* Jobs list section using existing DashboardJobsSection component */}
-        <section className="rounded-2xl border border-[var(--color-border)]/60 bg-white/90 p-4 shadow-sm">
+
+        {/* Pipeline list section (uses your upgraded DashboardJobsSection exactly as-is) */}
+        <section className="mt-2">
           <DashboardJobsSection
             jobsOpen={jobsOpen}
             setJobsOpen={setJobsOpen}
@@ -681,6 +836,40 @@ export default function JobsPage() {
           />
         </section>
       </div>
+    </div>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "gold" | "green" | "red";
+}) {
+  const accentCls =
+    accent === "gold"
+      ? "text-[var(--color-accent-gold)]"
+      : accent === "green"
+      ? "text-emerald-200"
+      : accent === "red"
+      ? "text-red-200"
+      : "text-white";
+
+  return (
+    <div
+      className="rounded-2xl border px-4 py-3"
+      style={{
+        borderColor: "rgba(58,63,75,0.75)",
+        backgroundColor: "rgba(11,14,20,0.30)",
+      }}
+    >
+      <div className="text-[11px] uppercase tracking-wide text-white/55">
+        {label}
+      </div>
+      <div className={cx("mt-1 text-lg font-semibold", accentCls)}>{value}</div>
     </div>
   );
 }
