@@ -229,27 +229,13 @@ export function DashboardPayoutsSection({
   return (
     <motion.section
       {...fadeUp(0.08)}
-      className="mt-10 mb-40 rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.55)] overflow-hidden"
-      style={{
-        borderColor: "var(--color-border)",
-        backgroundColor: "rgba(31,36,48,0.55)",
-      }}
+      className="mt-10 mb-40 rounded-2xl  overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_18px_50px_rgba(0,0,0,0.35)]"
     >
       {/* Header */}
       <div
         className="relative px-4 sm:px-6 py-4 border-b"
         style={{ borderColor: "rgba(58,63,75,0.75)" }}
       >
-        {/* soft ambient glow */}
-        <div
-          className="pointer-events-none absolute -top-28 -right-28 h-64 w-64 rounded-full blur-3xl"
-          style={{ backgroundColor: "rgba(207,174,93,0.10)" }}
-        />
-        <div
-          className="pointer-events-none absolute -bottom-28 -left-28 h-64 w-64 rounded-full blur-3xl"
-          style={{ backgroundColor: "rgba(245,246,248,0.06)" }}
-        />
-
         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
@@ -356,14 +342,6 @@ export function DashboardPayoutsSection({
               >
                 Paid
               </Pill>
-
-              <span className="ml-auto inline-flex items-center gap-2 text-[11px] text-white/50">
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: "rgba(207,174,93,0.85)" }}
-                />
-                Org scoped
-              </span>
             </div>
           </div>
         </div>

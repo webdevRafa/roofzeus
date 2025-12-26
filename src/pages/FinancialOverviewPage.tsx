@@ -346,14 +346,6 @@ export default function FinancialOverviewPage() {
     };
   }, [filteredJobs, filteredPayouts]);
 
-  const paidRatePct = useMemo(() => {
-    if (totalPayoutsCents <= 0) return 0;
-    return Math.min(
-      100,
-      Math.round((paidPayoutsCents / totalPayoutsCents) * 100)
-    );
-  }, [paidPayoutsCents, totalPayoutsCents]);
-
   // Monthly trend aggregation
   const {
     labels: trendLabels,
@@ -1083,34 +1075,6 @@ export default function FinancialOverviewPage() {
           <StatCard label="Pending payouts">
             <MoneyCount cents={pendingPayoutsCents} decimals={0} />
           </StatCard>
-
-          {/* Replaces the old misplaced bottom-left “Paid payouts” box */}
-          <motion.div
-            variants={cardIn}
-            className={cx(
-              "col-span-2 sm:col-span-3 lg:col-span-2 xl:col-span-1",
-              "rounded-2xl border border-white/10 bg-[var(--color-card)]",
-              "p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors"
-            )}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
-                Payout health
-              </div>
-              <div className="text-xs font-semibold text-[var(--color-text)]">
-                <IntCount value={paidRatePct} duration={0.8} />%
-              </div>
-            </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/25">
-              <div
-                className="h-full rounded-full bg-[var(--color-accent-gold)] transition-all"
-                style={{ width: `${paidRatePct}%` }}
-              />
-            </div>
-            <div className="mt-2 text-[11px] text-[var(--color-muted)]">
-              Paid vs total payouts (range)
-            </div>
-          </motion.div>
         </div>
       </motion.section>
 

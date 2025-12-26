@@ -148,9 +148,9 @@ export default function PunchCalendarPage() {
       {/* Page content */}
       <div className="mx-auto w-[min(1400px,94vw)] space-y-4 py-4">
         {/* Month controls */}
-        <section className="relative overflow-hidden rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-surface)] p-4 shadow-sm">
+        <section className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm">
           {/* subtle glow/gradient */}
-          <div className="pointer-events-none absolute inset-0 opacity-60 bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]" />
+          <div className="pointer-events-none absolute inset-0 opacity-60 bg-[var(--color-card)] border border-[var(--color-border)]" />
           <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--color-muted)]">
@@ -253,7 +253,7 @@ export default function PunchCalendarPage() {
                   type="button"
                   onClick={() => navigate(`/schedule/${key}`)}
                   className={[
-                    "group relative h-20 w-full rounded-xl border px-2 py-1 text-left text-xs transition",
+                    "group relative h-20 w-full rounded-xl border px-2 py-1 text-left text-xs transition hover:bg-[var(--color-surface)]",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-gold)]/70",
                     hasAnything
                       ? "border-white/10 bg-[var(--color-surface)] hover:bg-[var(--color-card-hover)]"
@@ -262,13 +262,6 @@ export default function PunchCalendarPage() {
                   ].join(" ")}
                 >
                   {/* subtle inner highlight */}
-                  <div
-                    className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition group-hover:opacity-100"
-                    style={{
-                      background:
-                        "radial-gradient(420px 140px at 50% 0%, rgba(207,174,93,0.14), transparent 55%)",
-                    }}
-                  />
 
                   <div className="relative flex items-center justify-between">
                     <span className="font-semibold text-[var(--color-text)]">

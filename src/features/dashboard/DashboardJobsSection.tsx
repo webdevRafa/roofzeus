@@ -339,16 +339,6 @@ export function DashboardJobsSection({
                 {statusFilter === "all" ? "All" : statusFilter}
               </span>
             </span>
-
-            {assignedEmployeeIds.length > 0 ? (
-              <span className="inline-flex items-center rounded-full border border-sky-300/15 bg-sky-300/10 px-3 py-1 font-semibold text-sky-200">
-                Crew filter • {assignedEmployeeIds.length}
-              </span>
-            ) : (
-              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
-                Crew: All
-              </span>
-            )}
           </div>
         </div>
 

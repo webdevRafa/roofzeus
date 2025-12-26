@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import type { FieldValue } from "firebase/firestore";
 import { X, Wrench } from "lucide-react";
+import { AnimatePresence, motion, type MotionProps } from "framer-motion";
 
 import { db } from "../firebase/firebaseConfig";
 import type { Employee, PayoutDoc } from "../types/types";
@@ -64,6 +65,27 @@ function money(cents: number | null | undefined): string {
 
 function toCents(x: number): number {
   return Math.round(x * 100);
+}
+
+// ---- Motion helpers (match your dashboard vibe) ----
+const EASE = [0.16, 1, 0.3, 1] as const;
+
+const fadeUp = (delay = 0): MotionProps => ({
+  initial: { opacity: 0, y: 12, filter: "blur(8px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, y: 10, filter: "blur(8px)" },
+  transition: { duration: 0.55, ease: EASE, delay },
+});
+
+const softFade: MotionProps = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.25, ease: EASE },
+};
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
 }
 
 export default function PayTechnicianModal({
@@ -249,207 +271,256 @@ export default function PayTechnicianModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const inputBase =
+    "mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/35 disabled:opacity-60";
+
   const content = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 p-3">
-      {/* Click-away overlay */}
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default"
-        aria-label="Close"
-      />
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-3"
+        {...softFade}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
 
-      <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-xl">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-              <Wrench className="h-5 w-5" />
-            </div>
+        {/* Click-away overlay */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute inset-0 cursor-default"
+          aria-label="Close"
+        />
 
-            <div>
-              <h2 className="text-xl font-semibold text-[var(--color-text)]">
-                Pay technician
-              </h2>
-              <p className="mt-1 text-xs text-[var(--color-muted)]">
-                Create a global technician payout (not tied to any job).
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md border border-gray-300 px-2 py-1 text-[11px] text-gray-600 hover:bg-gray-100"
+        {/* Modal */}
+        <motion.div
+          {...fadeUp(0.02)}
+          className={cx(
+            "relative z-10 w-full max-w-xl overflow-hidden rounded-2xl border",
+            "bg-[var(--color-surface)] backdrop-blur",
+            "shadow-[0_30px_90px_rgba(0,0,0,0.65)]"
+          )}
+          style={{ borderColor: "var(--color-border)" }}
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Header */}
+          <motion.div
+            {...fadeUp(0.04)}
+            className="relative flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5"
           >
-            <span className="sr-only">Close</span>
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-[var(--color-accent-gold)]">
+                <Wrench className="h-5 w-5" />
+              </div>
 
-        {/* Body */}
-        <div className="px-6 py-5">
-          {employeesError && (
-            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-              {employeesError}
-            </div>
-          )}
-
-          {formError && (
-            <div className="mb-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-              {formError}
-            </div>
-          )}
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {/* Employee select */}
-            <div className="sm:col-span-2">
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
-                Employee
-              </label>
-
-              <select
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-                disabled={lockEmployee || loadingEmployees || saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
-              >
-                {loadingEmployees && <option>Loading employees…</option>}
-                {!loadingEmployees && employees.length === 0 && (
-                  <option value="">No employees found</option>
-                )}
-                {!loadingEmployees &&
-                  employees.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.name}
-                      {e.isActive === false ? " (inactive)" : ""}
-                    </option>
-                  ))}
-              </select>
-
-              <p className="mt-1 text-[11px] text-gray-500">
-                Tip: launch this from an employee page to lock the selection.
-              </p>
-            </div>
-
-            {/* Days worked */}
-            <div>
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
-                Days worked
-              </label>
-              <input
-                value={daysWorked}
-                onChange={(e) => setDaysWorked(e.target.value)}
-                type="number"
-                min={0}
-                step="1"
-                placeholder="e.g. 3"
-                disabled={saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
-              />
-            </div>
-
-            {/* Rate per day */}
-            <div>
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
-                Rate per day ($)
-              </label>
-              <input
-                value={ratePerDay}
-                onChange={(e) => setRatePerDay(e.target.value)}
-                type="number"
-                min={0}
-                step="0.01"
-                placeholder="e.g. 250"
-                disabled={saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
-              />
-            </div>
-
-            {/* Method */}
-            <div>
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
-                Method
-              </label>
-              <select
-                value={method}
-                onChange={(e) =>
-                  setMethod(
-                    e.target.value as "cash" | "check" | "zelle" | "other"
-                  )
-                }
-                disabled={saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
-              >
-                <option value="check">Check</option>
-                <option value="cash">Cash</option>
-                <option value="zelle">Zelle</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            {/* Total preview */}
-            <div className="flex items-end">
-              <div className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Total
-                </div>
-                <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
-                  {money(totalCents)}
-                </div>
-
-                {totalCents > 0 && (
-                  <div className="mt-0.5 text-[11px] text-[var(--color-muted)]">
-                    {daysNum} day{daysNum === 1 ? "" : "s"} @{" "}
-                    {(toCents(rateNum) / 100).toLocaleString(undefined, {
-                      style: "currency",
-                      currency: "USD",
-                    })}
-                    /day
-                  </div>
-                )}
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold text-white tracking-wide">
+                  Pay technician
+                </h2>
+                <p className="mt-1 text-xs text-white/55">
+                  Create a global technician payout (not tied to any job).
+                </p>
               </div>
             </div>
 
-            {/* Note */}
-            <div className="sm:col-span-2">
-              <label className="text-[10px] uppercase tracking-wide text-gray-500">
-                Note (optional)
-              </label>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="e.g. Week of Dec 9–13"
-                disabled={saving}
-                rows={2}
-                className="mt-1 w-full resize-none rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-60"
-              />
+            <motion.button
+              type="button"
+              onClick={onClose}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+              className="rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 p-2 text-white/70 transition"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </motion.button>
+          </motion.div>
+
+          {/* Body */}
+          <div className="px-6 py-5 relative">
+            <AnimatePresence initial={false}>
+              {employeesError && (
+                <motion.div
+                  key="employeesError"
+                  {...fadeUp(0)}
+                  className="mb-3 rounded-xl border border-red-300/20 bg-red-300/10 px-3 py-2 text-xs text-red-200"
+                >
+                  {employeesError}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence initial={false}>
+              {formError && (
+                <motion.div
+                  key="formError"
+                  {...fadeUp(0)}
+                  className="mb-3 rounded-xl border border-red-300/20 bg-red-300/10 px-3 py-2 text-xs text-red-200"
+                >
+                  {formError}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* Employee select */}
+              <motion.div {...fadeUp(0.06)} className="sm:col-span-2">
+                <label className="text-[10px] uppercase tracking-wide text-white/50">
+                  Employee
+                </label>
+
+                <select
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  disabled={lockEmployee || loadingEmployees || saving}
+                  className={cx(inputBase, "appearance-none")}
+                >
+                  {loadingEmployees && <option>Loading employees…</option>}
+                  {!loadingEmployees && employees.length === 0 && (
+                    <option value="">No employees found</option>
+                  )}
+                  {!loadingEmployees &&
+                    employees.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name}
+                        {e.isActive === false ? " (inactive)" : ""}
+                      </option>
+                    ))}
+                </select>
+
+                <p className="mt-1 text-[11px] text-white/45">
+                  Tip: launch this from an employee page to lock the selection.
+                </p>
+              </motion.div>
+
+              {/* Days worked */}
+              <motion.div {...fadeUp(0.09)}>
+                <label className="text-[10px] uppercase tracking-wide text-white/50">
+                  Days worked
+                </label>
+                <input
+                  value={daysWorked}
+                  onChange={(e) => setDaysWorked(e.target.value)}
+                  type="number"
+                  min={0}
+                  step="1"
+                  placeholder="e.g. 3"
+                  disabled={saving}
+                  className={inputBase}
+                />
+              </motion.div>
+
+              {/* Rate per day */}
+              <motion.div {...fadeUp(0.12)}>
+                <label className="text-[10px] uppercase tracking-wide text-white/50">
+                  Rate per day ($)
+                </label>
+                <input
+                  value={ratePerDay}
+                  onChange={(e) => setRatePerDay(e.target.value)}
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder="e.g. 250"
+                  disabled={saving}
+                  className={inputBase}
+                />
+              </motion.div>
+
+              {/* Method */}
+              <motion.div {...fadeUp(0.15)}>
+                <label className="text-[10px] uppercase tracking-wide text-white/50">
+                  Method
+                </label>
+                <select
+                  value={method}
+                  onChange={(e) =>
+                    setMethod(
+                      e.target.value as "cash" | "check" | "zelle" | "other"
+                    )
+                  }
+                  disabled={saving}
+                  className={cx(inputBase, "appearance-none")}
+                >
+                  <option value="check">Check</option>
+                  <option value="cash">Cash</option>
+                  <option value="zelle">Zelle</option>
+                  <option value="other">Other</option>
+                </select>
+              </motion.div>
+
+              {/* Total preview */}
+              <motion.div {...fadeUp(0.18)} className="flex items-end">
+                <div className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                  <div className="text-[10px] uppercase tracking-wide text-white/50">
+                    Total
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-white">
+                    {money(totalCents)}
+                  </div>
+
+                  {totalCents > 0 && (
+                    <div className="mt-0.5 text-[11px] text-white/50">
+                      {daysNum} day{daysNum === 1 ? "" : "s"} @{" "}
+                      {(toCents(rateNum) / 100).toLocaleString(undefined, {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                      /day
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Note */}
+              <motion.div {...fadeUp(0.21)} className="sm:col-span-2">
+                <label className="text-[10px] uppercase tracking-wide text-white/50">
+                  Note (optional)
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. Week of Dec 9–13"
+                  disabled={saving}
+                  rows={2}
+                  className={cx(inputBase, "resize-none")}
+                />
+              </motion.div>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex flex-col-reverse gap-2 border-t border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+          {/* Footer */}
+          <motion.div
+            {...fadeUp(0.24)}
+            className="flex flex-col-reverse gap-2 border-t border-white/10 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
           >
-            Cancel
-          </button>
+            <motion.button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              className="rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-2 text-sm font-semibold text-white/70 transition disabled:opacity-60"
+            >
+              Cancel
+            </motion.button>
 
-          <button
-            type="button"
-            onClick={submit}
-            disabled={saving || totalCents <= 0 || !employeeId}
-            className="rounded-lg bg-emerald-800 hover:bg-emerald-700 transition duration-300 ease-in-out px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-          >
-            {saving ? "Creating…" : "Create technician payout"}
-          </button>
-        </div>
-      </div>
-    </div>
+            <motion.button
+              type="button"
+              onClick={submit}
+              disabled={saving || totalCents <= 0 || !employeeId}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.985 }}
+              className={cx(
+                "rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-60",
+                "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)]"
+              )}
+            >
+              {saving ? "Creating…" : "Create technician payout"}
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 
   return createPortal(content, document.body);
