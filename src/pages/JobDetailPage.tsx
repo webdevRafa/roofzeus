@@ -70,20 +70,20 @@ function statusClasses(status: JobStatus) {
     case "active":
       return "bg-[var(--color-primary)]/15 text-[var(--color-primary)]";
     case "pending":
-      return "bg-yellow-50 text-yellow-800";
+      return "bg-yellow-500/15 text-yellow-200";
     case "invoiced":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-500/15 text-blue-200";
     case "paid":
-      return "bg-emerald-100 text-emerald-700";
+      return "bg-emerald-500/15 text-emerald-200";
     case "completed": // ← NEW
-      return "bg-emerald-100 text-emerald-700";
+      return "bg-emerald-500/15 text-emerald-200";
     case "closed":
-      return "bg-gray-200 text-gray-700";
+      return "bg-[var(--color-surface)]/35/10 text-white/70";
     case "archived":
-      return "bg-slate-200 text-slate-700";
+      return "bg-[var(--color-surface)]/35/10 text-white/70";
     case "draft":
     default:
-      return "bg-neutral-100 text-neutral-700";
+      return "bg-[var(--color-surface)]/35/10 text-white/70";
   }
 }
 
@@ -318,24 +318,24 @@ export default function JobDetailPage({
 
   const UI = {
     input:
-      "h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-white/80 px-3 text-sm outline-none " +
+      "h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 text-sm text-[var(--color-text)] outline-none " +
       "focus:ring-2 focus:ring-[var(--color-accent)] shadow-sm",
     textarea:
-      "w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-white/80 px-4 py-3 text-sm leading-6 " +
+      "w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-4 py-3 text-sm leading-6 " +
       "outline-none shadow-sm focus:ring-2 focus:ring-[var(--color-accent)] " +
       "placeholder:text-[var(--color-muted)] resize-none",
 
     select:
-      "h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-white/80 px-3 text-sm outline-none " +
+      "h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 text-sm text-[var(--color-text)] outline-none " +
       "focus:ring-2 focus:ring-[var(--color-accent)] shadow-sm",
     btnPrimary:
-      "h-8 inline-flex items-center justify-center rounded-md bg-cyan-800 px-2 text-xs font-medium " +
-      "text-[var(--btn-text)] shadow-sm hover:bg-cyan-700 transition disabled:opacity-60 disabled:cursor-not-allowed",
+      "h-8 inline-flex items-center justify-center rounded-md bg-[var(--btn-bg)] px-2 text-xs font-medium " +
+      "text-[var(--btn-text)] shadow-sm hover:bg-[var(--btn-hover-bg)] transition disabled:opacity-60 disabled:cursor-not-allowed",
     btnSoft:
-      "h-8 inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-white px-2 text-xs " +
+      "h-8 inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 text-xs " +
       "font-medium text-[var(--color-text)] shadow-sm hover:bg-[var(--color-card-hover)] transition",
     btnDangerSm:
-      "rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-xs text-[var(--color-muted)] " +
+      "rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] " +
       "hover:bg-[var(--color-card-hover)]",
   } as const;
 
@@ -1414,7 +1414,7 @@ export default function JobDetailPage({
           {...fadeUp(0)}
         >
           <div className="grid gap-4 p-4 lg:grid-cols-[1fr_auto]  lg:items-start">
-            <div className="rounded-sm bg-white shadow-md backdrop-blur-md p-4 max-w-[400px]  ">
+            <div className="rounded-sm bg-[var(--color-surface)]/35 shadow-md backdrop-blur-md p-4 max-w-[400px]  ">
               {isModal ? (
                 <button
                   type="button"
@@ -1457,7 +1457,7 @@ export default function JobDetailPage({
                 <button
                   type="button"
                   onClick={() => setWarrantyEditOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-sm bg-white/90 hover:bg-white transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm hover:shadow-md ring-1 ring-black/20"
+                  className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-surface)]/45 hover:bg-[var(--color-surface)]/35 transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm hover:shadow-md ring-1 ring-white/10"
                   title="Edit warranty details and notes"
                 >
                   Warranty
@@ -1467,13 +1467,13 @@ export default function JobDetailPage({
                 <button
                   type="button"
                   onClick={() => setWarrantyModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-sm bg-white/90 hover:bg-white transition duration-300 ease-in-out px-3 py-2 text-xs font-semibold text-[var(--color-text)] ring-1 ring-black/20 shadow-sm hover:shadow-md"
+                  className="inline-flex items-center gap-2 rounded-sm bg-[var(--color-surface)]/45 hover:bg-[var(--color-surface)]/35 transition duration-300 ease-in-out px-3 py-2 text-xs font-semibold text-[var(--color-text)] ring-1 ring-white/10 shadow-sm hover:shadow-md"
                   title="Create printable report"
                 >
                   Create report
                 </button>
 
-                <span className="rounded-sm  bg-white px-3 py-1.5 text-sm uppercase tracking-wide text-[var(--color-muted)]">
+                <span className="rounded-sm  bg-[var(--color-surface)]/35 px-3 py-1.5 text-sm uppercase tracking-wide text-[var(--color-muted)]">
                   Status:
                   <span
                     className={`ml-2 rounded-sm px-2 py-0.5 ${statusClasses(
@@ -1489,7 +1489,7 @@ export default function JobDetailPage({
               <div className="flex w-full flex-col gap-2 text-[11px]">
                 <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
                   {/* Felt pill */}
-                  <div className="inline-flex items-center gap-2 rounded-sm shadow-md p-3  bg-white">
+                  <div className="inline-flex items-center gap-2 rounded-sm shadow-md p-3  bg-[var(--color-surface)]/35">
                     <span className="text-[10px] font-semibold uppercase tracking-wide">
                       DRY IN
                     </span>
@@ -1519,7 +1519,7 @@ export default function JobDetailPage({
                       className={
                         "rounded-xs px-2 py-0.5 text-[10px] transition " +
                         (jobIsLocked
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          ? "bg-white/10 text-white/40 cursor-not-allowed"
                           : "bg-neutral-50 text-[var(--color-text)] hover:bg-neutral-100")
                       }
                     >
@@ -1536,7 +1536,7 @@ export default function JobDetailPage({
                         className={
                           "rounded-sm px-2 py-0.5 text-[10px] " +
                           (jobIsLocked
-                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            ? "bg-white/10 text-white/40 cursor-not-allowed"
                             : "bg-emerald-600 text-white hover:bg-emerald-500")
                         }
                       >
@@ -1546,7 +1546,7 @@ export default function JobDetailPage({
                   </div>
 
                   {/* Shingles pill */}
-                  <div className="inline-flex items-center gap-2 rounded-sm shadow-md bg-white p-3">
+                  <div className="inline-flex items-center gap-2 rounded-sm shadow-md bg-[var(--color-surface)]/35 p-3">
                     <span className="text-[10px] font-semibold uppercase tracking-wide">
                       Shingles
                     </span>
@@ -1576,7 +1576,7 @@ export default function JobDetailPage({
                       className={
                         "rounded-xs px-2 py-0.5 text-[10px]  " +
                         (jobIsLocked
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                          ? "bg-white/10 text-white/40 cursor-not-allowed"
                           : "bg-neutral-50 text-[var(--color-text)] hover:bg-neutral-100")
                       }
                     >
@@ -1598,7 +1598,7 @@ export default function JobDetailPage({
                         className={
                           "rounded-sm px-2 py-0.5 text-[10px] transition shadow-sm " +
                           (!canMarkShinglesDone
-                            ? "bg-gray-200 text-gray-400 cursor-not-allowed opacity-70"
+                            ? "bg-white/10 text-white/40 cursor-not-allowed opacity-70"
                             : "bg-emerald-600 text-white hover:bg-emerald-500")
                         }
                       >
@@ -1635,8 +1635,8 @@ export default function JobDetailPage({
                   className={
                     "rounded-sm border cursor-pointer border-[var(--color-border)] transition duration-300 ease-in-out px-3 py-1.5 text-xs " +
                     (!canSchedulePunch
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed opacity-60"
-                      : "bg-white text-[var(--color-text)] hover:bg-[var(--color-card-hover)]")
+                      ? "bg-white/10 text-white/40 cursor-not-allowed opacity-60"
+                      : "bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)]")
                   }
                 >
                   {job.punchScheduledFor
@@ -1657,7 +1657,7 @@ export default function JobDetailPage({
 
               {/* Pricing */}
               {!hasPricing || editingPricing ? (
-                <div className="rounded-sm bg-white/70 backdrop-blur-md ring-1 ring-black/5 shadow-sm px-5 py-3 text-right w-full">
+                <div className="rounded-sm bg-[var(--color-surface)]/30 backdrop-blur-md ring-1 ring-white/10 shadow-sm px-5 py-3 text-right w-full">
                   <div className="mb-2 text-xs text-[var(--color-muted)]">
                     Total Job Pay
                   </div>
@@ -1690,14 +1690,14 @@ export default function JobDetailPage({
                       min={0}
                       step="1"
                       placeholder="Sq. ft"
-                      className="w-24 rounded-sm border border-[var(--color-border)] bg-white/80 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                      className="w-24 rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                     />
                     <select
                       value={rate}
                       onChange={(e) =>
                         setRate(Number(e.target.value) as 31 | 35)
                       }
-                      className="w-20 rounded-sm border border-[var(--color-border)] bg-white/80 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                      className="w-20 rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                       title="Pay rate"
                     >
                       <option value={31}>$31</option>
@@ -1736,7 +1736,7 @@ export default function JobDetailPage({
                         void saveJob(updated);
                         setEditingPricing(false);
                       }}
-                      className="ml-2 rounded-sm bg-cyan-800 hover:bg-cyan-700 transition duration-300 ease-in-out px-3 py-1 text-[var(--btn-text)]"
+                      className="ml-2 rounded-sm bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out px-3 py-1 text-[var(--btn-text)]"
                     >
                       Apply
                     </button>
@@ -1747,7 +1747,7 @@ export default function JobDetailPage({
                           setRate((job.pricing?.ratePerSqFt as 31 | 35) ?? 31);
                           setEditingPricing(false);
                         }}
-                        className="rounded-sm border border-[var(--color-border)] bg-white px-3 py-1"
+                        className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1"
                       >
                         Cancel
                       </button>
@@ -1767,7 +1767,7 @@ export default function JobDetailPage({
 
                       setEditingPricing(true);
                     }}
-                    className="group w-full sm:min-w-[360px] rounded-md bg-white shadow-md ring-1 ring-black/5 px-4 py-3 text-left transition hover:bg-[var(--color-card-hover)]"
+                    className="group w-full sm:min-w-[360px] rounded-md bg-[var(--color-surface)]/35 shadow-md ring-1 ring-white/10 px-4 py-3 text-left transition hover:bg-[var(--color-card-hover)]"
                     title="Edit pricing"
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -1814,7 +1814,7 @@ export default function JobDetailPage({
                                 prefillFlashingInputs();
                                 setFlashingModalOpen(true);
                               }}
-                              className="mt-2 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-[var(--color-text)] ring-1 ring-black/10 hover:bg-[var(--color-card-hover)]"
+                              className="mt-2 inline-flex items-center rounded-full bg-[var(--color-surface)]/35 px-2 py-0.5 text-[10px] font-medium text-[var(--color-text)] ring-1 ring-white/10 hover:bg-[var(--color-card-hover)]"
                               title="Add flashing pay"
                             >
                               + Add flashing pay
@@ -1822,7 +1822,7 @@ export default function JobDetailPage({
                           )}
                         </div>
 
-                        <span className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/70 text-[var(--color-muted)] shadow-sm transition group-hover:bg-white">
+                        <span className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/30 text-[var(--color-muted)] shadow-sm transition group-hover:bg-[var(--color-surface)]/35">
                           <Pencil className="h-4 w-4" />
                         </span>
                       </div>
@@ -1841,7 +1841,7 @@ export default function JobDetailPage({
       >
         {/* Stat row + profit bar */}
         <motion.div
-          className="rounded-2xl bg-white/80 backdrop-blur-md p-4 shadow-sm ring-1 ring-black/5"
+          className="rounded-2xl bg-[var(--color-surface)]/35 backdrop-blur-md p-4 shadow-sm ring-1 ring-white/10"
           {...fadeUp(0.05)}
         >
           <div className="grid gap-4 sm:grid-cols-4 ">
@@ -1850,7 +1850,7 @@ export default function JobDetailPage({
             <Stat label="All Expenses" cents={totals.expenses} />
             <div
               className={
-                "rounded-xl ring-1 ring-black/5 " +
+                "rounded-xl ring-1 ring-white/10 " +
                 (totals.net >= 0 ? "bg-emerald-50" : "bg-red-50")
               }
             >
@@ -1876,7 +1876,7 @@ export default function JobDetailPage({
             </div>
           </div>
         </motion.div>
-        <section className="mt-6 rounded-2xl bg-white/50 p-6 shadow">
+        <section className="mt-6 rounded-2xl bg-[var(--color-surface)]/20 p-6 shadow">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-[var(--color-text)]">
               Latest activity
@@ -1890,7 +1890,7 @@ export default function JobDetailPage({
 
           <div className="max-h-64 overflow-y-auto pr-1">
             {!activityItems.length ? (
-              <div className="rounded-xl bg-white/60 p-4 text-sm text-[var(--color-muted)]">
+              <div className="rounded-xl bg-[var(--color-surface)]/25 p-4 text-sm text-[var(--color-muted)]">
                 No recent activity for this job yet.
               </div>
             ) : (
@@ -1898,7 +1898,7 @@ export default function JobDetailPage({
                 {activityItems.map((a) => (
                   <li
                     key={a.id}
-                    className="rounded-xl bg-white/70 p-3 ring-1 ring-black/5 hover:bg-white transition"
+                    className="rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-start gap-3">
@@ -1906,7 +1906,7 @@ export default function JobDetailPage({
                           <img
                             src={a.photoUrl}
                             alt={a.photoCaption ?? "Job photo"}
-                            className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-black/5"
+                            className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
                             loading="lazy"
                           />
                         ) : null}
@@ -1945,7 +1945,7 @@ export default function JobDetailPage({
               <button
                 type="button"
                 onClick={() => setPayoutModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/80 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
                 title="Add payout"
               >
                 <Plus className="h-4 w-4" />
@@ -1954,11 +1954,11 @@ export default function JobDetailPage({
           >
             {/* Existing list */}
             <div className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}>
-              <ul className="rounded-lg bg-white/70">
+              <ul className="rounded-lg bg-[var(--color-surface)]/30">
                 {(job?.expenses?.payouts ?? []).map((p) => (
                   <motion.li
                     key={p.id}
-                    className="mb-2 flex items-center justify-between rounded-xl bg-white/70 p-3 ring-1 ring-black/5 hover:bg-white transition"
+                    className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
                     variants={item}
                   >
                     <div className="flex min-w-0 items-center gap-2">
@@ -1989,7 +1989,7 @@ export default function JobDetailPage({
                       />
                       <button
                         onClick={() => removePayout(p.id)}
-                        className="rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                        className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
                         title="Delete"
                       >
                         Delete
@@ -2014,7 +2014,7 @@ export default function JobDetailPage({
               <button
                 type="button"
                 onClick={() => setMaterialModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/80 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
                 title="Add payout"
               >
                 <Plus className="h-4 w-4" />
@@ -2026,7 +2026,7 @@ export default function JobDetailPage({
                 {(job?.expenses?.materials ?? []).map((m) => (
                   <motion.li
                     key={m.id}
-                    className="mb-2 flex items-center justify-between rounded-xl bg-white/70 p-3 ring-1 ring-black/5 hover:bg-white transition"
+                    className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
                     variants={item}
                   >
                     <div className="min-w-0">
@@ -2060,7 +2060,7 @@ export default function JobDetailPage({
                       />
                       <button
                         onClick={() => removeMaterial(m.id)}
-                        className="rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                        className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
                         title="Delete"
                       >
                         Delete
@@ -2085,7 +2085,7 @@ export default function JobDetailPage({
               <button
                 type="button"
                 onClick={() => setNoteModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/80 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
                 title="Add payout"
               >
                 <Plus className="h-4 w-4" />
@@ -2106,7 +2106,7 @@ export default function JobDetailPage({
                     .map((n) => (
                       <motion.li
                         key={n.id}
-                        className="mb-2 flex items-start gap-3 rounded-xl bg-white/70 p-3 ring-1 ring-black/5 hover:bg-white transition"
+                        className="mb-2 flex items-start gap-3 rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
                         variants={item}
                       >
                         <div className="min-w-0 flex-1">
@@ -2119,7 +2119,7 @@ export default function JobDetailPage({
                         </div>
                         <button
                           onClick={() => removeNote(n.id)}
-                          className="shrink-0 rounded-md border border-[var(--color-border)] bg-white px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                          className="shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
                           title="Delete"
                         >
                           Delete
@@ -2145,7 +2145,7 @@ export default function JobDetailPage({
               <button
                 type="button"
                 onClick={() => setPhotoModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/80 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
                 title="Add payout"
               >
                 <Plus className="h-4 w-4" />
@@ -2203,7 +2203,7 @@ export default function JobDetailPage({
         {/* ===== Global Toast ===== */}
         {toast && (
           <div className="fixed right-4 top-20 z-50">
-            <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-white/95 px-4 py-3 text-sm shadow-lg">
+            <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35/95 px-4 py-3 text-sm shadow-lg">
               <div className="mt-0.5">
                 {toast.status === "success" ? (
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -2252,7 +2252,7 @@ export default function JobDetailPage({
             {/* Close button */}
             <button
               onClick={closeViewer}
-              className="absolute right-4 top-4 rounded-full p-2 bg-white/10 hover:bg-white/20 text-white"
+              className="absolute right-4 top-4 rounded-full p-2 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
               aria-label="Close viewer"
               title="Close"
             >
@@ -2267,7 +2267,7 @@ export default function JobDetailPage({
                     e.stopPropagation();
                     prevPhoto();
                   }}
-                  className="absolute left-4 md:left-6 rounded-full p-3 bg-white/10 hover:bg-white/20 text-white"
+                  className="absolute left-4 md:left-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
                   aria-label="Previous photo"
                   title="Previous"
                 >
@@ -2278,7 +2278,7 @@ export default function JobDetailPage({
                     e.stopPropagation();
                     nextPhoto();
                   }}
-                  className="absolute right-4 md:right-6 rounded-full p-3 bg-white/10 hover:bg-white/20 text-white"
+                  className="absolute right-4 md:right-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
                   aria-label="Next photo"
                   title="Next"
                 >
@@ -2316,7 +2316,7 @@ export default function JobDetailPage({
         {/* ===== Schedule Felt Modal ===== */}
         {feltScheduleEditing && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-white p-4 md:py-6 md:px-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Schedule DRY IN
@@ -2338,21 +2338,21 @@ export default function JobDetailPage({
                 type="date"
                 value={feltScheduleDate}
                 onChange={(e) => setFeltScheduleDate(e.target.value)}
-                className="w-full rounded-sm border border-[var(--color-border)] bg-white/80 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               />
 
               <div className="mt-4 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setFeltScheduleEditing(false)}
-                  className="rounded-sm border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => void saveFeltSchedule()}
-                  className="rounded-sm bg-cyan-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-cyan-700"
+                  className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
                 >
                   Apply
                 </button>
@@ -2364,7 +2364,7 @@ export default function JobDetailPage({
         {/* ===== Schedule Shingles Modal ===== */}
         {shinglesScheduleEditing && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-white p-4 md:py-6 md:px-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Schedule shingles
@@ -2386,21 +2386,21 @@ export default function JobDetailPage({
                 type="date"
                 value={shinglesScheduleDate}
                 onChange={(e) => setShinglesScheduleDate(e.target.value)}
-                className="w-full rounded-sm border border-[var(--color-border)] bg-white/80 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               />
 
               <div className="mt-4 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShinglesScheduleEditing(false)}
-                  className="rounded-sm border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={() => void saveShinglesSchedule()}
-                  className="rounded-sm bg-cyan-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-cyan-700"
+                  className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
                 >
                   Apply
                 </button>
@@ -2411,7 +2411,7 @@ export default function JobDetailPage({
         {/* ===== Flashing Pay Modal ===== */}
         {flashingModalOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-white p-4 md:py-6 md:px-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Flashing (C/J/L) Pay
@@ -2511,7 +2511,7 @@ export default function JobDetailPage({
         {/* ===== Schedule Punch Modal ===== */}
         {schedulePunchOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-white p-4 md:py-6 md:px-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Schedule punch
@@ -2533,14 +2533,14 @@ export default function JobDetailPage({
                 type="date"
                 value={schedulePunchDate}
                 onChange={(e) => setSchedulePunchDate(e.target.value)}
-                className="w-full rounded-sm border border-[var(--color-border)] bg-white/80 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               />
 
               <div className="mt-4 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setSchedulePunchOpen(false)}
-                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                 >
                   Cancel
                 </button>
@@ -2572,7 +2572,7 @@ export default function JobDetailPage({
                       message: `Punch is now set for ${label}.`,
                     });
                   }}
-                  className="rounded-sm cursor-pointer bg-cyan-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-cyan-700"
+                  className="rounded-sm cursor-pointer bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
                 >
                   Save
                 </button>
@@ -2583,7 +2583,7 @@ export default function JobDetailPage({
         {/* ===== Confirm Mark as Punched Modal ===== */}
         {confirmPunchedOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl">
+            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)]/35 p-4 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Confirm job completion
@@ -2608,7 +2608,7 @@ export default function JobDetailPage({
                 <button
                   type="button"
                   onClick={() => setConfirmPunchedOpen(false)}
-                  className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                 >
                   Cancel
                 </button>
@@ -2627,7 +2627,7 @@ export default function JobDetailPage({
         {/* ===== Confirm Felt Completed Modal ===== */}
         {confirmFeltDoneOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-white p-4 md:py-6 md:px-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Mark <strong className="font-semibold">DRY IN</strong> as
@@ -2651,7 +2651,7 @@ export default function JobDetailPage({
                 <button
                   type="button"
                   onClick={() => setConfirmFeltDoneOpen(false)}
-                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                 >
                   Cancel
                 </button>
@@ -2680,7 +2680,7 @@ export default function JobDetailPage({
         {/* ===== Confirm Shingles Completed Modal ===== */}
         {confirmShinglesDoneOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-white p-4 md:py-6 md:px-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Mark <strong className="font-semibold">SHINGLES</strong> as
@@ -2704,7 +2704,7 @@ export default function JobDetailPage({
                 <button
                   type="button"
                   onClick={() => setConfirmShinglesDoneOpen(false)}
-                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                 >
                   Cancel
                 </button>
@@ -2745,7 +2745,7 @@ export default function JobDetailPage({
         {/* ===== Confirm Permanently Delete Job Modal ===== */}
         {confirmDeleteOpen && job && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-4 shadow-xl">
+            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)]/35 p-4 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Permanently delete this job?
@@ -2773,7 +2773,7 @@ export default function JobDetailPage({
                 <button
                   type="button"
                   onClick={() => setConfirmDeleteOpen(false)}
-                  className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                 >
                   Cancel
                 </button>
@@ -2804,7 +2804,7 @@ export default function JobDetailPage({
                 className={
                   "px-3 py-1 rounded-md capitalize " +
                   (payoutTab === t
-                    ? "bg-cyan-800 hover:bg-cyan-700 transition duration-300 ease-in-out text-[var(--btn-text)]"
+                    ? "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out text-[var(--btn-text)]"
                     : "text-[var(--color-text)] hover:bg-[var(--color-card-hover)]")
                 }
               >
@@ -2928,7 +2928,7 @@ export default function JobDetailPage({
             }}
           >
             {/* Scrollable list */}
-            <div className="section-scroll rounded-xl border border-[var(--color-border)] bg-white p-3">
+            <div className="section-scroll rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 p-3">
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div>
                   <div className="text-sm font-medium text-[var(--color-text)]">
@@ -3259,7 +3259,7 @@ export default function JobDetailPage({
             />
 
             {/* Picker / Dropzone card */}
-            <div className="rounded-2xl border border-[var(--color-border)] bg-white shadow-sm">
+            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 shadow-sm">
               <div className="flex flex-col gap-3 p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -3278,7 +3278,7 @@ export default function JobDetailPage({
                         setPhotoFile(null);
                         setPhotoCaption("");
                       }}
-                      className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                       title="Remove selected photo"
                     >
                       Remove
@@ -3292,7 +3292,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => cameraInputRef.current?.click()}
-                      className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-white p-4 text-left transition hover:bg-[var(--color-card-hover)]"
+                      className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
                     >
                       <div className="flex items-center gap-3">
                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
@@ -3312,7 +3312,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => galleryInputRef.current?.click()}
-                      className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-white p-4 text-left transition hover:bg-[var(--color-card-hover)]"
+                      className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
                     >
                       <div className="flex items-center gap-3">
                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
@@ -3334,7 +3334,7 @@ export default function JobDetailPage({
                     <img
                       src={previewUrl}
                       alt="Selected preview"
-                      className="h-36 w-full rounded-xl object-cover ring-1 ring-black/5 sm:h-28"
+                      className="h-36 w-full rounded-xl object-cover ring-1 ring-white/10 sm:h-28"
                     />
 
                     <div className="min-w-0">
@@ -3349,7 +3349,7 @@ export default function JobDetailPage({
                         <button
                           type="button"
                           onClick={() => galleryInputRef.current?.click()}
-                          className="shrink-0 rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                          className="shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                           title="Pick a different file"
                         >
                           Change
@@ -3477,7 +3477,10 @@ export default function JobDetailPage({
 
 function Stat({ label, cents }: { label: string; cents: number }) {
   return (
-    <motion.div className="rounded-xl shadow-md bg-white p-3" variants={item}>
+    <motion.div
+      className="rounded-xl shadow-md bg-[var(--color-surface)]/35 p-3"
+      variants={item}
+    >
       <div className="text-xs text-[var(--color-muted)]">{label}</div>
       <div className="text-lg font-semibold text-[var(--color-text)]">
         <CountMoney cents={cents} />
@@ -3499,7 +3502,7 @@ function MotionCard({
 }) {
   return (
     <motion.section
-      className="w-full max-w-full justify-self-stretch rounded-2xl bg-white/80 backdrop-blur-md shadow-sm ring-1 ring-black/5 hover:shadow-md transition duration-300 ease-out"
+      className="w-full max-w-full justify-self-stretch rounded-2xl bg-[var(--color-surface)]/35 backdrop-blur-md shadow-sm ring-1 ring-white/10 hover:shadow-md transition duration-300 ease-out"
       {...fadeUp(delay)}
     >
       <div className="flex items-center justify-between px-4 sm:px-5 pt-4 gap-3">
@@ -3563,7 +3566,7 @@ function ModalShell({
             // Mobile: bottom sheet
             "w-full sm:w-full",
             "rounded-t-2xl sm:rounded-2xl",
-            "bg-white shadow-2xl ring-1 ring-black/10",
+            "bg-[var(--color-surface)]/35 shadow-2xl ring-1 ring-white/10",
             // Height behavior
             "max-h-[92vh] sm:max-h-[85vh]",
             // Width cap on larger screens
