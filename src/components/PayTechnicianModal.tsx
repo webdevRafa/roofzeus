@@ -315,10 +315,11 @@ export default function PayTechnicianModal({
 
               <div className="min-w-0">
                 <h2 className="text-xl font-semibold text-white tracking-wide">
-                  Pay technician
+                  Create day-rate payout
                 </h2>
                 <p className="mt-1 text-xs text-white/55">
-                  Create a global technician payout (not tied to any job).
+                  For inspections, service calls, punch supervision, or any
+                  non-job-tied work.
                 </p>
               </div>
             </div>

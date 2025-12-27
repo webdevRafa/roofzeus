@@ -6,9 +6,11 @@ import {
   User,
   MapPin,
   BadgeDollarSign,
+  Wrench,
 } from "lucide-react";
 import type { PayoutDoc } from "../../types/types";
 import type { Job } from "../../types/types";
+import { Link } from "react-router-dom";
 
 // Same payout filter union as DashboardPage
 export type PayoutFilter = "all" | "pending" | "paid";
@@ -254,8 +256,10 @@ export function DashboardPayoutsSection({
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg sm:text-xl font-semibold text-white">
-                    PAYOUTS
+                  <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-text)] tracking-wide">
+                    <Link to="/payouts" className="hover:underline">
+                      PAYOUTS
+                    </Link>
                   </h2>
 
                   <button
@@ -293,9 +297,11 @@ export function DashboardPayoutsSection({
           </div>
 
           {/* Controls */}
-          <div className="flex flex-col gap-2 sm:items-end">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <div className="relative w-full sm:w-[280px]">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+            {/* Row 1: Search + primary action (no overlap; wraps cleanly) */}
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+              {/* Search */}
+              <div className="relative w-full min-w-0 sm:w-[320px] sm:flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/45" />
                 <input
                   value={payoutSearch}
@@ -310,38 +316,44 @@ export function DashboardPayoutsSection({
                 />
               </div>
 
+              {/* Day-rate payout */}
               <button
                 type="button"
                 onClick={onOpenPayTechnician}
-                className="inline-flex items-center justify-center rounded-xl px-2 py-2 text-xs font-semibold transition"
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition hover:opacity-95 sm:self-auto"
                 style={{
                   backgroundColor: "rgba(207,174,93,0.95)",
                   color: "#0b0e14",
                 }}
               >
-                Pay tech
+                <Wrench className="h-4 w-4" />
+                <span className="hidden sm:inline">Day-rate payout</span>
+                <span className="sm:hidden">Day-rate</span>
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Pill
-                active={payoutFilter === "all"}
-                onClick={() => setPayoutFilter("all")}
-              >
-                All
-              </Pill>
-              <Pill
-                active={payoutFilter === "pending"}
-                onClick={() => setPayoutFilter("pending")}
-              >
-                Pending
-              </Pill>
-              <Pill
-                active={payoutFilter === "paid"}
-                onClick={() => setPayoutFilter("paid")}
-              >
-                Paid
-              </Pill>
+            {/* Row 2: Filters (scrollable on mobile, right-aligned on desktop) */}
+            <div className="mt-1 flex w-full items-center sm:mt-0 sm:justify-end">
+              <div className="flex w-full gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
+                <Pill
+                  active={payoutFilter === "all"}
+                  onClick={() => setPayoutFilter("all")}
+                >
+                  All
+                </Pill>
+                <Pill
+                  active={payoutFilter === "pending"}
+                  onClick={() => setPayoutFilter("pending")}
+                >
+                  Pending
+                </Pill>
+                <Pill
+                  active={payoutFilter === "paid"}
+                  onClick={() => setPayoutFilter("paid")}
+                >
+                  Paid
+                </Pill>
+              </div>
             </div>
           </div>
         </div>
@@ -385,11 +397,7 @@ export function DashboardPayoutsSection({
                         <button
                           type="button"
                           onClick={() => setStubOpen(true)}
-                          className="rounded-xl px-3 py-2 text-xs font-semibold transition"
-                          style={{
-                            backgroundColor: "rgba(16,185,129,0.85)",
-                            color: "white",
-                          }}
+                          className="rounded-xl bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-100 border border-emerald-400/25 hover:bg-emerald-500/25 transition"
                         >
                           Create stub ({selectedPayoutIds.length})
                         </button>

@@ -24,6 +24,7 @@ import JobDetailPage from "../pages/JobDetailPage";
 
 import CrewDashboardPage from "../pages/CrewDashboardPage";
 import CrewJobDetailPage from "../pages/CrewJobDetailPage";
+import PayoutsPage from "../pages/PayoutsPage";
 
 export default function AppRouter() {
   return (
@@ -52,6 +53,7 @@ export default function AppRouter() {
         <Route path="/employees/:id" element={<EmployeeDetailPage />} />
         <Route path="/job/:id" element={<JobDetailPage />} />
         <Route path="/invoices/:id" element={<InvoiceViewer />} />
+        <Route path="/payouts" element={<PayoutsPage />} />
       </Route>
 
       {/* ✅ Crew routes accessible to crew, manager, readOnly roles */}

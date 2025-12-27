@@ -321,8 +321,8 @@ export function DashboardJobsSection({
             </button>
           </div>
 
-          {/* Right chips */}
-          <div className="flex flex-wrap gap-2 text-[11px]">
+          {/* Right chips + primary action */}
+          <div className="flex flex-wrap items-center justify-end gap-2 text-[11px]">
             {hasActiveDateFilter ? (
               <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-black/20 px-3 py-1 text-[var(--color-accent-gold)]/80">
                 Date: {rangeLabel || "Custom range"}
@@ -339,6 +339,17 @@ export function DashboardJobsSection({
                 {statusFilter === "all" ? "All" : statusFilter}
               </span>
             </span>
+
+            {/* New job (moved here) */}
+            <button
+              type="button"
+              onClick={() => setOpenForm((v) => !v)}
+              className="group inline-flex items-center gap-2 rounded-full bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] px-3 py-1.5 text-[11px] font-semibold text-[var(--btn-text)] transition"
+              aria-label="Add New Job"
+            >
+              <SquarePlus className="h-4 w-4" />
+              New job
+            </button>
           </div>
         </div>
 
@@ -386,19 +397,6 @@ export function DashboardJobsSection({
               {hasActiveDateFilter ? "Edit date range" : "Date filters"}
             </span>
           </button>
-
-          {/* Add New Job */}
-          <div className="sm:ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setOpenForm((v) => !v)}
-              className="group inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] px-4 py-2 text-[12px] font-semibold text-[var(--btn-text)] transition"
-              aria-label="Add New Job"
-            >
-              <SquarePlus className="h-4 w-4" />
-              New job
-            </button>
-          </div>
         </div>
 
         {/* Status Filters row (only when expanded) */}
@@ -698,9 +696,9 @@ export function DashboardJobsSection({
       {/* Content */}
       {jobsOpen && (
         <div className="px-4 sm:px-6 py-5">
-          <div className="grid gap-4 lg:grid-cols-12">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-12 xl:items-start">
             {/* Main list/table */}
-            <motion.div {...fadeUp(0.08)} className="lg:col-span-8 min-w-0">
+            <motion.div {...fadeUp(0.08)} className="xl:col-span-8 min-w-0">
               <div className="mb-2 flex items-center justify-between">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55">
                   Pipeline
@@ -832,17 +830,21 @@ export function DashboardJobsSection({
                   animate="animate"
                 >
                   <div className="relative overflow-auto">
-                    <table className="w-full text-xs border-separate border-spacing-0">
+                    <table className="w-full table-fixed text-xs border-separate border-spacing-0">
                       <thead className="sticky top-0 z-30 bg-[var(--color-surface)]/80 backdrop-blur text-[11px] uppercase tracking-wide text-white/55 border-b border-[var(--color-border)]/60">
                         <tr>
                           <th className="text-left px-4 py-3">Job</th>
-                          <th className="text-left px-4 py-3">Status</th>
+                          <th className="text-left px-4 py-3 whitespace-nowrap">
+                            Status
+                          </th>
                           <th className="text-left px-4 py-3">Note</th>
                           <th className="text-right px-4 py-3">Net</th>
                           <th className="text-left px-4 py-3 whitespace-nowrap">
                             Last Updated
                           </th>
-                          <th className="text-right px-4 py-3">Actions</th>
+                          <th className="text-right px-4 py-3 whitespace-nowrap">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
 
@@ -883,7 +885,7 @@ export function DashboardJobsSection({
                                 </div>
                               </td>
 
-                              <td className="px-4 py-3">
+                              <td className="px-4 py-3 whitespace-nowrap">
                                 <span
                                   className={cx(
                                     "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
@@ -922,7 +924,7 @@ export function DashboardJobsSection({
                                 </div>
                               </td>
 
-                              <td className="px-4 py-3 text-right">
+                              <td className="px-4 py-3 text-right whitespace-nowrap">
                                 <Link
                                   to={`/job/${job.id}`}
                                   className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
@@ -1001,7 +1003,10 @@ export function DashboardJobsSection({
             </motion.div>
 
             {/* Right rail: totals / quick stats */}
-            <motion.aside {...fadeUp(0.12)} className="lg:col-span-4 min-w-0">
+            <motion.aside
+              {...fadeUp(0.12)}
+              className="xl:col-span-4 min-w-0 w-full xl:justify-self-end"
+            >
               <div className="mb-2 flex items-center justify-between">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55">
                   Snapshot

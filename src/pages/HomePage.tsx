@@ -9,6 +9,7 @@ const COLORS = {
   surface: "#1f2430",
   border: "#3a3f4b",
   gold: "#cfae5d",
+  white: "#ffffff",
   text: "#f5f6f8",
   black: "#000000",
 } as const;
@@ -108,7 +109,7 @@ function LightningMark({ className }: { className?: string }) {
     >
       <path
         d="M8.5 0.8L1.4 9.2H6.9L5.5 15.2L12.6 6.8H7.1L8.5 0.8Z"
-        fill={COLORS.gold}
+        fill={COLORS.white}
         opacity="0.95"
       />
     </svg>
@@ -961,7 +962,7 @@ export default function HomePage() {
                 {/* Use Link for same-domain routing; change to your actual app route if needed */}
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2 transition bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)] font-bold"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-6 py-2 transition bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)] font-bold "
                 >
                   Get Started
                   <LightningMark className="opacity-90" />

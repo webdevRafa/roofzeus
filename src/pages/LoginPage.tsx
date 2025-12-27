@@ -210,9 +210,6 @@ const LoginPage = () => {
                 </motion.div>
 
                 <motion.div variants={item} className="mt-6">
-                  <div className="text-white text-2xl sm:text-3xl font-semibold tracking-tight">
-                    Welcome back
-                  </div>
                   <div className="mt-2 text-white/60 text-sm leading-relaxed max-w-md">
                     Sign in to manage jobs, track profit, schedule crews, and
                     generate pay stubs—everything your roofing operation needs,
