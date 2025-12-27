@@ -390,8 +390,10 @@ export default function FinancialOverviewPage() {
       netMap[m] = 0;
     });
 
-    for (const job of filteredJobs) {
-      const ms = toMillis((job as any).updatedAt ?? job.createdAt);
+    for (const invoice of invoices) {
+      if (invoice.status === "void" || invoice.status === "draft") continue;
+
+      const ms = toMillis(invoiceTrendDate(invoice));
       if (ms == null) continue;
 
       const dt = new Date(ms);
@@ -401,11 +403,15 @@ export default function FinancialOverviewPage() {
       )}`;
 
       if (earnMap[key] != null) {
-        earnMap[key] += job.earnings?.totalEarningsCents ?? 0;
-        expMap[key] +=
-          (job.expenses?.totalPayoutsCents ?? 0) +
-          (job.expenses?.totalMaterialsCents ?? 0);
-        netMap[key] += job.computed?.netProfitCents ?? 0;
+        const earningsCents = invoice.money?.totalCents ?? 0;
+        const expensesCents =
+          (invoice.money?.materialsCents ?? 0) +
+          (invoice.money?.laborCents ?? 0) +
+          (invoice.money?.extraCents ?? 0);
+
+        earnMap[key] += earningsCents;
+        expMap[key] += expensesCents;
+        netMap[key] += earningsCents - expensesCents;
       }
     }
 
@@ -415,7 +421,7 @@ export default function FinancialOverviewPage() {
     const labels = monthDates.map((d) => formatMonth(d));
 
     return { labels, earningsTotals, expenseTotals, netProfitTotals };
-  }, [filteredJobs, rangeStart, now]);
+  }, [invoices, rangeStart, now]);
 
   // Expense breakdown by category
   const { breakdownLabels, breakdownValues, breakdownColors } = useMemo(() => {
@@ -608,6 +614,13 @@ export default function FinancialOverviewPage() {
   function invoiceBasisDate(inv: InvoiceDoc, mode: ReportInvoiceMode) {
     if (mode === "paidOnly") return (inv as any).paidAt;
     return (inv as any).sentAt ?? inv.createdAt;
+  }
+
+  function invoiceTrendDate(inv: InvoiceDoc): InvoiceDoc["createdAt"] {
+    if (inv.status === "paid") {
+      return inv.paidAt ?? inv.sentAt ?? inv.createdAt;
+    }
+    return inv.sentAt ?? inv.createdAt;
   }
 
   const invoicesForReport = useMemo(() => {
@@ -1089,7 +1102,8 @@ export default function FinancialOverviewPage() {
               Earnings, Expenses &amp; Profit Trend
             </h2>
             <p className="mt-1 text-sm text-[var(--color-muted)]">
-              Activity-based trend (jobs updated in the selected range).
+              Invoice-based trend (paid date for paid invoices, otherwise sent
+              or created date).
             </p>
           </div>
         </div>
