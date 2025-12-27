@@ -1015,6 +1015,58 @@ export default function JobDetailPage({
       feltCompletedAt: Timestamp.now(),
     });
   }
+  async function reopenFelt() {
+    if (!job) return;
+    if (jobIsLocked) return;
+
+    const patch: Job = {
+      ...job,
+      feltCompletedAt: deleteField() as any,
+
+      // reopening dry-in invalidates shingles + punch path
+      shinglesCompletedAt: deleteField() as any,
+      punchScheduledFor: deleteField() as any,
+      punchedAt: deleteField() as any,
+
+      // Optional: if you ever allow reopening after job completion:
+      // status: job.status === "completed" ? "active" : job.status,
+    };
+
+    await saveJob(patch);
+
+    setToast({
+      status: "success",
+      title: "Dry-in reopened",
+      message:
+        "Dry-in has been reopened. Shingles and punch were cleared to keep the timeline consistent.",
+    });
+  }
+
+  async function reopenShingles() {
+    if (!job) return;
+    if (jobIsLocked) return;
+
+    const patch: Job = {
+      ...job,
+      shinglesCompletedAt: deleteField() as any,
+
+      // reopening shingles invalidates punch path
+      punchScheduledFor: deleteField() as any,
+      punchedAt: deleteField() as any,
+
+      // Optional: if you ever allow reopening after job completion:
+      // status: job.status === "completed" ? "active" : job.status,
+    };
+
+    await saveJob(patch);
+
+    setToast({
+      status: "success",
+      title: "Shingles reopened",
+      message:
+        "Shingles has been reopened. Punch scheduling was cleared to keep the timeline consistent.",
+    });
+  }
 
   async function markShinglesCompleted() {
     if (!job) return;
@@ -1519,44 +1571,64 @@ export default function JobDetailPage({
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={jobIsLocked}
-                          onClick={() => {
-                            if (jobIsLocked) return;
-                            setFeltScheduleDate(
-                              feltScheduledMs
-                                ? toYMD(new Date(feltScheduledMs))
-                                : toYMD(new Date())
-                            );
-                            setFeltScheduleEditing(true);
-                          }}
-                          className={
-                            "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
-                            (jobIsLocked
-                              ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                              : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                          }
-                        >
-                          {feltScheduledMs ? "Reschedule" : "Schedule"}
-                        </button>
+                        {!feltCompletedMs ? (
+                          <>
+                            <button
+                              type="button"
+                              disabled={jobIsLocked}
+                              onClick={() => {
+                                if (jobIsLocked) return;
+                                setFeltScheduleDate(
+                                  feltScheduledMs
+                                    ? toYMD(new Date(feltScheduledMs))
+                                    : toYMD(new Date())
+                                );
+                                setFeltScheduleEditing(true);
+                              }}
+                              className={
+                                "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                (jobIsLocked
+                                  ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                  : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                              }
+                            >
+                              {feltScheduledMs ? "Reschedule" : "Schedule"}
+                            </button>
 
-                        {!feltCompletedMs && (
+                            <button
+                              type="button"
+                              disabled={jobIsLocked}
+                              onClick={() => {
+                                if (jobIsLocked) return;
+                                setConfirmFeltDoneOpen(true);
+                              }}
+                              className={
+                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                (jobIsLocked
+                                  ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                  : "bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500/30")
+                              }
+                            >
+                              Mark done
+                            </button>
+                          </>
+                        ) : (
                           <button
                             type="button"
                             disabled={jobIsLocked}
                             onClick={() => {
                               if (jobIsLocked) return;
-                              setConfirmFeltDoneOpen(true);
+                              void reopenFelt();
                             }}
                             className={
                               "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
                               (jobIsLocked
                                 ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                : "bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500/30")
+                                : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
                             }
+                            title="Undo dry-in completion"
                           >
-                            Mark done
+                            Reopen
                           </button>
                         )}
                       </div>
@@ -1591,49 +1663,69 @@ export default function JobDetailPage({
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={jobIsLocked}
-                          onClick={() => {
-                            if (jobIsLocked) return;
-                            setShinglesScheduleDate(
-                              shinglesScheduledMs
-                                ? toYMD(new Date(shinglesScheduledMs))
-                                : toYMD(new Date())
-                            );
-                            setShinglesScheduleEditing(true);
-                          }}
-                          className={
-                            "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
-                            (jobIsLocked
-                              ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                              : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                          }
-                        >
-                          {shinglesScheduledMs ? "Reschedule" : "Schedule"}
-                        </button>
+                        {!shinglesCompletedMs ? (
+                          <>
+                            <button
+                              type="button"
+                              disabled={jobIsLocked}
+                              onClick={() => {
+                                if (jobIsLocked) return;
+                                setShinglesScheduleDate(
+                                  shinglesScheduledMs
+                                    ? toYMD(new Date(shinglesScheduledMs))
+                                    : toYMD(new Date())
+                                );
+                                setShinglesScheduleEditing(true);
+                              }}
+                              className={
+                                "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                (jobIsLocked
+                                  ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                  : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                              }
+                            >
+                              {shinglesScheduledMs ? "Reschedule" : "Schedule"}
+                            </button>
 
-                        {!shinglesCompletedMs && (
+                            <button
+                              type="button"
+                              disabled={!canMarkShinglesDone}
+                              title={
+                                !feltCompletedMs
+                                  ? "Complete DRY IN first to mark shingles done."
+                                  : undefined
+                              }
+                              onClick={() => {
+                                if (!canMarkShinglesDone) return;
+                                setConfirmShinglesDoneOpen(true);
+                              }}
+                              className={
+                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                (!canMarkShinglesDone
+                                  ? "bg-white/10 text-white/40 cursor-not-allowed opacity-70 ring-white/10"
+                                  : "bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500/30")
+                              }
+                            >
+                              Mark done
+                            </button>
+                          </>
+                        ) : (
                           <button
                             type="button"
-                            disabled={!canMarkShinglesDone}
-                            title={
-                              !feltCompletedMs
-                                ? "Complete DRY IN first to mark shingles done."
-                                : undefined
-                            }
+                            disabled={jobIsLocked}
                             onClick={() => {
-                              if (!canMarkShinglesDone) return;
-                              setConfirmShinglesDoneOpen(true);
+                              if (jobIsLocked) return;
+                              void reopenShingles();
                             }}
                             className={
                               "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
-                              (!canMarkShinglesDone
-                                ? "bg-white/10 text-white/40 cursor-not-allowed opacity-70 ring-white/10"
-                                : "bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500/30")
+                              (jobIsLocked
+                                ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
                             }
+                            title="Undo shingles completion"
                           >
-                            Mark done
+                            Reopen
                           </button>
                         )}
                       </div>
@@ -1910,8 +2002,8 @@ export default function JobDetailPage({
             <Stat label="All Expenses" cents={totals.expenses} />
             <div
               className={
-                "rounded-xl ring-1 ring-white/10 " +
-                (totals.net >= 0 ? "bg-emerald-50" : "bg-red-50")
+                "rounded-xl ring-1 " +
+                (totals.net >= 0 ? "ring-emerald-600" : "ring-red-600/60")
               }
             >
               <Stat label="Profit" cents={totals.net} />
@@ -2571,7 +2663,7 @@ export default function JobDetailPage({
         {/* ===== Schedule Punch Modal ===== */}
         {schedulePunchOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
+            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Schedule punch
@@ -2643,7 +2735,7 @@ export default function JobDetailPage({
         {/* ===== Confirm Mark as Punched Modal ===== */}
         {confirmPunchedOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)]/35 p-4 shadow-xl">
+            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Confirm job completion
@@ -2805,7 +2897,7 @@ export default function JobDetailPage({
         {/* ===== Confirm Permanently Delete Job Modal ===== */}
         {confirmDeleteOpen && job && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)]/35 p-4 shadow-xl">
+            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[var(--color-text)]">
                   Permanently delete this job?

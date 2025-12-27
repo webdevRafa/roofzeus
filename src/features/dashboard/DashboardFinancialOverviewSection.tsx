@@ -257,14 +257,6 @@ export default function DashboardFinancialOverviewSection({
               </div>
             </div>
           </div>
-
-          <span className="hidden sm:inline-flex items-center gap-2 text-[11px] text-white/50">
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: "rgba(207,174,93,0.85)" }}
-            />
-            Org scoped
-          </span>
         </div>
       </div>
 

@@ -109,9 +109,6 @@ export default function DashboardSummarySection({
         </div>
 
         <div className="hidden sm:flex items-center gap-2">
-          <span className="rounded-full border border-[#3a3f4b] bg-[#0b0e14]/40 px-3 py-1 text-[11px] text-white/60">
-            Org scoped
-          </span>
           <span className="rounded-full border border-[#cfae5d]/30 bg-[#cfae5d]/10 px-3 py-1 text-[11px] text-[#cfae5d]">
             Live
           </span>
