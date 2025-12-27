@@ -516,7 +516,7 @@ export default function PayTechnicianModal({
                 "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)]"
               )}
             >
-              {saving ? "Creating…" : "Create technician payout"}
+              {saving ? "Creating…" : "Create day-rate payout"}
             </motion.button>
           </motion.div>
         </motion.div>
