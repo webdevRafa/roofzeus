@@ -15,7 +15,7 @@ import {
 import { useMembership } from "../hooks/useMembership";
 import { OrgProvider } from "../contexts/OrgContext";
 
-import logo from "../assets/rogers-roofing.webp"; // adjust if needed
+import logo from "../assets/roofzeus-white.png"; // adjust if needed
 
 function navLinkBase(isActive: boolean) {
   return (
@@ -66,7 +66,7 @@ export default function AdminLayout() {
                   <img
                     src={logo}
                     alt="Roger's Roofing logo"
-                    className="h-10 w-10 rounded-xl shadow-md"
+                    className="w-[100px] shadow-md"
                   />
                   <div className="hidden sm:block">
                     <div className="text-sm font-semibold text-white leading-4">
