@@ -77,7 +77,7 @@ function FeatureTicker({ items }: { items: string[] }) {
   // The result is a seamless loop that never “resets”.
   return (
     <div
-      className="relative overflow-hidden"
+      className="relative overflow-hidden w-full max-w-full"
       style={{
         WebkitMaskImage:
           "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
@@ -555,9 +555,9 @@ function DashboardPreview() {
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
+    <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8] overflow-x-hidden">
       {/* HERO */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden max-w-full">
         {/* subtle background texture */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(207,174,93,0.10),transparent_55%)]" />
@@ -570,8 +570,8 @@ export default function HomePage() {
           animate="show"
           className="max-w-7xl mx-auto px-6 pt-28 pb-24 relative"
         >
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <motion.div variants={fadeUp} className="select-none">
+          <div className="grid md:grid-cols-2 gap-16 items-center min-w-0">
+            <motion.div variants={fadeUp} className="select-none min-w-0">
               <motion.img
                 variants={fadeIn}
                 className="max-w-[300px] mb-3"
@@ -629,13 +629,15 @@ export default function HomePage() {
             </motion.div>
 
             {/* Preview */}
-            <DashboardPreview />
+            <div className="min-w-0">
+              <DashboardPreview />
+            </div>
           </div>
         </motion.div>
       </section>
 
       {/* PAIN → SOLUTION */}
-      <section className="bg-[#1f2430] border-t border-[#3a3f4b]">
+      <section className=" border-t border-[#3a3f4b]">
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -644,22 +646,22 @@ export default function HomePage() {
           className="max-w-7xl mx-auto px-6 py-20"
         >
           <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-10">
-            Stop running jobs from memory, texts, and spreadsheets
+            Stop juggling jobs across texts, notes, and spreadsheets
           </motion.h2>
 
           <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: "Job-level control",
-                desc: "Track square footage, price per square, materials, notes, photos, and status — all in one place.",
+                title: "Everything per job",
+                desc: "Square footage, pricing, materials, notes, photos, status — all tied to the job so nothing gets lost.",
               },
               {
-                title: "Scheduling clarity",
-                desc: "Plan dry-ins, shingles, and punch work with full visibility across all jobs.",
+                title: "Scheduling that stays clear",
+                desc: "Set dry-in, shingles, and punch dates and see what’s coming up across every job.",
               },
               {
-                title: "Crew accountability",
-                desc: "Invite crew members, assign jobs, and track contributions with full transparency.",
+                title: "Crew, without confusion",
+                desc: "Invite your crew, assign jobs, and keep updates in one place — no more guessing who did what.",
               },
             ].map((f) => (
               <motion.div
@@ -668,8 +670,10 @@ export default function HomePage() {
                 whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
                 className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
               >
-                <h3 className="font-semibold text-lg mb-2">{f.title}</h3>
-                <p className="text-sm text-[#cfae5d]/70">{f.desc}</p>
+                <h3 className="font-semibold text-lg mb-2 text-[#cfae5d]">
+                  {f.title}
+                </h3>
+                <p className="text-sm ">{f.desc}</p>
               </motion.div>
             ))}
           </motion.div>

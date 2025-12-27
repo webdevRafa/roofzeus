@@ -434,7 +434,7 @@ export function DashboardJobsSection({
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/85 backdrop-blur p-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+              className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
               {...fadeUp(0.02)}
             >
               <div className="flex items-start justify-between gap-3">
