@@ -366,7 +366,7 @@ export default function PayTechnicianModal({
               {/* Employee select */}
               <motion.div {...fadeUp(0.06)} className="sm:col-span-2">
                 <label className="text-[10px] uppercase tracking-wide text-white/50">
-                  Employee
+                  Member
                 </label>
 
                 <select

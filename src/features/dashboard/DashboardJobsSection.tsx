@@ -301,7 +301,7 @@ export function DashboardJobsSection({
                 </Link>
               </h2>
               <div className="text-[12px] text-[var(--color-accent-gold)]/70">
-                Searchable jobs • profit + status • scoped per company
+                Search jobs or filter by dates
               </div>
             </div>
 
@@ -699,15 +699,6 @@ export function DashboardJobsSection({
           <div className="grid min-w-0 gap-4 xl:grid-cols-12 xl:items-start">
             {/* Main list/table */}
             <motion.div {...fadeUp(0.08)} className="xl:col-span-8 min-w-0">
-              <div className="mb-2 flex items-center justify-between">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55">
-                  Pipeline
-                </div>
-                <div className="text-[11px] text-[var(--color-accent-gold)]/70">
-                  Profit + status
-                </div>
-              </div>
-
               <div className="rounded-xl border border-[var(--color-border)] bg-black/20 overflow-hidden">
                 {/* Mobile cards */}
                 <div className="grid gap-2 p-2 md:hidden">
@@ -1007,15 +998,6 @@ export function DashboardJobsSection({
               {...fadeUp(0.12)}
               className="xl:col-span-4 min-w-0 w-full xl:justify-self-end"
             >
-              <div className="mb-2 flex items-center justify-between">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-white/55">
-                  Snapshot
-                </div>
-                <div className="text-[11px] text-[var(--color-accent-gold)]/70">
-                  In scope
-                </div>
-              </div>
-
               <div className="rounded-xl border border-[var(--color-border)] bg-black/20 p-4">
                 <div className="text-[11px] uppercase tracking-wider text-white/50">
                   Total net
@@ -1047,9 +1029,6 @@ export function DashboardJobsSection({
                     </div>
                     <div className="mt-1 text-lg font-semibold text-white">
                       {statusFilter === "all" ? "All" : statusFilter}
-                    </div>
-                    <div className="mt-1 text-[12px] text-white/50">
-                      Status scope
                     </div>
                   </div>
                 </div>

@@ -69,13 +69,6 @@ export default function AdminLayout() {
                     className="w-[100px] shadow-md"
                   />
                   <div className="hidden sm:block">
-                    <div className="text-sm font-semibold text-white leading-4">
-                      Roger&apos;s Roofing
-                    </div>
-                    <div className="text-[11px] text-white/75">
-                      Jobs • Scheduling • Payouts
-                    </div>
-
                     {/* ✅ Org switcher */}
                     {!membershipLoading && memberships.length > 1 && (
                       <div className="mt-2 flex items-center gap-2">

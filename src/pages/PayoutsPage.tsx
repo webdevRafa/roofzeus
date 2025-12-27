@@ -798,7 +798,7 @@ export default function PayoutsPage() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search employee or address…"
+                  placeholder="Search member or address…"
                   className="w-full rounded-2xl border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-white/90 placeholder:text-white/35 outline-none focus:border-[rgba(207,174,93,0.35)]"
                 />
               </div>
@@ -826,7 +826,7 @@ export default function PayoutsPage() {
                   onChange={(e) => setEmployeeId(e.target.value)}
                   className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/85 outline-none focus:border-[rgba(207,174,93,0.35)]"
                 >
-                  <option value="all">Employee</option>
+                  <option value="all">Member</option>
                   {employees.map((e) => (
                     <option key={e.id} value={e.id}>
                       {(e as any).name || e.id}
@@ -885,198 +885,209 @@ export default function PayoutsPage() {
             </div>
           </div>
 
-          {/* list */}
-          <div ref={listTopRef} className="p-4">
-            <div className={innerCard + " overflow-hidden"}>
-              <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-white/45">
-                <div>Payout</div>
-                <div className="text-right">Amount</div>
-              </div>
-
-              <div className="divide-y divide-white/10">
-                {paged.map((p) => {
-                  const selected = selectedIds.includes(p.id);
-                  const amountCents = Number((p as any).amountCents) || 0;
-
-                  return (
-                    <motion.div
-                      key={p.id}
-                      whileHover={{ y: -1 }}
-                      transition={{ duration: 0.2, ease: EASE }}
-                      className="flex items-stretch justify-between gap-3 px-4 py-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="truncate text-sm font-bold text-white">
-                            {getEmployeeDisplayName(p)}
-                          </div>
-
-                          <span
-                            className={
-                              "rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide " +
-                              (isPaid(p)
-                                ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-200"
-                                : "border-[rgba(207,174,93,0.25)] bg-[rgba(207,174,93,0.12)] text-[rgba(245,246,248,0.9)]")
-                            }
-                          >
-                            {isPaid(p) ? "paid" : "pending"}
-                          </span>
-
-                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
-                            {getCategory(p)}
-                          </span>
-
-                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
-                            {getMethod(p)}
-                          </span>
-                        </div>
-
-                        <div className="mt-1 truncate text-xs text-white/55">
-                          {getJobAddress(p) || "—"}
-                        </div>
-
-                        <div className="mt-1 text-[11px] text-white/45">
-                          Created {fmtDateTime((p as any).createdAt)}
-                          {isPaid(p) ? (
-                            <span className="ml-2 text-emerald-200/70">
-                              • Paid {fmtDateTime((p as any).paidAt)}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <div className="flex shrink-0 flex-col items-end justify-between gap-2">
-                        <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-right">
-                          <div className="text-[10px] font-semibold uppercase tracking-wide text-white/50">
-                            Amount
-                          </div>
-                          <div className="text-sm font-extrabold text-white">
-                            {money(amountCents)}
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => toggleSelected(p.id)}
-                          className={
-                            "inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition " +
-                            (selected
-                              ? "border-[rgba(207,174,93,0.35)] bg-[rgba(207,174,93,0.18)] text-white"
-                              : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10")
-                          }
-                        >
-                          {selected ? (
-                            <CheckCircle2 className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                          {selected ? "Selected" : "Select"}
-                        </button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-
-                {paged.length === 0 ? (
-                  <div className="px-4 py-10 text-center text-sm text-white/55">
-                    No payouts match your filters.
+          {/* list + sticky footer (Dashboard-style) */}
+          <div className="relative">
+            {/* scrolling list area */}
+            <div
+              ref={listTopRef}
+              className="relative overflow-auto section-scroll max-h-[520px] lg:max-h-[600px]"
+            >
+              <div className="p-4">
+                <div className={innerCard + " overflow-hidden"}>
+                  <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                    <div>Payout</div>
+                    <div className="text-right">Amount</div>
                   </div>
-                ) : null}
+
+                  <div className="divide-y divide-white/10">
+                    {paged.map((p) => {
+                      const selected = selectedIds.includes(p.id);
+                      const amountCents = Number((p as any).amountCents) || 0;
+
+                      return (
+                        <motion.div
+                          key={p.id}
+                          whileHover={{ y: -1 }}
+                          transition={{ duration: 0.2, ease: EASE }}
+                          className="flex items-stretch justify-between gap-3 px-4 py-3"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="truncate text-sm font-bold text-white">
+                                {getEmployeeDisplayName(p)}
+                              </div>
+
+                              <span
+                                className={
+                                  "rounded-full border px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide " +
+                                  (isPaid(p)
+                                    ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-200"
+                                    : "border-[rgba(207,174,93,0.25)] bg-[rgba(207,174,93,0.12)] text-[rgba(245,246,248,0.9)]")
+                                }
+                              >
+                                {isPaid(p) ? "paid" : "pending"}
+                              </span>
+
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
+                                {getCategory(p)}
+                              </span>
+
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
+                                {getMethod(p)}
+                              </span>
+                            </div>
+
+                            <div className="mt-1 truncate text-xs text-white/55">
+                              {getJobAddress(p) || "—"}
+                            </div>
+
+                            <div className="mt-1 text-[11px] text-white/45">
+                              Created {fmtDateTime((p as any).createdAt)}
+                              {isPaid(p) ? (
+                                <span className="ml-2 text-emerald-200/70">
+                                  • Paid {fmtDateTime((p as any).paidAt)}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="flex shrink-0 flex-col items-end justify-between gap-2">
+                            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-right">
+                              <div className="text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                                Amount
+                              </div>
+                              <div className="text-sm font-extrabold text-white">
+                                {money(amountCents)}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => toggleSelected(p.id)}
+                              className={
+                                "inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition " +
+                                (selected
+                                  ? "border-[rgba(207,174,93,0.35)] bg-[rgba(207,174,93,0.18)] text-white"
+                                  : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10")
+                              }
+                            >
+                              {selected ? (
+                                <CheckCircle2 className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                              {selected ? "Selected" : "Select"}
+                            </button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+
+                    {paged.length === 0 ? (
+                      <div className="px-4 py-10 text-center text-sm text-white/55">
+                        No payouts match your filters.
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* spacer so the last row isn't hidden behind sticky footer */}
+                <div aria-hidden className="h-28" />
               </div>
             </div>
 
-            {/* pagination */}
-            <div className="mt-3 flex items-center justify-between text-xs text-white/60">
-              <div>
-                Showing{" "}
-                <span className="text-white/85 font-semibold">
-                  {(pageSafe - 1) * PER_PAGE + (paged.length ? 1 : 0)}–
-                  {(pageSafe - 1) * PER_PAGE + paged.length}
-                </span>{" "}
-                of{" "}
-                <span className="text-white/85 font-semibold">
-                  {filtered.length}
-                </span>
-              </div>
+            {/* Sticky footer (selection actions + pagination always visible) */}
+            <div className="sticky bottom-0 z-20 border-t border-white/10 bg-[rgba(11,14,20,0.88)] backdrop-blur">
+              <AnimatePresence initial={false}>
+                {selectedIds.length > 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 12 }}
+                    transition={{ duration: 0.22, ease: EASE }}
+                    className="px-4 py-3"
+                  >
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <div className="text-sm text-white/75">
+                        Selected{" "}
+                        <span className="font-extrabold text-white">
+                          {selectedIds.length}
+                        </span>{" "}
+                        payout{selectedIds.length === 1 ? "" : "s"}.
+                        {selectedEmployeeIds.length > 1 ? (
+                          <span className="ml-2 inline-flex items-center gap-1 text-amber-200/80">
+                            <AlertTriangle className="h-4 w-4" />
+                            Select payouts for a single member to create a stub.
+                          </span>
+                        ) : null}
+                      </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={pageSafe <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-white/80 disabled:opacity-40 hover:bg-white/10 transition"
-                >
-                  Prev
-                </button>
-                <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
-                  Page{" "}
-                  <span className="text-white/85 font-semibold">
-                    {pageSafe}
-                  </span>{" "}
-                  / {pageCount}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={clearSelected}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10 transition"
+                        >
+                          <X className="h-4 w-4" />
+                          Clear
+                        </button>
+
+                        <button
+                          disabled={!canCreateStub}
+                          onClick={() => setStubOpen(true)}
+                          className="inline-flex items-center gap-2 rounded-2xl bg-emerald-500/20 px-4 py-2 text-sm font-extrabold text-emerald-100 border border-emerald-400/25 hover:bg-emerald-500/25 transition disabled:opacity-40"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Create stub
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+
+              {/* pagination row */}
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between text-xs text-white/60">
+                  <div>
+                    Showing{" "}
+                    <span className="text-white/85 font-semibold">
+                      {(pageSafe - 1) * PER_PAGE + (paged.length ? 1 : 0)}–
+                      {(pageSafe - 1) * PER_PAGE + paged.length}
+                    </span>{" "}
+                    of{" "}
+                    <span className="text-white/85 font-semibold">
+                      {filtered.length}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={pageSafe <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-white/80 disabled:opacity-40 hover:bg-white/10 transition"
+                    >
+                      Prev
+                    </button>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+                      Page{" "}
+                      <span className="text-white/85 font-semibold">
+                        {pageSafe}
+                      </span>{" "}
+                      / {pageCount}
+                    </div>
+
+                    <button
+                      disabled={pageSafe >= pageCount}
+                      onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-white/80 disabled:opacity-40 hover:bg-white/10 transition"
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
-                <button
-                  disabled={pageSafe >= pageCount}
-                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-white/80 disabled:opacity-40 hover:bg-white/10 transition"
-                >
-                  Next
-                </button>
               </div>
             </div>
           </div>
-
-          {/* sticky selection bar */}
-          <AnimatePresence>
-            {selectedIds.length > 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 16 }}
-                transition={{ duration: 0.25, ease: EASE }}
-                className="sticky bottom-0 z-10 border-t border-white/10 bg-[rgba(11,14,20,0.8)] backdrop-blur px-4 py-3"
-              >
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div className="text-sm text-white/75">
-                    Selected{" "}
-                    <span className="font-extrabold text-white">
-                      {selectedIds.length}
-                    </span>{" "}
-                    payout
-                    {selectedIds.length === 1 ? "" : "s"}.
-                    {selectedEmployeeIds.length > 1 ? (
-                      <span className="ml-2 inline-flex items-center gap-1 text-amber-200/80">
-                        <AlertTriangle className="h-4 w-4" />
-                        Select payouts for a single employee to create a stub.
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={clearSelected}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10 transition"
-                    >
-                      <X className="h-4 w-4" />
-                      Clear
-                    </button>
-
-                    <button
-                      disabled={!canCreateStub}
-                      onClick={() => setStubOpen(true)}
-                      className={
-                        "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-extrabold transition " +
-                        (canCreateStub
-                          ? "bg-emerald-400/20 text-emerald-100 border border-emerald-400/25 hover:bg-emerald-400/25"
-                          : "bg-white/5 text-white/35 border border-white/10 cursor-not-allowed")
-                      }
-                    >
-                      <FileText className="h-4 w-4" />
-                      Create stub
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
         </div>
 
         {/* right: stub history */}
@@ -1124,7 +1135,7 @@ export default function PayoutsPage() {
                           `Stub ${s.id.slice(0, 6).toUpperCase()}`}
                       </div>
                       <div className="truncate text-xs text-white/55">
-                        {(s as any).employeeNameSnapshot || "Employee"} •{" "}
+                        {(s as any).employeeNameSnapshot || "Member"} •{" "}
                         {money((s as any).totalCents || 0)}
                       </div>
                     </div>
@@ -1146,7 +1157,7 @@ export default function PayoutsPage() {
             {/* hint */}
             <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/60">
               Tip: Use filters on the left to isolate a week/pay period, then
-              create a stub for a single employee.
+              create a stub for a single member.
             </div>
           </div>
         </div>

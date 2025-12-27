@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
+import preview from "../assets/roofzeus-demo.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -679,7 +680,11 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
       </section>
-
+      <img
+        className="block mx-auto w-full max-w-[1300px]"
+        src={preview}
+        alt=""
+      />
       {/* FINANCIAL POWER */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <motion.div
