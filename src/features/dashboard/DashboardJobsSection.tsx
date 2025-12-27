@@ -372,7 +372,7 @@ export function DashboardJobsSection({
               {showSearch && (
                 <motion.div
                   {...fadeUp(0.02)}
-                  className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
+                  className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
                 >
                   <input
                     value={searchTerm}
@@ -829,9 +829,9 @@ export function DashboardJobsSection({
                   initial="initial"
                   animate="animate"
                 >
-                  <div className="relative overflow-auto">
+                  <div className="relative overflow-auto section-scroll">
                     <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                      <thead className="sticky top-0 z-30 bg-[var(--color-surface)]/80 backdrop-blur text-[11px] uppercase tracking-wide text-white/55 border-b border-[var(--color-border)]/60">
+                      <thead className="sticky top-0 z-30 bg-[var(--color-surface)] backdrop-blur text-[11px] uppercase tracking-wide text-white/55 border-b border-[var(--color-border)]/60">
                         <tr>
                           <th className="text-left px-4 py-3">Job</th>
                           <th className="text-left px-4 py-3 whitespace-nowrap">
@@ -958,7 +958,7 @@ export function DashboardJobsSection({
 
                     {/* Sticky pagination footer */}
                     {filteredJobs.length > 0 && (
-                      <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-surface)]/80 px-4 py-2 backdrop-blur text-xs text-white/55">
+                      <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-surface)] px-4 py-2 backdrop-blur text-xs text-white/55">
                         <span>
                           Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                           {Math.min(

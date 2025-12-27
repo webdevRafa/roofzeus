@@ -234,6 +234,8 @@ export default function JobDetailPage({
   const [schedulePunchOpen, setSchedulePunchOpen] = useState(false);
   const [schedulePunchDate, setSchedulePunchDate] = useState<string>("");
   const [confirmPunchedOpen, setConfirmPunchedOpen] = useState(false);
+  const [confirmUndoPunchOpen, setConfirmUndoPunchOpen] = useState(false);
+
   // Delete job confirmation modal
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deletingJob, setDeletingJob] = useState(false);
@@ -961,6 +963,29 @@ export default function JobDetailPage({
       status: "success",
       title: "Job marked complete",
       message: `This job has been marked as punched and completed on ${label}.`,
+    });
+  }
+  async function confirmUndoPunch() {
+    if (!job) return;
+
+    // Allow undo even though "completed" normally locks the job UI.
+    // We only block undo for truly locked states.
+    if (job.status === "closed" || job.status === "archived") return;
+
+    await saveJob({
+      ...job,
+      status: "pending", // back to an actionable workflow state
+      punchedAt: null, // undo completion
+      // NOTE: we do NOT restore punchScheduledFor because confirmMarkPunched clears it.
+      // User can reschedule punch immediately after undo.
+    });
+
+    setConfirmUndoPunchOpen(false);
+
+    setToast({
+      status: "success",
+      title: "Punch undone",
+      message: "Job reopened. You can reschedule punch or make changes.",
     });
   }
 
@@ -1765,34 +1790,60 @@ export default function JobDetailPage({
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={!canSchedulePunch}
-                          onClick={() => {
-                            if (!canSchedulePunch) return;
-                            setSchedulePunchOpen(true);
-
-                            const base = job.punchScheduledFor ?? new Date();
-                            setSchedulePunchDate(toYMD(base));
-                          }}
-                          className={
-                            "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
-                            (!canSchedulePunch
-                              ? "bg-white/10 text-white/40 cursor-not-allowed opacity-60 ring-white/10"
-                              : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                          }
-                        >
-                          {job.punchScheduledFor ? "Reschedule" : "Schedule"}
-                        </button>
-
-                        {canSchedulePunch && (
+                        {punchedAtLabel ? (
                           <button
                             type="button"
-                            onClick={() => setConfirmPunchedOpen(true)}
-                            className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 transition ring-1 ring-emerald-500/30"
+                            disabled={
+                              job.status === "closed" ||
+                              job.status === "archived"
+                            }
+                            onClick={() => setConfirmUndoPunchOpen(true)}
+                            className={
+                              "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                              (job.status === "closed" ||
+                              job.status === "archived"
+                                ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                            }
+                            title="Undo punch completion and reopen this job"
                           >
-                            Mark punched
+                            Undo punch
                           </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              disabled={!canSchedulePunch}
+                              onClick={() => {
+                                if (!canSchedulePunch) return;
+                                setSchedulePunchOpen(true);
+
+                                const base =
+                                  job.punchScheduledFor ?? new Date();
+                                setSchedulePunchDate(toYMD(base));
+                              }}
+                              className={
+                                "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                (!canSchedulePunch
+                                  ? "bg-white/10 text-white/40 cursor-not-allowed opacity-60 ring-white/10"
+                                  : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                              }
+                            >
+                              {job.punchScheduledFor
+                                ? "Reschedule"
+                                : "Schedule"}
+                            </button>
+
+                            {canSchedulePunch && (
+                              <button
+                                type="button"
+                                onClick={() => setConfirmPunchedOpen(true)}
+                                className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 transition ring-1 ring-emerald-500/30"
+                              >
+                                Mark punched
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -2776,6 +2827,48 @@ export default function JobDetailPage({
             </div>
           </div>
         )}
+        {confirmUndoPunchOpen && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                  Undo punch?
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setConfirmUndoPunchOpen(false)}
+                  className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <p className="text-sm text-[var(--color-muted)]">
+                This will reopen the job and remove the punch completion
+                timestamp. You’ll be able to reschedule punch again.
+              </p>
+
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmUndoPunchOpen(false)}
+                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmUndoPunch}
+                  className="rounded-lg bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                >
+                  Yes, undo punch
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== Confirm Felt Completed Modal ===== */}
         {confirmFeltDoneOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
