@@ -4,6 +4,7 @@ import ExternalRedirect from "../components/ExternalRedirect";
 import PricingPage from "../pages/PricingPage";
 import PlansPage from "../pages/PlansPage";
 import HomePage from "../pages/HomePage";
+import SeeItInActionPage from "../pages/SeeItInActionPage";
 
 function appOrigin() {
   // local dev
@@ -19,6 +20,7 @@ export default function MarketingRouter() {
       <Route path="/" element={<HomePage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/plans" element={<PlansPage />} />
+      <Route path="/see-it-in-action" element={<SeeItInActionPage />} />
 
       {/* Any attempt to access auth routes on marketing should bounce to app domain */}
       <Route
