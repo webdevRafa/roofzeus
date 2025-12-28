@@ -785,10 +785,10 @@ export default function HomePage() {
             variants={fadeUp}
             whileHover={{ y: -1, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            href="http://app.localhost:5173/login"
-            className="inline-block mt-10 bg-[#cfae5d] text-black px-8 py-4 rounded-lg font-semibold hover:opacity-90 transition"
+            href="http://app.localhost:5173/signup"
+            className="inline-block mt-10 bg-[#cfae5d] hover:bg-[var(--color-accent-gold-2)] text-black px-2 py-2 rounded-md font-semibold hover:opacity-90 transition"
           >
-            Start Using ROOFZEUS
+            Try ROOF ZEUS
           </motion.a>
         </motion.div>
       </section>

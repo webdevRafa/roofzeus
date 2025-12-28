@@ -8,6 +8,8 @@ import {
   Loader2,
   ShieldCheck,
   X,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { signupContractorWithEmail } from "../firebase/signupContractor";
 import { signOut } from "firebase/auth";
@@ -40,6 +42,27 @@ const cardIn: Variants = {
     transition: { duration: 0.65, ease },
   },
 };
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+// Same scoring concept as CompleteSignupPage: 0..4
+function passwordScore(pw: string) {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  return score;
+}
+
+function strengthLabel(score: number) {
+  if (score <= 1) return "Weak";
+  if (score === 2) return "Fair";
+  if (score === 3) return "Good";
+  return "Strong";
+}
 
 function Field({
   label,
@@ -76,6 +99,52 @@ function Field({
   );
 }
 
+function PasswordField({
+  label,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+  placeholder,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+  placeholder?: string;
+  hint?: string;
+}) {
+  return (
+    <label className="block">
+      <div className="mb-1 flex items-center justify-between">
+        <div className="text-[12px] text-white/70">{label}</div>
+        {hint ? <div className="text-[11px] text-white/35">{hint}</div> : null}
+      </div>
+
+      <div className="relative">
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          type={show ? "text" : "password"}
+          placeholder={placeholder}
+          autoComplete="new-password"
+          className="w-full rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/55 px-3 py-2 pr-10 text-sm text-[#f5f6f8] placeholder:text-white/35 outline-none focus:border-[#cfae5d]/45 focus:ring-2 focus:ring-[#cfae5d]/10"
+        />
+        <button
+          type="button"
+          onClick={onToggleShow}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-white/60 hover:bg-white/5 hover:text-white/80"
+          aria-label={show ? "Hide password" : "Show password"}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    </label>
+  );
+}
+
 export default function SignupPage() {
   const navigate = useNavigate();
 
@@ -83,6 +152,7 @@ export default function SignupPage() {
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     userPhone: "",
 
     companyName: "",
@@ -93,21 +163,83 @@ export default function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   function set<K extends keyof typeof draft>(key: K, value: (typeof draft)[K]) {
     setDraft((d) => ({ ...d, [key]: value }));
   }
 
+  const score = useMemo(() => passwordScore(draft.password), [draft.password]);
+
+  const pwReq = useMemo(() => {
+    const pw = draft.password;
+    return {
+      len: pw.length >= 8,
+      upper: /[A-Z]/.test(pw),
+      number: /[0-9]/.test(pw),
+      symbol: /[^A-Za-z0-9]/.test(pw),
+    };
+  }, [draft.password]);
+
+  const passwordsMatch = useMemo(() => {
+    if (!draft.confirmPassword) return true; // don’t scream until they start typing
+    return draft.password === draft.confirmPassword;
+  }, [draft.password, draft.confirmPassword]);
+
+  const emailOk = useMemo(
+    () => draft.email.trim().includes("@"),
+    [draft.email]
+  );
+  const nameOk = useMemo(
+    () => draft.fullName.trim().length >= 2,
+    [draft.fullName]
+  );
+  const orgOk = useMemo(
+    () => draft.companyName.trim().length >= 2,
+    [draft.companyName]
+  );
+
+  // ✅ Require strong password + match
+  const pwOk = useMemo(() => score === 4, [score]);
+
   const canSubmit = useMemo(() => {
-    const emailOk = draft.email.trim().includes("@");
-    const pwOk = draft.password.trim().length >= 6;
-    const nameOk = draft.fullName.trim().length >= 2;
-    const orgOk = draft.companyName.trim().length >= 2;
-    return emailOk && pwOk && nameOk && orgOk && !submitting;
-  }, [draft, submitting]);
+    return (
+      emailOk &&
+      nameOk &&
+      orgOk &&
+      pwOk &&
+      draft.password === draft.confirmPassword &&
+      !submitting
+    );
+  }, [
+    emailOk,
+    nameOk,
+    orgOk,
+    pwOk,
+    draft.password,
+    draft.confirmPassword,
+    submitting,
+  ]);
+
+  function strongPasswordMessage() {
+    // only show guidance once they interact
+    if (!draft.password)
+      return "Use 8+ chars with uppercase, number, and a symbol.";
+    if (score === 4) return "Strong password.";
+    return "Make it stronger: add missing requirements below.";
+  }
 
   async function onSubmit() {
     setError(null);
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      if (!pwOk) {
+        setError("Please use a stronger password before continuing.");
+      } else if (draft.password !== draft.confirmPassword) {
+        setError("Passwords do not match.");
+      }
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -190,8 +322,8 @@ export default function SignupPage() {
                 </div>
                 <div className="mt-2 text-[12px] text-white/70 leading-relaxed">
                   We create your organization, user profile, employee profile,
-                  and an
-                  <span className="text-white/85"> active membership</span>{" "}
+                  and an{" "}
+                  <span className="text-white/85">active membership</span>{" "}
                   linking you to your company — in one transaction.
                 </div>
               </div>
@@ -241,15 +373,93 @@ export default function SignupPage() {
                   autoComplete="email"
                 />
 
-                <Field
-                  label="Password"
-                  value={draft.password}
-                  onChange={(v) => set("password", v)}
-                  type="password"
-                  placeholder="Minimum 6 characters"
-                  autoComplete="new-password"
-                  hint="Use a manager"
-                />
+                {/* Password + Strength */}
+                <div className="sm:col-span-2">
+                  <PasswordField
+                    label="Password"
+                    value={draft.password}
+                    onChange={(v) => set("password", v)}
+                    show={showPw}
+                    onToggleShow={() => setShowPw((v) => !v)}
+                    placeholder="8+ chars, uppercase, number, symbol"
+                    hint={
+                      draft.password ? strengthLabel(score) : "Use a manager"
+                    }
+                  />
+
+                  {/* Strength meter */}
+                  <motion.div
+                    initial={false}
+                    animate={{ opacity: draft.password ? 1 : 0.95 }}
+                    className="mt-2 rounded-2xl border border-white/10 bg-white/5 p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-white/50">
+                        Password strength
+                      </span>
+                      <span className="text-[11px] text-white/70">
+                        {strengthLabel(score)}
+                      </span>
+                    </div>
+
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/5">
+                      <div
+                        className={cx(
+                          "h-full rounded-full transition-all duration-300",
+                          score === 0 && "w-[5%] bg-red-500/35",
+                          score === 1 && "w-[25%] bg-red-500/45",
+                          score === 2 && "w-[50%] bg-amber-500/55",
+                          score === 3 && "w-[75%] bg-emerald-500/45",
+                          score === 4 && "w-[100%] bg-emerald-500/65"
+                        )}
+                      />
+                    </div>
+
+                    <div className="mt-2 text-[11px] text-white/45">
+                      {strongPasswordMessage()}
+                    </div>
+
+                    <ul className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/45">
+                      <li className={cx(pwReq.len && "text-white/80")}>
+                        • 8+ characters
+                      </li>
+                      <li className={cx(pwReq.upper && "text-white/80")}>
+                        • 1 uppercase
+                      </li>
+                      <li className={cx(pwReq.number && "text-white/80")}>
+                        • 1 number
+                      </li>
+                      <li className={cx(pwReq.symbol && "text-white/80")}>
+                        • 1 symbol
+                      </li>
+                    </ul>
+                  </motion.div>
+                </div>
+
+                {/* Confirm */}
+                <div className="sm:col-span-2">
+                  <PasswordField
+                    label="Confirm password"
+                    value={draft.confirmPassword}
+                    onChange={(v) => set("confirmPassword", v)}
+                    show={showConfirm}
+                    onToggleShow={() => setShowConfirm((v) => !v)}
+                    placeholder="Re-enter your password"
+                    hint={
+                      draft.confirmPassword
+                        ? passwordsMatch
+                          ? "Matches"
+                          : "Doesn’t match"
+                        : undefined
+                    }
+                  />
+                  {!passwordsMatch && draft.confirmPassword.length > 0 ? (
+                    <div className="mt-2 text-[12px] text-red-200">
+                      Passwords don’t match.
+                    </div>
+                  ) : null}
+                </div>
+
                 <Field
                   label="Your phone (optional)"
                   value={draft.userPhone}

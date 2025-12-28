@@ -165,7 +165,7 @@ export default function SecurityPage() {
               <Link
                 to="/see-it-in-action"
                 className={cx(
-                  "inline-flex items-center justify-center gap-2",
+                  "inline-flex items-center justify-center gap-2 md:hidden",
                   "rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black",
                   "hover:bg-[#cfae5d]/90 transition"
                 )}

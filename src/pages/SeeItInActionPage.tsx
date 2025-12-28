@@ -525,13 +525,6 @@ export default function SeeItInActionPage() {
               <Pill>Cancel anytime</Pill>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="flex items-center gap-3">
-              <img src={logo} alt="ROOFZEUS" className="h-10 w-auto" />
-              <span className="rounded-full border border-[#cfae5d]/30 bg-[#cfae5d]/10 px-3 py-1 text-[11px] text-[#cfae5d]">
-                See it in action
-              </span>
-            </motion.div>
-
             <motion.h1
               variants={fadeUp}
               className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05]"
@@ -553,17 +546,18 @@ export default function SeeItInActionPage() {
               variants={fadeUp}
               className="flex flex-col sm:flex-row gap-3"
             >
-              <button
+              <Link
+                to="/signup"
                 onClick={() => setSignupOpen(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black hover:bg-[#cfae5d]/90"
+                className="inline-flex md:hidden items-center justify-center gap-2 rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black hover:bg-[#cfae5d]/90"
               >
                 Start 14-day free trial
                 <ArrowRight className="h-4 w-4" />
-              </button>
+              </Link>
 
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#3a3f4b] bg-white/5 px-5 py-3 text-sm font-semibold text-[#f5f6f8] hover:bg-white/10"
+                className="inline-flex md:hidden items-center justify-center gap-2 rounded-xl border border-[#3a3f4b] bg-white/5 px-5 py-3 text-sm font-semibold text-[#f5f6f8] hover:bg-white/10"
               >
                 Log in
               </Link>
@@ -804,25 +798,14 @@ export default function SeeItInActionPage() {
 
             <button
               onClick={() => setSignupOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black hover:bg-[#cfae5d]/90"
+              className="inline-flex md:hidden items-center justify-center gap-2 rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black hover:bg-[#cfae5d]/90"
             >
-              Start 14-day free trial
+              Try now
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </motion.div>
       </section>
-
-      <footer className="border-t border-[#3a3f4b] bg-[#0b0e14]">
-        <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-sm text-white/55">
-          <div className="flex items-center gap-2">
-            <img src={logo} className="h-10" alt="" />
-          </div>
-          <div className="text-[12px] text-white/45">
-            Built for roofing contractors • Jobs • Scheduling • Payouts • Profit
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

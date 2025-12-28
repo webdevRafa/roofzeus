@@ -15,8 +15,6 @@ import {
   Plus,
 } from "lucide-react";
 
-import logo from "../assets/roofzeus-white.png";
-
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const stagger: Variants = {
@@ -157,15 +155,6 @@ export default function PricingPage() {
             variants={fadeUp}
             className="flex items-center justify-between gap-4"
           >
-            <Link to="/" className="inline-flex items-center gap-3">
-              <img
-                src={logo}
-                alt="ROOFZEUS"
-                className="h-8 w-auto"
-                draggable={false}
-              />
-            </Link>
-
             <div className="flex items-center gap-2">
               <Pill>14-day free trial</Pill>
               <Pill>No card required</Pill>
@@ -210,8 +199,7 @@ export default function PricingPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-sm text-white/60">Plan</div>
-                  <div className="mt-1 text-xl font-bold">ROOFZEUS</div>
+                  <div className="mt-1 text-xl font-bold">THE THUNDER PLAN</div>
                   <div className="mt-1 text-sm text-[#cfae5d]/80">
                     Flat rate. Full access. Built for contractors.
                   </div>
@@ -286,7 +274,7 @@ export default function PricingPage() {
 
               <div className="mt-6 grid sm:grid-cols-2 gap-3">
                 <Link
-                  to="/see-it-in-action"
+                  to="/signup"
                   className="group inline-flex items-center justify-center gap-2 rounded-xl bg-[#cfae5d] px-4 py-3 font-semibold text-black hover:opacity-90 transition"
                 >
                   Start free trial
@@ -493,13 +481,13 @@ export default function PricingPage() {
             <div className="flex gap-3">
               <Link
                 to="/see-it-in-action"
-                className="inline-flex items-center justify-center rounded-xl bg-[#cfae5d] px-5 py-3 font-semibold text-black hover:opacity-90 transition"
+                className="inline-flex md:hidden items-center justify-center rounded-xl bg-[#cfae5d] px-5 py-3 font-semibold text-black hover:opacity-90 transition"
               >
                 Start free trial
               </Link>
               <Link
                 to="/"
-                className="inline-flex items-center justify-center rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 px-5 py-3 font-semibold text-white hover:border-[#cfae5d] transition"
+                className="inline-flex md:hidden items-center justify-center rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 px-5 py-3 font-semibold text-white hover:border-[#cfae5d] transition"
               >
                 Back home
               </Link>
