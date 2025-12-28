@@ -816,8 +816,7 @@ export default function SeeItInActionPage() {
       <footer className="border-t border-[#3a3f4b] bg-[#0b0e14]">
         <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-sm text-white/55">
           <div className="flex items-center gap-2">
-            <img src={logo} className="h-6" alt="" />
-            <span>ROOFZEUS</span>
+            <img src={logo} className="h-10" alt="" />
           </div>
           <div className="text-[12px] text-white/45">
             Built for roofing contractors • Jobs • Scheduling • Payouts • Profit
