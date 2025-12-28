@@ -262,7 +262,7 @@ export default function MarketingNav() {
 
               {/* Desktop: Primary CTA */}
               <Link
-                to="/see-it-in-action"
+                to="/signup"
                 className={cx(
                   "hidden lg:inline-flex items-center justify-center gap-2",
                   "rounded-xl bg-[#cfae5d] px-4 py-2 text-sm font-semibold text-black",

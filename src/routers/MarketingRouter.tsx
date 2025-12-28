@@ -31,9 +31,13 @@ export default function MarketingRouter() {
         <Route path="see-it-in-action" element={<SeeItInActionPage />} />
         <Route path="features" element={<FeaturesPage />} />
         <Route path="security" element={<SecurityPage />} />
-        <Route path="faqs" element={<FaqPage />} />
+        <Route path="faq" element={<FaqPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="terms" element={<TermsPage />} />
+        <Route
+          path="signup"
+          element={<ExternalRedirect to={`${appOrigin()}/signup`} />}
+        />
 
         {/* Any attempt to access auth/app routes on marketing should bounce to app domain */}
         <Route

@@ -25,6 +25,7 @@ import JobDetailPage from "../pages/JobDetailPage";
 import CrewDashboardPage from "../pages/CrewDashboardPage";
 import CrewJobDetailPage from "../pages/CrewJobDetailPage";
 import PayoutsPage from "../pages/PayoutsPage";
+import SignupPage from "../pages/SignupPage";
 
 export default function AppRouter() {
   return (
@@ -34,6 +35,7 @@ export default function AppRouter() {
       <Route path="/accept-invite" element={<AcceptInvitePage />} />
       <Route path="/complete-signup" element={<CompleteSignupPage />} />
       <Route path="/invoice/:id" element={<InvoiceViewer />} />
+      <Route path="/signup" element={<SignupPage />} />
 
       {/* ✅ Admin routes protected by AdminGuard */}
       <Route

@@ -191,6 +191,10 @@ export type Org = {
   address?: Address | null;
   logoUrl?: string | null;
 
+
+   ownerUserId?: ID;
+   createdByUserId?: ID;
+
   createdAt?: FirestoreTime;
   updatedAt?: FirestoreTime;
 };
