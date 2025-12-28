@@ -612,7 +612,7 @@ export default function HomePage() {
                 <motion.a
                   whileHover={{ y: -1, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
-                  href="http://app.localhost:5173/login"
+                  href="http://localhost:5173/see-it-in-action"
                   className="bg-[#cfae5d] text-black px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition"
                 >
                   See it in action
