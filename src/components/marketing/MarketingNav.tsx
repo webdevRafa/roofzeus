@@ -1,8 +1,8 @@
 // src/components/marketing/MarketingNav.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { Menu, X, ArrowRight, LogIn } from "lucide-react";
+import { Menu, X, ArrowRight, LogIn, ChevronDown, Scale } from "lucide-react";
 
 import logo from "../../assets/roofzeus-white.png";
 
@@ -35,6 +35,24 @@ const drawerIn: Variants = {
   },
 };
 
+const popIn: Variants = {
+  hidden: { opacity: 0, y: 8, scale: 0.98, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.18, ease },
+  },
+  exit: {
+    opacity: 0,
+    y: 8,
+    scale: 0.98,
+    filter: "blur(6px)",
+    transition: { duration: 0.15, ease },
+  },
+};
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -42,24 +60,35 @@ function cx(...classes: Array<string | false | null | undefined>) {
 export default function MarketingNav() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
+  const legalWrapRef = useRef<HTMLDivElement | null>(null);
 
+  // Primary nav: only the important top-level destinations
   const items = useMemo<NavItem[]>(
     () => [
       { label: "Home", to: "/" },
-      { label: "Pricing", to: "/pricing" },
       { label: "Features", to: "/features" },
-      { label: "See it in action", to: "/see-it-in-action" },
+      { label: "Pricing", to: "/pricing" },
       { label: "Security", to: "/security" },
-      { label: "FAQs", to: "/faqs" },
+      { label: "FAQ", to: "/faq" }, // change to "/faqs" only if that's your actual route
+      { label: "Demo", to: "/see-it-in-action" },
+    ],
+    []
+  );
+
+  // Legal stays out of the main row (cleaner on mid widths)
+  const legalItems = useMemo<NavItem[]>(
+    () => [
       { label: "Privacy", to: "/privacy" },
       { label: "Terms", to: "/terms" },
     ],
     []
   );
 
-  // Close the drawer on route change
+  // Close menus on route change
   useEffect(() => {
     setOpen(false);
+    setLegalOpen(false);
   }, [location.pathname]);
 
   // Lock scroll when mobile menu is open
@@ -74,13 +103,27 @@ export default function MarketingNav() {
 
   // Esc closes
   useEffect(() => {
-    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setLegalOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, []);
+
+  // Click outside closes Legal dropdown
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!legalOpen) return;
+      const el = legalWrapRef.current;
+      if (!el) return;
+      if (!el.contains(e.target as Node)) setLegalOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [legalOpen]);
 
   return (
     <>
@@ -91,6 +134,7 @@ export default function MarketingNav() {
           <div className="absolute inset-x-0 bottom-0 h-px bg-[#3a3f4b]" />
         </div>
 
+        {/* slightly tighter overall; avoid huge max width causing the nav to feel “floating” */}
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between gap-3">
             {/* Brand */}
@@ -105,10 +149,13 @@ export default function MarketingNav() {
                 className="h-8 w-auto select-none"
                 draggable={false}
               />
+              <span className="hidden xl:inline text-sm text-white/60 group-hover:text-white/75 transition">
+                Purpose-built for roofing contractors
+              </span>
             </Link>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-2">
+            {/* Desktop Nav: ONLY at lg+ to avoid the awkward md-to-lg crowding */}
+            <nav className="hidden lg:flex items-center gap-1">
               {items.map((it) => (
                 <NavLink
                   key={it.to}
@@ -135,6 +182,66 @@ export default function MarketingNav() {
                   )}
                 </NavLink>
               ))}
+
+              {/* Legal dropdown */}
+              <div ref={legalWrapRef} className="relative ml-1">
+                <button
+                  type="button"
+                  onClick={() => setLegalOpen((v) => !v)}
+                  className={cx(
+                    "relative inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition",
+                    "text-white/65 hover:bg-white/5 hover:text-white/80"
+                  )}
+                  aria-haspopup="menu"
+                  aria-expanded={legalOpen}
+                >
+                  <Scale className="h-4 w-4 text-white/55" />
+                  Legal
+                  <ChevronDown
+                    className={cx(
+                      "h-4 w-4 text-white/55 transition",
+                      legalOpen && "rotate-180"
+                    )}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {legalOpen && (
+                    <motion.div
+                      variants={popIn}
+                      initial="hidden"
+                      animate="show"
+                      exit="exit"
+                      className={cx(
+                        "absolute right-0 mt-2 w-44 overflow-hidden",
+                        "rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/95 backdrop-blur-xl",
+                        "shadow-[0_30px_120px_rgba(0,0,0,0.55)]"
+                      )}
+                      role="menu"
+                    >
+                      <div className="p-2">
+                        {legalItems.map((it) => (
+                          <NavLink
+                            key={it.to}
+                            to={it.to}
+                            className={({ isActive }) =>
+                              cx(
+                                "block rounded-xl px-3 py-2 text-sm transition",
+                                isActive
+                                  ? "bg-white/10 text-white"
+                                  : "text-white/70 hover:bg-white/10 hover:text-white"
+                              )
+                            }
+                            role="menuitem"
+                          >
+                            {it.label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </nav>
 
             {/* Actions */}
@@ -143,7 +250,7 @@ export default function MarketingNav() {
               <Link
                 to="/login"
                 className={cx(
-                  "hidden md:inline-flex items-center justify-center gap-2",
+                  "hidden lg:inline-flex items-center justify-center gap-2",
                   "rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35",
                   "px-3 py-2 text-sm font-semibold text-white/80",
                   "hover:border-[#cfae5d] hover:text-white transition"
@@ -157,7 +264,7 @@ export default function MarketingNav() {
               <Link
                 to="/see-it-in-action"
                 className={cx(
-                  "hidden md:inline-flex items-center justify-center gap-2",
+                  "hidden lg:inline-flex items-center justify-center gap-2",
                   "rounded-xl bg-[#cfae5d] px-4 py-2 text-sm font-semibold text-black",
                   "hover:opacity-90 transition"
                 )}
@@ -166,12 +273,12 @@ export default function MarketingNav() {
                 <ArrowRight className="h-4 w-4" />
               </Link>
 
-              {/* Mobile menu button */}
+              {/* Mobile / Tablet menu button: visible until lg */}
               <button
                 type="button"
                 onClick={() => setOpen(true)}
                 className={cx(
-                  "md:hidden inline-flex items-center justify-center",
+                  "lg:hidden inline-flex items-center justify-center",
                   "h-10 w-10 rounded-xl",
                   "border border-white/10 bg-white/5 hover:bg-white/10 transition"
                 )}
@@ -184,7 +291,7 @@ export default function MarketingNav() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu (also used on md widths now — fixes the awkward mid breakpoint) */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -241,6 +348,28 @@ export default function MarketingNav() {
               <div className="px-4 py-4">
                 <div className="grid gap-2">
                   {items.map((it) => (
+                    <NavLink
+                      key={it.to}
+                      to={it.to}
+                      className={({ isActive }) =>
+                        cx(
+                          "rounded-xl px-3 py-3 text-sm font-semibold transition",
+                          "border border-white/10",
+                          isActive
+                            ? "bg-white/10 text-[#f5f6f8]"
+                            : "bg-white/5 text-white/75 hover:bg-white/10"
+                        )
+                      }
+                    >
+                      {it.label}
+                    </NavLink>
+                  ))}
+
+                  <div className="mt-2 text-[11px] uppercase tracking-wider text-white/40 px-1">
+                    Legal
+                  </div>
+
+                  {legalItems.map((it) => (
                     <NavLink
                       key={it.to}
                       to={it.to}
