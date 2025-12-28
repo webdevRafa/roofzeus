@@ -205,6 +205,92 @@ function formatMonth(date: Date): string {
   });
 }
 
+type ReportPreset = "30d" | "90d" | "ytd" | "custom";
+type ReportInvoiceMode = "sentOrPaid" | "paidOnly" | "includeDrafts";
+
+function startOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+}
+function endOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+}
+function toInputDateValue(d: Date) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function StatCard({
+  title,
+  subtitle,
+  value,
+  icon,
+  tone = "default",
+}: {
+  title: string;
+  subtitle?: string;
+  value: React.ReactNode;
+  icon?: React.ReactNode;
+  tone?: "default" | "gold" | "blue" | "green";
+}) {
+  const toneRing =
+    tone === "gold"
+      ? "ring-[rgba(207,174,93,0.22)]"
+      : tone === "blue"
+      ? "ring-[rgba(106,169,255,0.22)]"
+      : tone === "green"
+      ? "ring-[rgba(16,185,129,0.22)]"
+      : "ring-white/10";
+
+  const toneGlow =
+    tone === "gold"
+      ? "from-[rgba(207,174,93,0.22)]"
+      : tone === "blue"
+      ? "from-[rgba(106,169,255,0.22)]"
+      : tone === "green"
+      ? "from-[rgba(16,185,129,0.22)]"
+      : "from-white/10";
+
+  return (
+    <motion.div
+      variants={cardIn}
+      className={cx(
+        "relative overflow-hidden rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md",
+        "ring-1 shadow-sm",
+        toneRing
+      )}
+    >
+      <div
+        className={cx(
+          "pointer-events-none absolute -inset-24 opacity-60 blur-2xl",
+          "bg-gradient-to-br",
+          toneGlow,
+          "to-transparent"
+        )}
+      />
+      <div className="relative p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-white/85">{title}</div>
+            {subtitle ? (
+              <div className="mt-0.5 text-xs text-white/55">{subtitle}</div>
+            ) : null}
+          </div>
+          {icon ? (
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/5 ring-1 ring-white/10">
+              {icon}
+            </div>
+          ) : null}
+        </div>
+        <div className="mt-3 text-2xl font-semibold tracking-tight text-white">
+          {value}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function FinancialOverviewPage() {
   const { orgId, loading: orgLoading } = useOrg();
 
@@ -214,6 +300,15 @@ export default function FinancialOverviewPage() {
 
   const [invoices, setInvoices] = useState<InvoiceDoc[]>([]);
   const [quickViewJobId, setQuickViewJobId] = useState<string | null>(null);
+
+  const [reportPreset, setReportPreset] = useState<ReportPreset>("30d");
+  const [reportMode, setReportMode] = useState<ReportInvoiceMode>("sentOrPaid");
+  const [customStart, setCustomStart] = useState<string>(() =>
+    toInputDateValue(new Date())
+  );
+  const [customEnd, setCustomEnd] = useState<string>(() =>
+    toInputDateValue(new Date())
+  );
 
   const openJobQuickView = (jobId: string) => setQuickViewJobId(jobId);
   const closeJobQuickView = () => setQuickViewJobId(null);
@@ -353,6 +448,7 @@ export default function FinancialOverviewPage() {
     expenseTotals,
     netProfitTotals,
   } = useMemo(() => {
+    // Determine month boundaries between rangeStart (inclusive) and now
     const months: string[] = [];
     const monthDates: Date[] = [];
     let startDate = rangeStart ? new Date(rangeStart) : null;
@@ -380,6 +476,13 @@ export default function FinancialOverviewPage() {
       }
     }
 
+    // IMPORTANT:
+    // This chart MUST NOT use job.updatedAt (notes/photos edits would shift history).
+    // Instead, we anchor each data point to an invoice lifecycle date:
+    //   - paidAt (preferred when present)
+    //   - otherwise createdAt (invoice created / sent)
+    // This makes the trend reflect when revenue was actually invoiced/paid.
+
     const earnMap: Record<string, number> = {};
     const expMap: Record<string, number> = {};
     const netMap: Record<string, number> = {};
@@ -390,23 +493,57 @@ export default function FinancialOverviewPage() {
       netMap[m] = 0;
     });
 
-    for (const job of filteredJobs) {
-      const ms = toMillis((job as any).updatedAt ?? job.createdAt);
-      if (ms == null) continue;
+    // Build a quick lookup so we can attach real costs to invoice revenue.
+    const jobsById = new Map<string, Job>();
+    for (const j of jobs) jobsById.set(j.id, j);
 
-      const dt = new Date(ms);
+    for (const inv of invoices) {
+      // Prefer paidAt (recognize revenue when cash hits), fallback to createdAt.
+      const basisMs = toMillis((inv as any).paidAt ?? inv.createdAt);
+      if (basisMs == null) continue;
+
+      // Align to selected range.
+      if (rangeStart && basisMs < rangeStart.getTime()) continue;
+
+      // Only count real invoices by default. Drafts should not move charts.
+      const status = (inv.status ?? "draft") as InvoiceStatus;
+      if (status === "draft") continue;
+
+      const dt = new Date(basisMs);
       const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(
         2,
         "0"
       )}`;
+      if (earnMap[key] == null) continue;
 
-      if (earnMap[key] != null) {
-        earnMap[key] += job.earnings?.totalEarningsCents ?? 0;
-        expMap[key] +=
-          (job.expenses?.totalPayoutsCents ?? 0) +
-          (job.expenses?.totalMaterialsCents ?? 0);
-        netMap[key] += job.computed?.netProfitCents ?? 0;
-      }
+      const job = jobsById.get(inv.jobId);
+
+      // --- Revenue: prefer job earnings, fallback to pricing math ---
+      const earningsCents =
+        (job as any)?.earnings?.totalEarningsCents ??
+        (job as any)?.earnings?.entries?.totalEarningsCents ??
+        (() => {
+          const pricing: any = (job as any)?.pricing;
+          const sqft = Number(pricing?.sqft ?? 0);
+          const ratePerSqFt = Number(pricing?.ratePerSqFt ?? 0); // dollars
+          const feeCents = Number(pricing?.feeCents ?? 0);
+          return Math.round(sqft * ratePerSqFt * 100) + feeCents;
+        })();
+
+      // --- Expenses: prefer computed total, fallback to (payouts + materials) ---
+      const costCents =
+        (job as any)?.computed?.totalExpensesCents ??
+        (job?.expenses?.totalPayoutsCents ?? 0) +
+          (job?.expenses?.totalMaterialsCents ?? 0);
+
+      // --- Profit: prefer computed, fallback to earnings - costs ---
+      const profitCents =
+        (job as any)?.computed?.netProfitCents ?? earningsCents - costCents;
+
+      // Accumulate into the month bucket
+      earnMap[key] += earningsCents;
+      expMap[key] += costCents;
+      netMap[key] += profitCents;
     }
 
     const earningsTotals = months.map((m) => earnMap[m] / 100);
@@ -415,7 +552,7 @@ export default function FinancialOverviewPage() {
     const labels = monthDates.map((d) => formatMonth(d));
 
     return { labels, earningsTotals, expenseTotals, netProfitTotals };
-  }, [filteredJobs, rangeStart, now]);
+  }, [invoices, jobs, rangeStart, now]);
 
   // Expense breakdown by category
   const { breakdownLabels, breakdownValues, breakdownColors } = useMemo(() => {
@@ -480,123 +617,30 @@ export default function FinancialOverviewPage() {
     };
   }, [filteredPayouts, filteredJobs, rangeStart]);
 
-  // Top jobs by net profit (keep jobId so we can open JobDetailPage modal)
-  const { topJobsList, topJobLabels, topJobValues } = useMemo(() => {
-    const list = filteredJobs
-      .map((j) => {
-        const profit = j.computed?.netProfitCents ?? 0;
-
-        const label = (() => {
-          const addr: any = j.address;
-          if (typeof addr === "string") return addr;
-          if (typeof addr === "object") {
-            return (
-              (addr.fullLine as string) ||
-              (addr.line1 as string) ||
-              `${addr.city ?? ""}, ${addr.state ?? ""}`
-            );
-          }
-          return j.id;
-        })();
-
-        return { jobId: j.id, label, profit };
-      })
-      .sort((a, b) => b.profit - a.profit)
-      .slice(0, 5);
-
-    return {
-      topJobsList: list,
-      topJobLabels: list.map((x) => x.label),
-      topJobValues: list.map((x) => x.profit / 100),
-    };
-  }, [filteredJobs]);
-
-  // Top employees by total payout
-  const { topEmployeeLabels, topEmployeeValues } = useMemo(() => {
-    const totals: Record<string, number> = {};
-    for (const p of filteredPayouts) {
-      const name = payoutEmployeeName(p) || "Unknown";
-      totals[name] = (totals[name] || 0) + (p.amountCents ?? 0);
-    }
-
-    const list = Object.entries(totals)
-      .map(([name, cents]) => ({ name, cents }))
-      .sort((a, b) => b.cents - a.cents)
-      .slice(0, 5);
-
-    return {
-      topEmployeeLabels: list.map((x) => x.name),
-      topEmployeeValues: list.map((x) => x.cents / 100),
-    };
-  }, [filteredPayouts]);
-
   // ------------------------------
-  // Financial Reporting (Invoice-based)
+  // Invoice report helpers
   // ------------------------------
-  type ReportPreset = "week" | "month" | "year" | "custom";
-  type ReportInvoiceMode = "sentPaid" | "paidOnly" | "includeDrafts";
-
-  function startOfDay(d: Date) {
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-  }
-  function endOfDay(d: Date) {
-    return new Date(
-      d.getFullYear(),
-      d.getMonth(),
-      d.getDate(),
-      23,
-      59,
-      59,
-      999
-    );
-  }
-  function toInputDateValue(d: Date) {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-  function parseInputDateValue(v: string): Date | null {
-    if (!v) return null;
-    const d = new Date(`${v}T00:00:00`);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-
-  const [reportPreset, setReportPreset] = useState<ReportPreset>("month");
-  const [reportMode, setReportMode] = useState<ReportInvoiceMode>("sentPaid");
-
-  // default custom range (last 30 days)
-  const [customStart, setCustomStart] = useState<string>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 29);
-    return toInputDateValue(d);
-  });
-  const [customEnd, setCustomEnd] = useState<string>(() =>
-    toInputDateValue(new Date())
-  );
-
   const reportRange = useMemo(() => {
     const now = new Date();
+    const today = startOfDay(now);
 
-    if (reportPreset === "week") {
-      const start = new Date(now);
-      start.setDate(start.getDate() - 6);
-      return { start: startOfDay(start), end: endOfDay(now) };
+    if (reportPreset === "30d") {
+      const start = startOfDay(new Date(today.getTime() - 29 * 86400000));
+      return { start, end: endOfDay(today) };
     }
-    if (reportPreset === "month") {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      return { start: startOfDay(start), end: endOfDay(now) };
+    if (reportPreset === "90d") {
+      const start = startOfDay(new Date(today.getTime() - 89 * 86400000));
+      return { start, end: endOfDay(today) };
     }
-    if (reportPreset === "year") {
-      const start = new Date(now.getFullYear(), 0, 1);
-      return { start: startOfDay(start), end: endOfDay(now) };
+    if (reportPreset === "ytd") {
+      const start = startOfDay(new Date(today.getFullYear(), 0, 1));
+      return { start, end: endOfDay(today) };
     }
 
     // custom
-    const s =
-      parseInputDateValue(customStart) ??
-      new Date(now.getFullYear(), now.getMonth(), 1);
-    const e = parseInputDateValue(customEnd) ?? now;
+    const s = customStart ? new Date(customStart) : today;
+    const e = customEnd ? new Date(customEnd) : today;
+
     const start = startOfDay(s);
     const end = endOfDay(e);
 
@@ -635,8 +679,30 @@ export default function FinancialOverviewPage() {
     let paidCents = 0;
     let outstandingCents = 0;
 
+    // Job lookup so report totals reflect real job revenue (not invoice cost snapshots)
+    const jobsById = new Map<string, Job>();
+    for (const j of jobs) jobsById.set(j.id, j);
+
+    const invoiceRevenueCents = (inv: InvoiceDoc): number => {
+      const job = jobsById.get(inv.jobId);
+      if (!job) return 0;
+
+      const earningsFromField =
+        (job as any)?.earnings?.totalEarningsCents ??
+        (job as any)?.earnings?.entries?.totalEarningsCents;
+
+      if (Number.isFinite(earningsFromField)) return Number(earningsFromField);
+
+      // Fallback: pricing math
+      const pricing: any = (job as any)?.pricing;
+      const sqft = Number(pricing?.sqft ?? 0);
+      const ratePerSqFt = Number(pricing?.ratePerSqFt ?? 0); // dollars
+      const feeCents = Number(pricing?.feeCents ?? 0);
+      return Math.round(sqft * ratePerSqFt * 100) + feeCents;
+    };
+
     for (const inv of invoicesForReport) {
-      const amt = inv.money?.totalCents ?? 0;
+      const amt = invoiceRevenueCents(inv);
       totalCents += amt;
       if (inv.status === "paid") paidCents += amt;
       else outstandingCents += amt;
@@ -648,7 +714,7 @@ export default function FinancialOverviewPage() {
       paidCents,
       outstandingCents,
     };
-  }, [invoicesForReport]);
+  }, [invoicesForReport, jobs]);
 
   function invoiceJobLabel(inv: InvoiceDoc): string {
     const job = jobs.find((j) => j.id === inv.jobId);
@@ -844,7 +910,7 @@ export default function FinancialOverviewPage() {
         callbacks: {
           label: (context: TooltipItem<"pie">) => {
             const label = context.label ?? "";
-            const value = context.parsed;
+            const value = context.parsed as any;
             return `${label}: $${Number(value).toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -855,29 +921,50 @@ export default function FinancialOverviewPage() {
     },
   };
 
-  const topJobsData: ChartData<"bar", number[], string> = {
-    labels: topJobLabels,
+  const payoutByEmployee = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of filteredPayouts) {
+      const name = payoutEmployeeName(p) || "Unknown";
+      map[name] = (map[name] || 0) + (p.amountCents ?? 0);
+    }
+    const entries = Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8);
+
+    return {
+      labels: entries.map((e) => e[0]),
+      values: entries.map((e) => e[1] / 100),
+    };
+  }, [filteredPayouts]);
+
+  const payoutByEmployeeData: ChartData<"bar", number[], string> = {
+    labels: payoutByEmployee.labels,
     datasets: [
       {
-        label: "Net Profit ($)",
-        data: topJobValues,
-        backgroundColor: "rgba(207,174,93,0.85)",
-        borderColor: "rgba(207,174,93,1)",
+        label: "Payouts ($)",
+        data: payoutByEmployee.values,
+        backgroundColor: "rgba(106,169,255,0.35)",
+        borderColor: "#6aa9ff",
         borderWidth: 1,
         borderRadius: 10,
       },
     ],
   };
 
-  const topJobsOptions: ChartOptions<"bar"> = {
-    indexAxis: "y",
+  const payoutByEmployeeOptions: ChartOptions<"bar"> = {
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: true,
+        labels: {
+          color: legendColor,
+          font: { size: 11 },
+        },
+      },
       tooltip: {
         callbacks: {
           label: (context: TooltipItem<"bar">) => {
-            const value = context.parsed.x;
+            const value = context.parsed.y;
             return `$${Number(value).toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -888,634 +975,443 @@ export default function FinancialOverviewPage() {
     },
     scales: {
       x: {
-        beginAtZero: true,
         ticks: { color: tickColor },
         grid: { color: gridColor },
       },
       y: {
-        ticks: { color: tickColor },
-        grid: { display: false },
-      },
-    },
-  };
-
-  const topEmployeesData: ChartData<"bar", number[], string> = {
-    labels: topEmployeeLabels,
-    datasets: [
-      {
-        label: "Total Payout ($)",
-        data: topEmployeeValues,
-        backgroundColor: "rgba(106,169,255,0.85)",
-        borderColor: "rgba(106,169,255,1)",
-        borderWidth: 1,
-        borderRadius: 10,
-      },
-    ],
-  };
-
-  const topEmployeesOptions: ChartOptions<"bar"> = {
-    indexAxis: "y",
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context: TooltipItem<"bar">) => {
-            const value = context.parsed.x;
-            return `$${Number(value).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`;
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
         beginAtZero: true,
         ticks: { color: tickColor },
         grid: { color: gridColor },
-      },
-      y: {
-        ticks: { color: tickColor },
-        grid: { display: false },
       },
     },
   };
 
   // ------------------------------
-  // Guard states
+  // UI
   // ------------------------------
   if (orgLoading) {
     return (
-      <div className="p-6 text-[var(--color-muted)]">
-        Loading financial overview…
+      <div className="min-h-[calc(100vh-64px)] p-4 sm:p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md ring-1 ring-white/10 p-6 text-white/70">
+            Loading financial overview…
+          </div>
+        </div>
       </div>
     );
   }
+
   if (!orgId) {
     return (
-      <div className="p-8 text-red-300">
-        You are not linked to an organization. Please contact your admin.
+      <div className="min-h-[calc(100vh-64px)] p-4 sm:p-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md ring-1 ring-white/10 p-6 text-white/70">
+            No organization selected.
+          </div>
+        </div>
       </div>
     );
   }
 
-  const StatCard = ({
-    label,
-    children,
-    hint,
-  }: {
-    label: string;
-    children: React.ReactNode;
-    hint?: string;
-  }) => (
-    <motion.div
-      variants={cardIn}
-      className={cx(
-        "rounded-2xl border border-white/10 bg-[var(--color-card)] shadow-[0_20px_60px_rgba(0,0,0,0.35)]",
-        "p-4 hover:bg-[var(--color-card-hover)] transition-colors"
-      )}
-    >
-      <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
-        {label}
-      </div>
-      <div className="mt-1 text-xl sm:text-2xl font-semibold text-[var(--color-text)]">
-        {children}
-      </div>
-      {hint ? (
-        <div className="mt-1 text-xs text-[var(--color-muted)]">{hint}</div>
-      ) : null}
-    </motion.div>
-  );
-
   return (
-    <motion.div
-      initial="hidden"
-      animate="show"
-      variants={stagger}
-      className="mx-auto w-full py-6 sm:py-10 md:px-4"
-    >
-      {/* Page header */}
-      <motion.div variants={fadeUp} className="mb-6 flex flex-col gap-2">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="text-sm text-[var(--color-muted)]">
-              Financial Overview
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--color-text)]">
-              Profit, expenses, payouts, and reporting
-            </h1>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">
-              Use the range filter to review trends and performance. Drill into
-              jobs from the top lists or from invoice reporting.
-            </p>
-          </div>
+    <div className="min-h-[calc(100vh-64px)] p-4 sm:p-6">
+      <div className="mx-auto max-w-6xl">
+        {/* Header */}
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="mb-5 sm:mb-7"
+        >
+          <motion.div variants={fadeUp} className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
+                  Financial Overview
+                </div>
+                <div className="mt-1 text-sm text-white/60">
+                  Earnings, expenses, payouts, and invoicing — in one place.
+                </div>
+              </div>
 
-          {/* Range selector */}
-          <div className="flex flex-wrap items-center gap-2">
-            {(
-              [
-                { label: "Last 6 months", value: "6months" },
-                { label: "Last 12 months", value: "12months" },
-                { label: "Year to date", value: "ytd" },
-                { label: "All time", value: "all" },
-              ] as { label: string; value: RangeOption }[]
-            ).map((opt) => {
-              const active = rangeOption === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => setRangeOption(opt.value)}
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-white/60">Range</label>
+                <select
+                  value={rangeOption}
+                  onChange={(e) =>
+                    setRangeOption(e.target.value as RangeOption)
+                  }
                   className={cx(
-                    "rounded-full px-3 py-1 text-xs border transition",
-                    active
-                      ? "bg-[var(--color-accent-gold)] text-black border-transparent"
-                      : "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
+                    "rounded-xl bg-white/5 px-3 py-2 text-sm text-white",
+                    "ring-1 ring-white/10 outline-none",
+                    "hover:bg-white/10 focus:ring-white/20"
                   )}
                 >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Summary */}
-      <motion.section variants={fadeUp} className="mb-6">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 xl:grid-cols-8">
-          <StatCard label="Total earnings">
-            <MoneyCount cents={totalEarningsCents} decimals={0} />
-          </StatCard>
-
-          <StatCard label="Net profit">
-            <MoneyCount cents={totalNetProfitCents} decimals={0} />
-          </StatCard>
-
-          <StatCard
-            label="Avg profit / job"
-            hint={`${filteredJobs.length} job(s) in range`}
-          >
-            <MoneyCount cents={averageProfitCents} decimals={0} />
-          </StatCard>
-
-          <StatCard label="Materials">
-            <MoneyCount cents={totalMaterialsCents} decimals={0} />
-          </StatCard>
-
-          <StatCard label="Total payouts">
-            <MoneyCount cents={totalPayoutsCents} decimals={0} />
-          </StatCard>
-
-          <StatCard label="Paid payouts">
-            <MoneyCount cents={paidPayoutsCents} decimals={0} />
-          </StatCard>
-
-          <StatCard label="Pending payouts">
-            <MoneyCount cents={pendingPayoutsCents} decimals={0} />
-          </StatCard>
-        </div>
-      </motion.section>
-
-      {/* Trend chart */}
-      <motion.section
-        variants={fadeUp}
-        className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-[var(--color-text)]">
-              Earnings, Expenses &amp; Profit Trend
-            </h2>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">
-              Activity-based trend (jobs updated in the selected range).
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 relative h-80 w-full">
-          <Line data={profitTrendData} options={profitTrendOptions} />
-        </div>
-
-        <div className="mt-3 text-xs text-[var(--color-muted)]">
-          Tip: use this to spot profitability dips (materials spikes, payout
-          surges, or lower earnings).
-        </div>
-      </motion.section>
-
-      {/* Financial Reporting (Invoice-based) */}
-      <motion.section variants={fadeUp} className="mt-6">
-        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-[var(--color-text)]">
-                Financial Reporting
-              </h2>
-              <p className="mt-1 text-sm text-[var(--color-muted)]">
-                Invoice-based reporting (uses invoice dates). Great for
-                real-world accounting.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={downloadInvoiceCSV}
-                className={cx(
-                  "rounded-full px-3 py-1 text-xs border transition",
-                  "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
-                )}
-              >
-                Download CSV
-              </button>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-12">
-            {/* Presets */}
-            <div className="lg:col-span-7">
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-semibold text-[var(--color-text)]">
-                  Range:
-                </span>
-
-                {(
-                  [
-                    { label: "Week", value: "week" },
-                    { label: "Month", value: "month" },
-                    { label: "Year", value: "year" },
-                    { label: "Custom", value: "custom" },
-                  ] as { label: string; value: ReportPreset }[]
-                ).map((opt) => {
-                  const active = reportPreset === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => setReportPreset(opt.value)}
-                      className={cx(
-                        "rounded-full px-3 py-1 text-xs border transition",
-                        active
-                          ? "bg-[var(--color-accent-gold)] text-black border-transparent"
-                          : "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
+                  <option value="6months">Last 6 months</option>
+                  <option value="12months">Last 12 months</option>
+                  <option value="ytd">Year to date</option>
+                  <option value="all">All time</option>
+                </select>
               </div>
+            </div>
+          </motion.div>
+        </motion.div>
 
-              {/* Custom date inputs */}
-              {reportPreset === "custom" && (
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                      Start
-                    </label>
-                    <input
-                      type="date"
-                      value={customStart}
-                      onChange={(e) => setCustomStart(e.target.value)}
-                      className={cx(
-                        "mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none",
-                        "border-white/10 bg-[var(--color-surface)] text-[var(--color-text)]",
-                        "focus:ring-2 focus:ring-[var(--color-accent-gold)]"
-                      )}
-                    />
+        {/* KPI cards */}
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4"
+        >
+          <StatCard
+            title="Total Earnings"
+            subtitle="From jobs in range"
+            tone="blue"
+            value={<MoneyCount cents={totalEarningsCents} />}
+          />
+          <StatCard
+            title="Net Profit"
+            subtitle="Earnings minus expenses"
+            tone="green"
+            value={<MoneyCount cents={totalNetProfitCents} />}
+          />
+          <StatCard
+            title="Payouts"
+            subtitle="Crew payouts tracked"
+            tone="default"
+            value={<MoneyCount cents={totalPayoutsCents} />}
+          />
+          <StatCard
+            title="Materials"
+            subtitle="Materials expenses tracked"
+            tone="gold"
+            value={<MoneyCount cents={totalMaterialsCents} />}
+          />
+        </motion.div>
+
+        {/* Secondary KPI row */}
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+          className="mt-3 sm:mt-4 grid gap-3 sm:gap-4 md:grid-cols-3"
+        >
+          <StatCard
+            title="Avg Profit / Job"
+            subtitle="Net profit divided by jobs"
+            value={<MoneyCount cents={averageProfitCents} />}
+          />
+          <StatCard
+            title="Pending Payouts"
+            subtitle="Not marked as paid"
+            value={<MoneyCount cents={pendingPayoutsCents} />}
+          />
+          <StatCard
+            title="Paid Payouts"
+            subtitle="Marked as paid"
+            value={<MoneyCount cents={paidPayoutsCents} />}
+          />
+        </motion.div>
+
+        {/* Charts */}
+        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+          {/* Profit trend */}
+          <motion.div
+            variants={cardIn}
+            initial="hidden"
+            animate="show"
+            className="rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md ring-1 ring-white/10 shadow-sm"
+          >
+            <div className="p-4 sm:p-5">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-lg font-semibold text-white">
+                    Earnings, Expenses & Profit Trend
                   </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                      End
-                    </label>
-                    <input
-                      type="date"
-                      value={customEnd}
-                      onChange={(e) => setCustomEnd(e.target.value)}
-                      className={cx(
-                        "mt-1 w-full rounded-xl border px-3 py-2 text-sm outline-none",
-                        "border-white/10 bg-[var(--color-surface)] text-[var(--color-text)]",
-                        "focus:ring-2 focus:ring-[var(--color-accent-gold)]"
-                      )}
-                    />
+                  <div className="mt-0.5 text-xs text-white/55">
+                    Invoice-based trend (uses paidAt/createdAt — not updatedAt).
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Invoice status mode */}
-            <div className="lg:col-span-5">
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-semibold text-[var(--color-text)]">
-                  Invoices:
-                </span>
-
-                {(
-                  [
-                    { label: "Issued", value: "sentPaid" },
-                    { label: "Paid only", value: "paidOnly" },
-                    { label: "Include drafts", value: "includeDrafts" },
-                  ] as { label: string; value: ReportInvoiceMode }[]
-                ).map((opt) => {
-                  const active = reportMode === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => setReportMode(opt.value)}
-                      className={cx(
-                        "rounded-full px-3 py-1 text-xs border transition",
-                        active
-                          ? "bg-[var(--color-accent-gold)] text-black border-transparent"
-                          : "bg-[var(--color-card)] text-[var(--color-text)] border-white/10 hover:bg-[var(--color-card-hover)]"
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
+                <div className="text-xs text-white/50">
+                  {filteredJobs.length} job(s) in range
+                </div>
               </div>
 
-              <div className="mt-2 text-[11px] text-[var(--color-muted)]">
-                Reporting window:{" "}
-                <span className="font-semibold text-[var(--color-text)]">
-                  {reportRange.start.toLocaleDateString()} –{" "}
-                  {reportRange.end.toLocaleDateString()}
-                </span>
+              <div className="mt-3 h-[280px]">
+                <Line data={profitTrendData} options={profitTrendOptions} />
+              </div>
+
+              <div className="mt-2 text-[11px] text-white/45">
+                Tip: use this to spot profitability dips (materials spikes,
+                payout surges, or lower earnings).
               </div>
             </div>
-          </div>
-
-          {/* Summary row */}
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
-              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
-                Invoiced revenue
-              </div>
-              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
-                <MoneyCount cents={reportSummary.totalCents} decimals={0} />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
-              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
-                Paid
-              </div>
-              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
-                <MoneyCount cents={reportSummary.paidCents} decimals={0} />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
-              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
-                Outstanding
-              </div>
-              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
-                <MoneyCount
-                  cents={reportSummary.outstandingCents}
-                  decimals={0}
-                />
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)] p-4">
-              <div className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
-                Invoices
-              </div>
-              <div className="mt-1 text-xl font-semibold text-[var(--color-text)]">
-                <IntCount value={reportSummary.invoiceCount} />
-              </div>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-[var(--color-surface)] section-scroll-invoices">
-            <table className="min-w-full text-sm">
-              <thead className="bg-black/15 text-[11px] uppercase tracking-wide text-[var(--color-muted)] sticky top-0">
-                <tr>
-                  <th className="px-3 py-2 text-left">Invoice</th>
-                  <th className="px-3 py-2 text-left">Job</th>
-                  <th className="px-3 py-2 text-left">Date</th>
-                  <th className="px-3 py-2 text-left">Status</th>
-                  <th className="px-3 py-2 text-right">Total</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {invoicesForReport.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-3 py-6 text-center text-[var(--color-muted)]"
-                    >
-                      No invoices found in this range.
-                    </td>
-                  </tr>
-                ) : (
-                  invoicesForReport.slice(0, 50).map((inv) => (
-                    <tr
-                      key={inv.id}
-                      className="border-t border-white/10 hover:bg-white/5"
-                    >
-                      <td className="px-3 py-2">
-                        <div className="font-semibold text-[var(--color-text)]">
-                          {inv.number}
-                        </div>
-                        {inv.customer?.name && (
-                          <div className="text-[11px] text-[var(--color-muted)]">
-                            {inv.customer.name}
-                          </div>
-                        )}
-                      </td>
-
-                      <td className="px-3 py-2">
-                        <button
-                          type="button"
-                          onClick={() => openJobQuickView(inv.jobId)}
-                          className="font-medium text-[var(--color-text)] hover:underline text-left"
-                          title="Quick view job"
-                        >
-                          {invoiceJobLabel(inv)}
-                        </button>
-                      </td>
-
-                      <td className="px-3 py-2 text-[var(--color-muted)]">
-                        {invoiceDateLabel(inv, reportMode)}
-                      </td>
-
-                      <td className="px-3 py-2">
-                        <span
-                          className={cx(
-                            "inline-flex items-center rounded-full px-2 py-1 text-xs font-medium border",
-                            inv.status === "paid"
-                              ? "bg-emerald-500/15 text-emerald-200 border-emerald-500/25"
-                              : inv.status === "sent"
-                              ? "bg-amber-500/15 text-amber-200 border-amber-500/25"
-                              : inv.status === "draft"
-                              ? "bg-white/10 text-[var(--color-muted)] border-white/10"
-                              : "bg-rose-500/15 text-rose-200 border-rose-500/25"
-                          )}
-                        >
-                          {inv.status}
-                        </span>
-                      </td>
-
-                      <td className="px-3 py-2 text-right font-semibold text-[var(--color-text)]">
-                        {/* CountUp for row totals (short duration to stay snappy) */}
-                        <MoneyCount
-                          cents={inv.money?.totalCents ?? 0}
-                          decimals={0}
-                          duration={0.45}
-                        />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-
-            {invoicesForReport.length > 50 && (
-              <div className="px-3 py-2 text-[11px] text-[var(--color-muted)]">
-                Showing first 50 invoices. Download CSV for full export.
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.section>
-
-      {/* 3-up charts row */}
-      <motion.div
-        variants={fadeUp}
-        className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3"
-      >
-        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
-          <h2 className="text-xl font-semibold text-[var(--color-text)]">
-            Expense Breakdown
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Categories include payouts + materials.
-          </p>
-          <div className="mt-4 relative h-64 w-full">
-            {breakdownValues.length > 0 ? (
-              <Pie
-                data={expenseBreakdownData}
-                options={expenseBreakdownOptions}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-[var(--color-muted)]">
-                No expenses in selected range
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
-          <h2 className="text-xl font-semibold text-[var(--color-text)]">
-            Top Jobs by Profit
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Click a job to quick-view details.
-          </p>
-
-          <div className="mt-4 relative h-64 w-full">
-            {topJobLabels.length > 0 ? (
-              <Bar data={topJobsData} options={topJobsOptions} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-[var(--color-muted)]">
-                No jobs in selected range
-              </div>
-            )}
-          </div>
-
-          {topJobsList.length > 0 && (
-            <div className="mt-4 space-y-1">
-              {topJobsList.map((j) => (
-                <button
-                  key={j.jobId}
-                  type="button"
-                  onClick={() => openJobQuickView(j.jobId)}
-                  className="w-full text-left text-sm px-2 py-1.5 rounded-xl hover:bg-white/5 transition"
-                  title="Quick view job"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="truncate text-[var(--color-text)] hover:underline">
-                      {j.label}
-                    </span>
-                    <span className="shrink-0 text-[11px] text-[var(--color-muted)]">
-                      {/* CountUp for list values */}
-                      <MoneyCount
-                        cents={j.profit}
-                        decimals={0}
-                        duration={0.5}
-                      />
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] hover:bg-[var(--color-card-hover)] transition-colors">
-          <h2 className="text-xl font-semibold text-[var(--color-text)]">
-            Top Employees by Payout
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Total payouts by employee (range).
-          </p>
-
-          <div className="mt-4 relative h-64 w-full">
-            {topEmployeeLabels.length > 0 ? (
-              <Bar data={topEmployeesData} options={topEmployeesOptions} />
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-[var(--color-muted)]">
-                No payouts in selected range
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Quick Job View Modal */}
-      <AnimatePresence>
-        {quickViewJobId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, transition: { duration: 0.18 } }}
-            exit={{ opacity: 0, transition: { duration: 0.16 } }}
-            className="fixed inset-0 z-[200] bg-black/70 p-3 sm:p-6 flex items-center justify-center"
-            onMouseDown={(e) => {
-              // click outside closes
-              if (e.target === e.currentTarget) closeJobQuickView();
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.99 }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                transition: { duration: 0.28, ease },
-              }}
-              exit={{
-                opacity: 0,
-                y: 10,
-                scale: 0.99,
-                transition: { duration: 0.18, ease },
-              }}
-              className="w-full max-w-[1200px] h-[92vh] overflow-hidden rounded-2xl bg-[var(--color-surface)] shadow-2xl border border-white/10"
-            >
-              <div className="h-full overflow-y-auto">
-                <JobDetailPage
-                  jobId={quickViewJobId}
-                  variant="modal"
-                  onClose={closeJobQuickView}
-                />
-              </div>
-            </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+
+          {/* Expense breakdown */}
+          <motion.div
+            variants={cardIn}
+            initial="hidden"
+            animate="show"
+            className="rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md ring-1 ring-white/10 shadow-sm"
+          >
+            <div className="p-4 sm:p-5">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-lg font-semibold text-white">
+                    Expense Breakdown
+                  </div>
+                  <div className="mt-0.5 text-xs text-white/55">
+                    Payout categories + materials categories combined.
+                  </div>
+                </div>
+                <div className="text-xs text-white/50">
+                  {breakdownLabels.length} category(s)
+                </div>
+              </div>
+
+              <div className="mt-3 h-[280px]">
+                <Pie
+                  data={expenseBreakdownData}
+                  options={expenseBreakdownOptions}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Payouts by employee */}
+        <div className="mt-4">
+          <motion.div
+            variants={cardIn}
+            initial="hidden"
+            animate="show"
+            className="rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md ring-1 ring-white/10 shadow-sm"
+          >
+            <div className="p-4 sm:p-5">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-lg font-semibold text-white">
+                    Payouts by Employee
+                  </div>
+                  <div className="mt-0.5 text-xs text-white/55">
+                    Top employees by payout amount (range).
+                  </div>
+                </div>
+                <div className="text-xs text-white/50">
+                  {payoutByEmployee.labels.length} shown
+                </div>
+              </div>
+
+              <div className="mt-3 h-[280px]">
+                <Bar
+                  data={payoutByEmployeeData}
+                  options={payoutByEmployeeOptions}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Invoice report */}
+        <div className="mt-6">
+          <motion.div
+            variants={cardIn}
+            initial="hidden"
+            animate="show"
+            className="rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md ring-1 ring-white/10 shadow-sm"
+          >
+            <div className="p-4 sm:p-5">
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <div className="text-lg font-semibold text-white">
+                    Invoice Report
+                  </div>
+                  <div className="mt-0.5 text-xs text-white/55">
+                    Filter invoices by “sent/paid” vs “paid only”, export CSV,
+                    and reconcile totals.
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={reportPreset}
+                    onChange={(e) =>
+                      setReportPreset(e.target.value as ReportPreset)
+                    }
+                    className={cx(
+                      "rounded-xl bg-white/5 px-3 py-2 text-sm text-white",
+                      "ring-1 ring-white/10 outline-none",
+                      "hover:bg-white/10 focus:ring-white/20"
+                    )}
+                  >
+                    <option value="30d">Last 30 days</option>
+                    <option value="90d">Last 90 days</option>
+                    <option value="ytd">Year to date</option>
+                    <option value="custom">Custom</option>
+                  </select>
+
+                  <select
+                    value={reportMode}
+                    onChange={(e) =>
+                      setReportMode(e.target.value as ReportInvoiceMode)
+                    }
+                    className={cx(
+                      "rounded-xl bg-white/5 px-3 py-2 text-sm text-white",
+                      "ring-1 ring-white/10 outline-none",
+                      "hover:bg-white/10 focus:ring-white/20"
+                    )}
+                  >
+                    <option value="sentOrPaid">Sent + Paid</option>
+                    <option value="paidOnly">Paid only</option>
+                    <option value="includeDrafts">Include drafts</option>
+                  </select>
+
+                  {reportPreset === "custom" ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="date"
+                        value={customStart}
+                        onChange={(e) => setCustomStart(e.target.value)}
+                        className={cx(
+                          "rounded-xl bg-white/5 px-3 py-2 text-sm text-white",
+                          "ring-1 ring-white/10 outline-none",
+                          "hover:bg-white/10 focus:ring-white/20"
+                        )}
+                      />
+                      <span className="text-xs text-white/50">to</span>
+                      <input
+                        type="date"
+                        value={customEnd}
+                        onChange={(e) => setCustomEnd(e.target.value)}
+                        className={cx(
+                          "rounded-xl bg-white/5 px-3 py-2 text-sm text-white",
+                          "ring-1 ring-white/10 outline-none",
+                          "hover:bg-white/10 focus:ring-white/20"
+                        )}
+                      />
+                    </div>
+                  ) : null}
+
+                  <button
+                    onClick={downloadInvoiceCSV}
+                    className={cx(
+                      "rounded-xl bg-white/10 px-3 py-2 text-sm text-white",
+                      "ring-1 ring-white/10 hover:bg-white/15"
+                    )}
+                  >
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
+                  <div className="text-xs text-white/55">Invoices</div>
+                  <div className="mt-1 text-xl font-semibold text-white">
+                    <IntCount value={reportSummary.invoiceCount} />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
+                  <div className="text-xs text-white/55">Total</div>
+                  <div className="mt-1 text-xl font-semibold text-white">
+                    <MoneyCount cents={reportSummary.totalCents} />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
+                  <div className="text-xs text-white/55">Paid</div>
+                  <div className="mt-1 text-xl font-semibold text-white">
+                    <MoneyCount cents={reportSummary.paidCents} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl bg-white/5 ring-1 ring-white/10 overflow-hidden">
+                <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[11px] text-white/55 border-b border-white/10">
+                  <div className="col-span-3">Invoice</div>
+                  <div className="col-span-2">Status</div>
+                  <div className="col-span-3">Date</div>
+                  <div className="col-span-2 text-right">Total</div>
+                  <div className="col-span-2 text-right">Job</div>
+                </div>
+
+                <div className="max-h-[340px] overflow-auto">
+                  {invoicesForReport.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-sm text-white/55">
+                      No invoices in this range.
+                    </div>
+                  ) : (
+                    invoicesForReport.map((inv) => (
+                      <button
+                        key={inv.id}
+                        onClick={() => openJobQuickView(inv.jobId)}
+                        className={cx(
+                          "w-full text-left grid grid-cols-12 gap-2 px-4 py-2",
+                          "text-sm text-white/80 border-b border-white/10",
+                          "hover:bg-white/5"
+                        )}
+                      >
+                        <div className="col-span-3 font-medium">
+                          {inv.number ?? inv.id.slice(0, 6)}
+                        </div>
+                        <div className="col-span-2 text-white/60">
+                          {inv.status}
+                        </div>
+                        <div className="col-span-3 text-white/60">
+                          {invoiceDateLabel(inv, reportMode)}
+                        </div>
+                        <div className="col-span-2 text-right">
+                          <MoneyCount
+                            cents={inv.money?.totalCents ?? 0}
+                            duration={0.6}
+                          />
+                        </div>
+                        <div className="col-span-2 text-right truncate text-white/55">
+                          {invoiceJobLabel(inv)}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Job Quick View Modal */}
+        <AnimatePresence>
+          {quickViewJobId ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm"
+              onMouseDown={(e) => {
+                if (e.target === e.currentTarget) closeJobQuickView();
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 16, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 16, scale: 0.99 }}
+                transition={{ duration: 0.2, ease }}
+                className="absolute left-1/2 top-1/2 w-[min(1100px,92vw)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-[var(--color-surface)] ring-1 ring-white/10 shadow-2xl"
+              >
+                <div className="max-h-[88vh] overflow-auto">
+                  <JobDetailPage
+                    jobId={quickViewJobId}
+                    variant="modal"
+                    onClose={closeJobQuickView}
+                  />
+                </div>
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }

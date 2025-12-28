@@ -119,14 +119,62 @@ function NewInvoiceModal({
   const [saving, setSaving] = useState(false);
   const [savingMode, setSavingMode] = useState<InvoiceStatus | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [billMaterialsSeparately, setBillMaterialsSeparately] = useState(false);
+  const [materialsMarkupPct, setMaterialsMarkupPct] = useState<string>("0");
 
   const selectedJob = useMemo(
     () => jobs.find((j) => j.id === jobId) ?? null,
     [jobs, jobId]
   );
 
-  const laborCents = selectedJob?.expenses?.totalPayoutsCents ?? 0;
-  const materialsCents = selectedJob?.expenses?.totalMaterialsCents ?? 0;
+  function computeJobMaterialCostCents(job: Job | null): number {
+    if (!job) return 0;
+    const mats = job.expenses?.materials ?? [];
+    return mats.reduce((sum, m: any) => sum + (m?.amountCents ?? 0), 0);
+  }
+
+  // Derived billable amounts (what the customer is invoiced for)
+  // IMPORTANT: invoices must reflect REVENUE (contract price), not internal costs like crew payouts/material expenses.
+  function computeJobRevenueCents(job: Job | null): number {
+    if (!job) return 0;
+
+    // Preferred: explicit earnings total (your canonical "what we made on this job")
+    const earnings = job.earnings?.totalEarningsCents;
+    if (
+      typeof earnings === "number" &&
+      Number.isFinite(earnings) &&
+      earnings > 0
+    ) {
+      return Math.round(earnings);
+    }
+
+    // Fallback: pricing model (sqft * ratePerSqFt) + fee
+    const sqft = job.pricing?.sqft ?? 0;
+    const rate = job.pricing?.ratePerSqFt ?? 0; // dollars per sqft
+    const feeCents = job.pricing?.feeCents ?? 0;
+
+    const base = Math.round(Number(sqft) * Number(rate) * 100);
+    const total = base + Math.round(Number(feeCents) || 0);
+
+    return Number.isFinite(total) && total > 0 ? total : 0;
+  }
+
+  // Billable "base contract" amount goes into laborCents (keeps your existing InvoiceMoney schema intact)
+  const laborCents = computeJobRevenueCents(selectedJob);
+
+  // Do NOT auto-bill materials from internal expense tracking.
+  // If you want to bill additional items, use Extras (change orders, decking repair, upgrades, etc.)
+  const baseMaterialsCents = computeJobMaterialCostCents(selectedJob);
+
+  const materialsCents = useMemo(() => {
+    if (!billMaterialsSeparately) return 0;
+
+    const pct = Number(materialsMarkupPct);
+    const markupMultiplier =
+      Number.isFinite(pct) && pct > 0 ? 1 + pct / 100 : 1;
+
+    return Math.round(baseMaterialsCents * markupMultiplier);
+  }, [billMaterialsSeparately, materialsMarkupPct, baseMaterialsCents]);
 
   const extraCents = useMemo(() => {
     return extras.reduce((sum, ex) => {
@@ -163,14 +211,14 @@ function NewInvoiceModal({
     if (laborCents > 0) {
       lines.push({
         id: "labor",
-        label: "Labor (payouts)",
+        label: "Contract total",
         amountCents: laborCents,
       });
     }
     if (materialsCents > 0) {
       lines.push({
         id: "materials",
-        label: "Materials",
+        label: "Reimbursable materials",
         amountCents: materialsCents,
       });
     }
@@ -513,11 +561,38 @@ function NewInvoiceModal({
                 className="mt-1 w-full resize-none rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
               />
             </div>
+            <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-3">
+              <label className="flex items-center gap-2 text-xs text-[var(--color-text)]/85">
+                <input
+                  type="checkbox"
+                  checked={billMaterialsSeparately}
+                  onChange={(e) => setBillMaterialsSeparately(e.target.checked)}
+                  disabled={saving}
+                  className="h-4 w-4 accent-[var(--color-accent-gold)]"
+                />
+                Bill materials separately (reimbursable)
+              </label>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-[var(--color-muted)]">
+                  Markup %
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={materialsMarkupPct}
+                  onChange={(e) => setMaterialsMarkupPct(e.target.value)}
+                  disabled={saving || !billMaterialsSeparately}
+                  className="w-20 rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
+                />
+              </div>
+            </div>
 
             <div>
               <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Labor
+                  Contract total
                 </div>
                 <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
                   {money(laborCents)}
@@ -528,7 +603,7 @@ function NewInvoiceModal({
             <div>
               <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Materials
+                  Billable Materials
                 </div>
                 <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
                   {money(materialsCents)}
