@@ -232,7 +232,7 @@ function DashboardPreview() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.25 }}
-      className="relative overflow-hidden rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+      className="relative hidden overflow-hidden rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
     >
       {/* ambient glow */}
       <div className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full bg-[#cfae5d]/12 blur-3xl" />
