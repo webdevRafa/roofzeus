@@ -126,9 +126,13 @@ function FeatureTicker({ items }: { items: string[] }) {
 function StatMoney({
   cents,
   className,
+  duration = 1.2,
+  delay = 0,
 }: {
   cents: number;
   className?: string;
+  duration?: number;
+  delay?: number;
 }) {
   return (
     <span className={className}>
@@ -137,16 +141,38 @@ function StatMoney({
         end={Math.round(cents / 100)}
         prefix="$"
         separator=","
-        duration={1.2}
+        duration={duration}
+        delay={delay}
+        enableScrollSpy
+        scrollSpyOnce
+        scrollSpyDelay={0}
       />
     </span>
   );
 }
 
-function StatInt({ value, className }: { value: number; className?: string }) {
+function StatInt({
+  value,
+  className,
+  duration = 0.9,
+  delay = 0,
+}: {
+  value: number;
+  className?: string;
+  duration?: number;
+  delay?: number;
+}) {
   return (
     <span className={className}>
-      <CountUp start={0} end={value} duration={0.9} />
+      <CountUp
+        start={0}
+        end={value}
+        duration={duration}
+        delay={delay}
+        enableScrollSpy
+        scrollSpyOnce
+        scrollSpyDelay={0}
+      />
     </span>
   );
 }
@@ -231,7 +257,7 @@ function DashboardPreview() {
       variants={cardIn}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, amount: 0.25 }}
+      viewport={{ once: false, amount: 0.25 }}
       className="relative  overflow-hidden hidden md:block max-h-[500px] rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)] opacity-40! blur-[2px]!"
     >
       {/* ambient glow */}
@@ -284,10 +310,10 @@ function DashboardPreview() {
           variants={stagger}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, amount: 0.3 }}
+          viewport={{ once: false, amount: 0.3 }}
           className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3"
         >
-          {kpis.map((k) => (
+          {kpis.map((k, idx) => (
             <motion.div
               key={k.label}
               variants={fadeUp}
@@ -298,7 +324,7 @@ function DashboardPreview() {
                 {k.label}
               </div>
               <div className="mt-1 text-xl font-semibold text-[#f5f6f8]">
-                <StatMoney cents={k.cents} />
+                <StatMoney cents={k.cents} delay={0.06 + idx * 0.06} />
               </div>
               <div className="mt-1 text-[12px] text-[#cfae5d]/70">{k.sub}</div>
             </motion.div>
@@ -312,7 +338,7 @@ function DashboardPreview() {
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.25 }}
+            viewport={{ once: false, amount: 0.25 }}
             className="lg:col-span-7 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35"
           >
             <div className="flex items-center justify-between border-b border-[#3a3f4b] px-4 py-3">
@@ -328,7 +354,7 @@ function DashboardPreview() {
                   key={s.address + s.stage}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.4 }}
+                  viewport={{ once: false, amount: 0.4 }}
                   transition={{ duration: 0.55, ease, delay: idx * 0.06 }}
                   className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 hover:bg-white/5 transition"
                 >
@@ -357,7 +383,7 @@ function DashboardPreview() {
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
-            viewport={{ once: true, amount: 0.25 }}
+            viewport={{ once: false, amount: 0.25 }}
             className="lg:col-span-5 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-4"
           >
             <div className="flex items-center justify-between">
@@ -370,7 +396,7 @@ function DashboardPreview() {
             <motion.div
               initial={{ opacity: 0, scale: 0.99 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, amount: 0.35 }}
+              viewport={{ once: false, amount: 0.35 }}
               transition={{ duration: 0.65, ease }}
               className="mt-3 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/45 p-3"
             >
@@ -381,17 +407,25 @@ function DashboardPreview() {
                     <stop offset="1" stopColor="rgba(207,174,93,0.55)" />
                   </linearGradient>
                 </defs>
-                <path
+                <motion.path
                   d="M6,54 C26,44 34,56 54,42 C74,28 84,36 104,30 C124,24 134,36 154,22 C174,8 194,18 234,10"
                   fill="none"
                   stroke="rgba(207,174,93,0.85)"
                   strokeWidth="3"
                   strokeLinecap="round"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  whileInView={{ pathLength: 1, opacity: 1 }}
+                  viewport={{ once: false, amount: 0.6 }}
+                  transition={{ duration: 3, ease }}
                 />
-                <path
+
+                <motion.path
                   d="M6,54 C26,44 34,56 54,42 C74,28 84,36 104,30 C124,24 134,36 154,22 C174,8 194,18 234,10 L234,72 L6,72 Z"
                   fill="url(#g1)"
-                  opacity="0.35"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 0.35 }}
+                  viewport={{ once: false, amount: 0.6 }}
+                  transition={{ duration: 0.7, ease, delay: 0.15 }}
                 />
               </svg>
 
@@ -417,7 +451,7 @@ function DashboardPreview() {
                   Punch Ready
                 </div>
                 <div className="mt-1 text-lg font-semibold text-white">
-                  <StatInt value={4} />
+                  <StatInt value={4} delay={0.08} />
                 </div>
                 <div className="mt-1 text-[12px] text-white/50">
                   Jobs pending final pass
@@ -432,7 +466,7 @@ function DashboardPreview() {
                   Stubs This Week
                 </div>
                 <div className="mt-1 text-lg font-semibold text-white">
-                  <StatInt value={8} />
+                  <StatInt value={8} delay={0.12} />
                 </div>
                 <div className="mt-1 text-[12px] text-white/50">
                   Crew accountability

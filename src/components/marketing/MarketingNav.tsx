@@ -149,9 +149,6 @@ export default function MarketingNav() {
                 className="h-8 w-auto select-none"
                 draggable={false}
               />
-              <span className="hidden xl:inline text-sm text-white/60 group-hover:text-white/75 transition">
-                Purpose-built for roofing contractors
-              </span>
             </Link>
 
             {/* Desktop Nav: ONLY at lg+ to avoid the awkward md-to-lg crowding */}
