@@ -503,7 +503,7 @@ export default function SignupPage() {
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-[11px] text-white/45 leading-relaxed">
-                  By continuing, you agree to reasonable terms. No spam.
+                  By continuing, you agree to the terms & conditions.
                 </div>
 
                 <button

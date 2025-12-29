@@ -1,9 +1,18 @@
 // src/pages/HomePage.tsx
 import { Link } from "react-router-dom";
-import { motion, type Variants } from "framer-motion";
+import {
+  motion,
+  type Variants,
+  useAnimation,
+  AnimatePresence,
+} from "framer-motion";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
 import preview from "../assets/roofzeus-demo.png";
+import jobdetails from "../assets/jobdetailpage preview.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -72,6 +81,77 @@ const HERO_TICKER_ITEMS = [
   "Financial reports",
   "Warranty reports",
 ];
+const docs = [
+  {
+    title: "Invoices",
+    desc: "Create clean invoices that match the job—then send or print in seconds.",
+    bullets: ["PDF-ready", "Email from the job", "Stored per job"],
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+        <path
+          d="M7 3h7l3 3v15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"
+          stroke="currentColor"
+          strokeWidth="1.7"
+        />
+        <path
+          d="M14 3v3a1 1 0 0 0 1 1h3"
+          stroke="currentColor"
+          strokeWidth="1.7"
+        />
+        <path
+          d="M8.5 11h7M8.5 14h7M8.5 17h4.5"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+    pill: "Preview",
+  },
+  {
+    title: "Pay Stubs",
+    desc: "Generate pay stubs with job context so crews trust the numbers.",
+    bullets: ["Pending / paid states", "Export anytime", "Crew history"],
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+        <path
+          d="M6 4h12a2 2 0 0 1 2 2v13l-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1V6a2 2 0 0 1 2-2Z"
+          stroke="currentColor"
+          strokeWidth="1.7"
+        />
+        <path
+          d="M8.5 9.5h7M8.5 13h7M8.5 16.5h4.5"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+    pill: "Export",
+  },
+  {
+    title: "Warranty Reports",
+    desc: "Produce a clean packet for warranty or third-party workflows.",
+    bullets: ["Job notes + photos", "Printable packet", "Attached to job"],
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+        <path
+          d="M12 2 19 5v7c0 5-3.5 9-7 10-3.5-1-7-5-7-10V5l7-3Z"
+          stroke="currentColor"
+          strokeWidth="1.7"
+        />
+        <path
+          d="M9.5 12.2 11 13.7l3.8-4"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    pill: "Packet",
+  },
+] as const;
 
 function FeatureTicker({ items }: { items: string[] }) {
   // Render two identical groups and translate the track by exactly one group width.
@@ -258,7 +338,7 @@ function DashboardPreview() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: false, amount: 0.25 }}
-      className="relative  overflow-hidden hidden md:block max-h-[500px] rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)] opacity-40! blur-[2px]!"
+      className="relative  overflow-hidden hidden select-none md:block max-h-[500px] rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)] opacity-40! blur-[2px]!"
     >
       {/* ambient glow */}
       <div className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full bg-[#cfae5d]/12 blur-3xl" />
@@ -587,8 +667,122 @@ function DashboardPreview() {
     </motion.div>
   );
 }
+function ImageLightbox({
+  open,
+  src,
+  alt,
+  onClose,
+}: {
+  open: boolean;
+  src: string;
+  alt: string;
+  onClose: () => void;
+}) {
+  // Prevent scroll when open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // ESC to close
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          aria-modal="true"
+          role="dialog"
+        >
+          {/* Backdrop */}
+          <motion.button
+            type="button"
+            className="absolute inset-0 bg-black/70"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            aria-label="Close preview"
+          />
+
+          {/* Modal frame */}
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.985, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: 10, scale: 0.985, filter: "blur(6px)" }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-[1200px] max-h-[90vh] overflow-hidden rounded-2xl border border-white/10 bg-[#0b0e14] shadow-[0_30px_120px_rgba(0,0,0,0.75)] flex flex-col"
+          >
+            {/* Top bar */}
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2 sm:px-4 sm:py-3">
+              <div className="min-w-0">
+                <div className="text-[12px] text-white/55">
+                  ROOFZEUS preview
+                </div>
+                <div className="text-sm font-semibold text-white/85 truncate">
+                  Job detail view
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[12px] text-white/80 hover:bg-white/10 transition"
+              >
+                <span className="hidden sm:inline">Close</span>
+                <span aria-hidden className="text-white/60">
+                  ✕
+                </span>
+              </button>
+            </div>
+
+            {/* Image (scrolls inside modal) */}
+            <div className="relative bg-[#0b0e14] overflow-auto">
+              <img
+                src={src}
+                alt={alt}
+                className="block w-full h-auto select-none"
+                draggable={false}
+              />
+            </div>
+
+            {/* Helper hint */}
+            <div className="flex items-center justify-between border-t border-white/10 px-3 py-2 sm:px-4 sm:py-3 text-[12px] text-white/55">
+              <div>
+                Tip: press <span className="text-white/70">Esc</span> to close
+              </div>
+              <div className="hidden sm:block">Click outside to dismiss</div>
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
+    document.body
+  );
+}
 
 export default function HomePage() {
+  const financialControls = useAnimation();
+  const builtForControls = useAnimation();
+  const [jobPreviewOpen, setJobPreviewOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8] overflow-x-hidden">
       {/* HERO */}
@@ -676,27 +870,60 @@ export default function HomePage() {
         <motion.div
           variants={stagger}
           initial="hidden"
+          animate={builtForControls}
           whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
+          viewport={{ once: false, amount: 0.25 }}
+          onViewportEnter={() => builtForControls.start("show")}
+          onViewportLeave={() => builtForControls.set("hidden")}
           className="max-w-7xl mx-auto px-6 py-20"
         >
-          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-10">
-            Stop juggling jobs across texts, notes, and spreadsheets
-          </motion.h2>
+          <div className="flex flex-col md:flex-row gap-2 items-center">
+            <div>
+              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
+                Built for how roofing actually works
+              </motion.h2>
+
+              <motion.p
+                variants={fadeUp}
+                className="max-w-2xl text-white/70 mb-12"
+              >
+                Keep jobs, scheduling, and crew updates in one place — so your
+                team stays aligned and nothing falls through the cracks.
+              </motion.p>
+            </div>
+
+            <motion.button
+              type="button"
+              variants={cardIn}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.25 }}
+              onClick={() => setJobPreviewOpen(true)}
+              className="group relative block mx-auto w-full max-w-[600px] mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black/20"
+              aria-label="Open full preview"
+            >
+              <img
+                src={jobdetails}
+                alt="ROOFZEUS app preview"
+                className="block w-full h-auto cursor-pointer"
+                draggable={false}
+              />
+            </motion.button>
+          </div>
 
           <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: "Everything per job",
-                desc: "Square footage, pricing, materials, notes, photos, status — all tied to the job so nothing gets lost.",
+                title: "All job details, one place",
+                desc: "Square footage, pricing, materials, notes, photos, and status — everything tied to the job so nothing slips through the cracks.",
               },
               {
-                title: "Scheduling that stays clear",
-                desc: "Set dry-in, shingles, and punch dates and see what’s coming up across every job.",
+                title: "Clear scheduling, end to end",
+                desc: "Schedule dry-ins, shingles, and punch work — and see what’s coming up at a glance.",
               },
               {
-                title: "Crew, without confusion",
-                desc: "Invite your crew, assign jobs, and keep updates in one place — no more guessing who did what.",
+                title: "Crew coordination that makes sense",
+                desc: "Assignments, updates, and progress without the back-and-forth.",
               },
             ].map((f) => (
               <motion.div
@@ -708,33 +935,38 @@ export default function HomePage() {
                 <h3 className="font-semibold text-lg mb-2 text-[#cfae5d]">
                   {f.title}
                 </h3>
-                <p className="text-sm ">{f.desc}</p>
+                <p className="text-sm text-white leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
           </motion.div>
         </motion.div>
       </section>
-      <img
+      <motion.img
+        variants={cardIn}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: false, amount: 0.25 }}
         className="block mx-auto w-full max-w-[1300px]"
         src={preview}
-        alt=""
+        alt="ROOFZEUS app preview"
       />
+
       {/* FINANCIAL POWER */}
       <section className="max-w-7xl mx-auto px-6 py-24">
         <motion.div
           variants={stagger}
           initial="hidden"
+          animate={financialControls}
           whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
+          viewport={{ once: false, amount: 0.25 }}
+          onViewportEnter={() => financialControls.start("show")}
+          onViewportLeave={() => financialControls.set("hidden")}
         >
           <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
             Know exactly where your money is
           </motion.h2>
 
-          <motion.p
-            variants={fadeUp}
-            className="max-w-2xl text-[#cfae5d]/80 mb-12"
-          >
+          <motion.p variants={fadeUp} className="max-w-2xl text-white/70 mb-12">
             Filter by any date range and instantly see earnings, expenses,
             payouts, materials, and profit — across all jobs or down to a single
             one.
@@ -744,10 +976,12 @@ export default function HomePage() {
             <motion.div
               variants={cardIn}
               whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-              className="bg-[#1f2430] rounded-xl p-6 border border-[#3a3f4b]"
+              className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
             >
-              <h3 className="font-semibold mb-2">Financial Overview</h3>
-              <p className="text-sm text-[#cfae5d]/70">
+              <h3 className="font-semibold mb-2 text-[#cfae5d]">
+                Financial Overview
+              </h3>
+              <p className="text-sm text-white">
                 A dedicated page for real-time financial insight across your
                 operation.
               </p>
@@ -756,10 +990,12 @@ export default function HomePage() {
             <motion.div
               variants={cardIn}
               whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-              className="bg-[#1f2430] rounded-xl p-6 border border-[#3a3f4b]"
+              className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
             >
-              <h3 className="font-semibold mb-2">Payouts & Pay Stubs</h3>
-              <p className="text-sm text-[#cfae5d]/70">
+              <h3 className="font-semibold mb-2 text-[#cfae5d]">
+                Payouts & Pay Stubs
+              </h3>
+              <p className="text-sm text-white">
                 Generate, track, filter, and export pay stubs for your crew —
                 pending or paid.
               </p>
@@ -769,30 +1005,94 @@ export default function HomePage() {
       </section>
 
       {/* DOCUMENTS */}
-      <section className="bg-[#1f2430] border-t border-[#3a3f4b]">
+      <section className="bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] ">
         <motion.div
           variants={stagger}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
+          viewport={{ once: false, amount: 0.25 }}
           className="max-w-7xl mx-auto px-6 py-20"
         >
-          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-10">
-            Professional documents, built-in
-          </motion.h2>
+          <motion.div
+            variants={fadeUp}
+            className="flex items-end justify-between gap-6 flex-wrap"
+          >
+            <div className="min-w-0">
+              <h2 className="text-3xl font-bold">
+                Professional documents, built-in
+              </h2>
+              <p className="mt-3 max-w-2xl text-white/70">
+                Send invoices, generate pay stubs, and create warranty packets
+                without leaving the job. Everything stays organized and easy to
+                find later.
+              </p>
+            </div>
 
-          <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
-            {["Invoices", "Pay Stubs", "Warranty Reports"].map((doc) => (
+            <div className="hidden md:flex items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/50 px-3 py-1 text-[12px] text-white/65">
+                Print-ready PDFs
+              </span>
+              <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/50 px-3 py-1 text-[12px] text-white/65">
+                Stored per job
+              </span>
+            </div>
+          </motion.div>
+
+          <motion.div
+            variants={stagger}
+            className="mt-10 grid md:grid-cols-3 gap-8"
+          >
+            {docs.map((d) => (
               <motion.div
-                key={doc}
+                key={d.title}
                 variants={cardIn}
-                whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-                className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
+                whileHover={{ y: -4, transition: { duration: 0.25, ease } }}
+                className="group relative rounded-2xl border border-[#3a3f4b] bg-[#0b0e14] p-6 overflow-hidden"
               >
-                <h3 className="font-semibold">{doc}</h3>
-                <p className="text-sm text-[#cfae5d]/70 mt-2">
-                  Printable, emailable, and stored with each job.
+                <div className="relative flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-xl border border-[#cfae5d]/25 bg-[#cfae5d]/10 text-[#cfae5d] flex items-center justify-center">
+                      {d.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-lg text-white">
+                        {d.title}
+                      </h3>
+                      <div className="mt-1 text-[12px] text-[#cfae5d]/80">
+                        {d.pill}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span className="hidden sm:inline-flex items-center rounded-full border border-[#3a3f4b] bg-white/5 px-2.5 py-1 text-[11px] text-white/65">
+                    Built-in
+                  </span>
+                </div>
+
+                <p className="relative mt-4 text-sm text-white/75 leading-relaxed">
+                  {d.desc}
                 </p>
+
+                <div className="relative mt-5 space-y-2">
+                  {d.bullets.map((b) => (
+                    <div
+                      key={b}
+                      className="flex items-center gap-2 text-[12px] text-white/65"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#cfae5d]/80" />
+                      <span className="truncate">{b}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="relative mt-6 flex items-center justify-between">
+                  <div className="text-[12px] text-white/45">
+                    Linked to jobs & crew
+                  </div>
+                </div>
+
+                {/* top accent line */}
+                <div className="pointer-events-none absolute left-6 right-6 top-0 h-[1px] bg-[#cfae5d]/0 group-hover:bg-[#cfae5d]/30 transition" />
               </motion.div>
             ))}
           </motion.div>
@@ -811,8 +1111,9 @@ export default function HomePage() {
             Built for real roofing operations
           </motion.h2>
 
-          <motion.p variants={fadeUp} className="mt-4 text-[#cfae5d]/80">
-            Not generic software. Not spreadsheets. ROOFZEUS.
+          <motion.p variants={fadeUp} className="mt-1 text-white/70">
+            Purpose-built for roofing contractors. No spreadsheets. No
+            guesswork.
           </motion.p>
 
           <motion.a
@@ -820,12 +1121,18 @@ export default function HomePage() {
             whileHover={{ y: -1, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             href="http://app.localhost:5173/signup"
-            className="inline-block mt-10 bg-[#cfae5d] hover:bg-[var(--color-accent-gold-2)] text-black px-2 py-2 rounded-md font-semibold hover:opacity-90 transition"
+            className="inline-block mt-10 bg-[#cfae5d] hover:bg-[var(--color-accent-gold-2)] text-sm text-black px-2 py-2 rounded-md font-semibold hover:opacity-90 transition"
           >
-            Try ROOF ZEUS
+            Try now
           </motion.a>
         </motion.div>
       </section>
+      <ImageLightbox
+        open={jobPreviewOpen}
+        src={jobdetails}
+        alt="ROOFZEUS job detail preview"
+        onClose={() => setJobPreviewOpen(false)}
+      />
     </main>
   );
 }

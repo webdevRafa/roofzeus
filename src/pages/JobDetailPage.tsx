@@ -2015,7 +2015,7 @@ export default function JobDetailPage({
                                     prefillFlashingInputs();
                                     setFlashingModalOpen(true);
                                   }}
-                                  className="mt-2 inline-flex items-center rounded-full bg-[var(--color-surface)]/35 px-2 py-0.5 text-[10px] font-medium text-[var(--color-text)] ring-1 ring-white/10 hover:bg-[var(--color-card-hover)]"
+                                  className="mt-2  items-center hidden rounded-full bg-[var(--color-surface)]/35 px-2 py-0.5 text-[10px] font-medium text-[var(--color-text)] ring-1 ring-white/10 hover:bg-[var(--color-card-hover)]"
                                   title="Add flashing pay"
                                 >
                                   + Add flashing pay

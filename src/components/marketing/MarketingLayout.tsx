@@ -1,5 +1,5 @@
 // src/components/marketing/MarketingLayout.tsx
-import { Outlet, Link } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
 import MarketingNav from "./MarketingNav";
 
@@ -61,42 +61,13 @@ export default function MarketingLayout() {
                   <Pill>Cancel anytime</Pill>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 text-sm">
-                <Link
-                  to="/"
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/75 hover:text-white hover:bg-white/10 transition"
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/pricing"
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/75 hover:text-white hover:bg-white/10 transition"
-                >
-                  Pricing
-                </Link>
-                <Link
-                  to="/see-it-in-action"
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/75 hover:text-white hover:bg-white/10 transition"
-                >
-                  See it in action
-                </Link>
-                <Link
-                  to="/login"
-                  className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 px-3 py-2 text-white/80 hover:border-[#cfae5d] hover:text-white transition"
-                >
-                  Log in
-                </Link>
-              </div>
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[12px] text-white/45">
               <div>© {new Date().getFullYear()} ROOFZEUS</div>
               <div className="flex gap-4">
                 {/* Placeholder links (optional later): privacy/terms/contact */}
-                <span className="text-white/35">
-                  Built to replace spreadsheets and guesswork.
-                </span>
+                <span className="text-white/35"></span>
               </div>
             </div>
           </div>

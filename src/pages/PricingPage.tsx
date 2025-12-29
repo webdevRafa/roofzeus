@@ -195,7 +195,7 @@ export default function PricingPage() {
             {/* Pricing Card */}
             <motion.div
               variants={cardIn}
-              className={`lg:col-span-6 rounded-2xl border border-[#3a3f4b] bg-[#1f2430] p-6 ${glowRing}`}
+              className={`lg:col-span-6 rounded-2xl border border-[#3a3f4b] bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 ${glowRing}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -398,7 +398,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-[#1f2430] border-t border-[#3a3f4b]">
+      <section className="bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] ">
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -495,23 +495,6 @@ export default function PricingPage() {
           </motion.div>
         </motion.div>
       </section>
-
-      <footer className="max-w-7xl mx-auto px-6 py-10 text-sm text-white/45">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>© {new Date().getFullYear()} ROOFZEUS</div>
-          <div className="flex gap-4">
-            <Link
-              to="/see-it-in-action"
-              className="hover:text-white/70 transition"
-            >
-              See it in action
-            </Link>
-            <Link to="/login" className="hover:text-white/70 transition">
-              Log in
-            </Link>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
