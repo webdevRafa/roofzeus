@@ -1,6 +1,7 @@
 // src/pages/FeaturesPage.tsx
 import { Link } from "react-router-dom";
-import { motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { useMemo, useState } from "react";
 import {
   CalendarDays,
   ClipboardList,
@@ -10,8 +11,8 @@ import {
   Receipt,
   FileText,
   Wrench,
-  CheckCircle2,
   ArrowRight,
+  CheckCircle2,
   Sparkles,
 } from "lucide-react";
 
@@ -55,102 +56,134 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-type FeatureCard = {
+type Feature = {
+  key: string;
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   desc: string;
   bullets: string[];
+  micro?: string; // small “why it matters”
 };
 
-const featureCards: FeatureCard[] = [
-  {
-    icon: ClipboardList,
-    title: "Job pages that keep everything together",
-    desc: "Every job has a single source of truth — money, schedule, photos, notes, and progress.",
-    bullets: [
-      "Sq ft, rate, fees, materials & labor",
-      "Notes + photos in the same place",
-      "Status tracking that matches real workflows",
-    ],
-  },
-  {
-    icon: CalendarDays,
-    title: "Scheduling built for roofing stages",
-    desc: "Dry-in, shingles, punch — set dates and keep the whole pipeline visible across jobs.",
-    bullets: [
-      "Stage dates stay readable (no guessing)",
-      "See what’s coming this week",
-      "Crew stays aligned with the plan",
-    ],
-  },
-  {
-    icon: Users,
-    title: "Crew workflow without chaos",
-    desc: "Invite the team, assign jobs, and keep field updates tied to the job — not lost in texts.",
-    bullets: [
-      "Role-aware access (owner vs crew)",
-      "Assigned jobs for each crew member",
-      "Clean accountability and history",
-    ],
-  },
-  {
-    icon: Receipt,
-    title: "Materials + receipts tied to profit",
-    desc: "Log spend with receipts so job margins stay accurate — not a rough estimate.",
-    bullets: [
-      "Track material spend per job",
-      "Receipt attachments for proof",
-      "Clear job-level margin visibility",
-    ],
-  },
-  {
-    icon: LineChart,
-    title: "Financial overview by any date range",
-    desc: "Filter by any range and see earnings, costs, payouts, and net profit — fast.",
-    bullets: [
-      "Company-wide or per job insights",
-      "Revenue, materials, payouts, net",
-      "Trend visibility without spreadsheets",
-    ],
-  },
-  {
-    icon: FileText,
-    title: "Payouts and pay stubs that make sense",
-    desc: "Track crew payouts and generate stubs with the details you’ll want later.",
-    bullets: [
-      "Pending vs paid filtering",
-      "Stub history stays organized",
-      "Better documentation for everyone",
-    ],
-  },
-  {
-    icon: Camera,
-    title: "Photos + notes where they belong",
-    desc: "Capture progress in the field and keep it attached to the job forever.",
-    bullets: [
-      "Before / during / after documentation",
-      "Notes tied to the correct address/job",
-      "No more hunting through phones",
-    ],
-  },
-  {
-    icon: Wrench,
-    title: "Built around real contractor ops",
-    desc: "This isn’t generic project software. It’s shaped around how roofing actually moves.",
-    bullets: [
-      "Stages, crew, payouts, profit clarity",
-      "Fast workflow with minimal admin work",
-      "Designed for multi-company SaaS scale",
-    ],
-  },
-];
-
 export default function FeaturesPage() {
+  const features: Feature[] = useMemo(
+    () => [
+      {
+        key: "jobs",
+        icon: ClipboardList,
+        title: "Job pages that hold the truth",
+        desc: "Every job has one source of truth: pricing, notes, photos, schedule, materials, and payouts.",
+        bullets: [
+          "Sq ft, rate, fees, materials & labor in one place",
+          "Notes + photos attached to the job — not texts",
+          "Status tracking that matches real roofing workflows",
+        ],
+        micro: "Less chasing info. More clean execution.",
+      },
+      {
+        key: "schedule",
+        icon: CalendarDays,
+        title: "Scheduling built for roofing stages",
+        desc: "Dry-in, shingles, punch — your schedule stays readable across every job and crew.",
+        bullets: [
+          "Stage dates stay clear (no guessing)",
+          "See what’s coming this week",
+          "Crew stays aligned with the plan",
+        ],
+        micro: "Your pipeline stays visible at a glance.",
+      },
+      {
+        key: "crew",
+        icon: Users,
+        title: "Crew workflow without chaos",
+        desc: "Invite your team, assign jobs, and keep field updates tied to the job forever.",
+        bullets: [
+          "Role-aware access (owner vs crew)",
+          "Assigned job lists per crew member",
+          "Clean accountability and history",
+        ],
+        micro: "Updates live where they belong: on the job.",
+      },
+      {
+        key: "money",
+        icon: LineChart,
+        title: "Profit clarity by any date range",
+        desc: "Filter any range and see revenue, costs, payouts, and net profit — company-wide or per job.",
+        bullets: [
+          "Company-wide or per job insights",
+          "Revenue, materials, payouts, net",
+          "Trend visibility without spreadsheets",
+        ],
+        micro: "Know your numbers without building a workbook.",
+      },
+      {
+        key: "receipts",
+        icon: Receipt,
+        title: "Materials + receipts tied to profit",
+        desc: "Log spend with receipts so margins stay accurate — not a rough estimate.",
+        bullets: [
+          "Track material spend per job",
+          "Receipt attachments for proof",
+          "Clear job-level margin visibility",
+        ],
+        micro: "Margins you can defend — not guess.",
+      },
+      {
+        key: "stubs",
+        icon: FileText,
+        title: "Payouts and pay stubs that make sense",
+        desc: "Track payouts and generate stubs with the details you’ll want later.",
+        bullets: [
+          "Pending vs paid filtering",
+          "Stub history stays organized",
+          "Better documentation for everyone",
+        ],
+        micro: "Crews trust the numbers when the context is there.",
+      },
+      {
+        key: "photos",
+        icon: Camera,
+        title: "Photos + notes where they belong",
+        desc: "Capture progress in the field and keep it attached to the job forever.",
+        bullets: [
+          "Before / during / after documentation",
+          "Notes tied to the correct address/job",
+          "No more hunting through phones",
+        ],
+        micro: "Clean records = smoother handoffs and fewer disputes.",
+      },
+      {
+        key: "ops",
+        icon: Wrench,
+        title: "Built around contractor reality",
+        desc: "This isn’t generic project software. It’s shaped around how roofing actually moves.",
+        bullets: [
+          "Stages, crew, payouts, profit clarity",
+          "Fast workflow with minimal admin work",
+          "Designed for multi-company SaaS scale",
+        ],
+        micro: "Roofing-first, not “project management.”",
+      },
+    ],
+    []
+  );
+
+  const [activeKey, setActiveKey] = useState(features[0].key);
+  const active = features.find((f) => f.key === activeKey) ?? features[0];
+  const ActiveIcon = active.icon;
+
   return (
     <main className="min-h-[calc(100vh-64px)] text-[#f5f6f8] overflow-x-hidden">
       {/* HERO */}
-      <section className="relative">
-        <div className="max-w-7xl mx-auto px-6 pt-14 pb-10">
+      <section className="relative overflow-hidden">
+        {/* soft background texture */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(207,174,93,0.10),transparent_55%)]" />
+          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#cfae5d]/10 blur-3xl" />
+          <div className="absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 pt-14 pb-10 relative">
           <motion.div
             variants={stagger}
             initial="hidden"
@@ -158,8 +191,8 @@ export default function FeaturesPage() {
             className="flex flex-col gap-6"
           >
             <motion.div variants={fadeUp} className="flex items-center gap-3">
-              <Pill>Product</Pill>
               <Pill>Roofing-first workflows</Pill>
+              <Pill>Org-scoped</Pill>
               <Pill>Built for teams</Pill>
             </motion.div>
 
@@ -193,7 +226,7 @@ export default function FeaturesPage() {
                   "hover:bg-[#cfae5d]/90 transition"
                 )}
               >
-                Start free trial
+                See it in action
                 <ArrowRight className="h-4 w-4" />
               </Link>
 
@@ -205,7 +238,7 @@ export default function FeaturesPage() {
                   "text-sm font-semibold text-[#f5f6f8] hover:bg-white/10 transition"
                 )}
               >
-                See pricing
+                Pricing
               </Link>
 
               <Link
@@ -223,43 +256,61 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* FEATURE GRID */}
+      {/* 3 PILLARS (less cards, more hierarchy) */}
       <section className="max-w-7xl mx-auto px-6 py-10">
         <motion.div
           variants={stagger}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-4 lg:grid-cols-3"
         >
-          {featureCards.map((f) => {
-            const Icon = f.icon;
+          {[
+            {
+              title: "Operations stay tight",
+              desc: "Job pages, stages, and crew updates — everything stays tied to the work.",
+              bullets: ["Jobs + stages", "Crew assignments", "Notes & photos"],
+              icon: Wrench,
+            },
+            {
+              title: "Money stays explainable",
+              desc: "Track materials, payouts, and job profit with clean history you can export.",
+              bullets: ["Receipts", "Pay stubs", "Profit clarity"],
+              icon: LineChart,
+            },
+            {
+              title: "Your system scales",
+              desc: "Org-scoped by design. Built for multi-company growth without data mess.",
+              bullets: ["Org separation", "Role access", "Clean records"],
+              icon: Users,
+            },
+          ].map((p) => {
+            const Icon = p.icon;
             return (
               <motion.div
-                key={f.title}
+                key={p.title}
                 variants={cardIn}
-                whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
                 className="rounded-2xl border border-[#3a3f4b] bg-[#1f2430]/55 p-6"
               >
                 <div className="flex items-center gap-3">
                   <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#cfae5d]/25 bg-[#cfae5d]/10">
                     <Icon className="h-5 w-5 text-[#cfae5d]" />
                   </div>
-                  <div className="text-sm font-semibold text-[#f5f6f8]">
-                    {f.title}
-                  </div>
+                  <div className="text-sm font-semibold">{p.title}</div>
                 </div>
 
                 <div className="mt-3 text-sm text-white/65 leading-relaxed">
-                  {f.desc}
+                  {p.desc}
                 </div>
 
-                <div className="mt-4 space-y-2">
-                  {f.bullets.map((b) => (
-                    <div key={b} className="flex gap-2 text-sm text-white/70">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#cfae5d]" />
-                      <span>{b}</span>
-                    </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {p.bullets.map((b) => (
+                    <span
+                      key={b}
+                      className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/35 px-2.5 py-1 text-[11px] text-white/70"
+                    >
+                      {b}
+                    </span>
                   ))}
                 </div>
               </motion.div>
@@ -268,43 +319,221 @@ export default function FeaturesPage() {
         </motion.div>
       </section>
 
-      {/* “WHY THIS WINS” STRIP */}
-      <section className="max-w-7xl mx-auto px-6 py-14">
+      {/* INTERACTIVE FEATURE SWITCHER (the “creative” part) */}
+      <section className="max-w-7xl mx-auto px-6 py-12">
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.25 }}
+          className="grid gap-6 lg:grid-cols-12"
+        >
+          {/* Left: selector */}
+          <motion.div variants={fadeUp} className="lg:col-span-5">
+            <div className="flex items-center gap-2 text-[#cfae5d]">
+              <Sparkles className="h-4 w-4" />
+              <div className="text-sm font-semibold">Explore the workflow</div>
+            </div>
+
+            <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+              Everything is organized around the job.
+            </h2>
+
+            <p className="mt-2 text-white/65 leading-relaxed max-w-xl">
+              Instead of 8 equal cards, here’s the flow in a way your brain can
+              scan: pick a pillar, see what it does, and why it matters.
+            </p>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              {features.slice(0, 6).map((f) => {
+                const Icon = f.icon;
+                const isActive = f.key === activeKey;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => setActiveKey(f.key)}
+                    className={cx(
+                      "text-left rounded-2xl border px-4 py-3 transition",
+                      isActive
+                        ? "border-[#cfae5d]/45 bg-[#cfae5d]/10"
+                        : "border-[#3a3f4b] bg-[#0b0e14]/35 hover:bg-white/5 hover:border-white/20"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cx(
+                          "inline-flex h-9 w-9 items-center justify-center rounded-xl border",
+                          isActive
+                            ? "border-[#cfae5d]/35 bg-[#cfae5d]/10"
+                            : "border-white/10 bg-white/5"
+                        )}
+                      >
+                        <Icon
+                          className={cx(
+                            "h-4 w-4",
+                            isActive ? "text-[#cfae5d]" : "text-white/70"
+                          )}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white">
+                          {f.title}
+                        </div>
+                        <div className="mt-0.5 text-[12px] text-white/55">
+                          {f.micro}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* smaller “more” row */}
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {features.slice(6).map((f) => {
+                const Icon = f.icon;
+                const isActive = f.key === activeKey;
+                return (
+                  <button
+                    key={f.key}
+                    onClick={() => setActiveKey(f.key)}
+                    className={cx(
+                      "text-left rounded-2xl border px-4 py-3 transition",
+                      isActive
+                        ? "border-[#cfae5d]/45 bg-[#cfae5d]/10"
+                        : "border-[#3a3f4b] bg-[#0b0e14]/35 hover:bg-white/5 hover:border-white/20"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cx(
+                          "inline-flex h-9 w-9 items-center justify-center rounded-xl border",
+                          isActive
+                            ? "border-[#cfae5d]/35 bg-[#cfae5d]/10"
+                            : "border-white/10 bg-white/5"
+                        )}
+                      >
+                        <Icon
+                          className={cx(
+                            "h-4 w-4",
+                            isActive ? "text-[#cfae5d]" : "text-white/70"
+                          )}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white">
+                          {f.title}
+                        </div>
+                        <div className="mt-0.5 text-[12px] text-white/55">
+                          {f.micro}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Right: animated detail panel */}
+          <motion.div variants={fadeUp} className="lg:col-span-7">
+            <div className="relative overflow-hidden rounded-2xl border border-[#3a3f4b] bg-[#1f2430]/55 p-6">
+              <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#cfae5d]/10 blur-3xl" />
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active.key}
+                  initial={{ opacity: 0, y: 12, filter: "blur(10px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -10, filter: "blur(10px)" }}
+                  transition={{ duration: 0.35, ease }}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#cfae5d]/25 bg-[#cfae5d]/10">
+                      <ActiveIcon className="h-5 w-5 text-[#cfae5d]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-lg font-bold tracking-tight">
+                        {active.title}
+                      </div>
+                      <div className="mt-2 text-sm text-white/65 leading-relaxed">
+                        {active.desc}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-2">
+                    {active.bullets.map((b) => (
+                      <div key={b} className="flex gap-2 text-sm text-white/75">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#cfae5d]" />
+                        <span>{b}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                    <Link
+                      to="/see-it-in-action"
+                      className={cx(
+                        "inline-flex items-center justify-center gap-2",
+                        "rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black",
+                        "hover:bg-[#cfae5d]/90 transition"
+                      )}
+                    >
+                      Watch the demo
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+
+                    <Link
+                      to="/pricing"
+                      className={cx(
+                        "inline-flex items-center justify-center gap-2",
+                        "rounded-xl border border-[#3a3f4b] bg-white/5 px-5 py-3",
+                        "text-sm font-semibold text-[#f5f6f8] hover:bg-white/10 transition"
+                      )}
+                    >
+                      See pricing
+                    </Link>
+                  </div>
+
+                  <div className="mt-4 text-[12px] text-white/45">
+                    Tip: This is built around roofing stages — not generic
+                    “project management.”
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* SMALL PROOF STRIP (not a second big CTA section) */}
+      <section className="max-w-7xl mx-auto px-6 pb-16">
         <motion.div
           variants={cardIn}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
-          className="relative overflow-hidden rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/45 p-7"
+          className="rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-6"
         >
-          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#cfae5d]/10 blur-3xl" />
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[#cfae5d]">
-                <Sparkles className="h-4 w-4" />
-                <div className="text-sm font-semibold">The difference</div>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-white">
+                Roofing workflows first — not generic software.
               </div>
-              <div className="mt-2 text-2xl font-bold">
-                Roofing workflows first — not generic “project management”.
-              </div>
-              <div className="mt-2 text-white/65 max-w-2xl">
-                Your crew doesn’t need more tools. They need one system that
-                keeps jobs and money organized with as little friction as
-                possible.
+              <div className="mt-1 text-sm text-white/65 max-w-2xl">
+                Keep job truth, stages, crew updates, receipts, and payouts in
+                one place so your operation stays clean as you scale.
               </div>
             </div>
 
             <Link
               to="/see-it-in-action"
-              className={cx(
-                "inline-flex items-center justify-center gap-2",
-                "rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black",
-                "hover:bg-[#cfae5d]/90 transition"
-              )}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#3a3f4b] bg-white/5 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10 hover:border-[#cfae5d]/40 transition"
             >
-              Start free trial
-              <ArrowRight className="h-4 w-4" />
+              See it in action
+              <ArrowRight className="h-4 w-4 text-white/70" />
             </Link>
           </div>
         </motion.div>

@@ -6,7 +6,7 @@ import {
   useAnimation,
   AnimatePresence,
 } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import CountUp from "react-countup";
@@ -667,6 +667,43 @@ function DashboardPreview() {
     </motion.div>
   );
 }
+function StickyCtaBar({ show }: { show: boolean }) {
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {show ? (
+        <motion.div
+          initial={{ opacity: 0, y: -30, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="md:hidden fixed left-0 right-0 top-16 z-[40] px-4"
+        >
+          <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-[#0b0e14] backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] p-3">
+            <div className="flex items-center gap-3 w-full">
+              <Link
+                to="/see-it-in-action"
+                className="flex-1 inline-flex items-center justify-center bg-[#cfae5d] text-black px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
+              >
+                See it in action
+              </Link>
+
+              <Link
+                to="/pricing"
+                className="flex-1 inline-flex items-center justify-center border border-[#3a3f4b] bg-white/5 px-4 py-2.5 rounded-xl text-xs font-semibold text-white hover:border-[#cfae5d] transition"
+              >
+                Pricing
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
+    document.body
+  );
+}
+
 function ImageLightbox({
   open,
   src,
@@ -783,8 +820,32 @@ export default function HomePage() {
   const builtForControls = useAnimation();
   const [jobPreviewOpen, setJobPreviewOpen] = useState(false);
 
+  const heroCtaRef = useRef<HTMLDivElement | null>(null);
+  const [showStickyCtas, setShowStickyCtas] = useState(false);
+
+  useEffect(() => {
+    const el = heroCtaRef.current;
+    if (!el) return;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        // If the hero CTA row is NOT visible, show the sticky bar
+        setShowStickyCtas(!entry.isIntersecting);
+      },
+      {
+        // Trigger slightly before it fully leaves (nice UX)
+        threshold: 0.15,
+      }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8] overflow-x-hidden">
+      <StickyCtaBar show={showStickyCtas} />
+
       {/* HERO */}
       <section className="relative overflow-hidden max-w-full">
         {/* subtle background texture */}
@@ -836,15 +897,22 @@ export default function HomePage() {
                 guesswork.
               </motion.p>
 
-              <motion.div variants={fadeUp} className="mt-10 flex gap-4">
-                <motion.a
+              <motion.div
+                ref={heroCtaRef}
+                variants={fadeUp}
+                className="mt-10 flex gap-4"
+              >
+                <motion.div
                   whileHover={{ y: -1, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
-                  href="http://localhost:5173/see-it-in-action"
-                  className="bg-[#cfae5d] text-black px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition"
                 >
-                  See it in action
-                </motion.a>
+                  <Link
+                    to="/see-it-in-action"
+                    className="inline-flex items-center justify-center bg-[#cfae5d] text-black px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+                  >
+                    See it in action
+                  </Link>
+                </motion.div>
 
                 <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
                   <Link
@@ -877,21 +945,7 @@ export default function HomePage() {
           onViewportLeave={() => builtForControls.set("hidden")}
           className="max-w-7xl mx-auto px-6 py-20"
         >
-          <div className="flex flex-col md:flex-row gap-2 items-center">
-            <div>
-              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
-                Built for how roofing actually works
-              </motion.h2>
-
-              <motion.p
-                variants={fadeUp}
-                className="max-w-2xl text-white/70 mb-12"
-              >
-                Keep jobs, scheduling, and crew updates in one place — so your
-                team stays aligned and nothing falls through the cracks.
-              </motion.p>
-            </div>
-
+          <div className="flex flex-col md:flex-row gap-6 items-center md:mb-10">
             <motion.button
               type="button"
               variants={cardIn}
@@ -909,6 +963,19 @@ export default function HomePage() {
                 draggable={false}
               />
             </motion.button>
+            <div>
+              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
+                Built for how roofing actually works
+              </motion.h2>
+
+              <motion.p
+                variants={fadeUp}
+                className="max-w-2xl text-white/70 mb-12"
+              >
+                Keep jobs, scheduling, and crew updates in one place — so your
+                team stays aligned and nothing falls through the cracks.
+              </motion.p>
+            </div>
           </div>
 
           <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">

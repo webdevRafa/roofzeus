@@ -157,7 +157,7 @@ export default function PricingPage() {
           >
             <div className="flex items-center gap-2">
               <Pill>14-day free trial</Pill>
-              <Pill>No card required</Pill>
+              <Pill>No card required to try</Pill>
             </div>
           </motion.div>
 
