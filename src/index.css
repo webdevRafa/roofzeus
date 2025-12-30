@@ -73,32 +73,96 @@ body {
 }
 
 
-:root {
-  /* ROOFZEUS dark command-center theme */
-  --color-background: #0b0e14; /* page canvas */
-  --color-surface: #1f2430;    /* elevated surfaces */
-  --color-card: rgba(31, 36, 48, 0.55);
-  --color-card-hover: rgba(31, 36, 48, 0.75);
+/* =========================
+   THEME TOKENS (RoofZeus)
+   Default: DARK
+   Toggle by setting: <html data-theme="dark|light">
+   ========================= */
 
-  --color-text: #f5f6f8;
-  --color-muted: rgba(245, 246, 248, 0.65);
-  --color-border: rgba(58, 63, 75, 0.9);
+   :root,
+   html[data-theme="dark"] {
 
-  --color-accent-gold: #cfae5d;
-  --color-accent-gold-2: #b9973f;
+     /* Status / semantic chips (dark) */
+  --pill-success-rgb: 110 231 183; /* emerald-300 */
+  --pill-warning-rgb: 253 224 71;  /* yellow-300 */
+  --pill-danger-rgb: 254 202 202;  /* red-200 */
 
-  /* buttons */
-  --btn-bg: var(--color-accent-gold);
-  --btn-text: #0b0e14;
-  --btn-hover-bg: var(--color-accent-gold-2);
+     /* Base */
+     --color-background: #0b0e14;
+     --color-surface: #121826;          /* elevated canvas */
+     --color-card: #1f2430;             /* primary card */
+     --color-card-hover: #242b39;
+     --color-border: rgba(255,255,255,0.10);
+   
+     /* Text */
+     --color-text: #eef2f7;
+     --color-muted: rgba(238,242,247,0.70);
+   
+     /* Accents (keep your brand feel) */
+     --color-primary: #cfae5d;          /* “gold” accent used across UI */
+     --color-danger: #ef4444;
+     --color-success: #22c55e;
+   
+     /* RGB helpers (so Tailwind can do opacity nicely) */
+     --color-background-rgb: 11 14 20;
+     --color-surface-rgb: 18 24 38;
+     --color-card-rgb: 31 36 48;
+     --color-text-rgb: 238 242 247;
+     --color-border-rgb: 255 255 255;
+   }
+   
+   html[data-theme="light"] .brand-logo {
+    filter: invert(1) grayscale(1) contrast(1.1);
+    opacity: 0.95;
+  }
+  
+   html[data-theme="light"] {
 
-  /* keep these for compatibility if older components reference them */
-  --color-primary: var(--color-accent-gold);
-  --color-primary-600: var(--color-accent-gold-2);
-  --color-accent: var(--color-accent-gold);
-  --color-blue: #6aa9ff;
-}
-
+     /* Status / semantic chips (light) */
+  --pill-success-rgb: 5 150 105;   /* emerald-600 */
+  --pill-warning-rgb: 180 83 9;    /* amber-700 */
+  --pill-danger-rgb: 220 38 38;    /* red-600 */
+  
+     /* Base */
+     --color-background: #ffffff;
+     --color-surface: #ffffff;
+     --color-card: #ffffff;
+     --color-card-hover: #f3f4f6;
+     --color-border: rgba(15,23,42,0.10);
+   
+     /* Text */
+     --color-text: #0f172a;
+     --color-muted: rgba(15,23,42,0.65);
+   
+     /* Accents */
+     --color-primary: #9a7b2e;          /* slightly deeper gold for contrast on white */
+     --color-danger: #dc2626;
+     --color-success: #16a34a;
+   
+     /* RGB helpers */
+     --color-background-rgb: 246 247 251;
+     --color-surface-rgb: 255 255 255;
+     --color-card-rgb: 255 255 255;
+     --color-text-rgb: 15 23 42;
+     --color-border-rgb: 15 23 42;
+   }
+   
+   /* Global application of tokens */
+   html,
+   body {
+     background: var(--color-background);
+     color: var(--color-text);
+   }
+   
+   /* Nice transitions when toggling */
+   html * {
+     transition:
+       background-color 180ms ease,
+       border-color 180ms ease,
+       color 180ms ease,
+       box-shadow 180ms ease;
+   }
+   
 
 .font-bebas {
   font-family: "bebas-neue-pro", sans-serif;

@@ -911,7 +911,7 @@ export default function DashboardPage() {
         {/* 🔁 Reschedule punch modal */}
         {rescheduleJob && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
               <h3 className="text-lg font-semibold text-[var(--color-text)]">
                 Reschedule punch
               </h3>
@@ -936,7 +936,7 @@ export default function DashboardPage() {
                   type="date"
                   value={rescheduleDate}
                   onChange={(e) => setRescheduleDate(e.target.value)}
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-white/80 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.65)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                 />
               </div>
 
@@ -944,7 +944,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={closeReschedule}
-                  className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  className="rounded-lg border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
                 >
                   Cancel
                 </button>

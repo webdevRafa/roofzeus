@@ -272,7 +272,7 @@ export default function PayTechnicianModal({
   }, [onClose]);
 
   const inputBase =
-    "mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/35 disabled:opacity-60";
+    "mt-1 w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-black/30 px-3 py-2 text-sm text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/35 disabled:opacity-60";
 
   const content = (
     <AnimatePresence>
@@ -306,10 +306,10 @@ export default function PayTechnicianModal({
           {/* Header */}
           <motion.div
             {...fadeUp(0.04)}
-            className="relative flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5"
+            className="relative flex items-start justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.14)] px-6 py-5"
           >
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-[var(--color-accent-gold)]">
+              <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-[var(--color-accent-gold)]">
                 <Wrench className="h-5 w-5" />
               </div>
 

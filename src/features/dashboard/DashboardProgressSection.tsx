@@ -116,12 +116,12 @@ function statusClasses(status: JobStatus) {
     case "completed":
       return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
     case "closed":
-      return "border-white/10 bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
     case "archived":
-      return "border-white/10 bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
     case "draft":
     default:
-      return "border-white/10 bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
   }
 }
 
@@ -155,7 +155,7 @@ export function DashboardProgressSection({
           <button
             type="button"
             onClick={() => setUpcomingOpen((v) => !v)}
-            className="ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-black/20 hover:bg-black/30 px-3 py-1.5 text-[11px] font-semibold text-white/75 transition"
+            className="ml-2 inline-flex items-center gap-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1.5 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
           >
             <ChevronDown
               className={`h-4 w-4 transition-transform ${
@@ -256,7 +256,7 @@ export function DashboardProgressSection({
                           ? "border-emerald-300/15 bg-emerald-300/10 text-emerald-200"
                           : scheduled != null
                           ? "border-sky-300/15 bg-sky-300/10 text-sky-200"
-                          : "border-white/10 bg-white/5 text-white/60";
+                          : "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
 
                       return (
                         <motion.div
@@ -266,7 +266,7 @@ export function DashboardProgressSection({
                             y: -1,
                             transition: { duration: 0.2, ease: EASE },
                           }}
-                          className="rounded-xl border border-white/10 bg-black/20 hover:bg-black/30 transition px-3 py-3"
+                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-black/20 hover:bg-black/30 transition px-3 py-3"
                         >
                           <div className="flex flex-wrap items-center gap-2">
                             <div className="truncate text-sm font-semibold text-white">
@@ -319,7 +319,7 @@ export function DashboardProgressSection({
 
                             <Link
                               to={`/job/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
+                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
                             >
                               View job
                             </Link>
@@ -398,7 +398,7 @@ export function DashboardProgressSection({
                             y: -1,
                             transition: { duration: 0.2, ease: EASE },
                           }}
-                          className="rounded-xl border border-white/10 bg-black/20 hover:bg-black/30 transition px-3 py-3"
+                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-black/20 hover:bg-black/30 transition px-3 py-3"
                         >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -451,7 +451,7 @@ export function DashboardProgressSection({
                           <div className="mt-2 flex justify-end">
                             <Link
                               to={`/job/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
+                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
                             >
                               View job
                             </Link>

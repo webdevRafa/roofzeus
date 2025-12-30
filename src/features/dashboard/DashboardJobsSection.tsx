@@ -117,20 +117,21 @@ function statusClasses(status: JobStatus) {
     case "active":
       return "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]";
     case "pending":
-      return "border-yellow-300/12 bg-yellow-500/15 text-yellow-200";
+      return "border-[rgb(var(--pill-warning-rgb)/0.35)] bg-[rgb(var(--pill-warning-rgb)/0.14)] text-[rgb(var(--pill-warning-rgb))]";
     case "invoiced":
-      return "border-white/12 bg-white/5 text-white/70";
+      return "border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)]";
+
     case "paid":
-      return "border-emerald-300/20 bg-emerald-300/10 text-emerald-200";
+      return "border-[rgb(var(--pill-success-rgb)/0.35)] bg-[rgb(var(--pill-success-rgb)/0.14)] text-[rgb(var(--pill-success-rgb))]";
     case "completed":
-      return "border-emerald-300/20 bg-emerald-300/10 text-emerald-200";
+      return "border-[rgb(var(--pill-success-rgb)/0.35)] bg-[rgb(var(--pill-success-rgb)/0.14)] text-[rgb(var(--pill-success-rgb))]";
     case "closed":
-      return "border-white/10 bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
     case "archived":
-      return "border-white/10 bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
     case "draft":
     default:
-      return "border-white/10 bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
   }
 }
 
@@ -308,7 +309,7 @@ export function DashboardJobsSection({
             <button
               type="button"
               onClick={() => setJobsOpen((v) => !v)}
-              className="ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-black/20 hover:bg-black/30 px-3 py-1.5 text-[11px] font-semibold text-white/75 transition"
+              className="ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1.5 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
             >
               <ChevronDown
                 className={`h-4 w-4 transition-transform ${
@@ -324,18 +325,18 @@ export function DashboardJobsSection({
           {/* Right chips + primary action */}
           <div className="flex flex-wrap items-center justify-end gap-2 text-[11px]">
             {hasActiveDateFilter ? (
-              <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-black/20 px-3 py-1 text-[var(--color-accent-gold)]/80">
+              <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[var(--color-accent-gold)]/80">
                 Date: {rangeLabel || "Custom range"}
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
+              <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
                 Date: All time
               </span>
             )}
 
-            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/60">
+            <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
               Status:{" "}
-              <span className="ml-1 font-semibold text-white/80">
+              <span className="ml-1 font-semibold text-[rgb(var(--color-text-rgb)/0.92)]/80">
                 {statusFilter === "all" ? "All" : statusFilter}
               </span>
             </span>
@@ -344,7 +345,7 @@ export function DashboardJobsSection({
             <button
               type="button"
               onClick={() => setOpenForm((v) => !v)}
-              className="group inline-flex items-center gap-2 rounded-full bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] px-3 py-1.5 text-[11px] font-semibold text-[var(--btn-text)] transition"
+              className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] hover:bg-[var(--btn-hover-bg)] px-3 py-1.5 text-[11px] font-semibold text-[var(--btn-text)] transition"
               aria-label="Add New Job"
             >
               <SquarePlus className="h-4 w-4" />
@@ -360,7 +361,7 @@ export function DashboardJobsSection({
             <button
               type="button"
               onClick={() => setShowSearch((v) => !v)}
-              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2 text-[12px] font-semibold text-white/75 transition"
+              className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
               title="Search addresses"
               aria-label="Search addresses"
             >
@@ -378,7 +379,7 @@ export function DashboardJobsSection({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by address…"
-                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                    className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                   />
                 </motion.div>
               )}
@@ -389,7 +390,7 @@ export function DashboardJobsSection({
           <button
             type="button"
             onClick={() => setShowFilters((v) => !v)}
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2 text-[12px] font-semibold text-white/75 transition"
+            className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
             title="Filter by last updated date"
           >
             <Filter size={16} className="mr-2" />
@@ -413,7 +414,7 @@ export function DashboardJobsSection({
                     "whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition",
                     active
                       ? "border-[var(--color-accent-gold)]/35 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]"
-                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                      : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
                   )}
                 >
                   {f}
@@ -439,10 +440,10 @@ export function DashboardJobsSection({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-semibold text-white">
+                  <h3 className="text-base font-semibold text-[var(--color-text)]">
                     Create new job
                   </h3>
-                  <p className="mt-1 text-xs text-white/55">
+                  <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                     Only the address is required. You can optionally schedule
                     felt, shingles, and punch.
                   </p>
@@ -452,28 +453,30 @@ export function DashboardJobsSection({
               <div className="mt-4 space-y-3">
                 {/* Address */}
                 <div>
-                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                     Job address <span className="text-red-300">*</span>
                   </label>
                   <input
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="123 Main St, San Antonio, TX"
-                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                    className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                   />
                 </div>
 
                 {/* Assign workers */}
                 <div>
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm font-semibold text-[var(--color-text)]">
                     Assign workers{" "}
-                    <span className="text-white/50">(optional)</span>
+                    <span className="text-[rgb(var(--color-text-rgb)/0.55)]">
+                      (optional)
+                    </span>
                   </div>
 
-                  <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-white/10 bg-black/20 p-2">
+                  <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-2">
                     {employees.length === 0 ? (
-                      <div className="text-sm text-white/60">
-                        No active employees found.
+                      <div className="text-sm text-[rgb(var(--color-text-rgb)/0.62)]">
+                        No active members found.
                       </div>
                     ) : (
                       employees.map((emp) => {
@@ -481,13 +484,13 @@ export function DashboardJobsSection({
                         return (
                           <label
                             key={emp.id}
-                            className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-white/5"
+                            className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-[rgb(var(--color-surface-rgb)/0.55)]"
                           >
                             <div className="min-w-0">
-                              <div className="truncate text-sm font-medium text-white">
+                              <div className="truncate text-sm font-medium text-[rgb(var(--color-text-rgb)/0.90)]">
                                 {emp.name}
                               </div>
-                              <div className="truncate text-xs text-white/50">
+                              <div className="truncate text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                                 {emp.role ?? "crew"}
                               </div>
                             </div>
@@ -511,7 +514,7 @@ export function DashboardJobsSection({
                   </div>
 
                   {assignedEmployeeIds.length > 0 && (
-                    <div className="mt-2 text-xs text-white/60">
+                    <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.62)]">
                       Assigned: {assignedEmployeeIds.length}
                       <button
                         type="button"
@@ -527,38 +530,38 @@ export function DashboardJobsSection({
                 {/* Schedule fields */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                       Schedule felt (optional)
                     </label>
                     <input
                       type="date"
                       value={newFeltDate}
                       onChange={(e) => setNewFeltDate(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                       Schedule shingles (optional)
                     </label>
                     <input
                       type="date"
                       value={newShinglesDate}
                       onChange={(e) => setNewShinglesDate(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                     />
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                       Schedule punch (optional)
                     </label>
                     <input
                       type="date"
                       value={newPunchDate}
                       onChange={(e) => setNewPunchDate(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                     />
                   </div>
                 </div>
@@ -579,7 +582,7 @@ export function DashboardJobsSection({
                     setNewShinglesDate("");
                     setNewPunchDate("");
                   }}
-                  className="rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 transition"
+                  className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                 >
                   Cancel
                 </button>
@@ -587,7 +590,13 @@ export function DashboardJobsSection({
                   type="button"
                   onClick={() => void createJob()}
                   disabled={loading}
-                  className="rounded-xl bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] px-4 py-2 text-xs font-semibold text-[var(--btn-text)] transition disabled:opacity-50"
+                  className={[
+                    "rounded-xl px-4 py-2 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed",
+                    "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)]",
+                    "ring-1 ring-[rgb(var(--color-border-rgb)/0.18)]",
+                    "shadow-[0_10px_22px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_28px_rgba(0,0,0,0.16)]",
+                    "active:translate-y-[1px]",
+                  ].join(" ")}
                 >
                   {loading ? "Creating…" : "Create job"}
                 </button>
@@ -602,15 +611,15 @@ export function DashboardJobsSection({
         {showFilters && (
           <motion.section
             id="date-filters"
-            className="border-b border-[var(--color-border)] bg-black/10 px-4 sm:px-6 py-4"
+            className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 sm:px-6 py-4"
             {...fadeUp(0.06)}
           >
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-white">
+                <h3 className="text-sm font-semibold text-[var(--color-text)]">
                   Filter by last updated date
                 </h3>
-                <p className="mt-1 text-xs text-white/55">
+                <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                   Choose a quick range or set custom start / end dates.
                 </p>
               </div>
@@ -618,7 +627,7 @@ export function DashboardJobsSection({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <div className="flex items-end gap-2">
                   <div className="flex flex-col">
-                    <label className="text-[10px] uppercase tracking-wide text-white/50">
+                    <label className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                       Start
                     </label>
                     <input
@@ -628,12 +637,12 @@ export function DashboardJobsSection({
                         setDatePreset("custom");
                         setStartDate(e.target.value);
                       }}
-                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                     />
                   </div>
 
                   <div className="flex flex-col">
-                    <label className="text-[10px] uppercase tracking-wide text-white/50">
+                    <label className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                       End
                     </label>
                     <input
@@ -643,7 +652,7 @@ export function DashboardJobsSection({
                         setDatePreset("custom");
                         setEndDate(e.target.value);
                       }}
-                      className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                     />
                   </div>
                 </div>
@@ -652,21 +661,21 @@ export function DashboardJobsSection({
                   <button
                     type="button"
                     onClick={() => applyPreset("last7")}
-                    className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 transition"
+                    className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                   >
                     Last 7 days
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPreset("thisMonth")}
-                    className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 transition"
+                    className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                   >
                     This month
                   </button>
                   <button
                     type="button"
                     onClick={() => applyPreset("ytd")}
-                    className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2 text-xs font-semibold text-white/70 transition"
+                    className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                   >
                     Year to date
                   </button>
@@ -685,9 +694,12 @@ export function DashboardJobsSection({
               </div>
             </div>
 
-            <p className="mt-2 text-xs text-white/50">
-              Filters use each job&apos;s <strong>last updated</strong> date
-              (falls back to created date).
+            <p className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+              Filters use each job&apos;s{" "}
+              <strong className="text-[rgb(var(--color-text-rgb)/0.80)]">
+                last updated
+              </strong>{" "}
+              date (falls back to created date).
             </p>
           </motion.section>
         )}
@@ -699,7 +711,7 @@ export function DashboardJobsSection({
           <div className="grid min-w-0 gap-4 xl:grid-cols-12 xl:items-start">
             {/* Main list/table */}
             <motion.div {...fadeUp(0.08)} className="xl:col-span-8 min-w-0">
-              <div className="rounded-xl border border-[var(--color-border)] bg-black/20 overflow-hidden">
+              <div className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] overflow-hidden">
                 {/* Mobile cards */}
                 <div className="grid gap-2 p-2 md:hidden">
                   {pagedJobs.map((job) => {
@@ -716,12 +728,12 @@ export function DashboardJobsSection({
                           y: -1,
                           transition: { duration: 0.2, ease: EASE },
                         }}
-                        className="rounded-xl border border-white/10 bg-black/20 hover:bg-black/30 transition px-3 py-3"
+                        className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.55)] transition px-3 py-3"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <div className="truncate text-sm font-semibold text-white">
+                              <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
                                 {a.display || "—"}
                               </div>
                               <span
@@ -734,17 +746,21 @@ export function DashboardJobsSection({
                               </span>
                             </div>
 
-                            <div className="mt-1 text-[12px] text-white/55 truncate">
+                            <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] truncate">
                               {pipelineNote(job)}
                             </div>
                           </div>
 
                           <div className="shrink-0 text-right">
-                            <div className="text-[11px] text-white/45">Net</div>
+                            <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
+                              Net
+                            </div>
                             <div
                               className={cx(
                                 "text-sm font-semibold",
-                                net >= 0 ? "text-emerald-200" : "text-red-200"
+                                net >= 0
+                                  ? "text-[rgb(var(--pill-success-rgb))]"
+                                  : "text-[rgb(var(--pill-danger-rgb))]"
                               )}
                             >
                               <CountMoney cents={net} />
@@ -753,13 +769,13 @@ export function DashboardJobsSection({
                         </div>
 
                         <div className="mt-2 flex items-center justify-between">
-                          <div className="text-[11px] text-white/45">
+                          <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
                             Updated {fmtDateTime(job.updatedAt)}
                           </div>
 
                           <Link
                             to={`/job/${job.id}`}
-                            className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
+                            className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                           >
                             View job
                           </Link>
@@ -769,14 +785,14 @@ export function DashboardJobsSection({
                   })}
 
                   {pagedJobs.length === 0 && (
-                    <div className="px-4 py-6 text-center text-[12px] text-white/55">
+                    <div className="px-4 py-6 text-center text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
                       No jobs match the current filters.
                     </div>
                   )}
 
                   {/* Mobile pagination */}
                   {filteredJobs.length > 0 && (
-                    <div className="mt-2 flex items-center justify-between text-xs text-white/55">
+                    <div className="mt-2 flex items-center justify-between text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                       <span>
                         {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                         {Math.min(
@@ -791,7 +807,7 @@ export function DashboardJobsSection({
                           type="button"
                           disabled={jobsPage === 1}
                           onClick={() => setJobsPage((p) => Math.max(1, p - 1))}
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 disabled:opacity-40"
+                          className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 disabled:opacity-40"
                         >
                           Prev
                         </button>
@@ -804,7 +820,7 @@ export function DashboardJobsSection({
                           onClick={() =>
                             setJobsPage((p) => Math.min(jobsTotalPages, p + 1))
                           }
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 disabled:opacity-40"
+                          className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 disabled:opacity-40"
                         >
                           Next
                         </button>
@@ -822,7 +838,7 @@ export function DashboardJobsSection({
                 >
                   <div className="relative overflow-auto section-scroll">
                     <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                      <thead className="sticky top-0 z-30 bg-[var(--color-surface)] backdrop-blur text-[11px] uppercase tracking-wide text-white/55 border-b border-[var(--color-border)]/60">
+                      <thead className="sticky top-0 z-30 bg-[var(--color-surface)] backdrop-blur text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)] border-b border-[var(--color-border)]/60">
                         <tr>
                           <th className="text-left px-4 py-3">Job</th>
                           <th className="text-left px-4 py-3 whitespace-nowrap">
@@ -851,14 +867,14 @@ export function DashboardJobsSection({
                               className={cx(
                                 "transition",
                                 idx % 2 === 0
-                                  ? "bg-white/[0.02]"
+                                  ? "bg-[rgb(var(--color-surface-rgb)/0.35)]"
                                   : "bg-transparent",
-                                "hover:bg-white/[0.04]"
+                                "hover:bg-[rgb(var(--color-surface-rgb)/0.55)]"
                               )}
                             >
                               <td className="px-4 py-3">
                                 <div className="min-w-0">
-                                  <div className="truncate max-w-[320px] font-semibold text-white">
+                                  <div className="truncate max-w-[320px] font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
                                     <Link
                                       to={`/job/${job.id}`}
                                       className="hover:underline"
@@ -867,7 +883,7 @@ export function DashboardJobsSection({
                                     </Link>
                                   </div>
                                   {(a.city || a.state || a.zip) && (
-                                    <div className="text-[11px] text-white/45">
+                                    <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
                                       {[a.city, a.state, a.zip]
                                         .filter(Boolean)
                                         .join(", ")}
@@ -888,10 +904,10 @@ export function DashboardJobsSection({
                               </td>
 
                               <td className="px-4 py-3">
-                                <div className="text-white/70 text-[12px] truncate max-w-[320px]">
+                                <div className="text-[rgb(var(--color-text-rgb)/0.72)] text-[12px] truncate max-w-[320px]">
                                   {pipelineNote(job)}
                                 </div>
-                                <div className="text-[11px] text-white/40">
+                                <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
                                   Created {fmtDateTime(job.createdAt)}
                                 </div>
                               </td>
@@ -901,8 +917,8 @@ export function DashboardJobsSection({
                                   className={cx(
                                     "font-semibold",
                                     net >= 0
-                                      ? "text-emerald-200"
-                                      : "text-red-200"
+                                      ? "text-[rgb(var(--pill-success-rgb))]"
+                                      : "text-[rgb(var(--pill-danger-rgb))]"
                                   )}
                                 >
                                   <CountMoney cents={net} />
@@ -910,7 +926,7 @@ export function DashboardJobsSection({
                               </td>
 
                               <td className="px-4 py-3">
-                                <div className="text-white/75">
+                                <div className="text-[rgb(var(--color-text-rgb)/0.78)]">
                                   {fmtDateTime(job.updatedAt)}
                                 </div>
                               </td>
@@ -918,7 +934,7 @@ export function DashboardJobsSection({
                               <td className="px-4 py-3 text-right whitespace-nowrap">
                                 <Link
                                   to={`/job/${job.id}`}
-                                  className="inline-flex items-center justify-center rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
+                                  className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                                 >
                                   View job
                                 </Link>
@@ -931,7 +947,7 @@ export function DashboardJobsSection({
                           <tr>
                             <td
                               colSpan={6}
-                              className="px-4 py-8 text-center text-white/55"
+                              className="px-4 py-8 text-center text-[rgb(var(--color-text-rgb)/0.55)]"
                             >
                               No jobs match the current filters.
                             </td>
@@ -949,7 +965,7 @@ export function DashboardJobsSection({
 
                     {/* Sticky pagination footer */}
                     {filteredJobs.length > 0 && (
-                      <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-surface)] px-4 py-2 backdrop-blur text-xs text-white/55">
+                      <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-surface)] px-4 py-2 backdrop-blur text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                         <span>
                           Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                           {Math.min(
@@ -966,7 +982,7 @@ export function DashboardJobsSection({
                             onClick={() =>
                               setJobsPage((p) => Math.max(1, p - 1))
                             }
-                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 disabled:opacity-40"
+                            className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 disabled:opacity-40"
                           >
                             Prev
                           </button>
@@ -981,7 +997,7 @@ export function DashboardJobsSection({
                                 Math.min(jobsTotalPages, p + 1)
                               )
                             }
-                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 disabled:opacity-40"
+                            className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 disabled:opacity-40"
                           >
                             Next
                           </button>
@@ -998,11 +1014,11 @@ export function DashboardJobsSection({
               {...fadeUp(0.12)}
               className="xl:col-span-4 min-w-0 w-full xl:justify-self-end"
             >
-              <div className="rounded-xl border border-[var(--color-border)] bg-black/20 p-4">
-                <div className="text-[11px] uppercase tracking-wider text-white/50">
+              <div className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-4">
+                <div className="text-[11px] uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
                   Total net
                 </div>
-                <div className="mt-1 text-2xl font-semibold text-white">
+                <div className="mt-1 text-2xl font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
                   <CountMoney cents={totalNet} />
                 </div>
                 <div className="mt-1 text-[12px] text-[var(--color-accent-gold)]/70">
@@ -1011,32 +1027,39 @@ export function DashboardJobsSection({
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <div className="text-[11px] uppercase tracking-wider text-white/50">
+                  <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-3">
+                    <div className="text-[11px] uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
                       Showing
                     </div>
-                    <div className="mt-1 text-lg font-semibold text-white">
+                    <div className="mt-1 text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
                       {pagedJobs.length}
                     </div>
-                    <div className="mt-1 text-[12px] text-white/50">
+                    <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
                       On this page
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                    <div className="text-[11px] uppercase tracking-wider text-white/50">
+                  <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-3">
+                    <div className="text-[11px] uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
                       Filter
                     </div>
-                    <div className="mt-1 text-lg font-semibold text-white">
+                    <div className="mt-1 text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
                       {statusFilter === "all" ? "All" : statusFilter}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 text-[12px] text-white/50 leading-relaxed">
-                  Tip: use <span className="text-white/80">Date filters</span> +
-                  <span className="text-white/80"> Status</span> to isolate a
-                  production window and audit profit quickly.
+                <div className="mt-4 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] leading-relaxed">
+                  Tip: use{" "}
+                  <span className="text-[rgb(var(--color-text-rgb)/0.92)]/80">
+                    Date filters
+                  </span>{" "}
+                  +
+                  <span className="text-[rgb(var(--color-text-rgb)/0.92)]/80">
+                    {" "}
+                    Status
+                  </span>{" "}
+                  to isolate a production window and audit profit quickly.
                 </div>
               </div>
             </motion.aside>

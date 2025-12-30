@@ -5,6 +5,7 @@ import "./index.css";
 import ScrollToTop from "./components/ScrollToTop";
 import AppRouter from "./routers/AppRouter";
 import MarketingRouter from "./routers/MarketingRouter";
+import { ThemeProvider } from "./theme/ThemeProvider";
 
 function isAppHost() {
   const host = window.location.hostname.toLowerCase();
@@ -15,11 +16,13 @@ export default function App() {
   const showApp = isAppHost();
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-      <BrowserRouter>
-        <ScrollToTop />
-        {showApp ? <AppRouter /> : <MarketingRouter />}
-      </BrowserRouter>
-    </div>
+    <ThemeProvider>
+      <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
+        <BrowserRouter>
+          <ScrollToTop />
+          {showApp ? <AppRouter /> : <MarketingRouter />}
+        </BrowserRouter>
+      </div>
+    </ThemeProvider>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useMembership } from "../hooks/useMembership";
 import { OrgProvider } from "../contexts/OrgContext";
+import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 
 import logo from "../assets/roofzeus-white.png"; // adjust if needed
 
@@ -21,8 +22,8 @@ function navLinkBase(isActive: boolean) {
   return (
     "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition " +
     (isActive
-      ? "bg-white/20 text-white"
-      : "text-white/85 hover:bg-white/10 hover:text-white")
+      ? "bg-[rgb(var(--color-surface-rgb)/0.85)] text-[rgb(var(--color-text-rgb)/0.92)] ring-1 ring-[rgb(var(--color-border-rgb)/0.18)]"
+      : "text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.70)] hover:text-[rgb(var(--color-text-rgb)/0.92)]")
   );
 }
 
@@ -54,7 +55,7 @@ export default function AdminLayout() {
     <div className="min-h-screen ">
       {/* Global Navbar */}
       <header className="sticky top-0 z-40 select-none">
-        <div className="bg-[var(--color-background)]">
+        <div className="bg-[rgb(var(--color-background-rgb)/0.85)] backdrop-blur border-b border-[rgb(var(--color-border-rgb)/0.14)]">
           <div className="mx-auto w-[min(1200px,94vw)] py-8">
             <div className="flex items-center justify-between gap-3">
               {/* Brand */}
@@ -66,20 +67,20 @@ export default function AdminLayout() {
                   <img
                     src={logo}
                     alt="Roger's Roofing logo"
-                    className="w-[100px] shadow-md"
+                    className="w-[100px] shadow-md brand-logo"
                   />
                   <div className="hidden sm:block">
                     {/* ✅ Org switcher */}
                     {!membershipLoading && memberships.length > 1 && (
                       <div className="mt-2 flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-wide text-white/75">
+                        <span className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.65)]">
                           Org
                         </span>
 
                         <select
                           value={activeOrgId ?? ""}
                           onChange={(e) => setActiveOrgId(e.target.value)}
-                          className="rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-[11px] text-white outline-none hover:bg-white/15"
+                          className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.85)] outline-none hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
                         >
                           {memberships.map((m) => (
                             <option
@@ -93,7 +94,7 @@ export default function AdminLayout() {
                         </select>
 
                         {activeOrgName && (
-                          <span className="text-[11px] text-white/70 truncate max-w-[160px]">
+                          <span className="text-[11px] text-[rgb(var(--color-text-rgb)/0.70)] truncate max-w-[160px]">
                             {activeOrgName}
                           </span>
                         )}
@@ -146,11 +147,13 @@ export default function AdminLayout() {
 
               {/* Actions */}
               <div className="flex items-center gap-2">
+                <ThemeToggleButton />
+
                 {/* Logout */}
                 <button
                   onClick={handleLogout}
                   disabled={signingOut}
-                  className="inline-flex items-center justify-center rounded-lg bg-red-800 px-3 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-60 shadow-[0_10px_22px_rgba(0,0,0,0.10)]"
                   aria-label="Sign out"
                 >
                   <LogOut className="h-4 w-4" />
@@ -159,7 +162,7 @@ export default function AdminLayout() {
                 {/* Mobile menu */}
                 <button
                   type="button"
-                  className="md:hidden inline-flex items-center justify-center rounded-lg bg-white/10 px-3 py-2 text-white hover:bg-white/20"
+                  className="md:hidden inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[rgb(var(--color-text-rgb)/0.85)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
                   onClick={() => setMobileOpen((v) => !v)}
                   aria-label="Menu"
                 >
@@ -174,7 +177,7 @@ export default function AdminLayout() {
 
             {/* Mobile Nav Panel */}
             {mobileOpen && (
-              <div className="md:hidden mt-3 rounded-2xl bg-white/10 p-2 backdrop-blur">
+              <div className="md:hidden mt-3 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.65)] p-2 backdrop-blur">
                 <div className="grid gap-1">
                   <NavLink
                     to="/dashboard"

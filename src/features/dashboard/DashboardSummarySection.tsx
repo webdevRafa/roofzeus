@@ -46,29 +46,29 @@ function KpiCard({
 }) {
   const accentClasses =
     accent === "gold"
-      ? "text-[#cfae5d]"
+      ? "text-[var(--color-accent-gold)]"
       : accent === "sky"
-      ? "text-sky-200"
+      ? "text-sky-500"
       : accent === "emerald"
-      ? "text-emerald-200"
-      : "text-[#f5f6f8]";
+      ? "text-emerald-500"
+      : "text-[var(--color-text)]";
 
   const subClasses =
     accent === "gold"
-      ? "text-[#cfae5d]/70"
+      ? "text-[var(--color-accent-gold)]/70"
       : accent === "sky"
-      ? "text-sky-200/70"
+      ? "text-sky-500/70"
       : accent === "emerald"
-      ? "text-emerald-200/70"
-      : "text-white/45";
+      ? "text-emerald-500/70"
+      : "text-[rgb(var(--color-text-rgb)/0.55)]";
 
   return (
     <motion.div
       variants={fadeUp}
       whileHover={{ y: -2, transition: { duration: 0.22, ease } }}
-      className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/45 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+      className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-card-rgb)/0.70)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.18)]"
     >
-      <div className="text-[11px] uppercase tracking-wide text-white/50">
+      <div className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
         {label}
       </div>
 
@@ -102,14 +102,16 @@ export default function DashboardSummarySection({
       {/* Optional little header row to match the “Command Center” vibe */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-[#f5f6f8]">Overview</div>
-          <div className="text-[12px] text-[#cfae5d]/70">
+          <div className="text-sm font-semibold text-[var(--color-text)]">
+            Overview
+          </div>
+          <div className="text-[12px] text-[var(--color-accent-gold)]/70">
             Jobs • Pipeline • Payouts
           </div>
         </div>
 
         <div className="hidden sm:flex items-center gap-2">
-          <span className="rounded-full border border-[#cfae5d]/30 bg-[#cfae5d]/10 px-3 py-1 text-[11px] text-[#cfae5d]">
+          <span className="rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-3 py-1 text-[11px] text-[var(--color-accent-gold)]">
             Live
           </span>
         </div>

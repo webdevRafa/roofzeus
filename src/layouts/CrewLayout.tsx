@@ -13,6 +13,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { getAuth } from "firebase/auth";
 import { ClipboardList, LogOut, Menu, X, UserRound } from "lucide-react";
+import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 
 import { useCurrentEmployee } from "../hooks/useCurrentEmployee";
 import logo from "../assets/rogers-roofing.webp"; // adjust if needed
@@ -95,6 +96,8 @@ export default function CrewLayout({ children }: PropsWithChildren<{}>) {
 
               {/* Actions */}
               <div className="flex items-center gap-2">
+                <ThemeToggleButton />
+
                 {/* Employee chip */}
                 <div className="hidden sm:inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm text-white/90">
                   <UserRound className="h-4 w-4" />
@@ -130,7 +133,7 @@ export default function CrewLayout({ children }: PropsWithChildren<{}>) {
 
             {/* Mobile Nav Panel */}
             {mobileOpen && (
-              <div className="md:hidden mt-3 rounded-2xl bg-white/10 p-2 backdrop-blur">
+              <div className="md:hidden mt-3 rounded-2xl bg-[rgb(var(--color-surface-rgb)/0.55)] p-2 backdrop-blur ring-1 ring-[rgb(var(--color-border-rgb)/0.14)]">
                 <div className="grid gap-1">
                   <NavLink
                     to="/crew"
@@ -143,7 +146,7 @@ export default function CrewLayout({ children }: PropsWithChildren<{}>) {
                   </NavLink>
 
                   {/* Employee identity (mobile) */}
-                  <div className="mt-1 rounded-xl bg-white/10 px-3 py-2 text-xs text-white/90">
+                  <div className="mt-1 rounded-xl bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.88)] ring-1 ring-[rgb(var(--color-border-rgb)/0.14)]">
                     Signed in as{" "}
                     <span className="font-semibold">{displayName}</span>
                   </div>
