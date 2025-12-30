@@ -117,7 +117,7 @@ function statusClasses(status: JobStatus) {
     case "active":
       return "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]";
     case "pending":
-      return "border-white/12 bg-white/5 text-white/70";
+      return "border-yellow-300/12 bg-yellow-500/15 text-yellow-200";
     case "invoiced":
       return "border-white/12 bg-white/5 text-white/70";
     case "paid":

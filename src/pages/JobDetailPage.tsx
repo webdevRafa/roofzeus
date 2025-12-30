@@ -25,6 +25,7 @@ import {
   ChevronRight,
   Camera,
   Image as ImageIcon,
+  Clock,
   CheckCircle2,
   AlertTriangle,
   Plus,
@@ -1586,7 +1587,12 @@ export default function JobDetailPage({
                             <CheckCircle2 size={14} />
                             Done
                           </span>
-                        ) : null}
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                            <Clock size={14} />
+                            Pending
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -1608,7 +1614,7 @@ export default function JobDetailPage({
                                 "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
                                 (jobIsLocked
                                   ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                  : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                  : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
                               }
                             >
                               {feltScheduledMs ? "Reschedule" : "Schedule"}
@@ -1622,10 +1628,10 @@ export default function JobDetailPage({
                                 setConfirmFeltDoneOpen(true);
                               }}
                               className={
-                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
                                 (jobIsLocked
                                   ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                  : "bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500/30")
+                                  : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
                               }
                             >
                               Mark done
@@ -1678,7 +1684,12 @@ export default function JobDetailPage({
                             <CheckCircle2 size={14} />
                             Done
                           </span>
-                        ) : null}
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                            <Clock size={14} />
+                            Pending
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -1700,7 +1711,7 @@ export default function JobDetailPage({
                                 "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
                                 (jobIsLocked
                                   ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                  : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                  : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
                               }
                             >
                               {shinglesScheduledMs ? "Reschedule" : "Schedule"}
@@ -1719,10 +1730,10 @@ export default function JobDetailPage({
                                 setConfirmShinglesDoneOpen(true);
                               }}
                               className={
-                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
                                 (!canMarkShinglesDone
                                   ? "bg-white/10 text-white/40 cursor-not-allowed opacity-70 ring-white/10"
-                                  : "bg-emerald-600 text-white hover:bg-emerald-500 ring-emerald-500/30")
+                                  : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
                               }
                             >
                               Mark done
@@ -1780,7 +1791,12 @@ export default function JobDetailPage({
                             <CheckCircle2 size={14} />
                             Done
                           </span>
-                        ) : null}
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                            <Clock size={14} />
+                            Pending
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2">

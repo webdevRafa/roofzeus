@@ -12,7 +12,8 @@ import { createPortal } from "react-dom";
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
 import preview from "../assets/alljobs.png";
-import jobdetails from "../assets/jobdetailpage preview.png";
+import financialOverview from "../assets/financial-overview.png";
+import jobdetails from "../assets/jobdetails.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -708,11 +709,15 @@ function ImageLightbox({
   open,
   src,
   alt,
+  title,
+  subtitle,
   onClose,
 }: {
   open: boolean;
   src: string;
   alt: string;
+  title?: string;
+  subtitle?: string;
   onClose: () => void;
 }) {
   // Prevent scroll when open
@@ -771,10 +776,10 @@ function ImageLightbox({
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2 sm:px-4 sm:py-3">
               <div className="min-w-0">
                 <div className="text-[12px] text-white/55">
-                  ROOFZEUS preview
+                  {title ?? "Preview"}
                 </div>
                 <div className="text-sm font-semibold text-white/85 truncate">
-                  Job detail view
+                  {subtitle ?? "Click outside or press Esc to close"}
                 </div>
               </div>
 
@@ -818,12 +823,20 @@ function ImageLightbox({
 export default function HomePage() {
   const financialControls = useAnimation();
   const builtForControls = useAnimation();
-  const [jobPreviewOpen, setJobPreviewOpen] = useState(false);
 
   const heroCtaRef = useRef<HTMLDivElement | null>(null);
   const [showStickyCtas, setShowStickyCtas] = useState(false);
 
   const mountedRef = useRef(false);
+
+  type LightboxState = {
+    src: string;
+    alt: string;
+    title?: string;
+    subtitle?: string;
+  } | null;
+
+  const [lightbox, setLightbox] = useState<LightboxState>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -969,14 +982,21 @@ export default function HomePage() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: false, amount: 0.25 }}
-              onClick={() => setJobPreviewOpen(true)}
               className="group relative block mx-auto w-full max-w-[600px] mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black/20"
               aria-label="Open full preview"
             >
               <img
                 src={jobdetails}
+                onClick={() =>
+                  setLightbox({
+                    src: jobdetails,
+                    alt: "Dashboard preview",
+                    title: "Job Details",
+                    subtitle: "Keep everything tracked",
+                  })
+                }
                 alt="ROOFZEUS app preview"
-                className="block w-full h-auto cursor-pointer"
+                className="block w-full h-auto cursor-zoom-in"
                 draggable={false}
               />
             </motion.button>
@@ -998,16 +1018,16 @@ export default function HomePage() {
           <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: "All job details, one place",
-                desc: "Square footage, pricing, materials, notes, photos, and status — everything tied to the job so nothing slips through the cracks.",
+                title: "All job details in one place",
+                desc: "Square footage, pricing, materials, notes, photos, and status — everything is tied to the job.",
               },
               {
                 title: "Clear scheduling, end to end",
                 desc: "Schedule dry-ins, shingles, and punch work — and see what’s coming up at a glance.",
               },
               {
-                title: "Crew coordination that makes sense",
-                desc: "Assignments, updates, and progress without the back-and-forth.",
+                title: "Simple crew visiblity",
+                desc: "Assignments, updates, and progress are tied directly to each job.",
               },
             ].map((f) => (
               <motion.div
@@ -1016,10 +1036,12 @@ export default function HomePage() {
                 whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
                 className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
               >
-                <h3 className="font-semibold text-lg mb-2 text-[#cfae5d]">
+                <h3 className="font-semibold text-lg mb-2 text-white">
                   {f.title}
                 </h3>
-                <p className="text-sm text-white leading-relaxed">{f.desc}</p>
+                <p className="text-sm text-white/70 leading-relaxed">
+                  {f.desc}
+                </p>
               </motion.div>
             ))}
           </motion.div>
@@ -1033,10 +1055,9 @@ export default function HomePage() {
           </motion.h2>
 
           <motion.p variants={fadeUp} className="max-w-2xl text-white/70 mb-12">
-            Search, filter, and review every job your company has run — active,
-            completed, invoiced, or closed. All Jobs gives you a clear,
-            organized view of your work so nothing gets lost as your business
-            grows.
+            Search, filter, and review every job your company has run. Our tools
+            give you a clear, organized view of your work so nothing gets lost
+            as your business grows.
           </motion.p>
         </div>
         <motion.img
@@ -1044,9 +1065,17 @@ export default function HomePage() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: false, amount: 0.25 }}
-          className="block mx-auto w-full max-w-[600px]"
+          className="block mx-auto w-full max-w-[600px] cursor-zoom-in"
           src={preview}
-          alt="ROOFZEUS app preview"
+          alt="All jobs dashboard preview"
+          onClick={() =>
+            setLightbox({
+              src: preview,
+              alt: "All jobs dashboard preview",
+              title: "All Jobs",
+              subtitle: "Search • Filters • Status tracking • Full job history",
+            })
+          }
         />
       </div>
 
@@ -1067,51 +1096,53 @@ export default function HomePage() {
             financialControls.set("hidden");
           }}
         >
-          <motion.h2
-            variants={fadeUp}
-            className="text-3xl text-center font-bold mb-3"
-          >
-            Know exactly where your money is
-          </motion.h2>
+          <div className="flex flex-col md:flex-row gap-6 items-center md:mb-10 max-w-[1200px] mx-auto">
+            <div className="md:hidden">
+              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
+                Know exactly where your money is
+              </motion.h2>
 
-          <motion.p
-            variants={fadeUp}
-            className="max-w-2xl text-white/70 mb-12 text-center mx-auto"
-          >
-            Filter by any date range and instantly see earnings, expenses,
-            payouts, materials, and profit — across all jobs or down to a single
-            one.
-          </motion.p>
-
-          <motion.div variants={stagger} className="grid md:grid-cols-2 gap-8">
-            <motion.div
+              <motion.p
+                variants={fadeUp}
+                className="max-w-2xl text-white/70 mb-12"
+              >
+                Filter by any date range and instantly see earnings, expenses,
+                payouts, materials, and profit — across all jobs or down to a
+                single one.
+              </motion.p>
+            </div>
+            <motion.img
               variants={cardIn}
-              whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-              className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
-            >
-              <h3 className="font-semibold mb-2 text-[#cfae5d]">
-                Financial Overview
-              </h3>
-              <p className="text-sm text-white">
-                A dedicated page for real-time financial insight across your
-                operation.
-              </p>
-            </motion.div>
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: false, amount: 0.25 }}
+              className="block mx-auto w-full max-w-[600px] cursor-zoom-in"
+              src={financialOverview}
+              onClick={() =>
+                setLightbox({
+                  src: financialOverview,
+                  alt: "Financial overview preview",
+                  title: "Financial Overview",
+                  subtitle: "Profit • Payouts • Materials • Date ranges",
+                })
+              }
+              alt="ROOFZEUS app preview"
+            />
+            <div className="hidden md:block">
+              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
+                Know exactly where your money is
+              </motion.h2>
 
-            <motion.div
-              variants={cardIn}
-              whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
-              className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
-            >
-              <h3 className="font-semibold mb-2 text-[#cfae5d]">
-                Payouts & Pay Stubs
-              </h3>
-              <p className="text-sm text-white">
-                Generate, track, filter, and export pay stubs for your crew —
-                pending or paid.
-              </p>
-            </motion.div>
-          </motion.div>
+              <motion.p
+                variants={fadeUp}
+                className="max-w-2xl text-white/70 mb-12"
+              >
+                Filter by any date range and instantly see earnings, expenses,
+                payouts, materials, and profit — across all jobs or down to a
+                single one.
+              </motion.p>
+            </div>
+          </div>
         </motion.div>
       </section>
 
@@ -1239,10 +1270,12 @@ export default function HomePage() {
         </motion.div>
       </section>
       <ImageLightbox
-        open={jobPreviewOpen}
-        src={jobdetails}
-        alt="ROOFZEUS job detail preview"
-        onClose={() => setJobPreviewOpen(false)}
+        open={!!lightbox}
+        src={lightbox?.src ?? ""}
+        alt={lightbox?.alt ?? ""}
+        title={lightbox?.title}
+        subtitle={lightbox?.subtitle}
+        onClose={() => setLightbox(null)}
       />
     </main>
   );

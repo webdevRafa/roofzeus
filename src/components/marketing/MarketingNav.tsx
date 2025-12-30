@@ -325,7 +325,7 @@ export default function MarketingNav() {
                         "hover:opacity-90 transition"
                       )}
                     >
-                      Start free trial
+                      Try it free
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </motion.div>
