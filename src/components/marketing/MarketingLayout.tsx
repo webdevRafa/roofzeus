@@ -1,6 +1,6 @@
 import { Link, Outlet } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
-import { Mail, Linkedin, Twitter, Youtube, ArrowUpRight } from "lucide-react";
+import { Mail, Linkedin, Twitter, Youtube } from "lucide-react";
 import MarketingNav from "./MarketingNav";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -40,13 +40,7 @@ export default function MarketingLayout() {
 
         {/* Footer */}
         <footer className="relative  bg-[#0b0e14]/75 backdrop-blur">
-          {/* subtle ambient wash (lightweight, not a whole section) */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-24 left-1/2 h-[320px] w-[320px] -translate-x-1/2 rounded-full bg-[#cfae5d]/10 blur-[120px]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(207,174,93,0.10),transparent_50%)]" />
-          </div>
-
-          <div className="relative mx-auto max-w-7xl px-6 py-10">
+          <div className="relative mx-auto max-w-7xl px-6 py-5">
             <div className="grid gap-8 md:grid-cols-12">
               {/* Brand / contact */}
               <div className="md:col-span-5">
@@ -66,24 +60,6 @@ export default function MarketingLayout() {
                       — purpose-built for roofing contractors.
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Link
-                    to="/signup"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#cfae5d] px-4 py-2 text-sm font-semibold text-black hover:opacity-90 transition"
-                  >
-                    Start free trial
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-
-                  <Link
-                    to="/see-it-in-action"
-                    className="inline-flex items-center gap-2 rounded-xl border border-[#3a3f4b] bg-white/0 px-4 py-2 text-sm font-semibold text-white hover:border-[#cfae5d] transition"
-                  >
-                    Watch demo
-                    <ArrowUpRight className="h-4 w-4 text-white/70" />
-                  </Link>
                 </div>
 
                 <a

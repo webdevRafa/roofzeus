@@ -53,6 +53,9 @@ const popIn: Variants = {
   },
 };
 
+const TRIAL_CTA_SESSION_KEY = "rz_trial_cta_revealed_v1";
+const TRIAL_CTA_REVEAL_SCROLL_Y = 420; // px scrolled before CTA appears
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -62,6 +65,16 @@ export default function MarketingNav() {
   const [open, setOpen] = useState(false);
   const [legalOpen, setLegalOpen] = useState(false);
   const legalWrapRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ Reveal navbar CTA after scroll, then persist for the rest of the tab session.
+  const [trialCtaRevealed, setTrialCtaRevealed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return sessionStorage.getItem(TRIAL_CTA_SESSION_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   // Primary nav: only the important top-level destinations
   const items = useMemo<NavItem[]>(
@@ -124,6 +137,43 @@ export default function MarketingNav() {
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
   }, [legalOpen]);
+
+  // Reveal CTA after user scrolls a bit; once revealed it never hides again this session.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (trialCtaRevealed) return;
+
+    let raf = 0;
+
+    const check = () => {
+      // Only care until it flips to revealed
+      if (window.scrollY >= TRIAL_CTA_REVEAL_SCROLL_Y) {
+        try {
+          sessionStorage.setItem(TRIAL_CTA_SESSION_KEY, "1");
+        } catch {
+          // ignore
+        }
+        setTrialCtaRevealed(true);
+      }
+    };
+
+    const onScroll = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        check();
+      });
+    };
+
+    // Run once in case the user lands mid-page (or refreshes after scroll)
+    check();
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      if (raf) window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [trialCtaRevealed]);
 
   return (
     <>
@@ -257,18 +307,30 @@ export default function MarketingNav() {
                 Log in
               </Link>
 
-              {/* Desktop: Primary CTA */}
-              <Link
-                to="/signup"
-                className={cx(
-                  "hidden lg:inline-flex items-center justify-center gap-2",
-                  "rounded-xl bg-[#cfae5d] px-4 py-2 text-sm font-semibold text-black",
-                  "hover:opacity-90 transition"
+              {/* Desktop: Primary CTA (reveals after scroll, then persists for session) */}
+              <AnimatePresence initial={false}>
+                {trialCtaRevealed && (
+                  <motion.div
+                    variants={popIn}
+                    initial="hidden"
+                    animate="show"
+                    exit="exit"
+                    className="hidden lg:block"
+                  >
+                    <Link
+                      to="/signup"
+                      className={cx(
+                        "inline-flex items-center justify-center gap-2",
+                        "rounded-xl bg-[#cfae5d] px-4 py-2 text-sm font-semibold text-black",
+                        "hover:opacity-90 transition"
+                      )}
+                    >
+                      Start free trial
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </motion.div>
                 )}
-              >
-                Start free trial
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              </AnimatePresence>
 
               {/* Mobile / Tablet menu button: visible until lg */}
               <button
@@ -386,17 +448,28 @@ export default function MarketingNav() {
                 </div>
 
                 <div className="mt-4 grid gap-2">
-                  <Link
-                    to="/see-it-in-action"
-                    className={cx(
-                      "inline-flex items-center justify-center gap-2",
-                      "rounded-xl bg-[#cfae5d] px-4 py-3",
-                      "text-sm font-semibold text-black hover:opacity-90 transition"
+                  <AnimatePresence initial={false}>
+                    {trialCtaRevealed && (
+                      <motion.div
+                        variants={popIn}
+                        initial="hidden"
+                        animate="show"
+                        exit="exit"
+                      >
+                        <Link
+                          to="/signup"
+                          className={cx(
+                            "inline-flex items-center justify-center gap-2",
+                            "rounded-xl bg-[#cfae5d] px-4 py-3",
+                            "text-sm font-semibold text-black hover:opacity-90 transition"
+                          )}
+                        >
+                          Start free trial
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </motion.div>
                     )}
-                  >
-                    Start free trial
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  </AnimatePresence>
 
                   <Link
                     to="/login"

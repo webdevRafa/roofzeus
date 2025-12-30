@@ -11,7 +11,7 @@ import { createPortal } from "react-dom";
 
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
-import preview from "../assets/roofzeus-demo.png";
+import preview from "../assets/alljobs.png";
 import jobdetails from "../assets/jobdetailpage preview.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -190,8 +190,8 @@ function FeatureTicker({ items }: { items: string[] }) {
           <div key={dup} className="flex items-center gap-3 pr-3">
             {items.map((txt) => (
               <div key={dup + txt} className="flex items-center gap-3">
-                <span className="text-white/55 text-[12px]">•</span>
-                <span className="text-white/65 text-[12px] whitespace-nowrap">
+                <span className="text-white/30 blur-[1px] text-[12px]">|</span>
+                <span className="text-white/80 text-[12px] whitespace-nowrap">
                   {txt}
                 </span>
               </div>
@@ -496,7 +496,7 @@ function DashboardPreview() {
                   initial={{ pathLength: 0, opacity: 0 }}
                   whileInView={{ pathLength: 1, opacity: 1 }}
                   viewport={{ once: false, amount: 0.6 }}
-                  transition={{ duration: 3, ease }}
+                  transition={{ duration: 10, ease }}
                 />
 
                 <motion.path
@@ -823,6 +823,15 @@ export default function HomePage() {
   const heroCtaRef = useRef<HTMLDivElement | null>(null);
   const [showStickyCtas, setShowStickyCtas] = useState(false);
 
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     const el = heroCtaRef.current;
     if (!el) return;
@@ -872,9 +881,6 @@ export default function HomePage() {
 
               {/* Infinite feature ticker (replaces the static “Jobs • Schedules • …” line) */}
               <motion.div variants={fadeUp} className="mt-3 ">
-                <span className="inline-flex items-center rounded-full border border-[#cfae5d]/35 bg-[#cfae5d]/10 px-3 py-1 text-[11px] tracking-wide text-[#cfae5d] mb-2">
-                  Purpose-built for roofing contractors
-                </span>
                 <div className="flex-1">
                   <FeatureTicker items={HERO_TICKER_ITEMS} />
                 </div>
@@ -887,14 +893,19 @@ export default function HomePage() {
                 Total visibility into your roofing business.
               </motion.h1>
 
+              <motion.span
+                variants={fadeUp}
+                className="inline-flex mt-6 mb-2   rounded-full border border-[#cfae5d]/35 bg-[#cfae5d]/10 px-3 py-1 text-xl tracking-wide text-white "
+              >
+                Designed for roofing contractors
+              </motion.span>
               <motion.p
                 variants={fadeUp}
-                className="mt-6 text-base md:text-lg text-white/70 max-w-xl leading-relaxed"
+                className="text-base md:text-lg text-white/80 max-w-xl leading-relaxed"
               >
-                ROOFZEUS helps roofing contractors stay organized, track
-                profitability, manage crew payouts, and keep schedules, photos,
-                notes, and finances in one place — without spreadsheets or
-                guesswork.
+                ROOFZEUS helps you stay organized, track profitability, manage
+                crew payouts, and keep schedules, photos, notes, and finances in
+                one place — without spreadsheets or guesswork.
               </motion.p>
 
               <motion.div
@@ -941,8 +952,14 @@ export default function HomePage() {
           animate={builtForControls}
           whileInView="show"
           viewport={{ once: false, amount: 0.25 }}
-          onViewportEnter={() => builtForControls.start("show")}
-          onViewportLeave={() => builtForControls.set("hidden")}
+          onViewportEnter={() => {
+            if (!mountedRef.current) return;
+            builtForControls.start("show");
+          }}
+          onViewportLeave={() => {
+            if (!mountedRef.current) return;
+            builtForControls.set("hidden");
+          }}
           className="max-w-7xl mx-auto px-6 py-20"
         >
           <div className="flex flex-col md:flex-row gap-6 items-center md:mb-10">
@@ -1008,15 +1025,30 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
       </section>
-      <motion.img
-        variants={cardIn}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: false, amount: 0.25 }}
-        className="block mx-auto w-full max-w-[1300px]"
-        src={preview}
-        alt="ROOFZEUS app preview"
-      />
+
+      <div className="flex flex-col md:flex-row gap-6 items-center md:mb-10 max-w-[1200px] mx-auto">
+        <div>
+          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
+            One place to manage every job you’ve ever run
+          </motion.h2>
+
+          <motion.p variants={fadeUp} className="max-w-2xl text-white/70 mb-12">
+            Search, filter, and review every job your company has run — active,
+            completed, invoiced, or closed. All Jobs gives you a clear,
+            organized view of your work so nothing gets lost as your business
+            grows.
+          </motion.p>
+        </div>
+        <motion.img
+          variants={cardIn}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: false, amount: 0.25 }}
+          className="block mx-auto w-full max-w-[600px]"
+          src={preview}
+          alt="ROOFZEUS app preview"
+        />
+      </div>
 
       {/* FINANCIAL POWER */}
       <section className="max-w-7xl mx-auto px-6 py-24">
@@ -1026,14 +1058,26 @@ export default function HomePage() {
           animate={financialControls}
           whileInView="show"
           viewport={{ once: false, amount: 0.25 }}
-          onViewportEnter={() => financialControls.start("show")}
-          onViewportLeave={() => financialControls.set("hidden")}
+          onViewportEnter={() => {
+            if (!mountedRef.current) return;
+            financialControls.start("show");
+          }}
+          onViewportLeave={() => {
+            if (!mountedRef.current) return;
+            financialControls.set("hidden");
+          }}
         >
-          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
+          <motion.h2
+            variants={fadeUp}
+            className="text-3xl text-center font-bold mb-3"
+          >
             Know exactly where your money is
           </motion.h2>
 
-          <motion.p variants={fadeUp} className="max-w-2xl text-white/70 mb-12">
+          <motion.p
+            variants={fadeUp}
+            className="max-w-2xl text-white/70 mb-12 text-center mx-auto"
+          >
             Filter by any date range and instantly see earnings, expenses,
             payouts, materials, and profit — across all jobs or down to a single
             one.

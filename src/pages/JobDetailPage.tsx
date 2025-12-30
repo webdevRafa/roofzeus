@@ -1522,12 +1522,6 @@ export default function JobDetailPage({
           className="mb-8 relative w-full max-w-[1200px] mx-auto md:mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
           {...fadeUp(0)}
         >
-          {/* subtle header glow */}
-          <div className="pointer-events-none absolute inset-0 opacity-60">
-            <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-[var(--color-accent)]/15 blur-3xl" />
-            <div className="absolute -bottom-28 -left-24 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
-          </div>
-
           <div className="relative p-4 sm:p-5">
             {/* Top row: job meta + actions */}
             <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
@@ -1552,10 +1546,10 @@ export default function JobDetailPage({
                     Create report
                   </button>
 
-                  <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/35 px-3 py-2 text-xs sm:text-sm uppercase tracking-wide text-[var(--color-muted)] ring-1 ring-white/10">
+                  <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/35 px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ring-1 ring-white/10">
                     <span>Status</span>
                     <span
-                      className={`rounded-lg px-2 py-0.5 ${statusClasses(
+                      className={`rounded-lg px-2 text-[10px] py-0.5 ${statusClasses(
                         job.status as JobStatus
                       )}`}
                     >
@@ -1838,7 +1832,7 @@ export default function JobDetailPage({
                               <button
                                 type="button"
                                 onClick={() => setConfirmPunchedOpen(true)}
-                                className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 transition ring-1 ring-emerald-500/30"
+                                className="rounded-lg bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold   transition "
                               >
                                 Mark punched
                               </button>
@@ -2053,8 +2047,10 @@ export default function JobDetailPage({
             <Stat label="All Expenses" cents={totals.expenses} />
             <div
               className={
-                "rounded-xl ring-1 " +
-                (totals.net >= 0 ? "ring-emerald-600" : "ring-red-600/60")
+                "rounded-xl " +
+                (totals.net >= 0
+                  ? "shadow-[0_12px_10px_-8px_rgba(16,185,129,0.8)]"
+                  : "shadow-[0_12px_10px_-8px_rgba(220,38,38,0.8)]")
               }
             >
               <Stat label="Profit" cents={totals.net} />

@@ -327,8 +327,13 @@ export default function PricingPage() {
           className="grid lg:grid-cols-12 gap-10"
         >
           <motion.div variants={fadeUp} className="lg:col-span-5">
-            <h2 className="text-3xl font-bold">What you’re buying</h2>
-            <p className="mt-3 text-[#cfae5d]/80">
+            <motion.span
+              variants={fadeUp}
+              className="inline-flex mt-6 mb-2   rounded-full border border-[#cfae5d]/35 bg-[#cfae5d]/10 px-3 py-1 text-xl tracking-wide text-white "
+            >
+              What you're buying
+            </motion.span>
+            <p className="mt-3 text-white">
               ROOFZEUS isn’t a generic CRM. It’s a workflow tool built around
               how roofing work actually runs — from job setup to schedule to
               crew pay.
@@ -412,7 +417,7 @@ export default function PricingPage() {
           >
             <div>
               <h2 className="text-3xl font-bold">FAQ</h2>
-              <p className="mt-2 text-[#cfae5d]/80">
+              <p className="mt-2 text-white">
                 Straight answers. No pricing games.
               </p>
             </div>
