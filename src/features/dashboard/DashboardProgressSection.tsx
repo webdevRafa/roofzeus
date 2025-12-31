@@ -108,20 +108,24 @@ function statusClasses(status: JobStatus) {
     case "active":
       return "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]";
     case "pending":
-      return "border-white/12 bg-white/5 text-white/70";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.70)]";
+
     case "invoiced":
-      return "border-white/12 bg-white/5 text-white/70";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.70)]";
+
     case "paid":
-      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
+      return "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]";
+
     case "completed":
-      return "border-emerald-400/20 bg-emerald-400/10 text-emerald-200";
+      return "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]";
+
     case "closed":
-      return "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
     case "archived":
-      return "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
     case "draft":
     default:
-      return "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
+      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
   }
 }
 
@@ -170,14 +174,14 @@ export function DashboardProgressSection({
 
         <div className="flex flex-wrap gap-2 text-[11px]">
           {materialProgressJobs.length > 0 && (
-            <span className="inline-flex items-center rounded-full border border-sky-300/15 bg-sky-300/10 px-3 py-1 font-semibold text-sky-200">
+            <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-info-rgb))]">
               {materialProgressJobs.length} job
               {materialProgressJobs.length === 1 ? "" : "s"} in progress
             </span>
           )}
 
           {readyForPunchJobs.length > 0 && (
-            <span className="inline-flex items-center rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1 font-semibold text-emerald-200">
+            <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-success-rgb))]">
               {readyForPunchJobs.length} ready for punch
             </span>
           )}
@@ -190,7 +194,7 @@ export function DashboardProgressSection({
             {/* Scheduled dry-in + shingles */}
             <motion.div {...fadeUp(0.05)} className="min-w-0">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/55">
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.70)]">
                   Scheduled dry-in & shingles
                 </h3>
                 <span className="text-[11px] text-[var(--color-accent-gold)]/70">
@@ -198,9 +202,9 @@ export function DashboardProgressSection({
                 </span>
               </div>
 
-              <div className="rounded-xl border border-[var(--color-border)] bg-black/20 overflow-hidden">
+              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] overflow-hidden">
                 {materialProgressJobs.length === 0 ? (
-                  <div className="px-4 py-3 text-[12px] text-white/55">
+                  <div className="px-4 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
                     No jobs have felt or shingles scheduled yet. As you update
                     each job, they&apos;ll show up here.
                   </div>
@@ -253,10 +257,10 @@ export function DashboardProgressSection({
                         scheduled: number | null
                       ) =>
                         done != null
-                          ? "border-emerald-300/15 bg-emerald-300/10 text-emerald-200"
+                          ? "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]"
                           : scheduled != null
-                          ? "border-sky-300/15 bg-sky-300/10 text-sky-200"
-                          : "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-white/60";
+                          ? "border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] text-[rgb(var(--pill-info-rgb))]"
+                          : "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-[rgb(var(--color-text-rgb)/0.92)]/60";
 
                       return (
                         <motion.div
@@ -266,10 +270,10 @@ export function DashboardProgressSection({
                             y: -1,
                             transition: { duration: 0.2, ease: EASE },
                           }}
-                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-black/20 hover:bg-black/30 transition px-3 py-3"
+                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.12)] transition px-3 py-3"
                         >
                           <div className="flex flex-wrap items-center gap-2">
-                            <div className="truncate text-sm font-semibold text-white">
+                            <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
                               {a.display || "—"}
                             </div>
 
@@ -313,13 +317,14 @@ export function DashboardProgressSection({
                           </div>
 
                           <div className="mt-2 flex justify-between items-center gap-3">
-                            <div className="text-[11px] text-white/45">
+                            <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
                               Last updated {fmtDateTime(job.updatedAt)}
                             </div>
 
                             <Link
                               to={`/job/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
+                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]
+ px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                             >
                               View job
                             </Link>
@@ -335,7 +340,7 @@ export function DashboardProgressSection({
             {/* Ready for punch */}
             <motion.div {...fadeUp(0.12)} className="min-w-0">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/55">
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
                   Ready for punch
                 </h3>
                 <span className="text-[11px] text-[var(--color-accent-gold)]/70">
@@ -343,9 +348,9 @@ export function DashboardProgressSection({
                 </span>
               </div>
 
-              <div className="rounded-xl border border-[var(--color-border)] bg-black/20 overflow-hidden">
+              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] overflow-hidden">
                 {readyForPunchJobs.length === 0 ? (
-                  <div className="px-4 py-3 text-[12px] text-white/55">
+                  <div className="px-4 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
                     Once both felt and shingles are marked completed on a job,
                     it will appear here as ready to be punched.
                   </div>
@@ -398,12 +403,12 @@ export function DashboardProgressSection({
                             y: -1,
                             transition: { duration: 0.2, ease: EASE },
                           }}
-                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-black/20 hover:bg-black/30 transition px-3 py-3"
+                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.12)] transition px-3 py-3"
                         >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <div className="truncate text-sm font-semibold text-white">
+                                <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
                                   {a.display || "—"}
                                 </div>
                                 <span
@@ -417,15 +422,17 @@ export function DashboardProgressSection({
 
                               <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px]">
                                 {readySince ? (
-                                  <span className="text-white/45">
+                                  <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
                                     Ready since {readySince}
                                   </span>
                                 ) : (
-                                  <span className="text-white/45">Ready</span>
+                                  <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
+                                    Ready
+                                  </span>
                                 )}
 
                                 {punchDate ? (
-                                  <span className="text-[var(--color-accent-gold)]/80">
+                                  <span className="text-[var(--color-primary)]">
                                     • Scheduled for {punchDate}
                                   </span>
                                 ) : null}
@@ -451,7 +458,8 @@ export function DashboardProgressSection({
                           <div className="mt-2 flex justify-end">
                             <Link
                               to={`/job/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 hover:bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/70 transition"
+                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]
+ px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                             >
                               View job
                             </Link>

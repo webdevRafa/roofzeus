@@ -46,21 +46,14 @@ function KpiCard({
 }) {
   const accentClasses =
     accent === "gold"
-      ? "text-[var(--color-accent-gold)]"
+      ? "text-[var(--kpi-value)]"
       : accent === "sky"
-      ? "text-sky-500"
+      ? "text-[var(--kpi-value)]"
       : accent === "emerald"
-      ? "text-emerald-500"
-      : "text-[var(--color-text)]";
+      ? "text-[var(--kpi-value)]"
+      : "text-[var(--kpi-value)]";
 
-  const subClasses =
-    accent === "gold"
-      ? "text-[var(--color-accent-gold)]/70"
-      : accent === "sky"
-      ? "text-sky-500/70"
-      : accent === "emerald"
-      ? "text-emerald-500/70"
-      : "text-[rgb(var(--color-text-rgb)/0.55)]";
+  const subClasses = "text-[rgb(var(--color-text-rgb)/0.62)]";
 
   return (
     <motion.div
@@ -68,7 +61,7 @@ function KpiCard({
       whileHover={{ y: -2, transition: { duration: 0.22, ease } }}
       className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-card-rgb)/0.70)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.18)]"
     >
-      <div className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+      <div className="text-[14px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)]">
         {label}
       </div>
 

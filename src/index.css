@@ -79,8 +79,21 @@ body {
    Toggle by setting: <html data-theme="dark|light">
    ========================= */
 
+   html[data-theme="light"] .section-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(15, 23, 42, 0.18);
+  }
+  html[data-theme="dark"] .section-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(245, 246, 248, 0.18);
+  }
+  
    :root,
    html[data-theme="dark"] {
+
+    --pill-info-rgb: 125 211 252;   /* sky-300-ish */
+
+    --kpi-value: var(--color-text);
+    --panel-bg: rgba(0,0,0,0.20);
+    --panel-bg-hover: rgba(0,0,0,0.30);
 
      /* Status / semantic chips (dark) */
   --pill-success-rgb: 110 231 183; /* emerald-300 */
@@ -115,8 +128,15 @@ body {
     filter: invert(1) grayscale(1) contrast(1.1);
     opacity: 0.95;
   }
-  
+
    html[data-theme="light"] {
+
+    --pill-info-rgb: 2 132 199;     /* sky-600-ish */
+
+    --kpi-value: rgb(var(--color-text-rgb) / 0.92);
+    --panel-bg: rgb(var(--color-surface-rgb) / 0.65);
+    --panel-bg-hover: rgb(var(--color-surface-rgb) / 0.85);
+  
 
      /* Status / semantic chips (light) */
   --pill-success-rgb: 5 150 105;   /* emerald-600 */
