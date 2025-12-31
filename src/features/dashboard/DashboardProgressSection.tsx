@@ -1,7 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
 import { Link } from "react-router-dom";
 import { motion, type MotionProps, type Variants } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Clock } from "lucide-react";
+
 import type { Job } from "../../types/types";
 
 // ----- Animation helpers -----
@@ -143,7 +144,7 @@ export function DashboardProgressSection({
   readyForPunchJobs,
 }: DashboardProgressSectionProps) {
   return (
-    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
+    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -420,33 +421,53 @@ export function DashboardProgressSection({
                                 </span>
                               </div>
 
-                              <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px]">
-                                {readySince ? (
-                                  <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
-                                    Ready since {readySince}
-                                  </span>
-                                ) : (
-                                  <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
-                                    Ready
-                                  </span>
-                                )}
+                              <div className="mt-1 grid gap-1 text-[11px]">
+                                <div className="flex items-center gap-2">
+                                  {readySince ? (
+                                    <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
+                                      Ready since {readySince}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
+                                      Ready
+                                    </span>
+                                  )}
+                                </div>
 
                                 {punchDate ? (
-                                  <span className="text-[var(--color-primary)]">
-                                    • Scheduled for {punchDate}
-                                  </span>
+                                  <div>
+                                    <span
+                                      className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold
+                   border-[rgb(var(--pill-warning-rgb)/0.30)]
+                   bg-[rgb(var(--pill-warning-rgb)/0.12)]
+                   text-[rgb(var(--pill-warning-rgb))]"
+                                    >
+                                      <Clock className="h-3 w-3 opacity-80" />
+                                      Scheduled {punchDate}
+                                    </span>
+                                  </div>
                                 ) : null}
                               </div>
                             </div>
 
                             <div className="flex flex-col gap-1 text-[11px] shrink-0">
-                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-2 py-0.5 text-emerald-200">
+                              <span
+                                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5
+                 border-[rgb(var(--pill-success-rgb)/0.30)]
+                 bg-[rgb(var(--pill-success-rgb)/0.12)]
+                 text-[rgb(var(--pill-success-rgb))]"
+                              >
                                 <span className="font-semibold uppercase">
                                   Dry in
                                 </span>
                                 <span>Completed</span>
                               </span>
-                              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/15 bg-emerald-300/10 px-2 py-0.5 text-emerald-200">
+                              <span
+                                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5
+                 border-[rgb(var(--pill-success-rgb)/0.30)]
+                 bg-[rgb(var(--pill-success-rgb)/0.12)]
+                 text-[rgb(var(--pill-success-rgb))]"
+                              >
                                 <span className="font-semibold uppercase">
                                   Shingles
                                 </span>

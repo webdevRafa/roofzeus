@@ -215,7 +215,7 @@ export default function DashboardFinancialOverviewSection({
   };
 
   return (
-    <section className="mt-10 mb-40 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
+    <section className="mt-10 mb-40 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
       {/* Header (matches the new command-center sections) */}
       <div
         className="relative px-4 sm:px-6 py-4 border-b"

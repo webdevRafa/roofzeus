@@ -14,7 +14,7 @@ export function ThemeToggleButton() {
         "ring-1 ring-[rgb(var(--color-border-rgb)/0.14)]",
         "bg-[rgb(var(--color-surface-rgb)/0.45)] hover:bg-[rgb(var(--color-surface-rgb)/0.65)]",
         "text-[rgb(var(--color-text-rgb)/0.90)]",
-        "backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.25)]",
+        "backdrop-blur-md hover:shadow-md",
       ].join(" ")}
       aria-label="Toggle theme"
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}

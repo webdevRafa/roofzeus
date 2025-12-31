@@ -90,6 +90,7 @@ body {
    html[data-theme="dark"] {
 
     --pill-info-rgb: 125 211 252;   /* sky-300-ish */
+    --color-primary-rgb: 207 174 93; /* matches #cfae5d */
 
     --kpi-value: var(--color-text);
     --panel-bg: rgba(0,0,0,0.20);
@@ -132,7 +133,7 @@ body {
    html[data-theme="light"] {
 
     --pill-info-rgb: 2 132 199;     /* sky-600-ish */
-
+    --color-primary-rgb: 154 123 46; /* matches #9a7b2e */
     --kpi-value: rgb(var(--color-text-rgb) / 0.92);
     --panel-bg: rgb(var(--color-surface-rgb) / 0.65);
     --panel-bg-hover: rgb(var(--color-surface-rgb) / 0.85);

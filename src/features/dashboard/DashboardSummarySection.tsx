@@ -59,7 +59,7 @@ function KpiCard({
     <motion.div
       variants={fadeUp}
       whileHover={{ y: -2, transition: { duration: 0.22, ease } }}
-      className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-card-rgb)/0.70)] p-4 shadow-[0_14px_40px_rgba(0,0,0,0.18)]"
+      className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-card-rgb)/0.70)] p-4 hover:shadow-md select-none"
     >
       <div className="text-[14px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)]">
         {label}

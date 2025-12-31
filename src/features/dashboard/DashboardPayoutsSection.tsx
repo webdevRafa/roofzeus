@@ -179,14 +179,16 @@ function Pill({
       className={cx(
         "inline-flex items-center rounded-full border px-3 py-1 text-[11px] tracking-wide transition",
         active
-          ? "text-[var(--color-accent-gold)]"
-          : "text-white/70 hover:text-white"
+          ? "text-[rgb(var(--color-primary-rgb)/0.95)]"
+          : "text-[rgb(var(--color-text-rgb)/0.65)] hover:text-[rgb(var(--color-text-rgb)/0.85)]"
       )}
       style={{
-        borderColor: active ? "rgba(207,174,93,0.30)" : "rgba(58,63,75,0.75)",
+        borderColor: active
+          ? "rgb(var(--color-primary-rgb) / 0.30)"
+          : "rgb(var(--color-border-rgb) / 0.22)",
         backgroundColor: active
-          ? "rgba(207,174,93,0.10)"
-          : "rgba(255,255,255,0.04)",
+          ? "rgb(var(--color-primary-rgb) / 0.10)"
+          : "rgb(var(--color-text-rgb) / 0.04)",
       }}
     >
       {children}
@@ -231,26 +233,23 @@ export function DashboardPayoutsSection({
   return (
     <motion.section
       {...fadeUp(0.08)}
-      className="mt-10 mb-40 rounded-2xl  overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_18px_50px_rgba(0,0,0,0.35)]"
+      className="mt-10 mb-40 rounded-2xl  overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)]"
     >
       {/* Header */}
-      <div
-        className="relative px-4 sm:px-6 py-4 border-b"
-        style={{ borderColor: "rgba(58,63,75,0.75)" }}
-      >
+      <div className="relative px-4 sm:px-6 py-4 border-b border-[var(--color-border)]">
         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
               <div
                 className="h-9 w-9 rounded-xl border flex items-center justify-center"
                 style={{
-                  backgroundColor: "rgba(11,14,20,0.55)",
-                  borderColor: "rgba(58,63,75,0.9)",
+                  backgroundColor: "rgb(var(--color-primary-rgb) / 0.10)",
+                  borderColor: "rgb(var(--color-primary-rgb) / 0.22)",
                 }}
               >
                 <BadgeDollarSign
                   className="h-5 w-5"
-                  style={{ color: "var(--color-accent-gold)" }}
+                  style={{ color: "var(--color-primary)" }}
                 />
               </div>
 
@@ -267,9 +266,9 @@ export function DashboardPayoutsSection({
                     onClick={() => setPayoutsOpen((v) => !v)}
                     className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition"
                     style={{
-                      borderColor: "rgba(58,63,75,0.85)",
-                      backgroundColor: "rgba(255,255,255,0.04)",
-                      color: "rgba(245,246,248,0.80)",
+                      borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+                      backgroundColor: "rgb(var(--color-text-rgb) / 0.04)",
+                      color: "rgb(var(--color-text-rgb) / 0.75)",
                     }}
                   >
                     <ChevronDown
@@ -289,7 +288,9 @@ export function DashboardPayoutsSection({
                   style={{ color: "var(--color-muted)" }}
                 >
                   Search payouts by employee or address. In{" "}
-                  <span style={{ color: "rgba(207,174,93,0.9)" }}>Pending</span>
+                  <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.85)]">
+                    Pending
+                  </span>
                   , select payouts to generate a stub and mark them paid.
                 </p>
               </div>
@@ -302,16 +303,17 @@ export function DashboardPayoutsSection({
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
               {/* Search */}
               <div className="relative w-full min-w-0 sm:w-[320px] sm:flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/45" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[rgb(var(--color-text-rgb)/0.45)]" />
+
                 <input
                   value={payoutSearch}
                   onChange={(e) => setPayoutSearch(e.target.value)}
                   placeholder="Search employee or address…"
                   className="w-full rounded-xl border pl-9 pr-3 py-2 text-sm outline-none focus:ring-2"
                   style={{
-                    borderColor: "rgba(58,63,75,0.85)",
-                    backgroundColor: "rgba(11,14,20,0.45)",
-                    color: "rgba(245,246,248,0.92)",
+                    borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+                    backgroundColor: "var(--panel-bg)",
+                    color: "rgb(var(--color-text-rgb) / 0.92)",
                   }}
                 />
               </div>
@@ -320,10 +322,11 @@ export function DashboardPayoutsSection({
               <button
                 type="button"
                 onClick={onOpenPayTechnician}
-                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition hover:opacity-95 sm:self-auto"
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition hover:opacity-95 sm:self-auto hover:shadow-md cursor-pointer"
                 style={{
-                  backgroundColor: "rgba(207,174,93,0.95)",
-                  color: "#0b0e14",
+                  borderColor: "rgb(var(--color-primary-rgb) / 0.35)",
+                  backgroundColor: "rgb(var(--color-text-rgb) / 0.02)",
+                  color: "rgb(var(--color-text-rgb) / 0.85)",
                 }}
               >
                 <Wrench className="h-4 w-4" />
@@ -370,8 +373,8 @@ export function DashboardPayoutsSection({
                 <div
                   className="sticky top-0 z-20 rounded-2xl border px-4 py-3 backdrop-blur"
                   style={{
-                    borderColor: "rgba(58,63,75,0.75)",
-                    backgroundColor: "rgba(11,14,20,0.75)",
+                    borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+                    backgroundColor: "var(--panel-bg-hover)",
                   }}
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -382,7 +385,7 @@ export function DashboardPayoutsSection({
                           a stub.
                         </span>
                       ) : (
-                        <span className="text-white/60">
+                        <span className="text-[rgb(var(--color-text-rgb)/0.65)]">
                           Selected{" "}
                           <span style={{ color: "rgba(207,174,93,0.95)" }}>
                             {selectedPayoutIds.length}
@@ -408,9 +411,9 @@ export function DashboardPayoutsSection({
                         onClick={clearSelectedPayouts}
                         className="rounded-xl border px-3 py-2 text-xs font-semibold transition"
                         style={{
-                          borderColor: "rgba(58,63,75,0.85)",
-                          backgroundColor: "rgba(255,255,255,0.04)",
-                          color: "rgba(245,246,248,0.85)",
+                          borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+                          backgroundColor: "rgb(var(--color-text-rgb) / 0.04)",
+                          color: "rgb(var(--color-text-rgb) / 0.78)",
                         }}
                       >
                         Clear all
@@ -435,8 +438,8 @@ export function DashboardPayoutsSection({
                   <div
                     className="rounded-2xl border p-4"
                     style={{
-                      borderColor: "rgba(58,63,75,0.75)",
-                      backgroundColor: "rgba(11,14,20,0.35)",
+                      borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+                      backgroundColor: "var(--panel-bg)",
                       color: "var(--color-muted)",
                     }}
                   >
@@ -449,8 +452,8 @@ export function DashboardPayoutsSection({
                 <motion.ul
                   className="divide-y rounded-2xl border overflow-hidden"
                   style={{
-                    borderColor: "rgba(58,63,75,0.75)",
-                    backgroundColor: "rgba(11,14,20,0.35)",
+                    borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+                    backgroundColor: "var(--panel-bg)",
                   }}
                   variants={staggerParent}
                   initial="initial"
@@ -489,12 +492,13 @@ export function DashboardPayoutsSection({
                         variants={item}
                         className="px-4 py-3"
                       >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto] sm:items-center sm:gap-4">
                           {/* Left */}
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 min-w-0">
-                              <User className="h-4 w-4 text-white/45 shrink-0" />
-                              <div className="text-sm font-semibold text-white truncate">
+                              <User className="h-4 w-4 shrink-0 text-[rgb(var(--color-text-rgb)/0.45)]" />
+
+                              <div className="text-sm font-semibold text-[var(--color-text)] truncate">
                                 {employeeName || "Unknown employee"}
                               </div>
 
@@ -516,14 +520,14 @@ export function DashboardPayoutsSection({
                               </span>
                             </div>
 
-                            <div className="mt-1 flex items-start gap-2 text-xs text-white/60 min-w-0">
-                              <MapPin className="h-3.5 w-3.5 mt-[1px] shrink-0 text-white/35" />
+                            <div className="mt-1 flex items-start gap-2 text-xs text-[rgb(var(--color-text-rgb)/0.65)] min-w-0">
+                              <MapPin className="h-3.5 w-3.5 mt-[1px] shrink-0 text-[rgb(var(--color-text-rgb)/35)]" />
                               <div className="min-w-0">
                                 <div className="truncate">
                                   {a.display || "—"}
                                 </div>
                                 {(a.city || a.state || a.zip) && (
-                                  <div className="text-[11px] text-white/45">
+                                  <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
                                     {[a.city, a.state, a.zip]
                                       .filter(Boolean)
                                       .join(", ")}
@@ -533,14 +537,17 @@ export function DashboardPayoutsSection({
                             </div>
 
                             {(categoryLabel || hasSqft || hasRate) && (
-                              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-white/55">
+                              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[rgb(var(--color-text-rgb)/55)]">
                                 {categoryLabel && (
                                   <span
                                     className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                                     style={{
-                                      borderColor: "rgba(58,63,75,0.85)",
-                                      backgroundColor: "rgba(255,255,255,0.04)",
-                                      color: "rgba(245,246,248,0.80)",
+                                      borderColor:
+                                        "rgb(var(--color-border-rgb) / 0.22)",
+                                      backgroundColor:
+                                        "rgb(var(--color-text-rgb) / 0.04)",
+                                      color:
+                                        "rgb(var(--color-text-rgb) / 0.80)",
                                     }}
                                   >
                                     {categoryLabel}
@@ -550,7 +557,9 @@ export function DashboardPayoutsSection({
                                   <span>{sqft!.toLocaleString()} sq ft</span>
                                 )}
                                 {hasSqft && hasRate && (
-                                  <span className="text-white/30">•</span>
+                                  <span className="text-[rgb(var(--color-text-rgb)/30)]">
+                                    •
+                                  </span>
                                 )}
                                 {hasRate && (
                                   <span>
@@ -565,7 +574,7 @@ export function DashboardPayoutsSection({
                               </div>
                             )}
 
-                            <div className="mt-2 text-[11px] text-white/45">
+                            <div className="mt-2 text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
                               Created {fmtDateTime(p.createdAt)}{" "}
                               {p.paidAt
                                 ? `• Paid ${fmtDateTime(p.paidAt)}`
@@ -574,18 +583,19 @@ export function DashboardPayoutsSection({
                           </div>
 
                           {/* Right */}
-                          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                          <div className="flex items-center gap-3 sm:gap-4 justify-end">
                             <div
                               className="rounded-xl border px-3 py-2 text-right"
                               style={{
-                                borderColor: "rgba(58,63,75,0.75)",
-                                backgroundColor: "rgba(11,14,20,0.45)",
+                                borderColor:
+                                  "rgb(var(--color-border-rgb) / 0.22)",
+                                backgroundColor: "var(--panel-bg)",
                               }}
                             >
-                              <div className="text-[11px] text-white/45">
+                              <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
                                 Amount
                               </div>
-                              <div className="text-sm font-semibold text-white">
+                              <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb))]">
                                 {money(amountCents)}
                               </div>
                             </div>
@@ -596,9 +606,11 @@ export function DashboardPayoutsSection({
                                 onClick={() => onViewJob(jobId)}
                                 className="rounded-xl border px-3 py-2 text-xs font-semibold transition"
                                 style={{
-                                  borderColor: "rgba(58,63,75,0.85)",
-                                  backgroundColor: "rgba(255,255,255,0.04)",
-                                  color: "rgba(245,246,248,0.85)",
+                                  borderColor:
+                                    "rgb(var(--color-border-rgb) / 0.22)",
+                                  backgroundColor:
+                                    "rgb(var(--color-text-rgb) / 0.04)",
+                                  color: "rgb(var(--color-text-rgb) / 0.78)",
                                 }}
                               >
                                 View Job
@@ -606,13 +618,14 @@ export function DashboardPayoutsSection({
                             )}
 
                             {payoutFilter === "pending" && (
-                              <label className="flex items-center gap-2 text-xs text-white/60 select-none">
+                              <label className="flex items-center gap-2 text-xs text-[rgb(var(--color-text-rgb)/0.65)] select-none">
                                 <input
                                   type="checkbox"
                                   className="h-4 w-4 rounded border"
                                   style={{
-                                    borderColor: "rgba(58,63,75,0.85)",
-                                    accentColor: "var(--color-accent-gold)",
+                                    borderColor:
+                                      "rgb(var(--color-border-rgb) / 0.35)",
+                                    accentColor: "var(--color-primary)",
                                   }}
                                   checked={isSelected}
                                   onChange={() => togglePayoutSelected(p.id)}
@@ -637,34 +650,50 @@ export function DashboardPayoutsSection({
             <div
               className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t px-4 sm:px-6 py-3 backdrop-blur"
               style={{
-                borderColor: "rgba(58,63,75,0.75)",
-                backgroundColor: "rgba(11,14,20,0.88)",
+                borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+                backgroundColor: "var(--panel-bg-hover)",
               }}
             >
-              <span className="text-xs text-white/55">
-                Showing <span className="text-white/80">{showingFrom}</span> –{" "}
-                <span className="text-white/80">{showingTo}</span> of{" "}
-                <span className="text-white/80">{filteredPayoutsCount}</span>
+              <span className="text-xs text-[rgb(var(--color-text-rgb)/55)]">
+                Showing{" "}
+                <span className="text-[rgb(var(--color-text-rgb)/80)]">
+                  {showingFrom}
+                </span>{" "}
+                –{" "}
+                <span className="text-[rgb(var(--color-text-rgb)/80)]">
+                  {showingTo}
+                </span>{" "}
+                of{" "}
+                <span className="text-[rgb(var(--color-text-rgb)/80)]">
+                  {filteredPayoutsCount}
+                </span>
               </span>
 
-              <div className="flex items-center gap-2 text-xs text-white/65">
+              <div className="flex items-center gap-2 text-xs text-[rgb(var(--color-text-rgb)/0.65)]">
                 <button
                   type="button"
                   disabled={payoutsPage === 1}
                   onClick={() => setPayoutsPage((p) => Math.max(1, p - 1))}
-                  className="rounded-xl border px-3 py-2 disabled:opacity-40 transition"
-                  style={{
-                    borderColor: "rgba(58,63,75,0.85)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    color: "rgba(245,246,248,0.85)",
-                  }}
+                  className="rounded-xl border px-3 py-2 transition
+             border-[rgb(var(--color-border-rgb)/0.22)]
+             bg-[rgb(var(--color-text-rgb)/0.04)]
+             text-[rgb(var(--color-text-rgb)/0.78)]
+             hover:bg-[rgb(var(--color-text-rgb)/0.06)]
+             hover:text-[rgb(var(--color-text-rgb)/0.92)]
+             disabled:opacity-40 disabled:hover:bg-[rgb(var(--color-text-rgb)/0.04)]"
                 >
                   Prev
                 </button>
 
                 <span className="hidden sm:inline">
-                  Page <span className="text-white/85">{payoutsPage}</span> /{" "}
-                  <span className="text-white/85">{payoutsTotalPages}</span>
+                  Page{" "}
+                  <span className="text-[rgb(var(--color-text-rgb)/85)]">
+                    {payoutsPage}
+                  </span>{" "}
+                  /{" "}
+                  <span className="text-[rgb(var(--color-text-rgb)/85)]">
+                    {payoutsTotalPages}
+                  </span>
                 </span>
 
                 <button
@@ -673,12 +702,13 @@ export function DashboardPayoutsSection({
                   onClick={() =>
                     setPayoutsPage((p) => Math.min(payoutsTotalPages, p + 1))
                   }
-                  className="rounded-xl border px-3 py-2 disabled:opacity-40 transition"
-                  style={{
-                    borderColor: "rgba(58,63,75,0.85)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    color: "rgba(245,246,248,0.85)",
-                  }}
+                  className="rounded-xl border px-3 py-2 transition
+             border-[rgb(var(--color-border-rgb)/0.22)]
+             bg-[rgb(var(--color-text-rgb)/0.04)]
+             text-[rgb(var(--color-text-rgb)/0.78)]
+             hover:bg-[rgb(var(--color-text-rgb)/0.06)]
+             hover:text-[rgb(var(--color-text-rgb)/0.92)]
+             disabled:opacity-40 disabled:hover:bg-[rgb(var(--color-text-rgb)/0.04)]"
                 >
                   Next
                 </button>

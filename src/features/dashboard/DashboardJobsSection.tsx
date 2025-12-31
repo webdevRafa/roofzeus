@@ -287,7 +287,7 @@ export function DashboardJobsSection({
   totalNet,
 }: DashboardJobsSectionProps) {
   return (
-    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
+    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
       {/* Header */}
       <motion.header
         className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-4"
@@ -345,7 +345,7 @@ export function DashboardJobsSection({
             <button
               type="button"
               onClick={() => setOpenForm((v) => !v)}
-              className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] hover:bg-[var(--btn-hover-bg)] px-3 py-1.5 text-[11px] font-semibold text-[var(--btn-text)] transition"
+              className="cursor-pointer hover:shadow-md group inline-flex items-center gap-2 rounded-full bg-[var(--color-surface)] hover:bg-[var(--btn-hover-bg)] px-3 py-1.5 text-[11px] font-semibold text-[var(--btn-text)] transition"
               aria-label="Add New Job"
             >
               <SquarePlus className="h-4 w-4" />
@@ -361,7 +361,7 @@ export function DashboardJobsSection({
             <button
               type="button"
               onClick={() => setShowSearch((v) => !v)}
-              className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
+              className="cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
               title="Search addresses"
               aria-label="Search addresses"
             >
@@ -390,7 +390,7 @@ export function DashboardJobsSection({
           <button
             type="button"
             onClick={() => setShowFilters((v) => !v)}
-            className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
+            className=" cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
             title="Filter by last updated date"
           >
             <Filter size={16} className="mr-2" />
@@ -411,7 +411,7 @@ export function DashboardJobsSection({
                   type="button"
                   onClick={() => setStatusFilter(f)}
                   className={cx(
-                    "whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition",
+                    "whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition hover:shadow-md",
                     active
                       ? "border-[var(--color-accent-gold)]/35 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]"
                       : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
