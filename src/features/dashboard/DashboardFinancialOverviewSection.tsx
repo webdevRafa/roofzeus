@@ -17,6 +17,7 @@ import {
 import { Line } from "react-chartjs-2";
 import { Link } from "react-router-dom";
 import { TrendingUp } from "lucide-react";
+import { useTheme } from "../../theme/ThemeProvider";
 
 ChartJS.register(
   CategoryScale,
@@ -55,6 +56,28 @@ function formatMonth(date: Date): string {
     month: "short",
     year: "numeric",
   });
+}
+type RgbTuple = [number, number, number];
+
+function readRgbVar(varName: string, fallback: RgbTuple): RgbTuple {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(varName)
+    .trim();
+
+  const parts = raw
+    .split(/\s+/)
+    .map((p) => Number(p))
+    .filter((n) => Number.isFinite(n));
+
+  if (parts.length >= 3) {
+    return [parts[0], parts[1], parts[2]];
+  }
+
+  return fallback;
+}
+
+function rgba(rgb: RgbTuple, a: number) {
+  return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
 }
 
 interface Props {
@@ -125,14 +148,49 @@ export default function DashboardFinancialOverviewSection({
     return { labels, netProfits, payoutTotals };
   }, [jobs, payouts]);
 
+  const { theme } = useTheme();
+
   // Theme tokens (canvas colors must be explicit strings)
-  const GOLD = "#cfae5d";
-  const BLUE = "#6aa9ff";
-  const GRID = "rgba(245,246,248,0.10)";
-  const TICK = "rgba(245,246,248,0.60)";
-  const LEGEND = "rgba(245,246,248,0.70)";
-  const TOOLTIP_BG = "rgba(11,14,20,0.92)";
-  const TOOLTIP_BORDER = "rgba(58,63,75,0.85)";
+  const chartTokens = useMemo(() => {
+    const textRgb = readRgbVar("--color-text-rgb", [238, 242, 247]);
+    const borderRgb = readRgbVar("--color-border-rgb", [58, 63, 75]);
+    const bgRgb = readRgbVar("--color-background-rgb", [11, 14, 20]);
+    const primaryRgb = readRgbVar("--color-primary-rgb", [207, 174, 93]);
+
+    const GOLD = `rgb(${primaryRgb[0]},${primaryRgb[1]},${primaryRgb[2]})`;
+    const BLUE = "#6aa9ff";
+
+    const GRID = rgba(borderRgb, theme === "light" ? 0.14 : 0.1);
+    const TICK = rgba(textRgb, theme === "light" ? 0.55 : 0.6);
+    const LEGEND = rgba(textRgb, theme === "light" ? 0.65 : 0.7);
+
+    const TOOLTIP_BG =
+      theme === "light" ? "rgba(255,255,255,0.98)" : rgba(bgRgb, 0.92);
+
+    const TOOLTIP_BORDER = rgba(borderRgb, theme === "light" ? 0.22 : 0.18);
+
+    const TOOLTIP_TITLE = rgba(textRgb, 0.92);
+    const TOOLTIP_BODY = rgba(textRgb, 0.85);
+
+    const POINT_BORDER =
+      theme === "light" ? "rgba(255,255,255,0.90)" : rgba(bgRgb, 0.75);
+
+    return {
+      GOLD,
+      BLUE,
+      GRID,
+      TICK,
+      LEGEND,
+      TOOLTIP_BG,
+      TOOLTIP_BORDER,
+      TOOLTIP_TITLE,
+      TOOLTIP_BODY,
+      POINT_BORDER,
+      FILL_GOLD: rgba(primaryRgb, theme === "light" ? 0.14 : 0.18),
+      FILL_BLUE:
+        theme === "light" ? "rgba(106,169,255,0.10)" : "rgba(106,169,255,0.14)",
+    };
+  }, [theme]);
 
   // ✅ Strongly-type chart data so TS doesn't widen literals
   const chartData: ChartData<"line", number[], string> = {
@@ -141,10 +199,11 @@ export default function DashboardFinancialOverviewSection({
       {
         label: "Net Profit ($)",
         data: netProfits,
-        borderColor: GOLD,
-        backgroundColor: "rgba(207,174,93,0.18)",
-        pointBackgroundColor: GOLD,
-        pointBorderColor: "rgba(11,14,20,0.75)",
+        borderColor: chartTokens.GOLD,
+        backgroundColor: chartTokens.FILL_GOLD,
+        pointBackgroundColor: chartTokens.GOLD,
+        pointBorderColor: chartTokens.POINT_BORDER,
+
         pointBorderWidth: 2,
         pointRadius: 3,
         pointHoverRadius: 4,
@@ -153,10 +212,10 @@ export default function DashboardFinancialOverviewSection({
       {
         label: "Payouts ($)",
         data: payoutTotals,
-        borderColor: BLUE,
-        backgroundColor: "rgba(106,169,255,0.14)",
-        pointBackgroundColor: BLUE,
-        pointBorderColor: "rgba(11,14,20,0.75)",
+        borderColor: chartTokens.BLUE,
+        backgroundColor: chartTokens.FILL_BLUE,
+        pointBackgroundColor: chartTokens.BLUE,
+        pointBorderColor: chartTokens.POINT_BORDER,
         pointBorderWidth: 2,
         pointRadius: 3,
         pointHoverRadius: 4,
@@ -176,16 +235,16 @@ export default function DashboardFinancialOverviewSection({
           boxHeight: 10,
           padding: 14,
           font: { size: 12 },
-          color: LEGEND,
+          color: chartTokens.LEGEND,
         },
       },
       title: { display: false },
       tooltip: {
-        backgroundColor: TOOLTIP_BG,
-        borderColor: TOOLTIP_BORDER,
+        backgroundColor: chartTokens.TOOLTIP_BG,
+        borderColor: chartTokens.TOOLTIP_BORDER,
+        titleColor: chartTokens.TOOLTIP_TITLE,
+        bodyColor: chartTokens.TOOLTIP_BODY,
         borderWidth: 1,
-        titleColor: "rgba(245,246,248,0.92)",
-        bodyColor: "rgba(245,246,248,0.85)",
         displayColors: true,
         padding: 10,
         callbacks: {
@@ -199,14 +258,14 @@ export default function DashboardFinancialOverviewSection({
     },
     scales: {
       x: {
-        grid: { color: GRID },
-        ticks: { color: TICK, font: { size: 11 } },
+        grid: { color: chartTokens.GRID },
+        ticks: { color: chartTokens.TICK, font: { size: 11 } },
       },
       y: {
         beginAtZero: true,
-        grid: { color: GRID },
+        grid: { color: chartTokens.GRID },
         ticks: {
-          color: TICK,
+          color: chartTokens.TICK,
           callback: (value) => `$${value}`,
           font: { size: 11 },
         },
@@ -217,28 +276,25 @@ export default function DashboardFinancialOverviewSection({
   return (
     <section className="mt-10 mb-40 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
       {/* Header (matches the new command-center sections) */}
-      <div
-        className="relative px-4 sm:px-6 py-4 border-b"
-        style={{ borderColor: "rgba(58,63,75,0.75)" }}
-      >
+      <div className="relative px-4 sm:px-6 py-4 border-b border-[var(--color-border)]">
         <div className="relative flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
               <div
                 className="h-9 w-9 rounded-xl border flex items-center justify-center"
                 style={{
-                  backgroundColor: "rgba(11,14,20,0.55)",
-                  borderColor: "rgba(58,63,75,0.9)",
+                  backgroundColor: "var(--panel-bg)",
+                  borderColor: "rgb(var(--color-border-rgb) / 0.22)",
                 }}
               >
                 <TrendingUp
                   className="h-5 w-5"
-                  style={{ color: "var(--color-accent-gold)" }}
+                  style={{ color: "var(--color-primary)" }}
                 />
               </div>
 
               <div className="min-w-0">
-                <h2 className="text-lg sm:text-xl font-semibold text-white">
+                <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-text)]">
                   <Link
                     to="/financial-overview"
                     className="hover:underline underline-offset-4"
@@ -265,8 +321,8 @@ export default function DashboardFinancialOverviewSection({
         <div
           className="relative h-72 w-full rounded-2xl border"
           style={{
-            borderColor: "rgba(58,63,75,0.75)",
-            backgroundColor: "rgba(11,14,20,0.35)",
+            borderColor: "rgb(var(--color-border-rgb) / 0.22)",
+            backgroundColor: "var(--panel-bg)",
           }}
         >
           <div className="absolute inset-0 p-3 sm:p-4">
@@ -274,10 +330,7 @@ export default function DashboardFinancialOverviewSection({
           </div>
         </div>
 
-        <div
-          className="mt-3 text-[12px]"
-          style={{ color: "rgba(245,246,248,0.55)" }}
-        >
+        <div className="mt-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
           Tip: if payouts rise faster than net profit, drill into jobs to check
           material spend, rates, or unexpected labor.
         </div>
