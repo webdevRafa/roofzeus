@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   collection,
   doc,
-  getDoc,
   onSnapshot,
   query,
   orderBy,
@@ -30,7 +29,6 @@ import {
   Filter,
 } from "lucide-react";
 import { createPortal } from "react-dom";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import CountUp from "react-countup";
 
@@ -211,14 +209,14 @@ function NewInvoiceModal({
     if (laborCents > 0) {
       lines.push({
         id: "labor",
-        label: "Contract total",
+        label: "Labor Cost",
         amountCents: laborCents,
       });
     }
     if (materialsCents > 0) {
       lines.push({
         id: "materials",
-        label: "Reimbursable materials",
+        label: "Material Cost",
         amountCents: materialsCents,
       });
     }
@@ -249,39 +247,6 @@ function NewInvoiceModal({
 
     setSavingMode(status);
     setSaving(true);
-
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    async function confirmEmailDelivery(invoiceId: string): Promise<boolean> {
-      const maxAttempts = 8;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        try {
-          const invSnap = await getDoc(doc(db, "invoices", invoiceId));
-          if (invSnap.exists()) {
-            const invData = invSnap.data() as any;
-            const resendId = invData?.lastEmailResendId ?? null;
-            const sentAt = invData?.lastEmailSentAt ?? null;
-            if (resendId) return true;
-
-            const sentMs =
-              sentAt?.toDate && typeof sentAt.toDate === "function"
-                ? sentAt.toDate().getTime()
-                : null;
-
-            if (
-              sentMs &&
-              Date.now() - sentMs >= 0 &&
-              Date.now() - sentMs < 10 * 60 * 1000
-            ) {
-              return true;
-            }
-          }
-        } catch {
-          // ignore
-        }
-        await sleep(250 + attempt * 250);
-      }
-      return false;
-    }
 
     try {
       const number = await generateInvoiceNumber(orgId);
@@ -356,51 +321,13 @@ function NewInvoiceModal({
             message: "Marked as sent, but no customer email was provided.",
           });
         } else {
-          try {
-            const functions = getFunctions(undefined, "us-central1");
-            const sendInvoiceEmail = httpsCallable(
-              functions,
-              "sendInvoiceEmail"
-            );
-            const res = await sendInvoiceEmail({ invoiceId: docRef.id, email });
-            const data = res?.data as any;
-
-            if (data?.skipped) {
-              pushToast({
-                status: "success",
-                title: "Invoice already sent",
-                message:
-                  data?.reason === "in_flight"
-                    ? "A send was already in progress — skipping duplicate."
-                    : "This invoice was already emailed recently — skipping duplicate.",
-              });
-            } else {
-              pushToast({
-                status: "success",
-                title: "Invoice sent",
-                message: "Customer has been emailed the invoice link.",
-              });
-            }
-          } catch (emailErr: any) {
-            // eslint-disable-next-line no-console
-            console.error("sendInvoiceEmail callable threw:", emailErr);
-
-            const confirmed = await confirmEmailDelivery(docRef.id);
-            if (confirmed) {
-              pushToast({
-                status: "success",
-                title: "Invoice sent",
-                message: "Email was sent.",
-              });
-            } else {
-              pushToast({
-                status: "error",
-                title: "Invoice saved — delivery not confirmed",
-                message:
-                  "The invoice was created, but we couldn’t confirm the email delivery. The customer may still have received it. If needed, open the invoice and resend.",
-              });
-            }
-          }
+          // Email is sent server-side by the Firestore trigger (onInvoiceCreated).
+          // Do not call sendInvoiceEmail here or you'll get duplicates.
+          pushToast({
+            status: "success",
+            title: "Invoice sent",
+            message: "Invoice created. The email will be sent automatically.",
+          });
         }
       } else {
         pushToast({
@@ -592,7 +519,7 @@ function NewInvoiceModal({
             <div>
               <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Contract total
+                  Labor Cost
                 </div>
                 <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
                   {money(laborCents)}
@@ -603,7 +530,7 @@ function NewInvoiceModal({
             <div>
               <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Billable Materials
+                  Material Cost
                 </div>
                 <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
                   {money(materialsCents)}
@@ -770,6 +697,12 @@ function InvoicePreviewModal({
 }) {
   if (typeof document === "undefined") return null;
 
+  function displayLineLabel(label: string) {
+    if (label === "Contract total") return "Labor Cost";
+    if (label === "Reimbursable materials") return "Material Cost";
+    return label;
+  }
+
   const jobAddr = useMemo(() => {
     if (!job) return { display: "", city: "", state: "", zip: "" };
     const a = job.address;
@@ -893,7 +826,7 @@ function InvoicePreviewModal({
               {invoice.lines.map((ln) => (
                 <tr key={ln.id} className="border-t border-gray-100">
                   <td className="px-3 py-2 align-top text-sm text-gray-800">
-                    {ln.label}
+                    {displayLineLabel(ln.label)}
                   </td>
                   <td className="px-3 py-2 align-top text-right text-sm font-semibold text-gray-900">
                     {money(ln.amountCents)}

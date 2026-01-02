@@ -621,21 +621,36 @@ const invoiceUrl = buildInvoiceLink(invoiceId, publicToken);
         </p>
       </div>
     `;
-  const { error } = await resend.emails.send({
-    from,
-    to: [toEmail],
-    subject,
-    html,
-  });
-  if (error) {
-    throw new Error(error.message || "Failed to send invoice email.");
-  }
-  // update lastEmailSentAt on the invoice
-  const now = admin.firestore.FieldValue.serverTimestamp();
-  await admin.firestore().doc(`invoices/${invoiceId}`).set(
-    { lastEmailSentAt: now },
-    { merge: true }
-  );
+    const { data, error } = await resend.emails.send({
+      from,
+      to: [toEmail],
+      subject,
+      html,
+    });
+    
+    if (error) {
+      await admin.firestore().doc(`invoices/${invoiceId}`).set(
+        {
+          lastEmailError: error.message || "Failed to send invoice email.",
+          lastEmailErrorAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    
+      throw new Error(error.message || "Failed to send invoice email.");
+    }
+    
+ // update delivery markers on the invoice
+await admin.firestore().doc(`invoices/${invoiceId}`).set(
+  {
+    lastEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
+    lastEmailResendId: (data as any)?.id ?? null,
+    lastEmailError: null,
+    lastEmailErrorAt: null,
+  },
+  { merge: true }
+);
+
 }
 
 /**
