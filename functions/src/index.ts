@@ -545,25 +545,46 @@ export const sendInvoiceEmail = onCall(
         subject,
         html,
       });
+      
       if (error) {
         console.error("Resend invoice send error:", error);
-        throw new HttpsError("internal", error.message || "Failed to send invoice email.");
+      
+        // Persist failure for UI + audit
+        try {
+          await db.doc(`invoices/${invoiceId}`).set(
+            {
+              lastEmailError: error.message || "Failed to send invoice email.",
+              lastEmailErrorAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+        } catch (err) {
+          console.error("Failed to persist lastEmailError:", err);
+        }
+      
+        throw new HttpsError(
+          "internal",
+          error.message || "Failed to send invoice email."
+        );
       }
-
-      // Record timestamp and Resend ID for auditing (non-fatal)
+      
+      // Persist success markers (and clear any previous error)
       try {
         await db.doc(`invoices/${invoiceId}`).set(
           {
             lastEmailSentAt: admin.firestore.FieldValue.serverTimestamp(),
             lastEmailResendId: data?.id || null,
+            lastEmailError: null,
+            lastEmailErrorAt: null,
           },
           { merge: true }
         );
       } catch (err) {
         console.error("Failed to update invoice email audit fields:", err);
       }
-
+      
       return { ok: true, id: data?.id || null };
+      
     } finally {
       // Always clear in-flight lock (non-fatal)
       try {
@@ -672,20 +693,54 @@ export const onInvoiceCreated = onDocumentCreated(
   async (event) => {
     const snap = event.data;
     if (!snap) return;
+
     const data = snap.data() as any;
     if (!data) return;
+
     const invoiceId = snap.id;
-    // Only send if the invoice is marked as sent, has a customer email, and
-    // hasn't been emailed before.
+
     if (data.status !== "sent") return;
+
     const email = data.customer?.email;
     if (!email) return;
+
+    // Already sent => do nothing
     if (data.lastEmailSentAt) return;
+
+    // Respect in-flight lock (prevents race with callable/manual sends)
+    const inFlight = data.emailSendInFlightAt?.toDate?.() ?? null;
+    if (inFlight) {
+      const ms = Date.now() - inFlight.getTime();
+      if (ms >= 0 && ms < 2 * 60 * 1000) return;
+    }
+
+    // Set in-flight lock
+    try {
+      await admin.firestore().doc(`invoices/${invoiceId}`).set(
+        { emailSendInFlightAt: admin.firestore.FieldValue.serverTimestamp() },
+        { merge: true }
+      );
+    } catch (err) {
+      console.error("Failed to set emailSendInFlightAt in trigger:", err);
+      // Still continue; worst case we might send twice, but our sent markers help.
+    }
+
     try {
       await sendInvoiceViaResend(invoiceId, data, email);
     } catch (err) {
       console.error("Failed to send invoice email on create:", err);
+    } finally {
+      // Always clear lock
+      try {
+        await admin.firestore().doc(`invoices/${invoiceId}`).set(
+          { emailSendInFlightAt: admin.firestore.FieldValue.delete() },
+          { merge: true }
+        );
+      } catch (err) {
+        console.error("Failed to clear emailSendInFlightAt in trigger:", err);
+      }
     }
   }
 );
+
 
