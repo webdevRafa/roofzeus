@@ -3823,7 +3823,7 @@ function ModalShell({
             // Mobile: bottom sheet
             "w-full sm:w-full",
             "rounded-t-2xl sm:rounded-2xl",
-            "bg-[var(--color-surface)]/35 shadow-2xl ring-1 ring-white/10",
+            "bg-[var(--color-surface)] shadow-2xl ring-1 ring-white/10",
             // Height behavior
             "max-h-[92vh] sm:max-h-[85vh]",
             // Width cap on larger screens
