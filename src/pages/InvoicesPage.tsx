@@ -353,6 +353,13 @@ function NewInvoiceModal({
       setSavingMode(null);
     }
   }
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   useEffect(() => {
     const handler = (ev: KeyboardEvent) => {
@@ -363,7 +370,7 @@ function NewInvoiceModal({
   }, [onClose]);
 
   const content = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-3">
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 p-3 sm:items-center">
       <button
         type="button"
         onClick={onClose}
@@ -376,7 +383,11 @@ function NewInvoiceModal({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.98 }}
         transition={{ duration: 0.2 }}
-        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-surface)] shadow-2xl"
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-surface)] shadow-2xl
+           max-h-[calc(100vh-2rem)] flex flex-col"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create invoice"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border)]/60 px-6 py-5">
@@ -404,7 +415,7 @@ function NewInvoiceModal({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 overflow-y-auto">
           {formError && (
             <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
               {formError}
@@ -559,67 +570,75 @@ function NewInvoiceModal({
                 </p>
               )}
 
-              {extras.map((ex, idx) => (
-                <div
-                  key={idx}
-                  className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end"
-                >
-                  <div className="flex-1">
-                    <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                      Label
-                    </label>
-                    <input
-                      type="text"
-                      value={ex.label}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setExtras((prev) =>
-                          prev.map((item, i) =>
-                            i === idx ? { ...item, label: v } : item
-                          )
-                        );
-                      }}
-                      disabled={saving}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                      placeholder="e.g. Dumpster rental"
-                    />
-                  </div>
+              <div
+                className={
+                  extras.length > 3
+                    ? "mt-2 max-h-56 overflow-y-auto pr-1"
+                    : "mt-2"
+                }
+              >
+                {extras.map((ex, idx) => (
+                  <div
+                    key={idx}
+                    className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end"
+                  >
+                    <div className="flex-1">
+                      <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+                        Label
+                      </label>
+                      <input
+                        type="text"
+                        value={ex.label}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setExtras((prev) =>
+                            prev.map((item, i) =>
+                              i === idx ? { ...item, label: v } : item
+                            )
+                          );
+                        }}
+                        disabled={saving}
+                        className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
+                        placeholder="e.g. Dumpster rental"
+                      />
+                    </div>
 
-                  <div className="w-32">
-                    <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                      Amount ($)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      value={ex.amount}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setExtras((prev) =>
-                          prev.map((item, i) =>
-                            i === idx ? { ...item, amount: v } : item
-                          )
-                        );
-                      }}
-                      disabled={saving}
-                      className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                      placeholder="0.00"
-                    />
-                  </div>
+                    <div className="w-32">
+                      <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+                        Amount ($)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={ex.amount}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setExtras((prev) =>
+                            prev.map((item, i) =>
+                              i === idx ? { ...item, amount: v } : item
+                            )
+                          );
+                        }}
+                        disabled={saving}
+                        className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
+                        placeholder="0.00"
+                      />
+                    </div>
 
-                  <div className="flex items-center justify-center sm:justify-start">
-                    <button
-                      type="button"
-                      onClick={() => removeExtra(idx)}
-                      disabled={saving}
-                      className="ml-2 inline-flex items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-2 py-2 text-xs text-red-200 hover:bg-red-500/15 disabled:opacity-60"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center justify-center sm:justify-start">
+                      <button
+                        type="button"
+                        onClick={() => removeExtra(idx)}
+                        disabled={saving}
+                        className="ml-2 inline-flex items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-2 py-2 text-xs text-red-200 hover:bg-red-500/15 disabled:opacity-60"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             <div className="sm:col-span-2 mt-3">
@@ -641,7 +660,11 @@ function NewInvoiceModal({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)]/60 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)]/60 px-6 py-4
+                sm:flex-row sm:items-center sm:justify-between
+                bg-[var(--color-surface)]/85 backdrop-blur"
+        >
           <button
             type="button"
             onClick={onClose}
@@ -1069,39 +1092,108 @@ export default function InvoicesPage() {
     show: { opacity: 1, y: 0, transition: { duration: 0.35, ease } },
   };
 
-  function StatusPill({ status }: { status: InvoiceStatus }) {
+  function StatusPill({ inv }: { inv: InvoiceDoc }) {
+    const status = inv.status;
+
     const base =
       "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold capitalize";
-    if (status === "paid")
+
+    const hasEmailFailure =
+      status === "sent" && !!inv.lastEmailError && !inv.lastEmailSentAt;
+
+    const inFlight =
+      status === "sent" && !!inv.emailSendInFlightAt && !inv.lastEmailSentAt;
+
+    if (hasEmailFailure) {
       return (
         <span
-          className={`${base} border-emerald-400/30 bg-emerald-400/10 text-emerald-100`}
+          className={[
+            base,
+            "border-[rgb(var(--pill-danger-rgb)/0.25)]",
+            "bg-[rgb(var(--pill-danger-rgb)/0.12)]",
+            "text-[rgb(var(--pill-danger-rgb))]",
+          ].join(" ")}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-danger-rgb))]" />
+          email failed
+        </span>
+      );
+    }
+
+    if (inFlight) {
+      return (
+        <span
+          className={[
+            base,
+            "border-[rgb(var(--color-text-rgb)/0.12)]",
+            "bg-[rgb(var(--color-text-rgb)/0.06)]",
+            "text-[rgb(var(--color-text-rgb)/0.75)]",
+          ].join(" ")}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--color-text-rgb)/0.35)]" />
+          sending…
+        </span>
+      );
+    }
+
+    if (status === "paid") {
+      return (
+        <span
+          className={[
+            base,
+            "border-[rgb(var(--pill-success-rgb)/0.25)]",
+            "bg-[rgb(var(--pill-success-rgb)/0.12)]",
+            "text-[rgb(var(--pill-success-rgb))]",
+          ].join(" ")}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
           paid
         </span>
       );
-    if (status === "sent")
+    }
+
+    if (status === "sent") {
       return (
         <span
-          className={`${base} border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-text)]`}
+          className={[
+            base,
+            "border-[rgb(var(--color-primary-rgb)/0.25)]",
+            "bg-[rgb(var(--color-primary-rgb)/0.12)]",
+            "text-[rgb(var(--color-text-rgb)/0.9)]",
+          ].join(" ")}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-gold)]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--color-primary-rgb))]" />
           sent
         </span>
       );
-    if (status === "draft")
+    }
+
+    if (status === "draft") {
       return (
         <span
-          className={`${base} border-white/15 bg-white/5 text-[var(--color-text)]/80`}
+          className={[
+            base,
+            "border-[rgb(var(--color-text-rgb)/0.12)]",
+            "bg-[rgb(var(--color-text-rgb)/0.06)]",
+            "text-[rgb(var(--color-text-rgb)/0.75)]",
+          ].join(" ")}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--color-text-rgb)/0.35)]" />
           draft
         </span>
       );
+    }
+
     return (
-      <span className={`${base} border-red-400/30 bg-red-400/10 text-red-100`}>
-        <span className="h-1.5 w-1.5 rounded-full bg-red-300" />
+      <span
+        className={[
+          base,
+          "border-[rgb(var(--pill-danger-rgb)/0.25)]",
+          "bg-[rgb(var(--pill-danger-rgb)/0.12)]",
+          "text-[rgb(var(--pill-danger-rgb))]",
+        ].join(" ")}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-danger-rgb))]" />
         {status}
       </span>
     );
@@ -1145,7 +1237,7 @@ export default function InvoicesPage() {
           {/* Summary cards */}
           <motion.section
             variants={fadeUp}
-            className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur"
+            className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)]  p-4 shadow-md  backdrop-blur"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -1163,7 +1255,7 @@ export default function InvoicesPage() {
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
                 <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                   Total invoices
                 </div>
@@ -1172,7 +1264,7 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
                 <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                   Total amount
                 </div>
@@ -1187,7 +1279,7 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
                 <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                   Outstanding
                 </div>
@@ -1202,7 +1294,7 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/15 p-4">
+              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
                 <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                   Paid
                 </div>
@@ -1264,7 +1356,7 @@ export default function InvoicesPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease }}
-          className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur"
+          className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)] p-4 shadow-md backdrop-blur"
         >
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
@@ -1276,7 +1368,7 @@ export default function InvoicesPage() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-black/15 px-3 py-2 text-xs text-[var(--color-muted)]">
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--panel-bg)] px-3 py-2 text-xs text-[var(--color-muted)]">
               Page{" "}
               <span className="font-semibold text-[var(--color-text)]">
                 {invoicesPage}
@@ -1287,7 +1379,7 @@ export default function InvoicesPage() {
 
           <div className="relative overflow-auto section-scroll-invoices">
             <table className="min-w-full text-sm">
-              <thead className="sticky top-0 z-30 border-b border-white/10 bg-[var(--color-surface)]/60 text-[11px] uppercase tracking-wide text-[var(--color-muted)] backdrop-blur">
+              <thead className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--panel-bg)] text-[11px] uppercase tracking-wide text-[var(--color-muted)] backdrop-blur">
                 <tr>
                   <th className="px-3 py-2 text-left">Number</th>
                   <th className="px-3 py-2 text-left">Job</th>
@@ -1332,7 +1424,7 @@ export default function InvoicesPage() {
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.25, ease }}
-                      className="border-t border-white/10 hover:bg-white/5"
+                      className="border-t border-[var(--color-border)] hover:bg-[var(--panel-bg-hover)]"
                     >
                       <td className="px-3 py-3 align-top text-[var(--color-text)]/90">
                         {inv.number}
@@ -1356,7 +1448,19 @@ export default function InvoicesPage() {
                       </td>
 
                       <td className="px-3 py-3 align-top">
-                        <StatusPill status={inv.status} />
+                        <div className="flex items-center gap-2">
+                          <StatusPill inv={inv} />
+                          {inv.status === "sent" &&
+                            inv.lastEmailError &&
+                            !inv.lastEmailSentAt && (
+                              <span
+                                className="text-[11px] text-red-200/80 cursor-help"
+                                title={inv.lastEmailError}
+                              >
+                                (details)
+                              </span>
+                            )}
+                        </div>
                       </td>
 
                       <td className="px-3 py-3 align-top text-right font-semibold text-[var(--color-text)]">
@@ -1368,7 +1472,7 @@ export default function InvoicesPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedInvoice(inv)}
-                            className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-black/30"
+                            className="rounded-xl border border-[var(--color-border)] bg-[var(--panel-bg)] px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-[var(--panel-bg-hover)]"
                           >
                             View
                           </button>
@@ -1378,7 +1482,17 @@ export default function InvoicesPage() {
                               type="button"
                               onClick={() => markInvoicePaid(inv)}
                               disabled={markingPaid}
-                              className="rounded-xl bg-emerald-500/90 px-3 py-2 text-[11px] font-semibold text-black hover:bg-emerald-400 disabled:opacity-60"
+                              className="
+  rounded-xl
+  border border-black/10
+  bg-[rgb(var(--pill-success-rgb))]
+  px-3 py-2
+  text-[11px]
+  font-semibold
+  text-[rgb(var(--pill-success-text-rgb))]
+  hover:brightness-95
+  disabled:opacity-60
+"
                             >
                               {markingPaid ? "Updating…" : "Mark paid"}
                             </button>
@@ -1396,7 +1510,10 @@ export default function InvoicesPage() {
             </table>
 
             {/* Sticky pagination footer */}
-            <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-white/10 bg-[var(--color-surface)]/70 px-3 py-2 backdrop-blur">
+            <div
+              className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)] bg-[var(--panel-bg)]
+ px-3 py-2 backdrop-blur"
+            >
               <div className="text-xs text-[var(--color-muted)]">
                 {filteredInvoices.length === 0 ? (
                   "0 results"

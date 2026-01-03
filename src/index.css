@@ -88,6 +88,7 @@ body {
   
    :root,
    html[data-theme="dark"] {
+    --pill-success-text-rgb: 0 0 0; /* black text on light-green pill */
 
     --pill-info-rgb: 125 211 252;   /* sky-300-ish */
     --color-primary-rgb: 207 174 93; /* matches #cfae5d */
@@ -131,6 +132,7 @@ body {
   }
 
    html[data-theme="light"] {
+    --pill-success-text-rgb: 255 255 255; /* white text on emerald-600 pill */
 
     --pill-info-rgb: 2 132 199;     /* sky-600-ish */
     --color-primary-rgb: 154 123 46; /* matches #9a7b2e */

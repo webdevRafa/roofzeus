@@ -567,6 +567,8 @@ export interface InvoiceDoc {
   publicToken?: string;
   lastEmailSentAt?: Timestamp | Date | FieldValue | null;
   lastEmailResendId?: string | null;
+  lastEmailError?: string | null;
+lastEmailErrorAt?: any; // Timestamp | Date | null
   emailSendInFlightAt?: Timestamp | Date | FieldValue | null;
   status: InvoiceStatus;
   // For receipts, store how it was paid if you want:
