@@ -63,7 +63,11 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
 
   try {
     // 1) Auth user
-    const cred = await createUserWithEmailAndPassword(auth, email, input.password);
+    const cred = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      input.password
+    );
     const uid = cred.user.uid;
 
     // Optional: display name
@@ -89,8 +93,10 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
 
       createdAt: now,
       updatedAt: now,
+      deletedAt: null,
     };
 
+    // GLOBAL user profile (top-level)
     const userDoc = {
       id: uid,
       name: fullName,
@@ -101,6 +107,9 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
       deletedAt: null,
     };
 
+    // ORG-NESTED employee profile
+    // NOTE: this MUST live under organizations/{orgId}/employees/{uid}
+    // so the app never touches collection(db,"employees") again.
     const employeeDoc = {
       id: uid,
       orgId,
@@ -113,15 +122,16 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
       accessRole: "admin",
       isActive: true,
 
-      // optional fields safe to omit:
+      // keep nulls (never undefined) to be Firestore-safe
       address: null,
-      invite: { status: "none" },
+      invite: null,
 
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
     };
 
+    // GLOBAL membership index (top-level) - keep as-is for fast lookups
     const membershipId = `${orgId}_${uid}`;
     const membershipDoc = {
       id: membershipId,
@@ -135,14 +145,24 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
 
       createdAt: now,
       updatedAt: now,
+      deletedAt: null,
     };
 
     // 4) Commit as one atomic batch
     const batch = writeBatch(db);
+
+    // org doc (top-level)
     batch.set(orgRef, orgDoc);
+
+    // user doc (top-level)
     batch.set(doc(db, "users", uid), userDoc);
-    batch.set(doc(db, "employees", uid), employeeDoc);
+
+    // employee doc (ORG-NESTED)
+    batch.set(doc(db, "organizations", orgId, "employees", uid), employeeDoc);
+
+    // membership doc (top-level)
     batch.set(doc(db, "memberships", membershipId), membershipDoc);
+
     await batch.commit();
 
     // 5) Persist active org for app shell

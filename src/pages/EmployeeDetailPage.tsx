@@ -201,7 +201,7 @@ export default function EmployeeDetailPage() {
       try {
         if (!orgId) throw new Error("No organization selected.");
 
-        const ref = doc(collection(db, "employees"), id);
+        const ref = doc(db, "organizations", orgId, "employees", id);
         const snap = await getDoc(ref);
 
         if (!snap.exists()) throw new Error("Employee not found");
@@ -211,14 +211,6 @@ export default function EmployeeDetailPage() {
           id: snap.id,
           ...(snap.data() as Omit<Employee, "id">),
         } as Employee;
-
-        // ✅ Step B: guard against cross-org access
-        const employeeOrgId = (snap.data() as any).orgId as string | undefined;
-        if (employeeOrgId && employeeOrgId !== orgId) {
-          throw new Error(
-            "This employee does not belong to the active organization."
-          );
-        }
 
         setEmployee(data);
         setName(data.name);
@@ -250,10 +242,9 @@ export default function EmployeeDetailPage() {
       return;
     }
 
-    const ref = collection(db, "payouts");
+    const ref = collection(db, "organizations", orgId, "payouts");
     const q = query(
       ref,
-      where("orgId", "==", orgId),
       where("employeeId", "==", id),
       orderBy("createdAt", "desc")
     );
@@ -294,7 +285,8 @@ export default function EmployeeDetailPage() {
     setError(null);
 
     try {
-      const ref = doc(collection(db, "employees"), employee.id);
+      if (!orgId) throw new Error("No organization selected.");
+      const ref = doc(db, "organizations", orgId, "employees", employee.id);
       const next: Employee = {
         ...employee,
         name: name.trim(),
@@ -305,7 +297,7 @@ export default function EmployeeDetailPage() {
 
       await setDoc(ref, next, { merge: true });
 
-      navigate("/employees", {
+      navigate(`/org/${orgId}/employees`, {
         replace: true,
         state: { message: "Employee details saved successfully." },
       });
@@ -328,10 +320,9 @@ export default function EmployeeDetailPage() {
       return;
     }
 
-    const ref = collection(db, "payoutStubs");
+    const ref = collection(db, "organizations", orgId, "payoutStubs");
     const q = query(
       ref,
-      where("orgId", "==", orgId),
       where("employeeId", "==", id),
       orderBy("createdAt", "desc")
     );
@@ -454,7 +445,11 @@ export default function EmployeeDetailPage() {
 
     try {
       // 1) Create stub doc
-      const stubRef = doc(collection(db, "payoutStubs"));
+      if (!orgId) throw new Error("Missing orgId (cannot create payout stub).");
+      const stubRef = doc(
+        collection(db, "organizations", orgId, "payoutStubs")
+      );
+
       const now = new Date();
 
       // Simple, stable stub number (no extra counters needed)
@@ -515,7 +510,7 @@ export default function EmployeeDetailPage() {
       await Promise.all(
         payoutsToMark.map((p) =>
           setDoc(
-            doc(collection(db, "payouts"), p.id),
+            doc(db, "organizations", orgId, "payouts", p.id),
             {
               paidAt: serverTimestamp(),
               payoutStubId: stubRef.id,
@@ -582,7 +577,7 @@ export default function EmployeeDetailPage() {
         {/* Back */}
         <div className="mb-6">
           <button
-            onClick={() => navigate("/employees")}
+            onClick={() => navigate(`/org/${orgId}/employees`)}
             className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/75 shadow-sm hover:bg-white/[0.06] hover:text-white transition"
           >
             <ChevronLeft className="h-4 w-4 opacity-80 group-hover:opacity-100" />
@@ -1051,7 +1046,9 @@ export default function EmployeeDetailPage() {
                                     <button
                                       type="button"
                                       onClick={() =>
-                                        navigate(`/job/${p.jobId}`)
+                                        navigate(
+                                          `/org/${orgId}/jobs/${p.jobId}`
+                                        )
                                       }
                                       className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/75 hover:bg-white/[0.06] transition"
                                     >
