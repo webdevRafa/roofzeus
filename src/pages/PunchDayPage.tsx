@@ -156,11 +156,11 @@ export default function PunchDayPage() {
     }
 
     const q = query(
-      collection(db, "jobs").withConverter(jobConverter),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "jobs").withConverter(
+        jobConverter
+      ),
       orderBy("updatedAt", "desc")
     );
-
     const unsub = onSnapshot(q, (snap) => {
       setJobs(snap.docs.map((d) => d.data()));
     });
@@ -177,8 +177,7 @@ export default function PunchDayPage() {
     }
 
     const q = query(
-      collection(db, "employees"),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "employees"),
       where("isActive", "==", true)
     );
 
@@ -228,7 +227,7 @@ export default function PunchDayPage() {
     try {
       if (!address.trim()) throw new Error("Please enter a job address.");
 
-      const newRef = doc(collection(db, "jobs"));
+      const newRef = doc(collection(db, "organizations", orgId, "jobs"));
 
       // If user clears all schedule fields, default FELT to the day page we’re on (keeps your old intent)
       const shouldDefaultToThisDay =

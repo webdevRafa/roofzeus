@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  collection,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebase/firebaseConfig";
 import type { Job } from "../types/types";
@@ -76,8 +70,9 @@ export default function PunchCalendarPage() {
     }
 
     const q = query(
-      collection(db, "jobs").withConverter(jobConverter),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "jobs").withConverter(
+        jobConverter
+      ),
       orderBy("updatedAt", "desc")
     );
 
