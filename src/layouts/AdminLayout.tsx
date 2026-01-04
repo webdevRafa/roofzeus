@@ -12,11 +12,11 @@ import {
   BarChart3,
   X,
 } from "lucide-react";
-import { useMembership } from "../hooks/useMembership";
-import { OrgProvider } from "../contexts/OrgContext";
-import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 
-import logo from "../assets/roofzeus-white.png"; // adjust if needed
+import { ThemeToggleButton } from "../theme/ThemeToggleButton";
+import { useOrg } from "../contexts/OrgContext";
+
+import logo from "../assets/roofzeus-white.png";
 
 function navLinkBase(isActive: boolean) {
   return (
@@ -33,13 +33,14 @@ export default function AdminLayout() {
   const [signingOut, setSigningOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // ✅ pull org + memberships from context (provided by AdminShell)
   const {
-    memberships,
     orgId: activeOrgId,
-    activeOrgName,
-    setActiveOrgId,
+    orgName: activeOrgName,
+    memberships,
+    setOrgId: setActiveOrgId,
     loading: membershipLoading,
-  } = useMembership();
+  } = useOrg();
 
   async function handleLogout() {
     try {
@@ -52,7 +53,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       {/* Global Navbar */}
       <header className="sticky top-0 z-40 select-none">
         <div className="bg-[rgb(var(--color-background-rgb)/0.85)] backdrop-blur border-b border-[rgb(var(--color-border-rgb)/0.14)]">
@@ -69,6 +70,7 @@ export default function AdminLayout() {
                     alt="Roger's Roofing logo"
                     className="w-[100px] shadow-md brand-logo"
                   />
+
                   <div className="hidden sm:block">
                     {/* ✅ Org switcher */}
                     {!membershipLoading && memberships.length > 1 && (
@@ -127,8 +129,6 @@ export default function AdminLayout() {
                   <Users className="h-4 w-4" />
                   Members
                 </NavLink>
-
-                {/* Optional route (keep if you want invoices in global nav) */}
                 <NavLink
                   to="/invoices-page"
                   className={({ isActive }) => navLinkBase(isActive)}
@@ -149,7 +149,6 @@ export default function AdminLayout() {
               <div className="flex items-center gap-2">
                 <ThemeToggleButton />
 
-                {/* Logout */}
                 <button
                   onClick={handleLogout}
                   disabled={signingOut}
@@ -159,7 +158,6 @@ export default function AdminLayout() {
                   <LogOut className="h-4 w-4" />
                 </button>
 
-                {/* Mobile menu */}
                 <button
                   type="button"
                   className="md:hidden inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[rgb(var(--color-text-rgb)/0.85)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
@@ -205,6 +203,7 @@ export default function AdminLayout() {
                   </NavLink>
                   <NavLink
                     to="/financial-overview"
+                    onClick={() => setMobileOpen(false)}
                     className={({ isActive }) => navLinkBase(isActive)}
                   >
                     <BarChart3 className="h-4 w-4" />
@@ -217,19 +216,9 @@ export default function AdminLayout() {
         </div>
       </header>
 
-      <OrgProvider
-        value={{
-          orgId: activeOrgId,
-          orgName: activeOrgName ?? null,
-          memberships,
-          setOrgId: setActiveOrgId,
-          loading: membershipLoading,
-        }}
-      >
-        <main className="mx-auto w-full max-w-[1700px] py-6 sm:py-10">
-          <Outlet />
-        </main>
-      </OrgProvider>
+      <main className="mx-auto w-full max-w-[1700px] py-6 sm:py-10">
+        <Outlet />
+      </main>
     </div>
   );
 }

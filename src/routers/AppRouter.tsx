@@ -5,11 +5,11 @@ import LoginPage from "../pages/LoginPage";
 import AcceptInvitePage from "../pages/AcceptInvitePage";
 import CompleteSignupPage from "../pages/CompleteSignupPage";
 import InvoiceViewer from "../pages/InvoiceViewer";
+import SignupPage from "../pages/SignupPage";
 
-import AdminGuard from "../components/AdminGuard";
 import RoleGuard from "../components/RoleGuard";
 
-import AdminLayout from "../layouts/AdminLayout";
+import AdminShell from "../layouts/AdminShell";
 import CrewLayout from "../layouts/CrewLayout";
 
 import DashboardPage from "../pages/DashboardPage";
@@ -21,11 +21,10 @@ import JobsPage from "../pages/JobsPage";
 import EmployeesPage from "../pages/EmployeesPage";
 import EmployeeDetailPage from "../pages/EmployeeDetailPage";
 import JobDetailPage from "../pages/JobDetailPage";
+import PayoutsPage from "../pages/PayoutsPage";
 
 import CrewDashboardPage from "../pages/CrewDashboardPage";
 import CrewJobDetailPage from "../pages/CrewJobDetailPage";
-import PayoutsPage from "../pages/PayoutsPage";
-import SignupPage from "../pages/SignupPage";
 
 export default function AppRouter() {
   return (
@@ -37,14 +36,8 @@ export default function AppRouter() {
       <Route path="/invoice/:id" element={<InvoiceViewer />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      {/* ✅ Admin routes protected by AdminGuard */}
-      <Route
-        element={
-          <AdminGuard>
-            <AdminLayout />
-          </AdminGuard>
-        }
-      >
+      {/* ✅ Admin routes (OrgProvider BEFORE AdminGuard via AdminShell) */}
+      <Route element={<AdminShell />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/invoices-page" element={<InvoicesPage />} />
         <Route path="/financial-overview" element={<FinancialOverviewPage />} />
@@ -58,7 +51,7 @@ export default function AppRouter() {
         <Route path="/payouts" element={<PayoutsPage />} />
       </Route>
 
-      {/* ✅ Crew routes accessible to crew, manager, readOnly roles */}
+      {/* ✅ Crew routes */}
       <Route
         element={
           <RoleGuard allowedRoles={["crew", "manager", "readOnly"]}>
