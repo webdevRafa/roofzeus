@@ -277,11 +277,13 @@ export default function JobDetailPage({
   );
 
   const { orgId, loading: orgLoading } = useOrg();
+
   // ✅ Global job doc ref (usable by any function)
   const jobDocRef = useMemo(() => {
     if (!resolvedJobId) return null;
-    return doc(collection(db, "jobs"), resolvedJobId);
-  }, [resolvedJobId]);
+    if (!orgId) return null; // ✅ org not ready yet
+    return doc(db, "organizations", orgId, "jobs", resolvedJobId);
+  }, [resolvedJobId, orgId]);
 
   // When mounted as a modal/component, jobId may be passed via props.
   // When used as a route page, routeJobId comes from the URL.
@@ -293,6 +295,17 @@ export default function JobDetailPage({
     );
   }
 
+  if (orgLoading) {
+    return <div className="p-8 text-white/70">Loading organization…</div>;
+  }
+
+  if (!orgId) {
+    return (
+      <div className="p-8 text-red-600">
+        No organization selected. Please re-login or select an organization.
+      </div>
+    );
+  }
   const prefillFlashingInputs = () => {
     const fp = job?.earnings?.flashingPay;
 
@@ -577,10 +590,16 @@ export default function JobDetailPage({
   }, [orgId, orgLoading]);
 
   useEffect(() => {
+    if (orgLoading) return;
+    if (!orgId) {
+      setPayoutDocs([]);
+      return;
+    }
     if (!resolvedJobId) return;
 
     const qy = query(
       collection(db, "payouts"),
+      where("orgId", "==", orgId), // ✅ add this
       where("jobId", "==", resolvedJobId),
       orderBy("createdAt", "desc"),
       limit(50)
@@ -591,7 +610,6 @@ export default function JobDetailPage({
       (snap) => {
         const rows = snap.docs.map((d) => {
           const data = d.data() as PayoutDoc;
-          // Ensure id is present even if stored in doc id only
           return { ...data, id: data.id ?? d.id };
         });
         setPayoutDocs(rows);
@@ -600,7 +618,7 @@ export default function JobDetailPage({
     );
 
     return () => unsub();
-  }, [resolvedJobId]);
+  }, [resolvedJobId, orgId, orgLoading]);
 
   useEffect(() => {
     if (materialModalOpen) {
@@ -858,20 +876,21 @@ export default function JobDetailPage({
 
   // Load job + its photos (real-time)
   useEffect(() => {
-    if (!resolvedJobId) return;
+    if (orgLoading) return;
+    if (!jobDocRef) return; // ✅ covers: !resolvedJobId OR !orgId
 
-    // Job listener
-    const jobRef = doc(collection(db, "jobs"), resolvedJobId).withConverter(
-      jobConverter
-    );
+    // Job listener (ORG-SCOPED)
+    const typedJobRef = jobDocRef.withConverter(jobConverter);
+
     const unsubJob = onSnapshot(
-      jobRef,
+      typedJobRef,
       (snap) => {
         if (!snap.exists()) {
           setError("Job not found");
           setLoading(false);
           return;
         }
+
         const data = snap.data();
         setJob(data);
 
@@ -879,6 +898,7 @@ export default function JobDetailPage({
           setSqft(String(data.pricing.sqft ?? ""));
           setRate((data.pricing.ratePerSqFt as 31 | 35) ?? 31);
         }
+
         setLoading(false);
       },
       (e) => {
@@ -887,13 +907,15 @@ export default function JobDetailPage({
       }
     );
 
-    // Photos listener: jobPhotos where jobId == id
+    // Photos listener (keep your existing approach)
+    // If jobPhotos is also org-scoped in your schema, tell me and I’ll adjust this too.
     const photosRef = collection(db, "jobPhotos");
     const q = query(
       photosRef,
-      where("jobId", "==", resolvedJobId),
+      where("jobId", "==", jobDocRef.id), // ✅ use the same id, clearer intent
       orderBy("createdAt", "desc")
     );
+
     const unsubPhotos = onSnapshot(q, (qs) => {
       const list: JobPhoto[] = [];
       qs.forEach((d) => list.push({ id: d.id, ...(d.data() as any) }));
@@ -904,7 +926,7 @@ export default function JobDetailPage({
       unsubJob();
       unsubPhotos();
     };
-  }, [resolvedJobId]);
+  }, [jobDocRef, orgLoading]);
 
   const totals = useMemo(() => {
     const earnings = job?.earnings?.totalEarningsCents ?? 0;

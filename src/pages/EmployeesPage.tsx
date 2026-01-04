@@ -6,7 +6,6 @@ import {
   onSnapshot,
   query,
   orderBy,
-  where,
   serverTimestamp,
   writeBatch,
 } from "firebase/firestore";
@@ -104,7 +103,9 @@ export default function EmployeesPage() {
         return;
       }
       setError(null);
-      const inviteRef = doc(collection(db, "employeeInvites"));
+      const inviteRef = doc(
+        collection(db, "organizations", orgId, "employeeInvites")
+      );
       const batch = writeBatch(db);
       const now = serverTimestamp() as FieldValue;
       // snapshot the current role/accessRole or fall back to sensible defaults
@@ -122,11 +123,12 @@ export default function EmployeesPage() {
         accessRoleSnapshot,
         createdAt: now,
         createdByUserId: null,
+        updatedAt: now,
       });
 
       // Update the employee’s invite metadata and save the inviteDocId
       batch.set(
-        doc(db, "employees", employee.id),
+        doc(db, "organizations", orgId, "employees", employee.id),
         {
           invite: {
             status: "pending",
@@ -136,6 +138,7 @@ export default function EmployeesPage() {
             lastSentAt: now,
             inviteDocId: inviteRef.id,
           },
+          updatedAt: now,
         },
         { merge: true }
       );
@@ -160,7 +163,16 @@ export default function EmployeesPage() {
       );
       return;
     }
-    const url = `${window.location.origin}/accept-invite?inviteId=${inviteId}`;
+    if (!orgId) {
+      setError("No organization selected.");
+      return;
+    }
+    const url = `${
+      window.location.origin
+    }/accept-invite?orgId=${encodeURIComponent(
+      orgId
+    )}&inviteId=${encodeURIComponent(inviteId)}`;
+
     navigator.clipboard
       .writeText(url)
       .then(() => {
@@ -178,10 +190,14 @@ export default function EmployeesPage() {
   useEffect(() => {
     if (!successMessage) return;
     const timer = setTimeout(() => {
-      navigate("/employees", { replace: true, state: {} });
+      if (orgId) {
+        navigate(`/org/${orgId}/employees`, { replace: true, state: {} });
+      } else {
+        navigate("/", { replace: true, state: {} });
+      }
     }, 3000);
     return () => clearTimeout(timer);
-  }, [successMessage, navigate]);
+  }, [successMessage, navigate, orgId]);
 
   // Fetch employees
   useEffect(() => {
@@ -196,8 +212,7 @@ export default function EmployeesPage() {
     }
 
     const q = query(
-      collection(db, "employees"),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "employees"),
       orderBy("name", "asc")
     );
 
@@ -230,7 +245,9 @@ export default function EmployeesPage() {
     setError(null);
 
     try {
-      const employeeRef = doc(collection(db, "employees"));
+      const employeeRef = doc(
+        collection(db, "organizations", orgId, "employees")
+      );
       const inviteEmail = email.trim().toLowerCase();
       const hasInvite = inviteEmail.length > 0;
 
@@ -263,7 +280,9 @@ export default function EmployeesPage() {
       batch.set(employeeRef, employee);
 
       if (hasInvite) {
-        const inviteRef = doc(collection(db, "employeeInvites"));
+        const inviteRef = doc(
+          collection(db, "organizations", orgId, "employeeInvites")
+        );
         batch.set(inviteRef, {
           id: inviteRef.id,
           orgId,
@@ -294,7 +313,7 @@ export default function EmployeesPage() {
       setEmail("");
       setRole("roofer");
 
-      navigate(`/employees/${employeeRef.id}`);
+      navigate(`/org/${orgId}/employees/${employeeRef.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -603,11 +622,13 @@ export default function EmployeesPage() {
                       variants={fadeUp}
                       role="button"
                       tabIndex={0}
-                      onClick={() => navigate(`/employees/${e.id}`)}
+                      onClick={() =>
+                        navigate(`/org/${orgId}/employees/${e.id}`)
+                      }
                       onKeyDown={(ev) => {
                         if (ev.key === "Enter" || ev.key === " ") {
                           ev.preventDefault();
-                          navigate(`/employees/${e.id}`);
+                          navigate(`/org/${orgId}/employees/${e.id}`);
                         }
                       }}
                       className={cx(

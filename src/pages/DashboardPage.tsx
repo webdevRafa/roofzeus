@@ -261,10 +261,12 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!orgId) return;
     const q = query(
-      collection(db, "jobs").withConverter(jobConverter),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "jobs").withConverter(
+        jobConverter
+      ),
       orderBy("updatedAt", "desc")
     );
+
     const unsub = onSnapshot(q, (snap) => {
       setJobs(snap.docs.map((d) => d.data()));
     });
@@ -275,8 +277,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!orgId) return;
     const employeesQuery = query(
-      collection(db, "employees"),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "employees"),
       where("isActive", "==", true)
     );
     const unsub = onSnapshot(employeesQuery, (snap) => {
@@ -295,8 +296,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!orgId) return;
     const payoutsQuery = query(
-      collection(db, "payouts"),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "payouts"),
       orderBy("createdAt", "desc")
     );
     const unsub = onSnapshot(
@@ -549,7 +549,10 @@ export default function DashboardPage() {
       if (!stubEmployee.id) throw new Error("Employee is missing id.");
 
       // 1) Create payout stub doc
-      const stubRef = doc(collection(db, "payoutStubs"));
+      const stubRef = doc(
+        collection(db, "organizations", orgId, "payoutStubs")
+      );
+
       const now = new Date();
 
       const y = now.getFullYear();
@@ -612,7 +615,7 @@ export default function DashboardPage() {
       await Promise.all(
         payoutsToMark.map((p) =>
           setDoc(
-            doc(collection(db, "payouts"), p.id),
+            doc(collection(db, "organizations", orgId, "payouts"), p.id),
             {
               paidAt: serverTimestamp(),
               payoutStubId: stubRef.id,
@@ -650,7 +653,12 @@ export default function DashboardPage() {
 
     (async () => {
       try {
-        const ref = doc(collection(db, "employees"), employeeId);
+        if (!orgId) return;
+
+        const ref = doc(
+          collection(db, "organizations", orgId, "employees"),
+          employeeId
+        );
         const snap = await getDoc(ref);
         if (!snap.exists()) return;
         if (!cancelled) {
@@ -679,7 +687,8 @@ export default function DashboardPage() {
         throw new Error("Please enter a job address.");
       }
 
-      const newRef = doc(collection(db, "jobs"));
+      if (!orgId) throw new Error("Missing orgId.");
+      const newRef = doc(collection(db, "organizations", orgId, "jobs"));
 
       // Base job with the shape that matches `Job` in types.ts
       let job: Job = {
@@ -757,9 +766,11 @@ export default function DashboardPage() {
     if (!rescheduleJob || !rescheduleDate) return;
 
     try {
-      const ref = doc(collection(db, "jobs"), rescheduleJob.id).withConverter(
-        jobConverter
-      );
+      if (!orgId) throw new Error("Missing orgId.");
+      const ref = doc(
+        collection(db, "organizations", orgId, "jobs"),
+        rescheduleJob.id
+      ).withConverter(jobConverter);
 
       await setDoc(
         ref,
@@ -803,7 +814,7 @@ export default function DashboardPage() {
     <>
       <div>
         <motion.div
-          className="mx-auto w-full py-6 sm:py-10 md:px-4
+          className="mx-auto w-full max-w-[1600px] py-6 sm:py-10 md:px-4
           grid gap-6
           grid-cols-1 lg:grid-cols-12"
           initial="initial"

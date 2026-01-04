@@ -18,6 +18,8 @@ export default function AcceptInvitePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const inviteId = searchParams.get("inviteId") || "";
+  const orgId = searchParams.get("orgId") || "";
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<any | null>(null);
@@ -31,14 +33,27 @@ export default function AcceptInvitePage() {
         setLoading(false);
         return;
       }
+
+      if (!orgId) {
+        setError("Missing orgId parameter. Please request a new invite link.");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const ref = doc(db, "employeeInvites", inviteId);
+        const ref = doc(
+          db,
+          "organizations",
+          orgId,
+          "employeeInvites",
+          inviteId
+        );
         const snap = await getDoc(ref);
+
         if (!snap.exists()) {
           setError("Invite not found or has been deleted.");
         } else {
-          const data = snap.data();
-          setInvite({ id: snap.id, ...data });
+          setInvite({ id: snap.id, ...snap.data() });
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -47,8 +62,9 @@ export default function AcceptInvitePage() {
         setLoading(false);
       }
     }
+
     fetchInvite();
-  }, [inviteId]);
+  }, [inviteId, orgId]);
 
   // Call the claimEmployeeInvite callable function
   async function handleClaim() {
@@ -57,7 +73,12 @@ export default function AcceptInvitePage() {
     const currentUser = auth.currentUser;
     // If no user logged in, redirect to complete‑signup
     if (!currentUser) {
-      navigate(`/complete-signup?inviteId=${encodeURIComponent(inviteId)}`);
+      navigate(
+        `/complete-signup?orgId=${encodeURIComponent(
+          orgId
+        )}&inviteId=${encodeURIComponent(inviteId)}`
+      );
+
       return;
     }
     const inviteEmail = String(invite?.email || "")
@@ -75,7 +96,9 @@ export default function AcceptInvitePage() {
       );
       navigate(
         `/login?redirect=${encodeURIComponent(
-          `/accept-invite?inviteId=${inviteId}`
+          `/accept-invite?orgId=${encodeURIComponent(
+            orgId
+          )}&inviteId=${encodeURIComponent(inviteId)}`
         )}`
       );
       return;
@@ -85,8 +108,8 @@ export default function AcceptInvitePage() {
       setError(null);
       const functions = getFunctions();
       const claimInvite = httpsCallable(functions, "claimEmployeeInvite");
-      await claimInvite({ inviteId });
-      navigate("/dashboard");
+      await claimInvite({ orgId, inviteId });
+      navigate(`/org/${orgId}/dashboard`);
     } catch (err: any) {
       const msg = err?.message || String(err);
       setError(msg);

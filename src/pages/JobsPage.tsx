@@ -158,10 +158,12 @@ export default function JobsPage() {
   useEffect(() => {
     if (!orgId) return;
     const q = query(
-      collection(db, "jobs").withConverter(jobConverter),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "jobs").withConverter(
+        jobConverter
+      ),
       orderBy("updatedAt", "desc")
     );
+
     const unsub = onSnapshot(q, (snap) => {
       setJobs(snap.docs.map((d) => d.data()));
     });
@@ -197,10 +199,10 @@ export default function JobsPage() {
   useEffect(() => {
     if (!orgId) return;
     const q = query(
-      collection(db, "employees"),
-      where("orgId", "==", orgId),
+      collection(db, "organizations", orgId, "employees"),
       where("isActive", "==", true)
     );
+
     const unsub = onSnapshot(q, (snap) => {
       setEmployees(
         snap.docs.map((d) => ({
@@ -221,7 +223,8 @@ export default function JobsPage() {
       if (!address.trim()) {
         throw new Error("Please enter a job address.");
       }
-      const newRef = doc(collection(db, "jobs"));
+      const newRef = doc(collection(db, "organizations", orgId, "jobs"));
+
       let job: Job = {
         id: newRef.id,
         orgId,
