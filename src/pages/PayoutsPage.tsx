@@ -9,7 +9,6 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  where,
   type FieldValue,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
@@ -173,6 +172,13 @@ type MobileView = "payouts" | "stubs";
 
 export default function PayoutsPage() {
   const { orgId, loading: orgLoading } = useOrg();
+  function orgCollection(orgId: string, sub: string) {
+    return collection(db, "organizations", orgId, sub);
+  }
+
+  function orgDoc(orgId: string, sub: string, id: string) {
+    return doc(db, "organizations", orgId, sub, id);
+  }
 
   // data
   const [payouts, setPayouts] = useState<PayoutDoc[]>([]);
@@ -224,6 +230,7 @@ export default function PayoutsPage() {
   // ---------- subscriptions ----------
   useEffect(() => {
     if (orgLoading) return;
+
     if (!orgId) {
       setPayouts([]);
       setStubs([]);
@@ -233,24 +240,19 @@ export default function PayoutsPage() {
 
     setError(null);
 
-    // payouts
+    // ✅ org-nested collections
     const payoutQ = query(
-      collection(db, "payouts"),
-      where("orgId", "==", orgId),
+      orgCollection(orgId, "payouts"),
       orderBy("createdAt", "desc")
     );
 
-    // stubs
     const stubsQ = query(
-      collection(db, "payoutStubs"),
-      where("orgId", "==", orgId),
+      orgCollection(orgId, "payoutStubs"),
       orderBy("paidAt", "desc")
     );
 
-    // employees (for filter dropdown + stub address snapshots)
     const empQ = query(
-      collection(db, "employees"),
-      where("orgId", "==", orgId),
+      orgCollection(orgId, "employees"),
       orderBy("name", "asc")
     );
 
@@ -340,8 +342,13 @@ export default function PayoutsPage() {
       setStubEmployee(null);
       return;
     }
+    if (!orgId) {
+      setStubEmployee(null);
+      return;
+    }
 
     const eid = selectedEmployeeIds[0];
+
     // try local first
     const local = employees.find((e) => e.id === eid);
     if (local) {
@@ -352,10 +359,11 @@ export default function PayoutsPage() {
     let cancelled = false;
     (async () => {
       try {
-        const snap = await getDoc(doc(collection(db, "employees"), eid));
+        const snap = await getDoc(orgDoc(orgId, "employees", eid));
         if (!snap.exists()) return;
-        if (!cancelled)
+        if (!cancelled) {
           setStubEmployee({ id: snap.id, ...(snap.data() as any) } as Employee);
+        }
       } catch {
         // ignore
       }
@@ -364,7 +372,7 @@ export default function PayoutsPage() {
     return () => {
       cancelled = true;
     };
-  }, [stubOpen, selectedEmployeeIds, employees]);
+  }, [stubOpen, selectedEmployeeIds, employees, orgId]);
 
   function toggleSelected(id: string) {
     setSelectedIds((prev) =>
