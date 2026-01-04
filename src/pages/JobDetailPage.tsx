@@ -2,6 +2,8 @@
 // NOTE: This page uses framer-motion and react-countup.
 // Install:  npm i framer-motion react-countup lucide-react
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getFunctions, httpsCallable } from "firebase/functions";
+
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   collection,
@@ -111,9 +113,22 @@ function CountMoney({
 }
 type JobPhoto = {
   id: string;
+  orgId: string;
   jobId: string;
-  url: string;
-  path?: string;
+
+  // URLs written by your Cloud Function
+  thumbUrl?: string;
+  previewUrl?: string; // (optional, if you generate it)
+  fullUrl?: string;
+
+  // Back-compat / fallback
+  url?: string;
+
+  // Storage paths (so delete cleanup knows what to delete)
+  thumbPath?: string;
+  previewPath?: string;
+  fullPath?: string;
+
   caption?: string;
   createdAt?: Timestamp | Date | FieldValue | null;
 };
@@ -284,6 +299,21 @@ export default function JobDetailPage({
     if (!orgId) return null; // ✅ org not ready yet
     return doc(db, "organizations", orgId, "jobs", resolvedJobId);
   }, [resolvedJobId, orgId]);
+
+  const employeesColRef = useMemo(() => {
+    if (!orgId) return null;
+    return collection(db, "organizations", orgId, "employees");
+  }, [orgId]);
+
+  const payoutsColRef = useMemo(() => {
+    if (!orgId) return null;
+    return collection(db, "organizations", orgId, "payouts");
+  }, [orgId]);
+
+  const jobPhotosColRef = useMemo(() => {
+    if (!orgId) return null;
+    return collection(db, "organizations", orgId, "jobPhotos");
+  }, [orgId]);
 
   // When mounted as a modal/component, jobId may be passed via props.
   // When used as a route page, routeJobId comes from the URL.
@@ -470,8 +500,8 @@ export default function JobDetailPage({
   async function saveWarranty(nextWarranty: NonNullable<Job["warranty"]>) {
     if (!job) return;
 
-    // Raw ref so we can use deleteField/serverTimestamp safely
-    const rawRef = doc(collection(db, "jobs"), job.id);
+    if (!jobDocRef) return;
+    const rawRef = jobDocRef; // org-scoped raw ref
 
     // Build a PATCH that deletes empties instead of writing ""/undefined
     const warrantyPatch: any = {
@@ -521,9 +551,7 @@ export default function JobDetailPage({
       );
 
       // Re-fetch canonical typed doc (keeps your UI in sync)
-      const typedRef = doc(collection(db, "jobs"), job.id).withConverter(
-        jobConverter
-      );
+      const typedRef = jobDocRef.withConverter(jobConverter);
       const snap = await getDoc(typedRef);
       if (snap.exists()) setJob(snap.data());
 
@@ -572,8 +600,11 @@ export default function JobDetailPage({
       return;
     }
 
-    const ref = collection(db, "employees");
-    const q = query(ref, where("orgId", "==", orgId), orderBy("name", "asc"));
+    if (!employeesColRef) {
+      setEmployees([]);
+      return;
+    }
+    const q = query(employeesColRef, orderBy("name", "asc"));
 
     const unsub = onSnapshot(q, (snap) => {
       const list: Employee[] = [];
@@ -597,9 +628,13 @@ export default function JobDetailPage({
     }
     if (!resolvedJobId) return;
 
+    if (!payoutsColRef) {
+      setPayoutDocs([]);
+      return;
+    }
+
     const qy = query(
-      collection(db, "payouts"),
-      where("orgId", "==", orgId), // ✅ add this
+      payoutsColRef,
       where("jobId", "==", resolvedJobId),
       orderBy("createdAt", "desc"),
       limit(50)
@@ -647,7 +682,7 @@ export default function JobDetailPage({
     [curr, next, prev].forEach((p) => {
       if (!p) return;
       const img = new Image();
-      const src = (p as any).fullUrl ?? p.url; // if CF ever adds fullUrl
+      const src = p.fullUrl ?? p.previewUrl ?? p.url ?? p.thumbUrl ?? "";
       img.src = src;
     });
   }, [viewerOpen, viewerIndex, photos]);
@@ -909,10 +944,14 @@ export default function JobDetailPage({
 
     // Photos listener (keep your existing approach)
     // If jobPhotos is also org-scoped in your schema, tell me and I’ll adjust this too.
-    const photosRef = collection(db, "jobPhotos");
+    if (!jobPhotosColRef) {
+      setPhotos([]);
+      return;
+    }
+
     const q = query(
-      photosRef,
-      where("jobId", "==", jobDocRef.id), // ✅ use the same id, clearer intent
+      jobPhotosColRef,
+      where("jobId", "==", jobDocRef.id),
       orderBy("createdAt", "desc")
     );
 
@@ -940,9 +979,17 @@ export default function JobDetailPage({
 
   // Save (optimistic, typed)
   async function saveJob(nextJob: Job) {
-    const ref = doc(collection(db, "jobs"), nextJob.id).withConverter(
-      jobConverter
-    );
+    if (!jobDocRef) {
+      console.warn("saveJob called without jobDocRef (orgId/jobId not ready)");
+      return;
+    }
+
+    // Safety: ensure we never write to the wrong document id
+    if (nextJob.id !== jobDocRef.id) {
+      console.warn("saveJob id mismatch:", nextJob.id, "!==", jobDocRef.id);
+    }
+
+    const ref = jobDocRef.withConverter(jobConverter);
     const previous = job;
 
     try {
@@ -956,6 +1003,7 @@ export default function JobDetailPage({
         ...nextJob,
         updatedAt: serverTimestamp() as FieldValue,
       });
+
       await setDoc(ref, toPersist, { merge: true });
 
       const snap = await getDoc(ref);
@@ -1193,7 +1241,8 @@ export default function JobDetailPage({
 
     // 2) Write mirrored doc into top-level "payouts" collection
     try {
-      const payoutRef = doc(collection(db, "payouts"), entry.id);
+      if (!payoutsColRef) throw new Error("payoutsColRef not ready");
+      const payoutRef = doc(payoutsColRef, entry.id);
       const payoutMethod: "check" | "cash" | "zelle" | "other" = (() => {
         const m = entry.method;
         if (m === "check" || m === "cash" || m === "zelle" || m === "other") {
@@ -1322,41 +1371,46 @@ export default function JobDetailPage({
 
   // ------- NEW: Photo upload (Storage -> CF sharp -> Firestore) -------
   async function uploadPhoto() {
-    if (!job || !photoFile) return;
+    if (!job || !photoFile || !orgId) return;
+
     setUploading(true);
+
     try {
       const storage = getStorage();
+
       const safeName = photoFile.name
         .replace(/\s+/g, "_")
         .replace(/[^\w.\-]/g, "");
+
       const filename = `${Date.now()}_${safeName}`;
-      const path = `jobs/${job.id}/attachments/${filename}`;
-      const fileRef = storageRef(storage, path);
+
+      // ✅ This must match your Cloud Function trigger path
+      const originalPath = `organizations/${orgId}/jobs/${job.id}/attachments/originals/${filename}`;
+      const fileRef = storageRef(storage, originalPath);
 
       await uploadBytes(fileRef, photoFile, {
         contentType: photoFile.type || "image/*",
         customMetadata: {
+          orgId,
           jobId: job.id,
-          caption: photoCaption || "",
+          caption: photoCaption?.trim() || "",
         },
       });
 
-      // CF will: create webp90, add jobPhotos doc, delete original.
       setPhotoFile(null);
       setPhotoCaption("");
 
       setToast({
         status: "success",
         title: "Photo upload received",
-        message: "Upload received — processing. The photo will appear shortly.",
+        message: "Processing now. It will appear shortly.",
       });
     } catch (e) {
       console.error(e);
       setToast({
         status: "error",
         title: "Photo upload failed",
-        message:
-          "Upload failed. Please try again or check the console for details.",
+        message: "Upload failed. Check console for details and try again.",
       });
     } finally {
       setUploading(false);
@@ -1364,7 +1418,8 @@ export default function JobDetailPage({
   }
 
   async function deletePhoto(photoId: string) {
-    await deleteDoc(doc(db, "jobPhotos", photoId));
+    if (!jobPhotosColRef) return;
+    await deleteDoc(doc(jobPhotosColRef, photoId));
     // Cloud Function cleanupPhotoOnDelete will remove the Storage file and decrement counters.
   }
 
@@ -1381,7 +1436,9 @@ export default function JobDetailPage({
 
     // try to delete mirrored payout doc (if it exists)
     try {
-      await deleteDoc(doc(db, "payouts", pid));
+      if (payoutsColRef) {
+        await deleteDoc(doc(payoutsColRef, pid));
+      }
     } catch (e) {
       console.warn("Failed to delete payout doc", e);
     }
@@ -1411,11 +1468,19 @@ export default function JobDetailPage({
   // ------- Danger zone -------
   async function permanentlyDeleteJob() {
     if (!job) return;
+    if (!orgId) return;
+    if (!resolvedJobId) return;
+
     setDeletingJob(true);
 
     try {
-      await deleteDoc(doc(collection(db, "jobs"), job.id));
-      // Close modal (in case navigate is delayed) and go back to jobs list
+      const fn = httpsCallable<{ orgId: string; jobId: string }, { ok: true }>(
+        getFunctions(),
+        "deleteJobAndRelated"
+      );
+
+      await fn({ orgId, jobId: resolvedJobId });
+
       setConfirmDeleteOpen(false);
       if (isModal) handleClose();
       else navigate("/dashboard");
@@ -1426,6 +1491,7 @@ export default function JobDetailPage({
       setDeletingJob(false);
     }
   }
+
   // Use the most recent photo (if any) as a soft page background
   const latestPhoto = photos[0] ?? null;
   const latestPhotoUrl = latestPhoto
@@ -2406,7 +2472,9 @@ export default function JobDetailPage({
                       title="Open"
                     >
                       <img
-                        src={p.url}
+                        src={
+                          p.thumbUrl ?? p.previewUrl ?? p.fullUrl ?? p.url ?? ""
+                        }
                         alt={p.caption || ""}
                         className="h-32 w-full rounded-lg object-cover"
                         loading="lazy"

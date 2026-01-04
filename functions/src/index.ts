@@ -25,63 +25,84 @@ setGlobalOptions({ region: "us-central1", memory: "1GiB", timeoutSeconds: 540 })
  * 1) Convert uploads at jobs/{jobId}/attachments/* to WEBP (q=90),
  *    write a doc in jobPhotos, bump counters on the job, delete original.
  */
-export const processJobPhoto = onObjectFinalized({ bucket: "roofzeus-2f15c.firebasestorage.app", region: "us-central1" }, async (event) => {
-  const filePath = event.data.name || "";
-  const bucketName = event.data.bucket;
-  const contentType = event.data.contentType || "";
-  const metadata = event.data.metadata || {};
+export const processJobPhoto = onObjectFinalized(
+  { bucket: "roofzeus-2f15c.firebasestorage.app", region: "us-central1" },
+  async (event) => {
+    const filePath = event.data.name || "";
+    const bucketName = event.data.bucket;
+    const contentType = event.data.contentType || "";
+    const metadata = event.data.metadata || {};
 
-  if (!filePath.startsWith("jobs/")) return;
-  if (!filePath.includes("/attachments/")) return;
-  if (filePath.endsWith("_webp90.webp")) return; // avoid loops
-  if (!contentType.startsWith("image/")) return;
+    // ✅ Only image uploads
+    if (!contentType.startsWith("image/")) return;
 
-  const bucket = admin.storage().bucket(bucketName);
+    // ✅ Ignore derivatives to avoid loops
+    if (filePath.endsWith("_webp90.webp")) return;
 
-  // Paths
-  const dirname = path.dirname(filePath);
-  const basename = path.basename(filePath, path.extname(filePath));
-  const webpFileName = `${basename}_webp90.webp`;
-  const webpDestPath = path.join(dirname, webpFileName);
+    // ✅ Support BOTH:
+    // 1) New: organizations/{orgId}/jobs/{jobId}/attachments/*
+    // 2) Old: jobs/{jobId}/attachments/*
+    const orgMatch = filePath.match(
+      /^organizations\/([^/]+)\/jobs\/([^/]+)\/attachments\//
+    );
+    const legacyMatch = filePath.match(/^jobs\/([^/]+)\/attachments\//);
 
-  // Temp files
-  const tempOriginal = path.join(os.tmpdir(), path.basename(filePath));
-  const tempWebp = path.join(os.tmpdir(), webpFileName);
+    const orgId = orgMatch?.[1] ?? null;
+    const jobId = orgMatch?.[2] ?? legacyMatch?.[1] ?? null;
 
-  try {
-    // Download original
-    await bucket.file(filePath).download({ destination: tempOriginal });
+    // Must be in an attachments folder (either schema)
+    const isOrgUpload = !!orgMatch;
+    const isLegacyUpload = !!legacyMatch;
+    if (!isOrgUpload && !isLegacyUpload) return;
 
-    // Convert → WEBP q=90
-    await sharp(tempOriginal).rotate().webp({ quality: 90 }).toFile(tempWebp);
+    const bucket = admin.storage().bucket(bucketName);
 
-    // Upload derivative with a token
-    const token = randomUUID();
-    await bucket.upload(tempWebp, {
-      destination: webpDestPath,
-      metadata: {
-        contentType: "image/webp",
-        metadata: { firebaseStorageDownloadTokens: token },
-      },
-    });
+    // Paths
+    const dirname = path.dirname(filePath);
+    const basename = path.basename(filePath, path.extname(filePath));
+    const webpFileName = `${basename}_webp90.webp`;
+    const webpDestPath = path.join(dirname, webpFileName);
 
-    // Build public URL
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(
-      webpDestPath
-    )}?alt=media&token=${token}`;
+    // Temp files
+    const tempOriginal = path.join(os.tmpdir(), path.basename(filePath));
+    const tempWebp = path.join(os.tmpdir(), webpFileName);
 
-    // Parse jobId from path
-    const match = filePath.match(/^jobs\/([^/]+)\/attachments\//);
-    const jobId = match?.[1];
-    const caption = (metadata.caption as string) || "";
+    try {
+      // Download original
+      await bucket.file(filePath).download({ destination: tempOriginal });
 
-    if (jobId) {
+      // Convert → WEBP q=90
+      await sharp(tempOriginal).rotate().webp({ quality: 90 }).toFile(tempWebp);
+
+      // Upload derivative with a token
+      const token = randomUUID();
+      await bucket.upload(tempWebp, {
+        destination: webpDestPath,
+        metadata: {
+          contentType: "image/webp",
+          metadata: { firebaseStorageDownloadTokens: token },
+        },
+      });
+
+      // Build public URL
+      const url = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(
+        webpDestPath
+      )}?alt=media&token=${token}`;
+
+      const caption = (metadata.caption as string) || "";
+
+      if (!jobId) return;
+
       const db = admin.firestore();
       const batch = db.batch();
 
-      // Create photo document
-      const photoRef = db.collection("jobPhotos").doc();
+      // ✅ Decide Firestore paths based on schema
+      const photoRef = orgId
+        ? db.collection(`organizations/${orgId}/jobPhotos`).doc()
+        : db.collection("jobPhotos").doc(); // legacy
+
       batch.set(photoRef, {
+        orgId: orgId || null,
         jobId,
         url,
         path: webpDestPath,
@@ -89,8 +110,10 @@ export const processJobPhoto = onObjectFinalized({ bucket: "roofzeus-2f15c.fireb
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
-      // Update job counters
-      const jobRef = db.doc(`jobs/${jobId}`);
+      const jobRef = orgId
+        ? db.doc(`organizations/${orgId}/jobs/${jobId}`)
+        : db.doc(`jobs/${jobId}`); // legacy
+
       batch.set(
         jobRef,
         {
@@ -103,20 +126,22 @@ export const processJobPhoto = onObjectFinalized({ bucket: "roofzeus-2f15c.fireb
       );
 
       await batch.commit();
-    }
 
-    // Delete the original to save storage
-    await bucket.file(filePath).delete().catch(() => {});
-  } catch (err) {
-    console.error("processJobPhoto error:", err);
-  } finally {
-    await fs.unlink(tempOriginal).catch(() => {});
-    await fs.unlink(tempWebp).catch(() => {});
+      // Delete the original to save storage
+      await bucket.file(filePath).delete().catch(() => {});
+    } catch (err) {
+      console.error("processJobPhoto error:", err);
+    } finally {
+      await fs.unlink(tempOriginal).catch(() => {});
+      await fs.unlink(tempWebp).catch(() => {});
+    }
   }
-});
+);
+
 
 /**
- * 2) When a jobPhotos doc is deleted, remove the Storage file and decrement counters.
+ * 2) When a jobPhotos doc is deleted, remove the Storage file and decrement counters.const path = `organizations/${orgId}/jobs/${job.id}/attachments/${filename}`;
+
  *    onDocumentDeleted provides a single snapshot; use event.data.data().
  */
 export const cleanupPhotoOnDelete = onDocumentDeleted("jobPhotos/{photoId}", async (event) => {
@@ -147,6 +172,43 @@ export const cleanupPhotoOnDelete = onDocumentDeleted("jobPhotos/{photoId}", asy
     console.error("cleanupPhotoOnDelete error:", err);
   }
 });
+
+export const cleanupOrgPhotoOnDelete = onDocumentDeleted(
+  "organizations/{orgId}/jobPhotos/{photoId}",
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const data = snap.data() as { path?: string; jobId?: string } | undefined;
+    if (!data) return;
+
+    const orgId = event.params.orgId as string;
+
+    try {
+      // Delete the webp file in Storage
+      if (data.path) {
+        const bucket = admin.storage().bucket();
+        await bucket.file(data.path).delete().catch(() => {});
+      }
+
+      // Decrement photoCount on the org-nested job
+      if (data.jobId) {
+        await admin
+          .firestore()
+          .doc(`organizations/${orgId}/jobs/${data.jobId}`)
+          .set(
+            {
+              photoCount: admin.firestore.FieldValue.increment(-1),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
+      }
+    } catch (err) {
+      console.error("cleanupOrgPhotoOnDelete error:", err);
+    }
+  }
+);
 
 
 /**

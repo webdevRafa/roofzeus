@@ -14,10 +14,15 @@ import PrivacyPage from "../pages/PrivacyPage";
 import TermsPage from "../pages/TermsPage";
 
 function appOrigin() {
+  const host = window.location.hostname;
+
   // local dev
-  if (window.location.hostname === "localhost")
-    return "http://app.localhost:5173";
-  // production
+  if (host === "localhost") return "http://app.localhost:5173";
+
+  // vercel preview/prod on vercelapp
+  if (host.endsWith(".vercel.app")) return "https://app.roofzeus.vercel.app";
+
+  // custom domain
   return "https://app.roofzeus.com";
 }
 
@@ -51,6 +56,30 @@ export default function MarketingRouter() {
         <Route
           path="crew"
           element={<ExternalRedirect to={`${appOrigin()}/crew`} />}
+        />
+        <Route
+          path="accept-invite"
+          element={
+            <ExternalRedirect
+              to={`${appOrigin()}/accept-invite${window.location.search}`}
+            />
+          }
+        />
+        <Route
+          path="complete-signup"
+          element={
+            <ExternalRedirect
+              to={`${appOrigin()}/complete-signup${window.location.search}`}
+            />
+          }
+        />
+        <Route
+          path="signup"
+          element={
+            <ExternalRedirect
+              to={`${appOrigin()}/signup${window.location.search}`}
+            />
+          }
         />
 
         {/* fallback */}

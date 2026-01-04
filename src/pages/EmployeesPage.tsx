@@ -191,7 +191,7 @@ export default function EmployeesPage() {
     if (!successMessage) return;
     const timer = setTimeout(() => {
       if (orgId) {
-        navigate(`/org/${orgId}/employees`, { replace: true, state: {} });
+        navigate(`/employees`, { replace: true, state: {} });
       } else {
         navigate("/", { replace: true, state: {} });
       }
@@ -313,7 +313,7 @@ export default function EmployeesPage() {
       setEmail("");
       setRole("roofer");
 
-      navigate(`/org/${orgId}/employees/${employeeRef.id}`);
+      navigate(`/employees/${employeeRef.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -628,7 +628,7 @@ export default function EmployeesPage() {
                       onKeyDown={(ev) => {
                         if (ev.key === "Enter" || ev.key === " ") {
                           ev.preventDefault();
-                          navigate(`/org/${orgId}/employees/${e.id}`);
+                          navigate(`/employees/${e.id}`);
                         }
                       }}
                       className={cx(

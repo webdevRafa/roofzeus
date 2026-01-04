@@ -109,7 +109,7 @@ export default function AcceptInvitePage() {
       const functions = getFunctions();
       const claimInvite = httpsCallable(functions, "claimEmployeeInvite");
       await claimInvite({ orgId, inviteId });
-      navigate(`/org/${orgId}/dashboard`);
+      navigate(`/dashboard`);
     } catch (err: any) {
       const msg = err?.message || String(err);
       setError(msg);
