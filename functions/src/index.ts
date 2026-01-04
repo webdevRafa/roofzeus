@@ -170,25 +170,33 @@ function getResend() {
 export const claimEmployeeInvite = onCall(
   { region: "us-central1" },
   async (request) => {
-    const inviteId = request.data?.inviteId as string | undefined;
+    const inviteId = String(request.data?.inviteId || "").trim();
+    const orgId = String(request.data?.orgId || "").trim();
+
     const auth = request.auth;
-    if (!auth || !auth.uid) {
-      throw new HttpsError(
-        "unauthenticated",
-        "The function must be called while authenticated."
-      );
+    if (!auth?.uid) {
+      throw new HttpsError("unauthenticated", "Must be called while authenticated.");
+    }
+    if (!orgId) {
+      throw new HttpsError("invalid-argument", "Missing orgId parameter.");
     }
     if (!inviteId) {
       throw new HttpsError("invalid-argument", "Missing inviteId parameter.");
     }
+
     const uid = auth.uid;
     const db = admin.firestore();
-    const inviteRef = db.doc(`employeeInvites/${inviteId}`);
+
+    // ✅ ORG NESTED invite doc
+    const inviteRef = db.doc(`organizations/${orgId}/employeeInvites/${inviteId}`);
     const inviteSnap = await inviteRef.get();
+
     if (!inviteSnap.exists) {
       throw new HttpsError("not-found", "Invite not found.");
     }
+
     const invite = inviteSnap.data() as any;
+
     if (invite.status !== "pending") {
       throw new HttpsError(
         "failed-precondition",
@@ -196,8 +204,7 @@ export const claimEmployeeInvite = onCall(
       );
     }
 
-    // NEW: Verify that the current user’s email matches the invite email.
-    // auth.token.email is populated for email/password and most OAuth sign-ins.
+    // ✅ Verify email matches invite email
     const callerEmail = String(auth.token?.email || "").trim().toLowerCase();
     const inviteEmail = String(invite.email || "").trim().toLowerCase();
     if (!callerEmail || callerEmail !== inviteEmail) {
@@ -207,55 +214,72 @@ export const claimEmployeeInvite = onCall(
       );
     }
 
-    const employeeRef = db.doc(`employees/${invite.employeeId}`);
+    const employeeId = String(invite.employeeId || "").trim();
+    if (!employeeId) {
+      throw new HttpsError("failed-precondition", "Invite missing employeeId.");
+    }
+
+    // ✅ ORG NESTED employee doc
+    const employeeRef = db.doc(`organizations/${orgId}/employees/${employeeId}`);
+
     await db.runTransaction(async (trx) => {
       const employeeSnap = await trx.get(employeeRef);
       if (!employeeSnap.exists) {
-        throw new HttpsError(
-          "not-found",
-          "Employee associated with invite not found."
-        );
+        throw new HttpsError("not-found", "Employee associated with invite not found.");
       }
+
       const employee = employeeSnap.data() as any;
-      // Prepare updates
+
       const empUpdates: any = {
         userId: uid,
-        invite: Object.assign({}, employee.invite || {}, {
+        // keep orgId consistent on the employee doc (optional but recommended)
+        orgId,
+        invite: {
+          ...(employee.invite || {}),
           status: "accepted",
           acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
-        }),
+        },
       };
-      // Copy snapshots if employee doesn't already have role/accessRole
-      if (!employee.role && invite.roleSnapshot) {
-        empUpdates.role = invite.roleSnapshot;
-      }
-      if (!employee.accessRole && invite.accessRoleSnapshot) {
+
+      // Copy snapshots only if employee doesn't already have them
+      if (!employee.role && invite.roleSnapshot) empUpdates.role = invite.roleSnapshot;
+      if (!employee.accessRole && invite.accessRoleSnapshot)
         empUpdates.accessRole = invite.accessRoleSnapshot;
-      }
-      trx.update(employeeRef, empUpdates);
-      trx.update(inviteRef, {
-        status: "accepted",
-        acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
-        acceptedByUserId: uid,
-      });
+
+      trx.set(employeeRef, empUpdates, { merge: true });
+
+      trx.set(
+        inviteRef,
+        {
+          status: "accepted",
+          acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
+          acceptedByUserId: uid,
+        },
+        { merge: true }
+      );
     });
+
     return { ok: true };
   }
 );
 
 
-
 // Create full accept‑invite URL using APP_BASE_URL
-function buildInviteLink(inviteId: string): string {
+function buildInviteLink(orgId: string, inviteId: string): string {
   const baseUrl = (APP_BASE_URL.value() || "").replace(/\/$/, "");
-  return `${baseUrl}/accept-invite?inviteId=${encodeURIComponent(inviteId)}`;
+  return `${baseUrl}/accept-invite?orgId=${encodeURIComponent(
+    orgId
+  )}&inviteId=${encodeURIComponent(inviteId)}`;
 }
 
-async function sendInviteEmail(toEmail: string, inviteId: string) {
-  const resend = getResend(); // ✅ add this
-  const inviteUrl = buildInviteLink(inviteId);
 
-  const from = (INVITE_FROM_EMAIL.value() || "Roger's Roofing <no-reply@rogersroofingtx.com>").trim();
+async function sendInviteEmail(toEmail: string, orgId: string, inviteId: string) {
+  const resend = getResend();
+  const inviteUrl = buildInviteLink(orgId, inviteId);
+
+  const from = (INVITE_FROM_EMAIL.value() ||
+    "Roger's Roofing <no-reply@rogersroofingtx.com>").trim();
+
   const subject = "You have been invited to join Roger's Roofing";
 
   const html = `
@@ -276,36 +300,46 @@ async function sendInviteEmail(toEmail: string, inviteId: string) {
 }
 
 
+
 export const sendEmployeeInvite = onCall(
-  { region: "us-central1", secrets: [RESEND_API_KEY, INVITE_FROM_EMAIL, APP_BASE_URL], },
+  {
+    region: "us-central1",
+    secrets: [RESEND_API_KEY, INVITE_FROM_EMAIL, APP_BASE_URL],
+  },
   async (request) => {
-    const inviteId = request.data?.inviteId as string | undefined;
-    const auth = request.auth;
-    if (!auth || !auth.uid) {
-      throw new HttpsError(
-        "unauthenticated",
-        "The function must be called while authenticated."
-      );
+    const inviteId = String(request.data?.inviteId || "").trim();
+    const orgId = String(request.data?.orgId || "").trim();
+
+    if (!request.auth?.uid) {
+      throw new HttpsError("unauthenticated", "Must be signed in.");
+    }
+    if (!orgId) {
+      throw new HttpsError("invalid-argument", "Missing orgId parameter.");
     }
     if (!inviteId) {
       throw new HttpsError("invalid-argument", "Missing inviteId parameter.");
     }
+
     const db = admin.firestore();
-    const inviteRef = db.doc(`employeeInvites/${inviteId}`);
+
+    const inviteRef = db.doc(`organizations/${orgId}/employeeInvites/${inviteId}`);
     const inviteSnap = await inviteRef.get();
     if (!inviteSnap.exists) {
       throw new HttpsError("not-found", "Invite not found.");
     }
+
     const invite = inviteSnap.data() as any;
-    const employeeRef = db.doc(`employees/${invite.employeeId}`);
+    const employeeId = String(invite.employeeId || "").trim();
+    if (!employeeId) {
+      throw new HttpsError("failed-precondition", "Invite missing employeeId.");
+    }
+
+    const employeeRef = db.doc(`organizations/${orgId}/employees/${employeeId}`);
     const employeeSnap = await employeeRef.get();
     if (!employeeSnap.exists) {
-      throw new HttpsError(
-        "not-found",
-        "Employee associated with invite not found."
-      );
+      throw new HttpsError("not-found", "Employee associated with invite not found.");
     }
-    // Only send invites in pending or none states.  Adjust logic as needed.
+
     const currentStatus = invite.status || "pending";
     if (currentStatus !== "pending" && currentStatus !== "sent") {
       throw new HttpsError(
@@ -313,29 +347,24 @@ export const sendEmployeeInvite = onCall(
         `Invite status is ${currentStatus}; cannot send.`
       );
     }
+
     const toEmail = String(invite.email || "").trim();
     if (!toEmail) {
-      throw new HttpsError(
-        "invalid-argument",
-        "Invite is missing an email address."
-      );
+      throw new HttpsError("invalid-argument", "Invite is missing an email address.");
     }
-    // Attempt to send the email via Resend
+
     try {
-      await sendInviteEmail(toEmail, inviteId);
+      await sendInviteEmail(toEmail, orgId, inviteId);
     } catch (err: any) {
       console.error(err);
-      throw new HttpsError(
-        "internal",
-        err?.message || "Failed to send invite email."
-      );
+      throw new HttpsError("internal", err?.message || "Failed to send invite email.");
     }
-    // Update lastSentAt fields on invite and employee docs
+
     const now = admin.firestore.FieldValue.serverTimestamp();
     const batch = db.batch();
-    batch.set(inviteRef, { lastSentAt: now }, { merge: true });
 
-    // update employee.invite.lastSentAt and ensure status is pending and inviteDocId
+    batch.set(inviteRef, { lastSentAt: now, status: "pending" }, { merge: true });
+
     const employeeInviteMeta = (employeeSnap.data() as any).invite || {};
     batch.set(
       employeeRef,
@@ -343,71 +372,84 @@ export const sendEmployeeInvite = onCall(
         invite: {
           ...employeeInviteMeta,
           status: "pending",
+          email: toEmail,
           lastSentAt: now,
           inviteDocId: inviteId,
         },
       },
       { merge: true }
     );
+
     await batch.commit();
     return { ok: true };
   }
 );
 
+
 export const onEmployeeInviteCreated = onDocumentCreated(
   {
-    document: "employeeInvites/{inviteId}",
+    document: "organizations/{orgId}/employeeInvites/{inviteId}",
     region: "us-central1",
     secrets: [RESEND_API_KEY, INVITE_FROM_EMAIL, APP_BASE_URL],
   },
   async (event) => {
     const snap = event.data;
     if (!snap) return;
+
     const data = snap.data() as any;
     if (!data) return;
+
     const inviteId = snap.id;
+    const orgId = event.params.orgId as string;
+
     // Only send if status is pending and lastSentAt is not set
     if (data.status !== "pending" || data.lastSentAt) return;
+
     const toEmail = String(data.email || "").trim();
     if (!toEmail) return;
+
     try {
-      await sendInviteEmail(toEmail, inviteId);
-      // update Firestore documents after sending
+      await sendInviteEmail(toEmail, orgId, inviteId);
+
       const db = admin.firestore();
       const now = admin.firestore.FieldValue.serverTimestamp();
-      const inviteRef = db.doc(`employeeInvites/${inviteId}`);
-      const employeeRef = db.doc(`employees/${data.employeeId}`);
+
+      const inviteRef = db.doc(`organizations/${orgId}/employeeInvites/${inviteId}`);
+
+      const employeeId = String(data.employeeId || "").trim();
+      if (!employeeId) return;
+
+      const employeeRef = db.doc(`organizations/${orgId}/employees/${employeeId}`);
+
       const batch = db.batch();
-      batch.set(
-        inviteRef,
-        {
-          lastSentAt: now,
-        },
-        { merge: true }
-      );
-      // Load the employee doc to merge existing invite metadata
+      batch.set(inviteRef, { lastSentAt: now }, { merge: true });
+
+      // merge existing employee invite meta
       const empSnap = await employeeRef.get();
       const empData = empSnap.exists ? (empSnap.data() as any) : {};
       const existingInviteMeta = empData.invite || {};
+
       batch.set(
         employeeRef,
         {
           invite: {
             ...existingInviteMeta,
             status: "pending",
-            email: data.email,
+            email: toEmail,
             lastSentAt: now,
             inviteDocId: inviteId,
           },
         },
         { merge: true }
       );
+
       await batch.commit();
     } catch (err) {
       console.error("Failed to send invite email on create:", err);
     }
   }
 );
+
 
 async function ensureInvoicePublicToken(invoiceId: string, invoice: any): Promise<string> {
   const existing = String(invoice.publicToken || "").trim();
