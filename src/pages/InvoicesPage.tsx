@@ -9,7 +9,6 @@ import {
   onSnapshot,
   query,
   orderBy,
-  where,
   setDoc,
   updateDoc,
   serverTimestamp,
@@ -54,29 +53,38 @@ function money(cents: number | null | undefined): string {
     maximumFractionDigits: 2,
   });
 }
+function orgCollection(orgId: string, sub: string) {
+  return collection(db, "organizations", orgId, sub);
+}
+function orgDoc(orgId: string, sub: string, id: string) {
+  return doc(db, "organizations", orgId, sub, id);
+}
 
 // Generate a human friendly invoice number like INV-2025-000123
 async function generateInvoiceNumber(orgId: string): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `INV-${year}-`;
+
   try {
     const q = query(
-      collection(db, "invoices"),
-      where("orgId", "==", orgId),
-      where("number", ">=", prefix),
-      where("number", "<=", prefix + "\uffff"),
+      orgCollection(orgId, "invoices"),
       orderBy("number", "desc"),
       orderBy("createdAt", "desc")
     );
+
     const snap = await getDocs(q);
+
     let maxSeq = 0;
     snap.forEach((d) => {
       const num = (d.data() as InvoiceDoc).number;
+      if (!num?.startsWith(prefix)) return;
+
       const parts = num.split("-");
       const seqStr = parts[2];
       const seq = Number(seqStr);
       if (Number.isFinite(seq) && seq > maxSeq) maxSeq = seq;
     });
+
     const nextSeq = (maxSeq + 1).toString().padStart(6, "0");
     return `${prefix}${nextSeq}`;
   } catch {
@@ -250,7 +258,7 @@ function NewInvoiceModal({
 
     try {
       const number = await generateInvoiceNumber(orgId);
-      const docRef = doc(collection(db, "invoices"));
+      const docRef = doc(orgCollection(orgId, "invoices"));
 
       const custName = customerName.trim();
       const custEmail = customerEmail.trim();
@@ -960,11 +968,12 @@ export default function InvoicesPage() {
   // Subscribe to invoices for the current organisation
   useEffect(() => {
     if (!orgId) return;
+
     const q = query(
-      collection(db, "invoices"),
-      where("orgId", "==", orgId),
+      orgCollection(orgId, "invoices"),
       orderBy("createdAt", "desc")
     );
+
     const unsub = onSnapshot(q, (snap) => {
       const list: InvoiceDoc[] = snap.docs.map((d) => ({
         id: d.id,
@@ -972,20 +981,23 @@ export default function InvoicesPage() {
       }));
       setInvoices(list);
     });
+
     return () => unsub();
   }, [orgId]);
 
   // Load jobs for invoice creation dropdown
   useEffect(() => {
     if (!orgId) return;
+
     const q = query(
-      collection(db, "jobs").withConverter(jobConverter),
-      where("orgId", "==", orgId),
+      orgCollection(orgId, "jobs").withConverter(jobConverter),
       orderBy("updatedAt", "desc")
     );
+
     const unsub = onSnapshot(q, (snap) => {
       setJobs(snap.docs.map((d) => d.data()));
     });
+
     return () => unsub();
   }, [orgId]);
 
@@ -1052,7 +1064,7 @@ export default function InvoicesPage() {
     if (!orgId) return;
     setMarkingPaid(true);
     try {
-      const ref = doc(db, "invoices", inv.id);
+      const ref = orgDoc(orgId, "invoices", inv.id);
       await updateDoc(ref, {
         status: "paid",
         paidAt: serverTimestamp() as unknown as FieldValue,
