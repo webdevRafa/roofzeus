@@ -287,7 +287,7 @@ export function DashboardJobsSection({
   totalNet,
 }: DashboardJobsSectionProps) {
   return (
-    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
+    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
       {/* Header */}
       <motion.header
         className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-4"
@@ -373,13 +373,13 @@ export function DashboardJobsSection({
               {showSearch && (
                 <motion.div
                   {...fadeUp(0.02)}
-                  className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-2 shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
+                  className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-2 shadow-[0_5px_5px_rgba(0,0,0,0.35)]"
                 >
                   <input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by address…"
-                    className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                    className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                   />
                 </motion.div>
               )}

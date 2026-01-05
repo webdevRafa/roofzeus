@@ -815,7 +815,7 @@ export default function DashboardPage() {
       <div>
         <motion.div
           className="mx-auto w-full max-w-[1600px] py-6 sm:py-10 md:px-4
-          grid gap-6
+          grid gap-6 xl:gap-7 2xl:gap-8
           grid-cols-1 lg:grid-cols-12"
           initial="initial"
           animate="animate"
@@ -830,8 +830,18 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Jobs List */}
-          <div className="lg:col-span-12 xl:col-span-7">
+          {/* ===================== */}
+          {/* WORKBENCH: ALL JOBS */}
+          {/* ===================== */}
+          <div className="lg:col-span-12 ">
+            <DashboardProgressSection
+              upcomingOpen={upcomingOpen}
+              setUpcomingOpen={setUpcomingOpen}
+              materialProgressJobs={materialProgressJobs}
+              readyForPunchJobs={readyForPunchJobs}
+            />
+          </div>
+          <div className="lg:col-span-12 ">
             <DashboardJobsSection
               jobsOpen={jobsOpen}
               setJobsOpen={setJobsOpen}
@@ -878,17 +888,11 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Progress Tracker */}
-          <div className="lg:col-span-12 xl:col-span-5">
-            <DashboardProgressSection
-              upcomingOpen={upcomingOpen}
-              setUpcomingOpen={setUpcomingOpen}
-              materialProgressJobs={materialProgressJobs}
-              readyForPunchJobs={readyForPunchJobs}
-            />
-          </div>
-          {/* ====== PAYOUTS (all employees) ====== */}
-          <div className="lg:col-span-12 xl:col-span-6">
+          {/* ==================================== */}
+          {/* OPERATIONS LANE: PROGRESS + PAYOUTS */}
+          {/* ==================================== */}
+
+          <div className="lg:col-span-12 xl:col-span-7">
             <DashboardPayoutsSection
               payoutsOpen={payoutsOpen}
               setPayoutsOpen={setPayoutsOpen}
@@ -914,7 +918,11 @@ export default function DashboardPage() {
               onOpenPayTechnician={() => setPayTechOpen(true)}
             />
           </div>
-          <div className="lg:col-span-12 xl:col-span-6">
+
+          {/* ========================= */}
+          {/* TRENDS LANE: FINANCIAL */}
+          {/* ========================= */}
+          <div className="lg:col-span-12 xl:col-span-5">
             <DashboardFinancialOverviewSection jobs={jobs} payouts={payouts} />
           </div>
         </motion.div>

@@ -233,7 +233,7 @@ export function DashboardPayoutsSection({
   return (
     <motion.section
       {...fadeUp(0.08)}
-      className="mt-10 mb-40 rounded-2xl  overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)]"
+      className=" rounded-2xl  overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] min-h-[500px]"
     >
       {/* Header */}
       <div className="relative px-4 sm:px-6 py-4 border-b border-[var(--color-border)]">
@@ -435,14 +435,7 @@ export function DashboardPayoutsSection({
               {!payoutsLoading &&
                 !payoutsError &&
                 pagedPayouts.length === 0 && (
-                  <div
-                    className="rounded-2xl border p-4"
-                    style={{
-                      borderColor: "rgb(var(--color-border-rgb) / 0.22)",
-                      backgroundColor: "var(--panel-bg)",
-                      color: "var(--color-muted)",
-                    }}
-                  >
+                  <div className="rounded-2xl  p-4 mx-auto max-w-[500px] text-center">
                     No payouts match the current filters.
                   </div>
                 )}
