@@ -25,9 +25,9 @@ export type ContractorSignupInput = {
   companyPhone?: string;
 };
 
-function cleanPhone(p?: string) {
+function cleanPhone(p?: string): string | null {
   const v = (p ?? "").trim();
-  return v.length ? v : undefined;
+  return v.length ? v : null;
 }
 
 function firebaseErrorMessage(err: unknown): string {

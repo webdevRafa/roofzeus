@@ -10,7 +10,15 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 // Assumes you export `auth` from ./firebase/firebaseConfig
 import { auth, db } from "../firebase/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  where,
+} from "firebase/firestore";
 
 import {
   AnimatePresence,
@@ -18,6 +26,8 @@ import {
   type Variants,
   useReducedMotion,
 } from "framer-motion";
+
+const LS_ACTIVE_ORG_KEY = "rr_activeOrgId";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -93,28 +103,78 @@ const LoginPage = () => {
       );
       const user = cred.user;
 
-      // Fetch employee record to determine access role
+      // Fetch employee record (ORG-NESTED) to determine access role
+      // Resolve org via memberships, then read ORG-NESTED employee doc
       let accessRole: string | undefined;
+      let role: string | undefined;
+      let orgId: string | undefined;
+
       try {
-        const q = query(
-          collection(db, "employees"),
+        // 1) Find active membership for this user (top-level index)
+        const memQ = query(
+          collection(db, "memberships"),
           where("userId", "==", user.uid),
+          where("status", "==", "active"),
           limit(1)
         );
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const data: any = snap.docs[0].data();
-          accessRole = data.accessRole;
+
+        const memSnap = await getDocs(memQ);
+
+        if (!memSnap.empty) {
+          const mem = memSnap.docs[0].data() as any;
+          orgId = mem.orgId;
+
+          // ✅ hard guard: orgId must be a string
+          if (typeof orgId !== "string" || !orgId.trim()) {
+            console.warn("Membership missing orgId for user:", user.uid, mem);
+          } else {
+            // 2) Persist active org for rest of app
+            localStorage.setItem(LS_ACTIVE_ORG_KEY, orgId);
+
+            // 3) Read org-nested employee doc
+            const empRef = doc(
+              db,
+              "organizations",
+              orgId,
+              "employees",
+              user.uid
+            );
+            const empSnap = await getDoc(empRef);
+
+            if (empSnap.exists()) {
+              const emp = empSnap.data() as any;
+              accessRole = emp.accessRole;
+              role = emp.role;
+            } else {
+              console.warn("Employee doc missing at:", empRef.path);
+            }
+          }
+        } else {
+          console.warn("No active membership found for user:", user.uid);
         }
       } catch (e) {
-        // ignore errors and fall back to default
-        console.error("Failed to fetch employee record", e);
+        // IMPORTANT: Don't silently swallow this; it decides routing.
+        console.error("Failed to resolve membership/employee:", e);
       }
 
       // ✅ redirect back to invite or to proper dashboard based on role
       if (redirect) {
         navigate(redirect, { replace: true });
-      } else if (accessRole === "admin" || accessRole === "manager") {
+        return;
+      }
+
+      if (!accessRole && !role) {
+        setErr(
+          "Account found, but role info could not be loaded. Please refresh or contact support."
+        );
+        return;
+      }
+
+      if (
+        accessRole === "admin" ||
+        accessRole === "manager" ||
+        role === "owner"
+      ) {
         navigate("/dashboard", { replace: true });
       } else {
         navigate("/crew", { replace: true });

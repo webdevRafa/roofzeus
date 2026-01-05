@@ -2,7 +2,6 @@
 // NOTE: This page uses framer-motion and react-countup.
 // Install:  npm i framer-motion react-countup lucide-react
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getFunctions, httpsCallable } from "firebase/functions";
 
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
@@ -1469,17 +1468,16 @@ export default function JobDetailPage({
   async function permanentlyDeleteJob() {
     if (!job) return;
     if (!orgId) return;
-    if (!resolvedJobId) return;
+
+    // prefer resolvedJobId if you’re using it elsewhere; fallback to job.id
+    const jobId = resolvedJobId ?? job.id;
+    if (!jobId) return;
 
     setDeletingJob(true);
 
     try {
-      const fn = httpsCallable<{ orgId: string; jobId: string }, { ok: true }>(
-        getFunctions(),
-        "deleteJobAndRelated"
-      );
-
-      await fn({ orgId, jobId: resolvedJobId });
+      const jobRef = doc(db, "organizations", orgId, "jobs", jobId);
+      await deleteDoc(jobRef);
 
       setConfirmDeleteOpen(false);
       if (isModal) handleClose();
