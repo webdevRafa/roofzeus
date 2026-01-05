@@ -233,7 +233,7 @@ export function DashboardPayoutsSection({
   return (
     <motion.section
       {...fadeUp(0.08)}
-      className=" rounded-2xl  overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] min-h-[500px]"
+      className=" rounded-2xl  overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md min-h-[500px]"
     >
       {/* Header */}
       <div className="relative px-4 sm:px-6 py-4 border-b border-[var(--color-border)]">

@@ -814,7 +814,7 @@ export default function DashboardPage() {
     <>
       <div>
         <motion.div
-          className="mx-auto w-full max-w-[1600px] py-6 sm:py-10 md:px-4
+          className="mx-auto w-full py-6 sm:py-10 
           grid gap-6 xl:gap-7 2xl:gap-8
           grid-cols-1 lg:grid-cols-12"
           initial="initial"

@@ -144,7 +144,7 @@ export function DashboardProgressSection({
   readyForPunchJobs,
 }: DashboardProgressSectionProps) {
   return (
-    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_10px_rgba(0,0,0,0.35)] overflow-hidden">
+    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
         <div className="flex items-center gap-3 min-w-0">

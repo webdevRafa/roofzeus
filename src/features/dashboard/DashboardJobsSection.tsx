@@ -287,7 +287,7 @@ export function DashboardJobsSection({
   totalNet,
 }: DashboardJobsSectionProps) {
   return (
-    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-[0_18px_50px_rgba(0,0,0,0.35)] overflow-hidden">
+    <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md overflow-hidden">
       {/* Header */}
       <motion.header
         className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-4"
@@ -869,7 +869,7 @@ export function DashboardJobsSection({
                                 idx % 2 === 0
                                   ? "bg-[rgb(var(--color-surface-rgb)/0.35)]"
                                   : "bg-transparent",
-                                "hover:bg-[rgb(var(--color-surface-rgb)/0.55)]"
+                                "hover:bg-[var(--color-card-hover)]"
                               )}
                             >
                               <td className="px-4 py-3">

@@ -59,7 +59,7 @@ function KpiCard({
     <motion.div
       variants={fadeUp}
       whileHover={{ y: -2, transition: { duration: 0.22, ease } }}
-      className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-card-rgb)/0.70)] p-4 hover:shadow-md select-none"
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] p-4 hover:shadow-md select-none  "
     >
       <div className="text-[14px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)]">
         {label}
@@ -91,7 +91,7 @@ export default function DashboardSummarySection({
   const paidPayouts = payouts.filter((p) => !!p.paidAt).length;
 
   return (
-    <section className="mb-6">
+    <section className="mb-6 px-2">
       {/* Optional little header row to match the “Command Center” vibe */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
