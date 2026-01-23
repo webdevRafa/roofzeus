@@ -1,5 +1,5 @@
 // src/firebase/signupContractor.ts
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import {
   collection,
   doc,
@@ -72,7 +72,8 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
 
     // Optional: display name
     await updateProfile(cred.user, { displayName: fullName });
-
+   
+    
     // 2) Create orgId (auto id)
     const orgRef = doc(collection(db, "organizations"));
     const orgId = orgRef.id;
@@ -165,6 +166,15 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
 
     await batch.commit();
 
+    try {
+      await sendEmailVerification(cred.user, {
+        url: `${window.location.origin}/verify-email`,
+        handleCodeInApp: false,
+      });
+    } catch (err) {
+      console.warn("sendEmailVerification failed:", err);
+    }
+    
     // 5) Persist active org for app shell
     localStorage.setItem(LS_ACTIVE_ORG_KEY, orgId);
 

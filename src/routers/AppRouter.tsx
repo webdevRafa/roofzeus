@@ -25,6 +25,7 @@ import PayoutsPage from "../pages/PayoutsPage";
 
 import CrewDashboardPage from "../pages/CrewDashboardPage";
 import CrewJobDetailPage from "../pages/CrewJobDetailPage";
+import VerifyEmailPage from "../pages/VerifyEmailPage";
 
 export default function AppRouter() {
   return (
@@ -32,6 +33,8 @@ export default function AppRouter() {
       <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/accept-invite" element={<AcceptInvitePage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+
       <Route path="/complete-signup" element={<CompleteSignupPage />} />
       <Route path="/invoice/:id" element={<InvoiceViewer />} />
       <Route path="/signup" element={<SignupPage />} />

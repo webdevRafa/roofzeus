@@ -260,7 +260,7 @@ export default function SignupPage() {
         companyPhone: draft.companyPhone,
       });
 
-      navigate("/dashboard", { replace: true });
+      navigate("/verify-email", { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {

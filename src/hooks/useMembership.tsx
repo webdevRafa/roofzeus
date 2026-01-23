@@ -55,7 +55,12 @@ export function useMembership() {
         setLoading(false);
         return;
       }
-
+      if (!user.emailVerified) {
+        // User is signed in but has not verified email yet
+        // Do NOT open any Firestore listeners
+        setLoading(false);
+        return;
+      }
       setLoading(true);
 
       const q = query(

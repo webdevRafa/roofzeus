@@ -10,13 +10,15 @@ import * as path from "path";
 import * as os from "os";
 import * as fs from "fs/promises";
 import sharp from "sharp";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 
 import { defineSecret } from "firebase-functions/params";
 
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 const INVITE_FROM_EMAIL = defineSecret("INVITE_FROM_EMAIL");
 const APP_BASE_URL = defineSecret("APP_BASE_URL");
+
+const VERIFY_FROM_EMAIL = defineSecret("VERIFY_FROM_EMAIL");
 
 admin.initializeApp();
 setGlobalOptions({ region: "us-central1", memory: "1GiB", timeoutSeconds: 540 });
@@ -316,6 +318,215 @@ export const claimEmployeeInvite = onCall(
           status: "accepted",
           acceptedAt: admin.firestore.FieldValue.serverTimestamp(),
           acceptedByUserId: uid,
+        },
+        { merge: true }
+      );
+    });
+
+    return { ok: true };
+  }
+);
+
+// -------------------------
+// Custom Email Verification
+// -------------------------
+
+type EmailVerifyDoc = {
+  uid: string;
+  email: string;
+  tokenHash: string;
+  createdAt: FirebaseFirestore.FieldValue | FirebaseFirestore.Timestamp;
+  expiresAtMs: number;
+  consumedAt?: FirebaseFirestore.FieldValue | FirebaseFirestore.Timestamp | null;
+  consumedIp?: string | null;
+  resendCount?: number | FirebaseFirestore.FieldValue;
+};
+
+function sha256(input: string) {
+  return createHash("sha256").update(input).digest("hex");
+}
+
+function buildVerifyEmailLink(token: string) {
+  const baseUrl = (APP_BASE_URL.value() || "").replace(/\/$/, "");
+  // Your FE page can read `token` from query string:
+  // /verify-email?token=...
+  return `${baseUrl}/verify-email?token=${encodeURIComponent(token)}`;
+}
+
+async function sendVerificationEmail(toEmail: string, token: string) {
+  const resend = getResend();
+
+  const from = (VERIFY_FROM_EMAIL.value() || INVITE_FROM_EMAIL.value() || "").trim();
+  if (!from) throw new Error("Missing VERIFY_FROM_EMAIL (or INVITE_FROM_EMAIL) secret");
+
+  const verifyUrl = buildVerifyEmailLink(token);
+  const subject = "Verify your email for Roof Zeus";
+
+  const html = `
+    <div style="font-family: ui-sans-serif, system-ui, -apple-system; line-height:1.5;">
+      <h2 style="margin:0 0 10px;">Verify your email</h2>
+      <p style="margin:0 0 14px;">
+        Click the button below to verify your email address.
+      </p>
+      <p style="margin:0 0 18px;">
+        <a href="${verifyUrl}" style="display:inline-block; padding:10px 14px; border-radius:10px; background:#111827; color:#fff; text-decoration:none;">
+          Verify Email
+        </a>
+      </p>
+      <p style="margin:0 0 10px; color:#6b7280; font-size:12px;">
+        Or paste this link into your browser:
+        <br/>
+        <a href="${verifyUrl}">${verifyUrl}</a>
+      </p>
+      <p style="margin:0; color:#6b7280; font-size:12px;">
+        If you didn’t create an account, you can ignore this email.
+      </p>
+    </div>
+  `;
+
+  const { error } = await resend.emails.send({
+    from,
+    to: [toEmail],
+    subject,
+    html,
+  });
+
+  if (error) throw new Error(`Resend error: ${error.message || String(error)}`);
+}
+
+/**
+ * sendCustomEmailVerification
+ * - Must be called while authenticated
+ * - Creates a one-time token doc in Firestore
+ * - Sends an email with your own verification link via Resend
+ */
+export const sendCustomEmailVerification = onCall(
+  {
+    region: "us-central1",
+    secrets: [RESEND_API_KEY, APP_BASE_URL, VERIFY_FROM_EMAIL, INVITE_FROM_EMAIL],
+  },
+  async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError("unauthenticated", "Must be signed in.");
+    }
+
+    const uid = request.auth.uid;
+
+    // Pull Auth user to get canonical email + current verified state
+    const authUser = await admin.auth().getUser(uid);
+    const email = String(authUser.email || "").trim().toLowerCase();
+    if (!email) throw new HttpsError("failed-precondition", "User has no email.");
+    if (authUser.emailVerified) return { ok: true, alreadyVerified: true };
+
+    const db = admin.firestore();
+
+    // Throttle resend (optional but recommended)
+    // If you store these fields on users/{uid}, this becomes easy to enforce.
+    // We'll enforce based on latest token doc instead (simple + works now).
+    const recentSnap = await db
+      .collection("emailVerifications")
+      .where("uid", "==", uid)
+      .orderBy("expiresAtMs", "desc")
+      .limit(1)
+      .get();
+
+    if (!recentSnap.empty) {
+      const last = recentSnap.docs[0].data() as EmailVerifyDoc;
+      // if last token was created recently, block spam
+      const createdAtMs =
+        (last.createdAt as any)?.toMillis?.() ?? null;
+
+      // If we can't read createdAtMs, skip throttle; otherwise enforce 60s
+      if (typeof createdAtMs === "number") {
+        const ms = Date.now() - createdAtMs;
+        if (ms >= 0 && ms < 60_000) {
+          return { ok: true, skipped: true, reason: "throttled" };
+        }
+      }
+    }
+
+    // Create a one-time token (store only hash in Firestore)
+    const token = randomUUID();
+    const tokenHash = sha256(token);
+    const expiresAtMs = Date.now() + 1000 * 60 * 60 * 24; // 24 hours
+
+    const ref = db.collection("emailVerifications").doc();
+    await ref.set({
+      uid,
+      email,
+      tokenHash,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      expiresAtMs,
+      consumedAt: null,
+      resendCount: 1,
+    } satisfies EmailVerifyDoc as any);
+
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (err: any) {
+      console.error("sendCustomEmailVerification email error:", err);
+      throw new HttpsError("internal", err?.message || "Failed to send verification email.");
+    }
+
+    return { ok: true };
+  }
+);
+
+/**
+ * confirmCustomEmailVerification
+ * - Called from your /verify-email page with the token from query string
+ * - Validates tokenHash, expiry, and unused status
+ * - Marks Firebase Auth user emailVerified=true
+ * - Writes audit markers (optional but recommended)
+ */
+export const confirmCustomEmailVerification = onCall(
+  { region: "us-central1" },
+  async (request) => {
+    const token = String(request.data?.token || "").trim();
+    if (!token) throw new HttpsError("invalid-argument", "Missing token.");
+
+    const tokenHash = sha256(token);
+    const db = admin.firestore();
+
+    const q = await db
+      .collection("emailVerifications")
+      .where("tokenHash", "==", tokenHash)
+      .limit(1)
+      .get();
+
+    if (q.empty) throw new HttpsError("not-found", "Invalid or expired verification link.");
+
+    const docSnap = q.docs[0];
+    const data = docSnap.data() as EmailVerifyDoc;
+
+    if (data.consumedAt) {
+      throw new HttpsError("failed-precondition", "This verification link has already been used.");
+    }
+
+    if (typeof data.expiresAtMs === "number" && Date.now() > data.expiresAtMs) {
+      throw new HttpsError("deadline-exceeded", "Verification link expired. Please request a new one.");
+    }
+
+    // Mark Auth email verified
+    await admin.auth().updateUser(data.uid, { emailVerified: true });
+
+    // Consume token + write audit markers
+    await db.runTransaction(async (trx) => {
+      trx.set(
+        docSnap.ref,
+        {
+          consumedAt: admin.firestore.FieldValue.serverTimestamp(),
+          consumedIp: (request.rawRequest as any)?.ip ?? null,
+        },
+        { merge: true }
+      );
+
+      // Optional: also stamp users/{uid} so your UI can show “Verified”
+      trx.set(
+        db.doc(`users/${data.uid}`),
+        {
+          emailVerified: true,
+          emailVerifiedAt: admin.firestore.FieldValue.serverTimestamp(),
         },
         { merge: true }
       );

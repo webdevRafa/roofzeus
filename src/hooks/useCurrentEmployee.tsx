@@ -41,6 +41,14 @@ export function useCurrentEmployee() {
         return;
       }
 
+      // 🔒 Signed in but email not verified — block Firestore reads/listeners
+      if (!user.emailVerified) {
+        setEmployee(null);
+        setLoading(false);
+        setError("Please verify your email to continue.");
+        return;
+      }
+
       // Signed in but org not ready yet -> keep loading
       if (orgLoading) {
         setEmployee(null);
