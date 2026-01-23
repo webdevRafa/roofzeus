@@ -1,5 +1,5 @@
 // src/firebase/signupContractor.ts
-import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile  } from "firebase/auth";
 import {
   collection,
   doc,
@@ -7,9 +7,17 @@ import {
   writeBatch,
   type FieldValue,
 } from "firebase/firestore";
-import { auth, db } from "./firebaseConfig";
+import { auth, db, functions } from "./firebaseConfig";
+import { httpsCallable } from "firebase/functions";
+
 
 const LS_ACTIVE_ORG_KEY = "rr_activeOrgId";
+
+// ✅ typed callable
+const sendCustomEmailVerification = httpsCallable<
+  Record<string, never>,
+  { ok: boolean }
+>(functions, "sendCustomEmailVerification");
 
 export type ContractorSignupInput = {
   fullName: string;
@@ -166,14 +174,13 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
 
     await batch.commit();
 
-    try {
-      await sendEmailVerification(cred.user, {
-        url: `${window.location.origin}/verify-email`,
-        handleCodeInApp: false,
-      });
-    } catch (err) {
-      console.warn("sendEmailVerification failed:", err);
-    }
+      // ✅ Send YOUR custom verification email (Resend) via callable
+      try {
+        await sendCustomEmailVerification({});
+      } catch (err) {
+        console.warn("sendCustomEmailVerification failed:", err);
+        // non-fatal: account exists; user can resend from VerifyEmailPage
+      }
     
     // 5) Persist active org for app shell
     localStorage.setItem(LS_ACTIVE_ORG_KEY, orgId);
