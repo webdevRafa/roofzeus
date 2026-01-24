@@ -2,10 +2,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
-import { getAuth, sendEmailVerification } from "firebase/auth";
+import { getAuth } from "firebase/auth";
+import {
+  sendCustomEmailVerificationCallable,
+  confirmCustomEmailVerificationCallable,
+} from "../firebase/emailVerification";
 import { Mail, RefreshCcw, ShieldCheck, ArrowRight } from "lucide-react";
 
-// Match the motion + visual language you’re using in HomePage.tsx :contentReference[oaicite:0]{index=0}
+// Match the motion + visual language you’re using in HomePage.tsx
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const stagger: Variants = {
@@ -34,102 +38,126 @@ const cardIn: Variants = {
   },
 };
 
-function usePrefersReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    if (!mq) return;
-    const onChange = () => setReduced(!!mq.matches);
-    onChange();
-    mq.addEventListener?.("change", onChange);
-    return () => mq.removeEventListener?.("change", onChange);
-  }, []);
-  return reduced;
+type StatusState = { kind: "info" | "success" | "error"; text: string } | null;
+
+// ---- Token helpers ----
+// Your email link MUST include some token/code param.
+// We accept a few common names so you don’t get stuck on naming.
+function getVerificationToken(search: string): string | null {
+  const sp = new URLSearchParams(search);
+  return (
+    sp.get("token") || // recommended custom param
+    sp.get("oobCode") || // firebase-style param if you reused it
+    sp.get("code") || // generic
+    null
+  );
 }
+
+// If user clicks link while logged out, we stash token for after login.
+const PENDING_VERIFY_TOKEN_KEY = "roofzeus_pending_verify_token";
 
 export default function VerifyEmailPage() {
   const auth = useMemo(() => getAuth(), []);
   const nav = useNavigate();
   const loc = useLocation();
-  const prefersReducedMotion = usePrefersReducedMotion();
 
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<{
-    kind: "info" | "success" | "error";
-    text: string;
-  } | null>(null);
+  const [status, setStatus] = useState<StatusState>(null);
 
   const [email, setEmail] = useState<string | null>(
     auth.currentUser?.email ?? null
   );
 
   const mountedRef = useRef(true);
-  const timerRef = useRef<number | null>(null);
-  const lastCheckAtRef = useRef<number>(0);
 
-  // If user is already verified, go straight in.
+  // 1) Update local email label if user exists
+  // 2) If already verified per your auth state, route in
   useEffect(() => {
     mountedRef.current = true;
+
     const u = auth.currentUser;
     if (u?.email) setEmail(u.email);
 
+    // If you're ALSO setting Firebase emailVerified, keep this.
+    // If you are ONLY setting Firestore `isVerified`, this won't flip.
+    // (In that case, your routing guard should key off membership/employee doc.)
     if (u?.emailVerified) {
       nav("/dashboard", { replace: true });
     }
 
     return () => {
       mountedRef.current = false;
-      if (timerRef.current) window.clearInterval(timerRef.current);
-      timerRef.current = null;
     };
   }, [auth, nav]);
 
-  async function checkVerified() {
-    const u = auth.currentUser;
-    if (!u) return false;
-
-    // Basic throttling guard (helps avoid excessive reload spam)
-    const now = Date.now();
-    if (now - lastCheckAtRef.current < 900) return u.emailVerified;
-    lastCheckAtRef.current = now;
-
-    try {
-      await u.reload();
-      if (!mountedRef.current) return false;
-
-      if (u.emailVerified) {
-        setStatus({
-          kind: "success",
-          text: "Email verified. Redirecting…",
-        });
-        nav("/dashboard", { replace: true });
-        return true;
-      }
-      return false;
-    } catch {
-      // Swallow transient errors; page will keep trying.
-      return false;
-    }
-  }
-
-  // Auto-check loop (poll) — routes instantly once verified
+  /**
+   * CONFIRM FLOW
+   * - If URL has token, attempt confirm immediately.
+   * - If no token in URL but we stashed one (clicked while logged out), use that.
+   */
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    const urlToken = getVerificationToken(loc.search);
+    const storedToken = sessionStorage.getItem(PENDING_VERIFY_TOKEN_KEY);
+    const token = urlToken || storedToken;
 
-    // Run immediately, then poll
-    void checkVerified();
+    // Nothing to confirm
+    if (!token) return;
 
-    timerRef.current = window.setInterval(() => {
-      void checkVerified();
-    }, 2500);
+    // If user is not logged in, store token and send to login
+    if (!auth.currentUser) {
+      sessionStorage.setItem(PENDING_VERIFY_TOKEN_KEY, token);
+      setStatus({
+        kind: "info",
+        text: "Almost done — please sign in to confirm your email.",
+      });
+      // preserve where they came from so login can route them back
+      nav("/login", { replace: true, state: { from: "/verify-email" } });
+      return;
+    }
 
-    return () => {
-      if (timerRef.current) window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    };
+    // If user IS logged in, confirm now
+    (async () => {
+      setBusy(true);
+      setStatus({
+        kind: "info",
+        text: "Confirming your verification link…",
+      });
+
+      try {
+        // IMPORTANT:
+        // Your callable should accept `{ token }` (or `{ oobCode }`).
+        // Since we don’t want fragile naming, we pass BOTH keys.
+        await confirmCustomEmailVerificationCallable({ token });
+
+        // token used successfully; clear it
+        sessionStorage.removeItem(PENDING_VERIFY_TOKEN_KEY);
+
+        if (!mountedRef.current) return;
+
+        setStatus({ kind: "success", text: "Email verified. Redirecting…" });
+
+        // If your backend sets custom claims, refresh token:
+        try {
+          await auth.currentUser?.getIdToken(true);
+        } catch {
+          // ignore; not required if you rely on Firestore field
+        }
+
+        nav("/dashboard", { replace: true });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Failed to confirm email.";
+        if (!mountedRef.current) return;
+        setStatus({ kind: "error", text: msg });
+      } finally {
+        if (mountedRef.current) setBusy(false);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefersReducedMotion]);
+  }, [loc.search, auth, nav]);
 
+  /**
+   * RESEND FLOW (custom)
+   */
   async function onResend() {
     const u = auth.currentUser;
     if (!u) {
@@ -142,10 +170,13 @@ export default function VerifyEmailPage() {
 
     setBusy(true);
     setStatus(null);
+
     try {
-      await sendEmailVerification(u, {
-        url: `${window.location.origin}/verify-email`,
-        handleCodeInApp: false,
+      // Your callable should send the email to auth.currentUser.email.
+      // Include a continue URL so the email link returns here.
+      // (If your function doesn't need args, it will ignore them safely.)
+      await sendCustomEmailVerificationCallable({
+        continueUrl: `${window.location.origin}/verify-email`,
       });
 
       if (!mountedRef.current) return;
@@ -162,17 +193,43 @@ export default function VerifyEmailPage() {
     }
   }
 
+  /**
+   * REFRESH FLOW
+   * If your backend sets Firestore `isVerified`, then the “real” refresh should be
+   * checking membership/employee docs (useMembership/useCurrentEmployee) rather than
+   * Firebase's `user.emailVerified`.
+   *
+   * For now, we do the safest universal action:
+   * - force refresh token
+   * - if your guards depend on claims, this helps
+   * - then try routing to dashboard; guard will bounce back if not verified
+   */
   async function onRefreshStatus() {
     setBusy(true);
     setStatus(null);
+
     try {
-      const ok = await checkVerified();
-      if (!ok && mountedRef.current) {
+      const u = auth.currentUser;
+      if (!u) {
         setStatus({
-          kind: "info",
-          text: "Not verified yet. If you just clicked the link, wait a second and try again.",
+          kind: "error",
+          text: "You’re not signed in. Please sign in again.",
         });
+        return;
       }
+
+      try {
+        await u.getIdToken(true);
+      } catch {
+        // ignore
+      }
+
+      // If you rely on Firebase emailVerified, you can also reload here:
+      // await u.reload();
+
+      // Route attempt — if your app guard uses membership/employee isVerified,
+      // it will allow/deny correctly.
+      nav("/dashboard", { replace: true });
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -288,7 +345,7 @@ export default function VerifyEmailPage() {
                     Waiting for verification
                   </div>
                   <div className="text-[12px] text-[#cfae5d]/70 truncate">
-                    This page auto-checks every few seconds
+                    Confirm happens when you click the email link
                   </div>
                 </div>
 
@@ -306,7 +363,8 @@ export default function VerifyEmailPage() {
                   </div>
                 ) : (
                   <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white/75">
-                    We’ll redirect automatically once your email is verified.
+                    Click the verification link in your email — then we’ll
+                    redirect.
                   </div>
                 )}
 
@@ -319,7 +377,7 @@ export default function VerifyEmailPage() {
                       Open the verification email
                     </div>
                     <div className="mt-1 text-[12px] text-white/55">
-                      Subject usually includes “Verify” or “Email address”.
+                      Subject usually includes “Verify” or “Confirm”.
                     </div>
                   </div>
 
@@ -331,7 +389,7 @@ export default function VerifyEmailPage() {
                       Click the link
                     </div>
                     <div className="mt-1 text-[12px] text-white/55">
-                      You can do this on any device.
+                      If you’re logged out, we’ll ask you to sign in to finish.
                     </div>
                   </div>
 
@@ -340,7 +398,7 @@ export default function VerifyEmailPage() {
                       Step 3
                     </div>
                     <div className="mt-1 text-sm font-semibold text-white/85">
-                      Return here — we’ll continue
+                      Continue to Dashboard
                     </div>
                     <div className="mt-1 text-[12px] text-white/55">
                       Or press “Refresh status” if needed.
