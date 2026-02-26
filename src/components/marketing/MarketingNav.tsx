@@ -321,7 +321,7 @@ export default function MarketingNav() {
                       to="/signup"
                       className={cx(
                         "inline-flex items-center justify-center gap-2",
-                        "rounded-xl bg-[#cfae5d] px-4 py-2 text-sm font-semibold text-black",
+                        "rounded-xl bg-[var(--color-blue)] px-4 py-2 text-sm font-semibold text-black",
                         "hover:opacity-90 transition"
                       )}
                     >

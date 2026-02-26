@@ -33,7 +33,25 @@ const fadeUp: Variants = {
     transition: { duration: 0.7, ease },
   },
 };
-
+export const textRevealDeluxe: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 18,
+    filter: "blur(12px)",
+  },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      ease,
+      duration: 0.9,
+      opacity: { duration: 0.55, ease },
+      y: { duration: 0.9, ease },
+      filter: { duration: 0.75, ease },
+    },
+  },
+};
 const fadeIn: Variants = {
   hidden: { opacity: 0, filter: "blur(6px)" },
   show: {
@@ -872,7 +890,6 @@ export default function HomePage() {
       <section className="relative overflow-hidden max-w-full">
         {/* subtle background texture */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(207,174,93,0.10),transparent_55%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,255,255,0.05),transparent_55%)]" />
         </div>
 
@@ -883,7 +900,10 @@ export default function HomePage() {
           className="max-w-7xl mx-auto px-6 pt-28 pb-24 relative"
         >
           <div className="grid md:grid-cols-2 gap-16 items-center min-w-0">
-            <motion.div variants={fadeUp} className="select-none min-w-0">
+            <motion.div
+              variants={fadeUp}
+              className="select-none min-w-0 lg:translate-x-[200px] z-90"
+            >
               <motion.img
                 variants={fadeIn}
                 className="max-w-[300px] mb-3"
@@ -901,25 +921,10 @@ export default function HomePage() {
 
               <motion.h1
                 variants={fadeUp}
-                className="text-3xl md:text-3xl lg:text-4xl font-poppins mt-3 leading-[1.05] tracking-tight text-white"
+                className="text-3xl md:text-3xl lg:text-4xl font-poppins my-3 leading-[1.05] tracking-tight text-white"
               >
                 Total visibility into your roofing business.
               </motion.h1>
-
-              <motion.span
-                variants={fadeUp}
-                className="inline-flex mt-6 mb-2   rounded-full border border-[#cfae5d]/35 bg-[#cfae5d]/10 px-3 py-1 text-xl tracking-wide text-white "
-              >
-                Designed for roofing contractors
-              </motion.span>
-              <motion.p
-                variants={fadeUp}
-                className="text-base md:text-lg text-white/80 max-w-xl leading-relaxed"
-              >
-                ROOFZEUS helps you stay organized, track profitability, manage
-                crew payouts, and keep schedules, photos, notes, and finances in
-                one place — without spreadsheets or guesswork.
-              </motion.p>
 
               <motion.div
                 ref={heroCtaRef}
@@ -932,7 +937,7 @@ export default function HomePage() {
                 >
                   <Link
                     to="/see-it-in-action"
-                    className="inline-flex items-center justify-center bg-[#cfae5d] text-black px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition"
+                    className="inline-flex items-center justify-center bg-[var(--color-blue)] text-black px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
                   >
                     See it in action
                   </Link>
@@ -941,7 +946,7 @@ export default function HomePage() {
                 <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
                   <Link
                     to="/pricing"
-                    className="inline-block border border-[#3a3f4b] px-6 py-2 rounded-lg text-[#f5f6f8] text-sm hover:border-[#cfae5d] transition"
+                    className="inline-block border border-[#3a3f4b] px-6 py-2  text-[#f5f6f8] text-sm hover:border-[#cfae5d] transition"
                   >
                     See pricing
                   </Link>
@@ -959,6 +964,20 @@ export default function HomePage() {
 
       {/* PAIN → SOLUTION */}
       <section className=" border-t border-[#3a3f4b]">
+        <div className="mt-20 py-5">
+          <motion.p
+            variants={textRevealDeluxe}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, amount: 0.35 }}
+            className="text-base text-center md:text-3xl max-w-6xl text-white mx-auto leading-relaxed"
+          >
+            Stay organized, track profitability, manage crew payouts, and keep
+            schedules, photos, notes, and finances in one place — without
+            spreadsheets or guesswork.
+          </motion.p>
+        </div>
+
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -982,7 +1001,7 @@ export default function HomePage() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: false, amount: 0.25 }}
-              className="group relative block mx-auto w-full max-w-[600px] mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black/20"
+              className="group relative mx-auto w-full max-w-[600px] mb-8 overflow-hidden rounded-2xl border border-white/10 bg-black/20 hidden"
               aria-label="Open full preview"
             >
               <img
@@ -1001,7 +1020,10 @@ export default function HomePage() {
               />
             </motion.button>
             <div>
-              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
+              <motion.h2
+                variants={fadeUp}
+                className="text-3xl font-bold mb-6 text-white "
+              >
                 Built for how roofing actually works
               </motion.h2>
 

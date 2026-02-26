@@ -104,10 +104,12 @@ body {
 
      /* Base */
      --color-background: #0b0e14;
+     --color-fixed-background: #0b0e14;
      --color-surface: #121826;          /* elevated canvas */
      --color-card: #0c101a;             /* primary card */
      --color-card-hover: #242b39;
      --color-border: rgba(255,255,255,0.10);
+     --color-blue: #0a90f0;
    
      /* Text */
      --color-text: #eef2f7;
@@ -148,10 +150,12 @@ body {
   
      /* Base */
      --color-background: #f5f4f9;
+     --color-fixed-background: #0b0e14;
      --color-surface: #ffffff;
      --color-card: #ffffff;
      --color-card-hover: #f3f4f6;
      --color-border: rgba(15,23,42,0.10);
+     --color-blue: #0a90f0;
    
      /* Text */
      --color-text: #0f172a;
