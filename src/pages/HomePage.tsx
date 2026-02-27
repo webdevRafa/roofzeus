@@ -11,7 +11,6 @@ import { createPortal } from "react-dom";
 
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
-import preview from "../assets/alljobs.png";
 import financialOverview from "../assets/financial-overview.png";
 import jobdetails from "../assets/jobdetails.png";
 
@@ -965,17 +964,20 @@ export default function HomePage() {
       {/* PAIN → SOLUTION */}
       <section className=" border-t border-[#3a3f4b]">
         <div className="mt-20 py-5">
-          <motion.p
-            variants={textRevealDeluxe}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.35 }}
+          <p
+            data-aos="fade-right"
+            data-aos-duration="1000"
             className="text-base text-center md:text-3xl max-w-6xl text-white mx-auto leading-relaxed"
           >
-            Stay organized, track profitability, manage crew payouts, and keep
-            schedules, photos, notes, and finances in one place — without
-            spreadsheets or guesswork.
-          </motion.p>
+            Stay organized, track profitability, manage crew payouts
+          </p>
+          <p
+            data-aos="fade-left"
+            data-aos-duration="1000"
+            className="text-base text-center md:text-3xl max-w-6xl mt-0 text-white mx-auto leading-relaxed"
+          >
+            Keep schedules, photos, notes, and finances in one place
+          </p>
         </div>
 
         <motion.div
@@ -994,7 +996,7 @@ export default function HomePage() {
           }}
           className="max-w-7xl mx-auto px-6 py-20"
         >
-          <div className="flex flex-col md:flex-row gap-6 items-center md:mb-10">
+          <div className="flex flex-col md:flex-row gap-6 items-center mb-2">
             <motion.button
               type="button"
               variants={cardIn}
@@ -1022,34 +1024,26 @@ export default function HomePage() {
             <div>
               <motion.h2
                 variants={fadeUp}
-                className="text-3xl font-bold mb-6 text-white "
+                className="text-3xl font-bold mb-0 text-white "
               >
                 Built for how roofing actually works
               </motion.h2>
-
-              <motion.p
-                variants={fadeUp}
-                className="max-w-2xl text-white/70 mb-12"
-              >
-                Keep jobs, scheduling, and crew updates in one place — so your
-                team stays aligned and nothing falls through the cracks.
-              </motion.p>
             </div>
           </div>
 
           <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: "All job details in one place",
-                desc: "Square footage, pricing, materials, notes, photos, and status — everything is tied to the job.",
+                title: "Everything about the job",
+                desc: "Sq footage, pricing, materials, notes, photos, and status",
               },
               {
-                title: "Clear scheduling, end to end",
-                desc: "Schedule dry-ins, shingles, and punch work — and see what’s coming up at a glance.",
+                title: "Clear scheduling",
+                desc: "Schedule dry-ins, shingles, and punch work. Easily view what's coming up.",
               },
               {
-                title: "Simple crew visiblity",
-                desc: "Assignments, updates, and progress are tied directly to each job.",
+                title: "Add the Crew",
+                desc: "Invite members to your crew and assign jobs to get live feedback & updates.",
               },
             ].map((f) => (
               <motion.div
@@ -1069,37 +1063,6 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
       </section>
-
-      <div className="flex flex-col md:flex-row gap-6 items-center md:mb-10 max-w-[1200px] mx-auto">
-        <div>
-          <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
-            One place to manage every job you’ve ever run
-          </motion.h2>
-
-          <motion.p variants={fadeUp} className="max-w-2xl text-white/70 mb-12">
-            Search, filter, and review every job your company has run. Our tools
-            give you a clear, organized view of your work so nothing gets lost
-            as your business grows.
-          </motion.p>
-        </div>
-        <motion.img
-          variants={cardIn}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: false, amount: 0.25 }}
-          className="block mx-auto w-full max-w-[600px] cursor-zoom-in"
-          src={preview}
-          alt="All jobs dashboard preview"
-          onClick={() =>
-            setLightbox({
-              src: preview,
-              alt: "All jobs dashboard preview",
-              title: "All Jobs",
-              subtitle: "Search • Filters • Status tracking • Full job history",
-            })
-          }
-        />
-      </div>
 
       {/* FINANCIAL POWER */}
       <section className="max-w-7xl mx-auto px-6 py-24">
@@ -1183,22 +1146,12 @@ export default function HomePage() {
           >
             <div className="min-w-0">
               <h2 className="text-3xl font-bold">
-                Professional documents, built-in
+                Create professional documents
               </h2>
               <p className="mt-3 max-w-2xl text-white/70">
-                Send invoices, generate pay stubs, and create warranty packets
-                without leaving the job. Everything stays organized and easy to
-                find later.
+                Send invoices, generate pay stubs, and create warranty packets.
+                Everything stays organized and easy to find later.
               </p>
-            </div>
-
-            <div className="hidden md:flex items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/50 px-3 py-1 text-[12px] text-white/65">
-                Print-ready PDFs
-              </span>
-              <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/50 px-3 py-1 text-[12px] text-white/65">
-                Stored per job
-              </span>
             </div>
           </motion.div>
 
@@ -1211,7 +1164,7 @@ export default function HomePage() {
                 key={d.title}
                 variants={cardIn}
                 whileHover={{ y: -4, transition: { duration: 0.25, ease } }}
-                className="group relative rounded-2xl border border-[#3a3f4b] bg-[#0b0e14] p-6 overflow-hidden"
+                className="group relative rounded-2xl  bg-[#0b0e14] p-6 overflow-hidden"
               >
                 <div className="relative flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -1222,15 +1175,8 @@ export default function HomePage() {
                       <h3 className="font-semibold text-lg text-white">
                         {d.title}
                       </h3>
-                      <div className="mt-1 text-[12px] text-[#cfae5d]/80">
-                        {d.pill}
-                      </div>
                     </div>
                   </div>
-
-                  <span className="hidden sm:inline-flex items-center rounded-full border border-[#3a3f4b] bg-white/5 px-2.5 py-1 text-[11px] text-white/65">
-                    Built-in
-                  </span>
                 </div>
 
                 <p className="relative mt-4 text-sm text-white/75 leading-relaxed">
@@ -1254,9 +1200,6 @@ export default function HomePage() {
                     Linked to jobs & crew
                   </div>
                 </div>
-
-                {/* top accent line */}
-                <div className="pointer-events-none absolute left-6 right-6 top-0 h-[1px] bg-[#cfae5d]/0 group-hover:bg-[#cfae5d]/30 transition" />
               </motion.div>
             ))}
           </motion.div>

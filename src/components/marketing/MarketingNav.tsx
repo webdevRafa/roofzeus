@@ -80,11 +80,8 @@ export default function MarketingNav() {
   const items = useMemo<NavItem[]>(
     () => [
       { label: "Home", to: "/" },
-      { label: "Features", to: "/features" },
       { label: "Pricing", to: "/pricing" },
-      { label: "Security", to: "/security" },
       { label: "FAQ", to: "/faq" }, // change to "/faqs" only if that's your actual route
-      { label: "Demo", to: "/see-it-in-action" },
     ],
     []
   );
@@ -181,7 +178,6 @@ export default function MarketingNav() {
         {/* background + blur */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="h-full w-full bg-[#0b0e14]/70 backdrop-blur-xl" />
-          <div className="absolute inset-x-0 bottom-0 h-px bg-[#3a3f4b]" />
         </div>
 
         {/* slightly tighter overall; avoid huge max width causing the nav to feel “floating” */}
@@ -196,7 +192,7 @@ export default function MarketingNav() {
               <img
                 src={logo}
                 alt="ROOFZEUS"
-                className="h-8 w-auto select-none"
+                className="h-6 w-auto select-none "
                 draggable={false}
               />
             </Link>
@@ -321,7 +317,7 @@ export default function MarketingNav() {
                       to="/signup"
                       className={cx(
                         "inline-flex items-center justify-center gap-2",
-                        "rounded-xl bg-[var(--color-blue)] px-4 py-2 text-sm font-semibold text-black",
+                        "rounded-xl border-[var(--color-blue)]/40 hover:border-[var(--color-blue)] transition-all duration-500 ease-in-out border-1 px-4 py-2 text-sm font-semibold text-white",
                         "hover:opacity-90 transition"
                       )}
                     >
