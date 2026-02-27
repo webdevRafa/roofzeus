@@ -11,7 +11,6 @@ import { createPortal } from "react-dom";
 
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
-import financialOverview from "../assets/financial-overview.png";
 import jobdetails from "../assets/jobdetails.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -358,10 +357,6 @@ function DashboardPreview() {
       viewport={{ once: false, amount: 0.25 }}
       className="relative  overflow-hidden hidden select-none md:block max-h-[500px] rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)] opacity-40! blur-[2px]!"
     >
-      {/* ambient glow */}
-      <div className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full bg-[#cfae5d]/12 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-white/6 blur-3xl" />
-
       {/* “app frame” header */}
       <div className="flex items-center justify-between gap-3 border-b border-[#3a3f4b] px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -838,7 +833,6 @@ function ImageLightbox({
 }
 
 export default function HomePage() {
-  const financialControls = useAnimation();
   const builtForControls = useAnimation();
 
   const heroCtaRef = useRef<HTMLDivElement | null>(null);
@@ -888,9 +882,7 @@ export default function HomePage() {
       {/* HERO */}
       <section className="relative overflow-hidden max-w-full">
         {/* subtle background texture */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,255,255,0.05),transparent_55%)]" />
-        </div>
+        <div className="pointer-events-none absolute inset-0"></div>
 
         <motion.div
           variants={stagger}
@@ -963,23 +955,6 @@ export default function HomePage() {
 
       {/* PAIN → SOLUTION */}
       <section className=" border-t border-[#3a3f4b]">
-        <div className="mt-20 py-5">
-          <p
-            data-aos="fade-right"
-            data-aos-duration="1000"
-            className="text-base text-center md:text-3xl max-w-6xl text-white mx-auto leading-relaxed"
-          >
-            Stay organized, track profitability, manage crew payouts
-          </p>
-          <p
-            data-aos="fade-left"
-            data-aos-duration="1000"
-            className="text-base text-center md:text-3xl max-w-6xl mt-0 text-white mx-auto leading-relaxed"
-          >
-            Keep schedules, photos, notes, and finances in one place
-          </p>
-        </div>
-
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -994,7 +969,7 @@ export default function HomePage() {
             if (!mountedRef.current) return;
             builtForControls.set("hidden");
           }}
-          className="max-w-7xl mx-auto px-6 py-20"
+          className="max-w-7xl mx-auto px-6 py-30"
         >
           <div className="flex flex-col md:flex-row gap-6 items-center mb-2">
             <motion.button
@@ -1021,17 +996,20 @@ export default function HomePage() {
                 draggable={false}
               />
             </motion.button>
-            <div>
+            <div className="block mx-auto">
               <motion.h2
                 variants={fadeUp}
-                className="text-3xl font-bold mb-0 text-white "
+                className="text-3xl font-bold mb-5 text-white text-center"
               >
                 Built for how roofing actually works
               </motion.h2>
             </div>
           </div>
 
-          <motion.div variants={stagger} className="grid md:grid-cols-3 gap-8">
+          <motion.div
+            variants={stagger}
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+          >
             {[
               {
                 title: "Everything about the job",
@@ -1044,6 +1022,10 @@ export default function HomePage() {
               {
                 title: "Add the Crew",
                 desc: "Invite members to your crew and assign jobs to get live feedback & updates.",
+              },
+              {
+                title: "Keep track of your finances",
+                desc: "Filter between dates and instantly see earnings, expenses, payouts, materials and profits.",
               },
             ].map((f) => (
               <motion.div
@@ -1061,72 +1043,21 @@ export default function HomePage() {
               </motion.div>
             ))}
           </motion.div>
-        </motion.div>
-      </section>
-
-      {/* FINANCIAL POWER */}
-      <section className="max-w-7xl mx-auto px-6 py-24">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate={financialControls}
-          whileInView="show"
-          viewport={{ once: false, amount: 0.25 }}
-          onViewportEnter={() => {
-            if (!mountedRef.current) return;
-            financialControls.start("show");
-          }}
-          onViewportLeave={() => {
-            if (!mountedRef.current) return;
-            financialControls.set("hidden");
-          }}
-        >
-          <div className="flex flex-col md:flex-row gap-6 items-center md:mb-10 max-w-[1200px] mx-auto">
-            <div className="md:hidden">
-              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
-                Know exactly where your money is
-              </motion.h2>
-
-              <motion.p
-                variants={fadeUp}
-                className="max-w-2xl text-white/70 mb-12"
-              >
-                Filter by any date range and instantly see earnings, expenses,
-                payouts, materials, and profit — across all jobs or down to a
-                single one.
-              </motion.p>
-            </div>
-            <motion.img
-              variants={cardIn}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: false, amount: 0.25 }}
-              className="block mx-auto w-full max-w-[600px] cursor-zoom-in"
-              src={financialOverview}
-              onClick={() =>
-                setLightbox({
-                  src: financialOverview,
-                  alt: "Financial overview preview",
-                  title: "Financial Overview",
-                  subtitle: "Profit • Payouts • Materials • Date ranges",
-                })
-              }
-              alt="ROOFZEUS app preview"
-            />
-            <div className="hidden md:block">
-              <motion.h2 variants={fadeUp} className="text-3xl font-bold mb-6">
-                Know exactly where your money is
-              </motion.h2>
-
-              <motion.p
-                variants={fadeUp}
-                className="max-w-2xl text-white/70 mb-12"
-              >
-                Filter by any date range and instantly see earnings, expenses,
-                payouts, materials, and profit — across all jobs or down to a
-                single one.
-              </motion.p>
-            </div>
+          <div className="mt-10">
+            <p
+              data-aos="fade-right"
+              data-aos-duration="1000"
+              className="text-base text-center md:text-2xl max-w-6xl text-white mx-auto leading-relaxed"
+            >
+              Stay organized, track profitability, manage crew payouts
+            </p>
+            <p
+              data-aos="fade-left"
+              data-aos-duration="1000"
+              className="text-base text-center md:text-2xl max-w-6xl mt-0 text-white mx-auto leading-relaxed"
+            >
+              Keep schedules, photos, notes, and finances in one place
+            </p>
           </div>
         </motion.div>
       </section>
