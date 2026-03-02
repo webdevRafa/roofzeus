@@ -697,7 +697,7 @@ function StickyCtaBar({ show }: { show: boolean }) {
             <div className="flex items-center gap-3 w-full">
               <Link
                 to="/see-it-in-action"
-                className="flex-1 inline-flex items-center justify-center bg-[#cfae5d] text-black px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
+                className="flex-1 inline-flex items-center justify-center bg-[var(--color-blue)] text-black px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
               >
                 See it in action
               </Link>
@@ -1006,10 +1006,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <motion.div
-            variants={stagger}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
-          >
+          <motion.div variants={stagger} className="grid md:grid-cols-2  gap-8">
             {[
               {
                 title: "Everything about the job",
@@ -1034,10 +1031,10 @@ export default function HomePage() {
                 whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
                 className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
               >
-                <h3 className="font-semibold text-lg mb-2 text-white">
+                <h3 className="font-semibold text-xl mb-2 text-white text-center">
                   {f.title}
                 </h3>
-                <p className="text-sm text-white/70 leading-relaxed">
+                <p className="text-sm text-white/70 leading-relaxed text-center">
                   {f.desc}
                 </p>
               </motion.div>
@@ -1047,14 +1044,14 @@ export default function HomePage() {
             <p
               data-aos="fade-right"
               data-aos-duration="1000"
-              className="text-base text-center md:text-2xl max-w-6xl text-white mx-auto leading-relaxed"
+              className="text-base text-center md:text-xl max-w-6xl text-white mx-auto leading-relaxed"
             >
               Stay organized, track profitability, manage crew payouts
             </p>
             <p
               data-aos="fade-left"
               data-aos-duration="1000"
-              className="text-base text-center md:text-2xl max-w-6xl mt-0 text-white mx-auto leading-relaxed"
+              className="text-base text-center md:text-xl max-w-6xl mt-0 text-white mx-auto leading-relaxed"
             >
               Keep schedules, photos, notes, and finances in one place
             </p>
@@ -1137,34 +1134,6 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="max-w-7xl mx-auto px-6 py-24 text-center">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
-        >
-          <motion.h2 variants={fadeUp} className="text-4xl font-extrabold">
-            Built for real roofing operations
-          </motion.h2>
-
-          <motion.p variants={fadeUp} className="mt-1 text-white/70">
-            Purpose-built for roofing contractors. No spreadsheets. No
-            guesswork.
-          </motion.p>
-
-          <motion.a
-            variants={fadeUp}
-            whileHover={{ y: -1, scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            href="http://app.localhost:5173/signup"
-            className="inline-block mt-10 bg-[#cfae5d] hover:bg-[var(--color-accent-gold-2)] text-sm text-black px-2 py-2 rounded-md font-semibold hover:opacity-90 transition"
-          >
-            Try now
-          </motion.a>
-        </motion.div>
-      </section>
       <ImageLightbox
         open={!!lightbox}
         src={lightbox?.src ?? ""}
