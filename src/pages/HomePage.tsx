@@ -1091,16 +1091,15 @@ export default function HomePage() {
               <motion.div
                 key={d.title}
                 variants={cardIn}
-                whileHover={{ y: -4, transition: { duration: 0.25, ease } }}
                 className="group relative rounded-2xl  bg-[#0b0e14] p-6 overflow-hidden"
               >
                 <div className="relative flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-xl border border-[#cfae5d]/25 bg-[#cfae5d]/10 text-[#cfae5d] flex items-center justify-center">
+                    <div className="h-11 w-11 rounded-xl border border-[var(--color-blue)]/25 bg-[var(--color-blue)]/10 text-[#cfae5d] flex items-center justify-center">
                       {d.icon}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-lg text-white">
+                      <h3 className="font-semibold text-xl text-white">
                         {d.title}
                       </h3>
                     </div>
@@ -1121,12 +1120,6 @@ export default function HomePage() {
                       <span className="truncate">{b}</span>
                     </div>
                   ))}
-                </div>
-
-                <div className="relative mt-6 flex items-center justify-between">
-                  <div className="text-[12px] text-white/45">
-                    Linked to jobs & crew
-                  </div>
                 </div>
               </motion.div>
             ))}

@@ -43,16 +43,22 @@ export default function MarketingLayout() {
           <div className="relative mx-auto max-w-7xl px-6 py-5">
             {/* Bottom bar */}
             <div className="mt-10 flex flex-row items-center justify-between gap-3 border-t border-white/10 pt-5 text-[12px] text-white w-full">
-              <div className="flex gap-2">
-                <Facebook />
-                <Instagram />
+              <div className="flex gap-2 ">
+                <Facebook className="hover:text-[var(--color-blue)] cursor-pointer" />
+                <Instagram className="hover:text-[var(--color-blue)] cursor-pointer" />
               </div>
               <div className="flex items-center gap-4">
-                <Link to="/privacy" className="hover:text-white transition">
+                <Link
+                  to="/privacy"
+                  className="text-white hover:text-[var(--color-blue)] transition"
+                >
                   Privacy
                 </Link>
                 <span className="text-white/20">•</span>
-                <Link to="/terms" className="hover:text-white transition">
+                <Link
+                  to="/terms"
+                  className="text-white hover:text-[var(--color-blue)] transition"
+                >
                   Terms
                 </Link>
               </div>
