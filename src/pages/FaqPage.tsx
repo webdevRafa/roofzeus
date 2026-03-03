@@ -44,7 +44,7 @@ function FaqItem({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-2xl mb-4 bg-[var(--color-surface)] overflow-hidden">
+    <div className="rounded-2xl mb-4 bg-[var(--color-surface)]/70 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
