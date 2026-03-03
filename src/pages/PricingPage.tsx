@@ -43,9 +43,6 @@ const cardIn: Variants = {
   },
 };
 
-const glowRing =
-  "shadow-[0_0_0_1px_rgba(58,63,75,0.7),0_30px_100px_rgba(0,0,0,0.55)]";
-
 function Pill({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/55 px-2.5 py-1 text-[11px] text-[#cfae5d]/80">
@@ -133,7 +130,7 @@ export default function PricingPage() {
   const priceLabel =
     billing === "monthly" ? `$${pricing.monthly}` : `$${pricing.annual}`;
 
-  const priceSub = billing === "monthly" ? "per month" : "per year";
+  const priceSub = billing === "monthly" ? "/ month" : "/ year";
 
   return (
     <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
