@@ -9,7 +9,6 @@ import {
   CalendarDays,
   LineChart,
   FileText,
-  Receipt,
 } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -140,7 +139,7 @@ export default function PricingPage() {
                       className={[
                         "px-3 py-2 rounded-lg transition cursor-pointer",
                         billing === "monthly"
-                          ? "bg-white text-black font-semibold"
+                          ? "bg-[#cfae5d] text-black font-semibold"
                           : "text-white/70 hover:text-white",
                       ].join(" ")}
                     >
@@ -152,7 +151,7 @@ export default function PricingPage() {
                       className={[
                         "px-3 py-2 rounded-lg transition cursor-pointer",
                         billing === "annual"
-                          ? "bg-white text-black font-semibold"
+                          ? "bg-[#cfae5d] text-black font-semibold"
                           : "text-white/70 hover:text-white",
                       ].join(" ")}
                     >
@@ -210,8 +209,9 @@ export default function PricingPage() {
                   {[
                     "Unlimited jobs, notes, photos, and documents",
                     "Scheduling for dry-in, shingles, punch",
-                    "Crew invites, assignments, pay stubs + payouts",
-                    "Financial overview + profit visibility",
+                    "Crew invites and job assignments",
+                    "Financial overview",
+                    "Professional documents",
                   ].map((t) => (
                     <div
                       key={t}
@@ -248,8 +248,8 @@ export default function PricingPage() {
               <div className="grid sm:grid-cols-2 gap-6">
                 <FeatureRow
                   icon={<CalendarDays className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Scheduling jobs"
-                  desc="Dry-in, shingles, punch — planned and visible across your jobs."
+                  title="Job scheduling"
+                  desc="Schedule for dry-in, shingles and punch — easily see what's coming up."
                 />
                 <FeatureRow
                   icon={<Users className="h-4 w-4 text-[#cfae5d]" />}
@@ -259,22 +259,13 @@ export default function PricingPage() {
                 <FeatureRow
                   icon={<LineChart className="h-4 w-4 text-[#cfae5d]" />}
                   title="Financial clarity"
-                  desc="See earnings, materials, payouts, and net profit without spreadsheets."
+                  desc="See earnings, material expenses, payouts and know your profits."
                 />
-                <FeatureRow
-                  icon={<Receipt className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Paystubs"
-                  desc="Track pending vs paid, keep history, and export when you need it."
-                />
+
                 <FeatureRow
                   icon={<FileText className="h-4 w-4 text-[#cfae5d]" />}
                   title="Professional documents"
-                  desc="Invoices, pay stubs, warranty reports — printable and tied to jobs."
-                />
-                <FeatureRow
-                  icon={<ShieldCheck className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Org-scoped by design"
-                  desc="Built for multi-tenant SaaS — every org stays isolated and secure."
+                  desc="Create print-ready invoices, pay stubs, warranty reports."
                 />
               </div>
             </div>

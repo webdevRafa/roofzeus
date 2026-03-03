@@ -77,22 +77,16 @@ const HERO_TICKER_ITEMS = [
   "Pipeline",
   "Calendar",
   "Crew management",
-  "Notes & photos",
+  "Notes",
+  "Photos",
 
   // Payments
-  "Payouts",
-  "Pay stubs",
+  "Track payouts",
+  "Paystubs",
   "Invoices",
 
   // Financial control
   "Revenue tracking",
-  "Expense tracking",
-  "Net profit",
-  "Job profitability",
-  "Material & labor costs",
-  "Margin visibility",
-  "Cash flow",
-  "Profit trends",
 
   // Reporting
   "Financial reports",
@@ -1039,7 +1033,7 @@ export default function HomePage() {
             <div className="block mx-auto">
               <motion.h2
                 variants={fadeUp}
-                className="text-3xl font-bold mb-5 text-white text-center"
+                className="text-3xl font-bold mb-5 text-center "
               >
                 Built for how roofing actually works
               </motion.h2>
@@ -1057,7 +1051,7 @@ export default function HomePage() {
                 desc: "Schedule dry-ins, shingles, and punch work. Easily view what's coming up.",
               },
               {
-                title: "Add the Crew",
+                title: "Invite your crew",
                 desc: "Invite members to your crew and assign jobs to get live feedback & updates.",
               },
               {
@@ -1068,10 +1062,9 @@ export default function HomePage() {
               <motion.div
                 key={f.title}
                 variants={cardIn}
-                whileHover={{ y: -3, transition: { duration: 0.25, ease } }}
                 className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
               >
-                <h3 className="font-semibold text-xl mb-2 text-white text-center">
+                <h3 className="font-semibold text-xl mb-2 text-[var(--color-blue)] text-center">
                   {f.title}
                 </h3>
                 <p className="text-sm text-white/70 leading-relaxed text-center">

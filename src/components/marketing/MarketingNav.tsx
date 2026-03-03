@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { Menu, X, ArrowRight, LogIn, ChevronDown, Scale } from "lucide-react";
+import { Menu, X, ArrowRight, LogIn } from "lucide-react";
 
 import logo from "../../assets/logo-white.svg";
 
@@ -82,15 +82,6 @@ export default function MarketingNav() {
       { label: "Home", to: "/" },
       { label: "Pricing", to: "/pricing" },
       { label: "FAQ", to: "/faq" }, // change to "/faqs" only if that's your actual route
-    ],
-    []
-  );
-
-  // Legal stays out of the main row (cleaner on mid widths)
-  const legalItems = useMemo<NavItem[]>(
-    () => [
-      { label: "Privacy", to: "/privacy" },
-      { label: "Terms", to: "/terms" },
     ],
     []
   );
@@ -232,66 +223,6 @@ export default function MarketingNav() {
                   )}
                 </NavLink>
               ))}
-
-              {/* Legal dropdown */}
-              <div ref={legalWrapRef} className="relative ml-1">
-                <button
-                  type="button"
-                  onClick={() => setLegalOpen((v) => !v)}
-                  className={cx(
-                    "relative inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition",
-                    "text-white/65 hover:bg-white/5 hover:text-white/80"
-                  )}
-                  aria-haspopup="menu"
-                  aria-expanded={legalOpen}
-                >
-                  <Scale className="h-4 w-4 text-white/55" />
-                  Legal
-                  <ChevronDown
-                    className={cx(
-                      "h-4 w-4 text-white/55 transition",
-                      legalOpen && "rotate-180"
-                    )}
-                  />
-                </button>
-
-                <AnimatePresence>
-                  {legalOpen && (
-                    <motion.div
-                      variants={popIn}
-                      initial="hidden"
-                      animate="show"
-                      exit="exit"
-                      className={cx(
-                        "absolute right-0 mt-2 w-44 overflow-hidden",
-                        "rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/95 backdrop-blur-xl",
-                        "shadow-[0_30px_120px_rgba(0,0,0,0.55)]"
-                      )}
-                      role="menu"
-                    >
-                      <div className="p-2">
-                        {legalItems.map((it) => (
-                          <NavLink
-                            key={it.to}
-                            to={it.to}
-                            className={({ isActive }) =>
-                              cx(
-                                "block rounded-xl px-3 py-2 text-sm transition",
-                                isActive
-                                  ? "bg-white/10 text-white"
-                                  : "text-white/70 hover:bg-white/10 hover:text-white"
-                              )
-                            }
-                            role="menuitem"
-                          >
-                            {it.label}
-                          </NavLink>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
             </nav>
 
             {/* Actions */}
@@ -426,28 +357,6 @@ export default function MarketingNav() {
                       {it.label}
                     </NavLink>
                   ))}
-
-                  <div className="mt-2 text-[11px] uppercase tracking-wider text-white/40 px-1">
-                    Legal
-                  </div>
-
-                  {legalItems.map((it) => (
-                    <NavLink
-                      key={it.to}
-                      to={it.to}
-                      className={({ isActive }) =>
-                        cx(
-                          "rounded-xl px-3 py-3 text-sm font-semibold transition",
-                          "border border-white/10",
-                          isActive
-                            ? "bg-white/10 text-[#f5f6f8]"
-                            : "bg-white/5 text-white/75 hover:bg-white/10"
-                        )
-                      }
-                    >
-                      {it.label}
-                    </NavLink>
-                  ))}
                 </div>
 
                 <div className="mt-4 grid gap-2">
@@ -463,11 +372,11 @@ export default function MarketingNav() {
                           to="/signup"
                           className={cx(
                             "inline-flex items-center justify-center gap-2",
-                            "rounded-xl bg-[#cfae5d] px-4 py-3",
+                            "rounded-xl border-[var(--color-blue)] border-2 text-white px-4 py-3",
                             "text-sm font-semibold text-black hover:opacity-90 transition"
                           )}
                         >
-                          Start free trial
+                          Try it now
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       </motion.div>
