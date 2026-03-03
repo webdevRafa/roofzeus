@@ -120,8 +120,8 @@ export default function PricingPage() {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
 
   const pricing = useMemo(() => {
-    const monthly = 59;
-    const annual = 590; // 2 months free vs 59*12 = 708
+    const monthly = 50;
+    const annual = 500; // 2 months free vs 59*12 = 708
     return {
       monthly,
       annual,
@@ -139,69 +139,40 @@ export default function PricingPage() {
     <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-[#3a3f4b]">
-        <div className="absolute inset-0">
-          <div className="absolute -top-24 -left-24 h-[360px] w-[360px] rounded-full bg-[#cfae5d]/10 blur-[90px]" />
-          <div className="absolute -bottom-24 -right-24 h-[420px] w-[420px] rounded-full bg-white/5 blur-[110px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(207,174,93,0.12),transparent_55%),radial-gradient(circle_at_70%_60%,rgba(255,255,255,0.06),transparent_55%)]" />
-        </div>
-
         <motion.div
           variants={stagger}
           initial="hidden"
           animate="show"
           className="relative max-w-7xl mx-auto px-6 pt-20 pb-14"
         >
-          <motion.div
-            variants={fadeUp}
-            className="flex items-center justify-between gap-4"
-          >
-            <div className="flex items-center gap-2">
-              <Pill>14-day free trial</Pill>
-              <Pill>No card required to try</Pill>
-            </div>
-          </motion.div>
-
-          <div className="mt-10 grid lg:grid-cols-12 gap-10 items-start">
+          <div className="mt-10 grid lg:grid-cols-12 gap-10 items-center">
             <motion.div variants={fadeUp} className="lg:col-span-6">
               <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
-                Simple pricing.
-                <span className="block text-[#cfae5d]">
+                One Plan.
+                <span className="block text-[var(--color-blue)]">
                   Everything included.
                 </span>
               </h1>
-
-              <p className="mt-5 text-lg  max-w-xl">
-                ROOFZEUS is built for real roofing operations — jobs,
-                scheduling, crew payouts, notes/photos, documents, and finance
-                in one place. No add-on maze. No feature gates.
-              </p>
-
-              <div className="mt-8 flex flex-wrap gap-3 text-sm text-white/70">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-[#cfae5d]" />
-                  Unlimited jobs
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-[#cfae5d]" />
-                  Unlimited crew members
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-[#cfae5d]" />
-                  Pay stubs + invoices + reports
-                </span>
-              </div>
+              <motion.div
+                variants={fadeUp}
+                className="flex items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-2">
+                  <Pill>1 month trial</Pill>
+                  <Pill>No card required to try</Pill>
+                </div>
+              </motion.div>
             </motion.div>
 
             {/* Pricing Card */}
             <motion.div
               variants={cardIn}
-              className={`lg:col-span-6 rounded-2xl border border-[#3a3f4b] bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 ${glowRing}`}
+              className={`lg:col-span-6 rounded-2xl border-none bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 `}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mt-1 text-xl font-bold">THE THUNDER PLAN</div>
-                  <div className="mt-1 text-sm text-[#cfae5d]/80">
-                    Flat rate. Full access. Built for contractors.
+                  <div className="mt-1 text-xl font-bold">
+                    FLAT RATE. FULL ACCESS.
                   </div>
                 </div>
 
@@ -214,7 +185,7 @@ export default function PricingPage() {
                       className={[
                         "px-3 py-2 rounded-lg transition",
                         billing === "monthly"
-                          ? "bg-[#cfae5d] text-black font-semibold"
+                          ? "bg-white text-black font-semibold"
                           : "text-white/70 hover:text-white",
                       ].join(" ")}
                     >
@@ -226,7 +197,7 @@ export default function PricingPage() {
                       className={[
                         "px-3 py-2 rounded-lg transition",
                         billing === "annual"
-                          ? "bg-[#cfae5d] text-black font-semibold"
+                          ? "bg-white text-black font-semibold"
                           : "text-white/70 hover:text-white",
                       ].join(" ")}
                     >
@@ -272,22 +243,13 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid sm:grid-cols-2 gap-3">
-                <Link
-                  to="/signup"
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-[#cfae5d] px-4 py-3 font-semibold text-black hover:opacity-90 transition"
-                >
-                  Start free trial
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-
-                <Link
-                  to="/login"
-                  className="inline-flex items-center justify-center rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 px-4 py-3 font-semibold text-white hover:border-[#cfae5d] transition"
-                >
-                  Log in
-                </Link>
-              </div>
+              <Link
+                to="/signup"
+                className="group inline-flex items-center text-md justify-center gap-2  bg-[var(--color-blue)] px-4 py-1 font-semibold text-black hover:opacity-90 transition mt-5"
+              >
+                Try it free
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
 
               <div className="mt-6 border-t border-white/10 pt-5">
                 <div className="grid gap-3">

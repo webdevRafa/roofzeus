@@ -21,13 +21,6 @@ export default function MarketingLayout() {
 
       {/* Global marketing background treatment */}
       <div className="relative">
-        {/* ambient gradients */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-24 -left-28 h-[420px] w-[420px] rounded-full bg-[#cfae5d]/10 blur-[110px]" />
-          <div className="absolute -bottom-28 -right-28 h-[520px] w-[520px] rounded-full bg-white/5 blur-[130px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(207,174,93,0.10),transparent_55%),radial-gradient(circle_at_70%_55%,rgba(255,255,255,0.06),transparent_60%)]" />
-        </div>
-
         {/* Page content */}
         <motion.div
           variants={fade}

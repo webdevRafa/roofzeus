@@ -8,7 +8,7 @@ import {
 } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-
+import { useLayoutEffect } from "react";
 import CountUp from "react-countup";
 import logo from "../assets/roofzeus-white.png";
 import jobdetails from "../assets/jobdetails.png";
@@ -699,7 +699,7 @@ function StickyCtaBar({ show }: { show: boolean }) {
                 to="/see-it-in-action"
                 className="flex-1 inline-flex items-center justify-center bg-[var(--color-blue)] text-black px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
               >
-                See it in action
+                Try it free
               </Link>
 
               <Link
@@ -837,6 +837,7 @@ export default function HomePage() {
 
   const heroCtaRef = useRef<HTMLDivElement | null>(null);
   const [showStickyCtas, setShowStickyCtas] = useState(false);
+  const heroLogoRef = useRef<HTMLImageElement | null>(null);
 
   const mountedRef = useRef(false);
 
@@ -875,6 +876,44 @@ export default function HomePage() {
     return () => obs.disconnect();
   }, []);
 
+  useLayoutEffect(() => {
+    const el = heroLogoRef.current;
+    if (!el) return;
+
+    const root = document.documentElement;
+
+    const computeInView = () => {
+      const rect = el.getBoundingClientRect();
+
+      // Treat it as "in view" if any meaningful part is visible.
+      // (accounts for sticky header height so we hide nav logo at top)
+      const headerOffset = 64;
+      const topOk = rect.bottom > headerOffset;
+      const bottomOk = rect.top < window.innerHeight;
+      return topOk && bottomOk;
+    };
+
+    // ✅ Set initial state BEFORE first paint (prevents flash)
+    root.classList.toggle("rz-hero-logo-inview", computeInView());
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        root.classList.toggle("rz-hero-logo-inview", entry.isIntersecting);
+      },
+      {
+        rootMargin: "-64px 0px 0px 0px",
+        threshold: 0.2,
+      }
+    );
+
+    obs.observe(el);
+
+    return () => {
+      obs.disconnect();
+      root.classList.remove("rz-hero-logo-inview");
+    };
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8] overflow-x-hidden">
       <StickyCtaBar show={showStickyCtas} />
@@ -896,6 +935,7 @@ export default function HomePage() {
               className="select-none min-w-0 lg:translate-x-[200px] z-90"
             >
               <motion.img
+                ref={heroLogoRef}
                 variants={fadeIn}
                 className="max-w-[300px] mb-3"
                 src={logo}
@@ -930,7 +970,7 @@ export default function HomePage() {
                     to="/see-it-in-action"
                     className="inline-flex items-center justify-center bg-[var(--color-blue)] text-black px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
                   >
-                    See it in action
+                    Try it free
                   </Link>
                 </motion.div>
 

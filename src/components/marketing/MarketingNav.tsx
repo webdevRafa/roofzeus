@@ -186,7 +186,14 @@ export default function MarketingNav() {
             {/* Brand */}
             <Link
               to="/"
-              className="group inline-flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-white/5 transition"
+              className={cx(
+                "group inline-flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-white/5 transition",
+                // Hide the navbar logo while the hero logo is visible
+                "opacity-100 translate-y-0 transition-all duration-300",
+                "[html.rz-hero-logo-inview_&]:opacity-0",
+                "[html.rz-hero-logo-inview_&]:-translate-y-1",
+                "[html.rz-hero-logo-inview_&]:pointer-events-none"
+              )}
               aria-label="ROOFZEUS Home"
             >
               <img
