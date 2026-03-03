@@ -1,14 +1,8 @@
 // src/pages/FaqPage.tsx
-import { Link } from "react-router-dom";
+
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useMemo, useState } from "react";
-import {
-  ArrowRight,
-  CheckCircle2,
-  HelpCircle,
-  Minus,
-  Plus,
-} from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
