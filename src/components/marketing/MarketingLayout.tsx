@@ -32,7 +32,7 @@ export default function MarketingLayout() {
         </motion.div>
 
         {/* Footer */}
-        <footer className="relative  bg-[#0b0e14]/75 backdrop-blur">
+        <footer className="relative  bg-[#0b0e14]/75 backdrop-blur pb-10">
           <div className="relative mx-auto max-w-7xl px-6 py-5">
             {/* Bottom bar */}
             <div className="mt-10 flex flex-row items-center justify-between gap-3 border-t border-white/10 pt-5 text-[12px] text-white w-full">

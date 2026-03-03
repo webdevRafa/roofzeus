@@ -10,7 +10,7 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useLayoutEffect } from "react";
 import CountUp from "react-countup";
-import logo from "../assets/roofzeus-white.png";
+import logo from "../assets/logo-white.svg";
 import jobdetails from "../assets/jobdetails.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;

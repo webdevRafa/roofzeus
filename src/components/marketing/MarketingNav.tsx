@@ -4,7 +4,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { Menu, X, ArrowRight, LogIn, ChevronDown, Scale } from "lucide-react";
 
-import logo from "../../assets/roofzeus-white.png";
+import logo from "../../assets/logo-white.svg";
 
 type NavItem = {
   label: string;

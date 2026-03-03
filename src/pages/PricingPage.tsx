@@ -45,7 +45,7 @@ const cardIn: Variants = {
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/55 px-2.5 py-1 text-[11px] text-[#cfae5d]/80">
+    <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/55 px-2.5 py-1 text-[11px] text-white">
       {children}
     </span>
   );
@@ -164,23 +164,23 @@ export default function PricingPage() {
             {/* Pricing Card */}
             <motion.div
               variants={cardIn}
-              className={`lg:col-span-6 rounded-2xl border-none bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 `}
+              className={`lg:col-span-6 rounded-2xl border-none bg-gradient-to-b from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 `}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mt-1 text-xl font-bold">
-                    FLAT RATE. FULL ACCESS.
+                  <div className="mt-1 text-lg font-poppins">
+                    Flate rate, full access.
                   </div>
                 </div>
 
                 {/* Billing toggle */}
                 <div className="rounded-xl border border-white/10 bg-[#0b0e14]/35 p-1">
-                  <div className="grid grid-cols-2 text-[12px]">
+                  <div className="grid grid-cols-2 text-[10px] md:text-[12px]">
                     <button
                       type="button"
                       onClick={() => setBilling("monthly")}
                       className={[
-                        "px-3 py-2 rounded-lg transition",
+                        "px-3 py-2 rounded-lg transition cursor-pointer",
                         billing === "monthly"
                           ? "bg-white text-black font-semibold"
                           : "text-white/70 hover:text-white",
@@ -192,7 +192,7 @@ export default function PricingPage() {
                       type="button"
                       onClick={() => setBilling("annual")}
                       className={[
-                        "px-3 py-2 rounded-lg transition",
+                        "px-3 py-2 rounded-lg transition cursor-pointer",
                         billing === "annual"
                           ? "bg-white text-black font-semibold"
                           : "text-white/70 hover:text-white",
@@ -227,7 +227,7 @@ export default function PricingPage() {
                     </div>
                   ) : (
                     <div className="mt-2 text-sm text-white/65">
-                      Try it for 14 days — no payment info up front.
+                      Try it risk free for 30 days.
                     </div>
                   )}
                 </div>
@@ -242,10 +242,9 @@ export default function PricingPage() {
 
               <Link
                 to="/signup"
-                className="group inline-flex items-center text-md justify-center gap-2  bg-[var(--color-blue)] px-4 py-1 font-semibold text-black hover:opacity-90 transition mt-5"
+                className="group inline-flex items-center text-md justify-center gap-2 rounded-sm border-1 border-[var(--color-blue)] hover:bg-[var(--color-blue)] py-1 px-2  text-white hover:opacity-90 transition! duration-600 ease-in-out mt-5"
               >
-                Try it free
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                Get started
               </Link>
 
               <div className="mt-6 border-t border-white/10 pt-5">
@@ -267,8 +266,8 @@ export default function PricingPage() {
                 </div>
 
                 <div className="mt-4 text-[12px] text-white/50">
-                  After your trial, you’ll be prompted to add payment details to
-                  continue.
+                  After your trial ends, you’ll be prompted to add payment
+                  details to continue.
                 </div>
               </div>
             </motion.div>
@@ -277,77 +276,41 @@ export default function PricingPage() {
       </section>
 
       {/* VALUE GRID */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className="max-w-7xl mx-auto px-6 py-16  mt-10">
+        <h1 className="text-3xl mb-6">What you're getting</h1>
         <motion.div
           variants={stagger}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
-          className="grid lg:grid-cols-12 gap-10"
+          className="grid lg:grid-cols-12 gap-10 bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]"
         >
-          <motion.div variants={fadeUp} className="lg:col-span-5">
-            <motion.span
-              variants={fadeUp}
-              className="inline-flex mt-6 mb-2   rounded-full border border-[#cfae5d]/35 bg-[#cfae5d]/10 px-3 py-1 text-xl tracking-wide text-white "
-            >
-              What you're buying
-            </motion.span>
-            <p className="mt-3 text-white">
-              ROOFZEUS isn’t a generic CRM. It’s a workflow tool built around
-              how roofing work actually runs — from job setup to schedule to
-              crew pay.
-            </p>
-
-            <div className="mt-6 rounded-2xl border border-[#3a3f4b] bg-[#1f2430] p-5">
-              <div className="text-sm font-semibold">Why one plan?</div>
-              <p className="mt-2 text-sm text-white/65 leading-relaxed">
-                Pricing should be predictable. Your crew size changes, job
-                volume changes, and seasonality changes — the tool should stay
-                simple.
-              </p>
-              <div className="mt-4 grid gap-2 text-sm text-white/70">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-[#cfae5d]" />
-                  <span>No “per user” math.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-[#cfae5d]" />
-                  <span>No locked features.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 text-[#cfae5d]" />
-                  <span>Same workflow for every contractor.</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="lg:col-span-7">
+          <motion.div variants={fadeUp} className="lg:col-span-12">
             <div className="rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-6">
               <div className="grid sm:grid-cols-2 gap-6">
                 <FeatureRow
                   icon={<CalendarDays className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Scheduling that matches the work"
+                  title="Scheduling jobs"
                   desc="Dry-in, shingles, punch — planned and visible across your jobs."
                 />
                 <FeatureRow
                   icon={<Users className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Crew accountability"
+                  title="Crew access"
                   desc="Invite members, assign jobs, collect photos/notes, generate pay stubs."
                 />
                 <FeatureRow
                   icon={<LineChart className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Profit clarity"
+                  title="Financial clarity"
                   desc="See earnings, materials, payouts, and net profit without spreadsheets."
                 />
                 <FeatureRow
                   icon={<Receipt className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Payout tracking"
+                  title="Paystubs"
                   desc="Track pending vs paid, keep history, and export when you need it."
                 />
                 <FeatureRow
                   icon={<FileText className="h-4 w-4 text-[#cfae5d]" />}
-                  title="Documents built in"
+                  title="Professional documents"
                   desc="Invoices, pay stubs, warranty reports — printable and tied to jobs."
                 />
                 <FeatureRow
@@ -356,105 +319,6 @@ export default function PricingPage() {
                   desc="Built for multi-tenant SaaS — every org stays isolated and secure."
                 />
               </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* FAQ */}
-      <section className="bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] ">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
-          className="max-w-7xl mx-auto px-6 py-16"
-        >
-          <motion.div
-            variants={fadeUp}
-            className="flex items-end justify-between gap-6 flex-wrap"
-          >
-            <div>
-              <h2 className="text-3xl font-bold">FAQ</h2>
-              <p className="mt-2 text-white">
-                Straight answers. No pricing games.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Pill>14-day trial</Pill>
-              <Pill>Cancel anytime</Pill>
-            </div>
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="mt-8 grid gap-3">
-            <FaqItem
-              q="Do I need a credit card to start the trial?"
-              a={
-                <>
-                  No. You can create an account and use ROOFZEUS for 14 days
-                  with no payment info. After the trial, you’ll be prompted to
-                  add payment details to continue.
-                </>
-              }
-            />
-            <FaqItem
-              q="Is it really unlimited crew members?"
-              a={
-                <>
-                  Yes — invite your crew, assign jobs, and generate pay stubs
-                  without worrying about seat limits.
-                </>
-              }
-            />
-            <FaqItem
-              q="Can I switch between monthly and annual?"
-              a={
-                <>
-                  Yep. Start monthly, then switch to annual once it’s working
-                  for your operation. Annual includes a built-in discount (2
-                  months free).
-                </>
-              }
-            />
-            <FaqItem
-              q="Can I cancel anytime?"
-              a={
-                <>
-                  Yes. Cancel whenever you want. Your data stays intact during
-                  your paid period; after that, access is paused until you
-                  resume.
-                </>
-              }
-            />
-          </motion.div>
-
-          {/* Bottom CTA */}
-          <motion.div
-            variants={fadeUp}
-            className="mt-12 rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
-          >
-            <div>
-              <div className="text-xl font-bold">
-                Ready to run jobs cleaner?
-              </div>
-              <div className="mt-1 text-sm text-white/65">
-                Start the 14-day free trial. No card. Full access.
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <Link
-                to="/see-it-in-action"
-                className="inline-flex md:hidden items-center justify-center rounded-xl bg-[#cfae5d] px-5 py-3 font-semibold text-black hover:opacity-90 transition"
-              >
-                Start free trial
-              </Link>
-              <Link
-                to="/"
-                className="inline-flex md:hidden items-center justify-center rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 px-5 py-3 font-semibold text-white hover:border-[#cfae5d] transition"
-              >
-                Back home
-              </Link>
             </div>
           </motion.div>
         </motion.div>
