@@ -1,7 +1,7 @@
 // src/pages/PricingPage.tsx
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, type Variants, AnimatePresence } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   CheckCircle2,
   ShieldCheck,
@@ -10,9 +10,6 @@ import {
   LineChart,
   FileText,
   Receipt,
-  ArrowRight,
-  Minus,
-  Plus,
 } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -69,45 +66,6 @@ function FeatureRow({
         <div className="font-semibold text-[#f5f6f8]">{title}</div>
         <div className="text-sm text-white/60 leading-relaxed">{desc}</div>
       </div>
-    </div>
-  );
-}
-
-function FaqItem({ q, a }: { q: string; a: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full px-4 py-4 flex items-center justify-between gap-4 text-left"
-      >
-        <div className="font-semibold text-[#f5f6f8]">{q}</div>
-        <div className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5">
-          {open ? (
-            <Minus className="h-4 w-4 text-white/70" />
-          ) : (
-            <Plus className="h-4 w-4 text-white/70" />
-          )}
-        </div>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 pb-4 text-sm text-white/65 leading-relaxed">
-              {a}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
