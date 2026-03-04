@@ -227,9 +227,9 @@ export default function FaqPage() {
         >
           <motion.h1
             variants={fadeUp}
-            className="text-4xl font-bold tracking-tight leading-[1.05] mt-20 text-[var(--color-blue)]"
+            className="text-3xl  tracking-tight leading-[1.05] mt-20 text-white"
           >
-            Questions you may have
+            Frequently asked questions
           </motion.h1>
         </motion.div>
       </section>

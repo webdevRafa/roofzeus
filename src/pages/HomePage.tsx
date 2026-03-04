@@ -943,14 +943,12 @@ export default function HomePage() {
                   <FeatureTicker items={HERO_TICKER_ITEMS} />
                 </div>
               </motion.div>
-
               <motion.h1
                 variants={fadeUp}
-                className="text-2xl   font-poppins my-3 leading-[1.05] tracking-tight text-white"
+                className="text-2xl   font-poppins mt-5 leading-[1.05] tracking-tight text-white"
               >
-                The best tool for roofing contractors.
+                The best software for roofing contractors.
               </motion.h1>
-
               <motion.div
                 ref={heroCtaRef}
                 variants={fadeUp}

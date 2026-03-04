@@ -164,10 +164,10 @@ export default function PricingPage() {
               <div className="mt-6 flex items-end justify-between gap-4">
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <div className="text-5xl font-extrabold tracking-tight">
+                    <div className="text-4xl font-bold tracking-tight">
                       {priceLabel}
                     </div>
-                    <div className="text-white/60">{priceSub}</div>
+                    <div className="text-white/60 text-sm">{priceSub}</div>
                   </div>
 
                   {billing === "annual" ? (
@@ -183,7 +183,7 @@ export default function PricingPage() {
                       /yr.
                     </div>
                   ) : (
-                    <div className="mt-2 text-sm text-white/65">
+                    <div className="mt-2 text-xs text-white/65">
                       Try it risk free for 30 days.
                     </div>
                   )}

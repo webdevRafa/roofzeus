@@ -61,9 +61,9 @@ export default function PrivacyPage() {
             <span className="text-white/70 align-super text-[0.6em] ml-1">
               ™
             </span>{" "}
-            exists to help roofing contractors run jobs and track money easily.
-            This policy explains what we collect, why we collect it, and what we
-            do (and don’t) do with it.
+            was created to help roofing contractors run jobs and track money
+            easily. This policy explains what we collect, why we collect it, and
+            what we do (and don’t) do with it.
           </motion.p>
         </motion.div>
       </section>
