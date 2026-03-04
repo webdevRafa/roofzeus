@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import roofing from "../assets/roofing.webp";
-import logo from "../assets/roofzeus-white.png";
+import logo from "../assets/logo-white.svg";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 
 // Assumes you export `auth` from ./firebase/firebaseConfig
@@ -261,7 +261,7 @@ const LoginPage = () => {
                     className="rounded-xl p-3"
                   >
                     <img
-                      className="max-w-[250px] w-auto select-none"
+                      className="max-w-[250px] w-full select-none"
                       src={logo}
                       alt="ROOFZEUS"
                       draggable={false}

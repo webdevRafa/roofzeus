@@ -690,7 +690,7 @@ function StickyCtaBar({ show }: { show: boolean }) {
           <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-[#0b0e14] backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] p-3">
             <div className="flex items-center gap-3 w-full">
               <Link
-                to="/see-it-in-action"
+                to="/signup"
                 className="flex-1 inline-flex items-center justify-center bg-[var(--color-blue)] text-black px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
               >
                 Try it free
@@ -931,7 +931,7 @@ export default function HomePage() {
               <motion.img
                 ref={heroLogoRef}
                 variants={fadeIn}
-                className="max-w-[300px] mb-3"
+                className="max-w-[250px] mb-3"
                 src={logo}
                 alt="ROOFZEUS"
                 draggable={false}
@@ -946,9 +946,9 @@ export default function HomePage() {
 
               <motion.h1
                 variants={fadeUp}
-                className="text-3xl md:text-3xl lg:text-4xl font-poppins my-3 leading-[1.05] tracking-tight text-white"
+                className="text-2xl   font-poppins my-3 leading-[1.05] tracking-tight text-white"
               >
-                Total visibility into your roofing business.
+                The best tool for roofing contractors.
               </motion.h1>
 
               <motion.div
@@ -956,19 +956,16 @@ export default function HomePage() {
                 variants={fadeUp}
                 className="mt-10 flex gap-4"
               >
-                <motion.div
-                  whileHover={{ y: -1, scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                >
+                <motion.div whileTap={{ scale: 0.98 }}>
                   <Link
-                    to="/see-it-in-action"
-                    className="inline-flex items-center justify-center bg-[var(--color-blue)] text-black px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
+                    to="/signup"
+                    className="inline-flex items-center justify-center border-1 border-[var(--color-blue)] hover:border-[#cfae5d] text-[#f5f6f8] px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
                   >
                     Try it free
                   </Link>
                 </motion.div>
 
-                <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
+                <motion.div whileTap={{ scale: 0.98 }}>
                   <Link
                     to="/pricing"
                     className="inline-block border border-[#3a3f4b] px-6 py-2  text-[#f5f6f8] text-sm hover:border-[#cfae5d] transition"

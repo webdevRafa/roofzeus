@@ -321,7 +321,6 @@ export default function MarketingNav() {
                     className="h-7 w-auto select-none"
                     draggable={false}
                   />
-                  <div className="text-sm text-white/65">Menu</div>
                 </div>
 
                 <button
@@ -372,7 +371,7 @@ export default function MarketingNav() {
                           to="/signup"
                           className={cx(
                             "inline-flex items-center justify-center gap-2",
-                            "rounded-xl border-[var(--color-blue)] border-2 text-white px-4 py-3",
+                            "rounded-xl border-[var(--color-blue)] border-1 text-white px-4 py-1 mb-2",
                             "text-sm font-semibold text-black hover:opacity-90 transition"
                           )}
                         >
@@ -395,15 +394,6 @@ export default function MarketingNav() {
                     <LogIn className="h-4 w-4 text-white/70" />
                     Log in
                   </Link>
-                </div>
-
-                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-[12px] text-white/65 leading-relaxed">
-                  <div className="font-semibold text-white/80">
-                    14-day free trial
-                  </div>
-                  <div className="mt-1">
-                    No card required up front. Cancel anytime.
-                  </div>
                 </div>
               </div>
             </motion.aside>

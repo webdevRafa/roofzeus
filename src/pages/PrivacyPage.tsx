@@ -1,7 +1,6 @@
 // src/pages/PrivacyPage.tsx
-import { Link } from "react-router-dom";
+
 import { motion, type Variants } from "framer-motion";
-import { ShieldCheck, ArrowRight } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -19,14 +18,6 @@ const fadeUp: Variants = {
     transition: { duration: 0.7, ease },
   },
 };
-
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/55 px-2.5 py-1 text-[11px] text-[#cfae5d]/80">
-      {children}
-    </span>
-  );
-}
 
 function Section({
   title,
@@ -46,8 +37,6 @@ function Section({
 }
 
 export default function PrivacyPage() {
-  const lastUpdated = "December 28, 2025";
-
   return (
     <main className="min-h-[calc(100vh-64px)] text-[#f5f6f8] overflow-x-hidden">
       <section className="max-w-7xl mx-auto px-6 pt-14 pb-10">
@@ -57,15 +46,6 @@ export default function PrivacyPage() {
           animate="show"
           className="space-y-6"
         >
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-wrap items-center gap-3"
-          >
-            <Pill>Privacy</Pill>
-            <Pill>Plain English</Pill>
-            <Pill>Built for contractors</Pill>
-          </motion.div>
-
           <motion.h1
             variants={fadeUp}
             className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.05]"
@@ -77,28 +57,14 @@ export default function PrivacyPage() {
             variants={fadeUp}
             className="max-w-2xl text-white/70 leading-relaxed"
           >
-            ROOFZEUS exists to help roofing contractors run jobs and track money
-            cleanly. This policy explains what we collect, why we collect it,
-            and what we do (and don’t) do with it.
+            RoofZeus
+            <span className="text-white/70 align-super text-[0.6em] ml-1">
+              ™
+            </span>{" "}
+            exists to help roofing contractors run jobs and track money easily.
+            This policy explains what we collect, why we collect it, and what we
+            do (and don’t) do with it.
           </motion.p>
-
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-col sm:flex-row gap-3"
-          >
-            <Link
-              to="/see-it-in-action"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#cfae5d] px-5 py-3 text-sm font-semibold text-black hover:bg-[#cfae5d]/90 transition"
-            >
-              Start free trial
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <div className="inline-flex items-center gap-2 rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 px-5 py-3 text-sm text-white/70">
-              <ShieldCheck className="h-4 w-4 text-[#cfae5d]" />
-              Last updated:{" "}
-              <span className="text-white/80 font-semibold">{lastUpdated}</span>
-            </div>
-          </motion.div>
         </motion.div>
       </section>
 
