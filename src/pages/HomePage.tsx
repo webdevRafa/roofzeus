@@ -691,14 +691,14 @@ function StickyCtaBar({ show }: { show: boolean }) {
             <div className="flex items-center gap-3 w-full">
               <Link
                 to="/signup"
-                className="flex-1 inline-flex items-center justify-center bg-[var(--color-blue)] text-black px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
+                className="flex-1 inline-flex items-center justify-center border-1 border-[var(--color-blue)] text-white px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
               >
                 Try it free
               </Link>
 
               <Link
                 to="/pricing"
-                className="flex-1 inline-flex items-center justify-center border border-[#3a3f4b] bg-white/5 px-4 py-2.5 rounded-xl text-xs font-semibold text-white hover:border-[#cfae5d] transition"
+                className="flex-1 inline-flex items-center justify-center border border-[#3a3f4b]  px-4 py-2.5 rounded-xl text-xs font-semibold text-white hover:border-[#cfae5d] transition"
               >
                 Pricing
               </Link>
