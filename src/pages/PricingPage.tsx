@@ -101,7 +101,7 @@ export default function PricingPage() {
         >
           <div className="mt-10 grid lg:grid-cols-12 gap-10 items-center">
             <motion.div variants={fadeUp} className="lg:col-span-6">
-              <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
+              <h1 className="text-4xl font-extrabold leading-tight">
                 One Plan.
                 <span className="block text-[var(--color-blue)]">
                   Everything included.
@@ -125,7 +125,7 @@ export default function PricingPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mt-1 text-lg font-poppins">
+                  <div className="mt-1 text-md font-poppins">
                     Flate rate, full access.
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export default function PricingPage() {
 
       {/* VALUE GRID */}
       <section className="max-w-7xl mx-auto px-6 py-16  mt-10">
-        <h1 className="text-3xl mb-6">What you're getting</h1>
+        <h1 className="text-2xl mb-4">Run your business like a pro.</h1>
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -244,7 +244,7 @@ export default function PricingPage() {
           className="grid lg:grid-cols-12 gap-10 bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]"
         >
           <motion.div variants={fadeUp} className="lg:col-span-12">
-            <div className="rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-6">
+            <div className="rounded-2xl  bg-[#0b0e14]/35 px-6 py-20">
               <div className="grid sm:grid-cols-2 gap-6">
                 <FeatureRow
                   icon={<CalendarDays className="h-4 w-4 text-[#cfae5d]" />}

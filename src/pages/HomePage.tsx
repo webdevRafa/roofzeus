@@ -349,14 +349,11 @@ function DashboardPreview() {
       initial="hidden"
       whileInView="show"
       viewport={{ once: false, amount: 0.25 }}
-      className="relative  overflow-hidden hidden select-none md:block max-h-[500px] rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)] opacity-40! blur-[2px]!"
+      className="relative  overflow-hidden hidden select-none md:block max-h-[500px] rounded-2xl border border-[#3a3f4b] bg-[#121826] shadow-[0_24px_80px_rgba(0,0,0,0.55)] opacity-40! blur-[2px]!"
     >
       {/* “app frame” header */}
       <div className="flex items-center justify-between gap-3 border-b border-[#3a3f4b] px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-9 w-9 rounded-xl bg-[#0b0e14] border border-[#3a3f4b] flex items-center justify-center">
-            <div className="h-2 w-2 rounded-full bg-[#cfae5d]" />
-          </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold text-[#f5f6f8] truncate">
               Your business, in clear view.
@@ -957,7 +954,7 @@ export default function HomePage() {
                 <motion.div whileTap={{ scale: 0.98 }}>
                   <Link
                     to="/signup"
-                    className="inline-flex items-center justify-center border-1 border-[var(--color-blue)] hover:border-[#cfae5d] text-[#f5f6f8] px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
+                    className="inline-flex items-center justify-center border-b-1 border-b-[var(--color-blue)] hover:border-[#cfae5d] text-[#f5f6f8] px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
                   >
                     Try it free
                   </Link>
@@ -966,7 +963,7 @@ export default function HomePage() {
                 <motion.div whileTap={{ scale: 0.98 }}>
                   <Link
                     to="/pricing"
-                    className="inline-block border border-[#3a3f4b] px-6 py-2  text-[#f5f6f8] text-sm hover:border-[#cfae5d] transition"
+                    className="inline-block border-b border-b-[#3a3f4b] px-6 py-2  text-[#f5f6f8] text-sm hover:border-[#cfae5d] transition"
                   >
                     See pricing
                   </Link>
@@ -1030,7 +1027,7 @@ export default function HomePage() {
                 variants={fadeUp}
                 className="text-3xl font-bold mb-5 text-center "
               >
-                Built for how roofing actually works
+                Designed for how roofing actually works
               </motion.h2>
             </div>
           </div>
