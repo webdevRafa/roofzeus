@@ -954,7 +954,7 @@ export default function HomePage() {
                 <motion.div whileTap={{ scale: 0.98 }}>
                   <Link
                     to="/signup"
-                    className="inline-flex items-center justify-center border-b-1 border-b-[var(--color-blue)] hover:border-[#cfae5d] text-[#f5f6f8] px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
+                    className="inline-flex items-center justify-center border-b-1 border-b-[var(--color-blue)]/40 hover:border-b-[var(--color-blue)] text-[#f5f6f8] px-6 py-2  text-sm font-semibold hover:opacity-90 transition"
                   >
                     Try it free
                   </Link>

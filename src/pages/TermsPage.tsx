@@ -95,7 +95,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="Trial and subscription">
-            ROOFZEUS may offer a free trial period (currently 14 days) with no
+            ROOFZEUS may offer a free trial period (currently 30 days) with no
             payment method required upfront. After the trial, continued use
             requires an active subscription. Pricing, billing frequency, and
             plan details are shown on the Pricing page.

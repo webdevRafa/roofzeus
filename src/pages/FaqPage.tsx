@@ -52,7 +52,7 @@ function FaqItem({
         aria-expanded={open}
       >
         <div className="min-w-0">
-          <div className="text-md  text-[#cfae5d] leading-snug">{q}</div>
+          <div className="text-md  text-[#e5c26a] leading-snug">{q}</div>
         </div>
 
         <div className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
@@ -87,35 +87,29 @@ export default function FaqPage() {
   const faqs = useMemo(
     () => [
       {
-        q: "Is the trial really free — do I need a card?",
+        q: "Who is ROOFZEUS built for?",
+        a: <>ROOFZEUS is designed for roofing contractors.</>,
+      },
+      {
+        q: "Is the trial really free — do I need a card to get started?",
         a: (
           <>
-            The trial is{" "}
-            <span className="text-white/80 font-semibold">14 days</span> with
+            No card needed to start. The trial is{" "}
+            <span className="text-white/80 font-semibold">30 days</span> with
             full access. No card up front. After the trial, you’ll be prompted
-            to add payment details if you want to keep using ROOFZEUS.
+            to add payment details if you want to continue using ROOFZEUS.
           </>
         ),
         defaultOpen: true,
       },
-      {
-        q: "Who is ROOFZEUS built for?",
-        a: (
-          <>
-            Roofing contractors who want one system to run jobs clean: job
-            pages, stage scheduling (dry-in / shingles / punch), crew updates,
-            payout tracking, pay stubs, notes/photos, and financial visibility —
-            without spreadsheets and scattered texts.
-          </>
-        ),
-      },
+
       {
         q: "Can my crew use it? What can they see?",
         a: (
           <>
-            Yes. Crew accounts are designed to be role-aware. Owners/admins stay
-            in control. Crew can be limited to assigned jobs and job updates
-            (photos/notes) while keeping sensitive financial details protected.
+            Yes. Crew accounts are role-aware. Crew members can only see jobs
+            they have been assigned and are allowed to add notes/photos. Crew
+            members will also be able to see their own paystubs.
           </>
         ),
       },
@@ -123,8 +117,7 @@ export default function FaqPage() {
         q: "How does scheduling work?",
         a: (
           <>
-            ROOFZEUS is built around roofing stages. You can schedule key phases
-            like
+            ROOFZEUS provides scheduling for the key phases like
             <span className="text-white/80 font-semibold"> dry-in</span>,
             <span className="text-white/80 font-semibold"> shingles</span>, and
             <span className="text-white/80 font-semibold"> punch</span>, so your
@@ -136,9 +129,9 @@ export default function FaqPage() {
         q: "Can I track materials, expenses, and profit per job?",
         a: (
           <>
-            Yes. Each job can store your key inputs (sq ft, rate, fees) plus
-            material/expense entries and documentation. The goal is simple:
-            clear margins and fewer “rough estimates.”
+            Yes. ROOFZEUS allows you to track everything about the job such as
+            sq's, rate per sq, material expenses, payouts, notes, photos and
+            reports.
           </>
         ),
       },
@@ -156,22 +149,13 @@ export default function FaqPage() {
         q: "Can I attach photos and notes to jobs?",
         a: (
           <>
-            Yes. Photos and notes are first-class and tied to the job — so
-            progress documentation stays where it belongs (not buried in
-            someone’s camera roll).
+            Yes. You and your crew members are able to attach photos and notes
+            to jobs. No need to involve your camera roll. Take photos directly
+            from the app.
           </>
         ),
       },
-      {
-        q: "Can I run multiple crews or a larger operation?",
-        a: (
-          <>
-            ROOFZEUS is built to support real teams. Whether you’re running a
-            small crew or scaling up, the workflow stays the same: organized
-            jobs, staged scheduling, and clear payout records.
-          </>
-        ),
-      },
+
       {
         q: "Is my company’s data separated from other companies?",
         a: (

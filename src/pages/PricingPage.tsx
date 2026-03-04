@@ -137,7 +137,7 @@ export default function PricingPage() {
                       type="button"
                       onClick={() => setBilling("monthly")}
                       className={[
-                        "px-3 py-2 rounded-lg transition cursor-pointer",
+                        "px-3 py-1 rounded-lg transition cursor-pointer",
                         billing === "monthly"
                           ? "bg-[#cfae5d] text-black font-semibold"
                           : "text-white/70 hover:text-white",
@@ -149,7 +149,7 @@ export default function PricingPage() {
                       type="button"
                       onClick={() => setBilling("annual")}
                       className={[
-                        "px-3 py-2 rounded-lg transition cursor-pointer",
+                        "px-3 py-1 rounded-lg transition cursor-pointer",
                         billing === "annual"
                           ? "bg-[#cfae5d] text-black font-semibold"
                           : "text-white/70 hover:text-white",
