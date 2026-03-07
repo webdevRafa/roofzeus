@@ -97,7 +97,7 @@ export default function PricingPage() {
           variants={stagger}
           initial="hidden"
           animate="show"
-          className="relative max-w-7xl mx-auto px-6 pt-20 pb-14"
+          className="relative max-w-[1000px] mx-auto px-6 pt-20 pb-14"
         >
           <div className="mt-10 grid lg:grid-cols-12 gap-10 items-center">
             <motion.div variants={fadeUp} className="lg:col-span-6">
@@ -121,7 +121,7 @@ export default function PricingPage() {
             {/* Pricing Card */}
             <motion.div
               variants={cardIn}
-              className={`lg:col-span-6 rounded-2xl border-none bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 `}
+              className={`lg:col-span-6 rounded-md border-none bg-[var(--color-surface)]  p-6 `}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -171,7 +171,7 @@ export default function PricingPage() {
                   </div>
 
                   {billing === "annual" ? (
-                    <div className="mt-2 text-sm text-white/65">
+                    <div className="mt-2 text-xs text-white/65 max-w-[200px]">
                       That’s about{" "}
                       <span className="text-white/80 font-semibold">
                         ${pricing.annualPerMonth}/mo
@@ -241,10 +241,10 @@ export default function PricingPage() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
-          className="grid lg:grid-cols-12 gap-10 bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]"
+          className="grid lg:grid-cols-12 gap-10 bg-[var(--color-surface)]"
         >
           <motion.div variants={fadeUp} className="lg:col-span-12">
-            <div className="rounded-2xl  bg-[#0b0e14]/35 px-6 py-20">
+            <div className="rounded-2xl  px-6 py-20">
               <div className="grid sm:grid-cols-2 gap-6">
                 <FeatureRow
                   icon={<CalendarDays className="h-4 w-4 text-[#cfae5d]" />}

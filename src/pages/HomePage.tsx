@@ -1080,7 +1080,7 @@ export default function HomePage() {
       </section>
 
       {/* DOCUMENTS */}
-      <section className="bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] ">
+      <section className="bg-[var(--color-surface)]">
         <motion.div
           variants={stagger}
           initial="hidden"

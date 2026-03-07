@@ -29,6 +29,49 @@ function appOrigin() {
 export default function MarketingRouter() {
   return (
     <Routes>
+      <Route
+        path="signup"
+        element={<ExternalRedirect to={`${appOrigin()}/signup`} />}
+      />
+
+      {/* Any attempt to access auth/app routes on marketing should bounce to app domain */}
+      <Route
+        path="login"
+        element={<ExternalRedirect to={`${appOrigin()}/login`} />}
+      />
+      <Route
+        path="dashboard"
+        element={<ExternalRedirect to={`${appOrigin()}/dashboard`} />}
+      />
+      <Route
+        path="crew"
+        element={<ExternalRedirect to={`${appOrigin()}/crew`} />}
+      />
+      <Route
+        path="accept-invite"
+        element={
+          <ExternalRedirect
+            to={`${appOrigin()}/accept-invite${window.location.search}`}
+          />
+        }
+      />
+      <Route
+        path="complete-signup"
+        element={
+          <ExternalRedirect
+            to={`${appOrigin()}/complete-signup${window.location.search}`}
+          />
+        }
+      />
+      <Route
+        path="signup"
+        element={
+          <ExternalRedirect
+            to={`${appOrigin()}/signup${window.location.search}`}
+          />
+        }
+      />
+
       {/* Marketing layout wrapper (Nav + Footer + global bg) */}
       <Route path="/" element={<MarketingLayout />}>
         <Route index element={<HomePage />} />
@@ -39,48 +82,6 @@ export default function MarketingRouter() {
         <Route path="faq" element={<FaqPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="terms" element={<TermsPage />} />
-        <Route
-          path="signup"
-          element={<ExternalRedirect to={`${appOrigin()}/signup`} />}
-        />
-
-        {/* Any attempt to access auth/app routes on marketing should bounce to app domain */}
-        <Route
-          path="login"
-          element={<ExternalRedirect to={`${appOrigin()}/login`} />}
-        />
-        <Route
-          path="dashboard"
-          element={<ExternalRedirect to={`${appOrigin()}/dashboard`} />}
-        />
-        <Route
-          path="crew"
-          element={<ExternalRedirect to={`${appOrigin()}/crew`} />}
-        />
-        <Route
-          path="accept-invite"
-          element={
-            <ExternalRedirect
-              to={`${appOrigin()}/accept-invite${window.location.search}`}
-            />
-          }
-        />
-        <Route
-          path="complete-signup"
-          element={
-            <ExternalRedirect
-              to={`${appOrigin()}/complete-signup${window.location.search}`}
-            />
-          }
-        />
-        <Route
-          path="signup"
-          element={
-            <ExternalRedirect
-              to={`${appOrigin()}/signup${window.location.search}`}
-            />
-          }
-        />
 
         {/* fallback */}
         <Route path="*" element={<Navigate to="/pricing" replace />} />
