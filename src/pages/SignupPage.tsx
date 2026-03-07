@@ -1,12 +1,12 @@
 // src/pages/SignupPage.tsx
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion, type Variants } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
-  CheckCircle2,
+  ArrowLeft,
   ArrowRight,
+  Check,
   Loader2,
-  ShieldCheck,
   X,
   Eye,
   EyeOff,
@@ -20,16 +20,6 @@ const ease = [0.16, 1, 0.3, 1] as const;
 const stagger: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
-};
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 14, filter: "blur(6px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.7, ease },
-  },
 };
 
 const cardIn: Variants = {
@@ -144,8 +134,77 @@ function PasswordField({
     </label>
   );
 }
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  }
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+function phoneDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+const stepPanel: Variants = {
+  enter: { opacity: 0, x: 20, filter: "blur(6px)" },
+  center: {
+    opacity: 1,
+    x: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.28, ease },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    filter: "blur(6px)",
+    transition: { duration: 0.22, ease },
+  },
+};
+
+const SIGNUP_STEPS = [
+  {
+    id: 1,
+    eyebrow: "Step 1 of 4",
+    title: "Let's start with you",
+    desc: "Your name and work email.",
+  },
+  {
+    id: 2,
+    eyebrow: "Step 2 of 4",
+    title: "Secure your account",
+    desc: "Create a strong password.",
+  },
+  {
+    id: 3,
+    eyebrow: "Step 3 of 4",
+    title: "Tell us about your company",
+    desc: "Basic business details for your workspace.",
+  },
+  {
+    id: 4,
+    eyebrow: "Step 4 of 4",
+    title: "Finish setup",
+    desc: "Optional phone and quick review before creating your account.",
+  },
+] as const;
 
 export default function SignupPage() {
+  function marketingOrigin() {
+    const host = window.location.hostname.toLowerCase();
+
+    // local dev from app.localhost -> marketing localhost
+    if (host === "app.localhost") return "http://localhost:5173";
+
+    // vercel preview/prod on vercelapp
+    if (host.endsWith(".vercel.app")) return "https://roofzeus.vercel.app";
+
+    // custom domain
+    return "https://www.roofzeus.com";
+  }
+
   const navigate = useNavigate();
 
   const [draft, setDraft] = useState({
@@ -165,7 +224,7 @@ export default function SignupPage() {
 
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   function set<K extends keyof typeof draft>(key: K, value: (typeof draft)[K]) {
     setDraft((d) => ({ ...d, [key]: value }));
   }
@@ -203,12 +262,24 @@ export default function SignupPage() {
   // ✅ Require strong password + match
   const pwOk = useMemo(() => score === 4, [score]);
 
+  const userPhoneOk = useMemo(() => {
+    const digits = phoneDigits(draft.userPhone);
+    return digits.length === 0 || digits.length === 10;
+  }, [draft.userPhone]);
+
+  const companyPhoneOk = useMemo(() => {
+    const digits = phoneDigits(draft.companyPhone);
+    return digits.length === 0 || digits.length === 10;
+  }, [draft.companyPhone]);
+
   const canSubmit = useMemo(() => {
     return (
       emailOk &&
       nameOk &&
       orgOk &&
       pwOk &&
+      userPhoneOk &&
+      companyPhoneOk &&
       draft.password === draft.confirmPassword &&
       !submitting
     );
@@ -217,10 +288,60 @@ export default function SignupPage() {
     nameOk,
     orgOk,
     pwOk,
+    userPhoneOk,
+    companyPhoneOk,
     draft.password,
     draft.confirmPassword,
     submitting,
   ]);
+
+  const step1Ok = useMemo(() => nameOk && emailOk, [nameOk, emailOk]);
+  const step2Ok = useMemo(
+    () => pwOk && draft.password === draft.confirmPassword,
+    [pwOk, draft.password, draft.confirmPassword]
+  );
+  const step3Ok = useMemo(
+    () => orgOk && companyPhoneOk,
+    [orgOk, companyPhoneOk]
+  );
+
+  const progressPercent = useMemo(() => (step / 4) * 100, [step]);
+
+  const currentStepMeta = SIGNUP_STEPS[step - 1];
+
+  function goBackStep() {
+    setError(null);
+    setStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4);
+  }
+
+  function goNextStep() {
+    setError(null);
+
+    if (step === 1 && !step1Ok) {
+      setError("Please enter your full name and a valid work email.");
+      return;
+    }
+
+    if (step === 2 && !step2Ok) {
+      if (!pwOk) {
+        setError("Please use a stronger password before continuing.");
+      } else {
+        setError("Passwords do not match.");
+      }
+      return;
+    }
+
+    if (step === 3 && !step3Ok) {
+      if (!orgOk) {
+        setError("Please enter your company name.");
+      } else if (!companyPhoneOk) {
+        setError("Please enter a valid 10-digit company phone number.");
+      }
+      return;
+    }
+
+    setStep((prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4);
+  }
 
   function strongPasswordMessage() {
     // only show guidance once they interact
@@ -237,6 +358,10 @@ export default function SignupPage() {
         setError("Please use a stronger password before continuing.");
       } else if (draft.password !== draft.confirmPassword) {
         setError("Passwords do not match.");
+      } else if (!userPhoneOk) {
+        setError("Please enter a valid 10-digit phone number.");
+      } else if (!companyPhoneOk) {
+        setError("Please enter a valid 10-digit company phone number.");
       }
       return;
     }
@@ -275,60 +400,18 @@ export default function SignupPage() {
         <div className="absolute -top-24 left-1/2 h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-[#cfae5d]/10 blur-[120px]" />
       </div>
 
-      <div className="relative mx-auto w-[min(1100px,94vw)] py-10">
+      <div className="relative mx-auto w-full py-10 px-4">
         <motion.div variants={stagger} initial="hidden" animate="show">
           {/* header */}
-          <motion.div
-            variants={fadeUp}
-            className="flex items-center justify-between"
-          >
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 rounded-full border border-[#3a3f4b] bg-white/5 px-3 py-1.5 text-[12px] text-white/75 hover:bg-white/10"
-            >
-              Already have an account?
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </motion.div>
 
           {/* body */}
-          <div className="mt-6 grid gap-4 md:grid-cols-5">
-            {/* left rail */}
-            <motion.div
-              variants={cardIn}
-              className="md:col-span-2 rounded-3xl border border-[#3a3f4b] bg-[#1f2430]/55 p-6"
+          <div className="max-w-6xl mx-auto mt-20">
+            <a
+              href={marketingOrigin()}
+              className="inline-flex items-center text-sm text-white/65 hover:text-white mb-3 ml-3"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#3a3f4b] bg-[#0b0e14]/55 px-2.5 py-1 text-[11px] text-[#cfae5d]/80">
-                <ShieldCheck className="h-4 w-4" />
-                No payment info required
-              </div>
-
-              <div className="mt-4 space-y-3 text-sm text-white/70">
-                {[
-                  "Create jobs, schedule stages, and track profit without spreadsheets.",
-                  "Invite your crew, assign jobs, and generate pay stubs when you pay out.",
-                  "Everything is scoped per company. Your workspace stays clean as you grow.",
-                ].map((t) => (
-                  <div key={t} className="flex gap-2">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-[#cfae5d]" />
-                    <div className="leading-relaxed">{t}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-[#cfae5d]/25 bg-[#cfae5d]/10 p-4">
-                <div className="text-[12px] font-semibold text-[#cfae5d]">
-                  Created instantly
-                </div>
-                <div className="mt-2 text-[12px] text-white/70 leading-relaxed">
-                  We create your organization, user profile, employee profile,
-                  and an{" "}
-                  <span className="text-white/85">active membership</span>{" "}
-                  linking you to your company — in one transaction.
-                </div>
-              </div>
-            </motion.div>
-
+              Back to home
+            </a>
             {/* form */}
             <motion.div
               variants={cardIn}
@@ -340,9 +423,7 @@ export default function SignupPage() {
                     Create your account
                   </div>
                   <div className="mt-1 text-[12px] text-white/60">
-                    After 14 days, continue for{" "}
-                    <span className="text-white/80">$59/mo</span> (flat). Cancel
-                    anytime.
+                    No card is needed to get started.
                   </div>
                 </div>
 
@@ -356,143 +437,299 @@ export default function SignupPage() {
                 </button>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <Field
-                  label="Your full name"
-                  value={draft.fullName}
-                  onChange={(v) => set("fullName", v)}
-                  placeholder="e.g. Rafael Castro"
-                  autoComplete="name"
-                />
-                <Field
-                  label="Work email"
-                  value={draft.email}
-                  onChange={(v) => set("email", v)}
-                  type="email"
-                  placeholder="you@company.com"
-                  autoComplete="email"
-                />
+              <div className="mt-5">
+                {/* step header */}
+                <div className="mb-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-[#cfae5d]/85">
+                        {currentStepMeta.eyebrow}
+                      </div>
+                      <div className="mt-1 text-base font-semibold text-white">
+                        {currentStepMeta.title}
+                      </div>
+                      <div className="mt-1 text-[12px] text-white/55">
+                        {currentStepMeta.desc}
+                      </div>
+                    </div>
 
-                {/* Password + Strength */}
-                <div className="sm:col-span-2">
-                  <PasswordField
-                    label="Password"
-                    value={draft.password}
-                    onChange={(v) => set("password", v)}
-                    show={showPw}
-                    onToggleShow={() => setShowPw((v) => !v)}
-                    placeholder="8+ chars, uppercase, number, symbol"
-                    hint={
-                      draft.password ? strengthLabel(score) : "Use a manager"
-                    }
-                  />
+                    <div className="hidden sm:flex items-center gap-2">
+                      {SIGNUP_STEPS.map((s) => {
+                        const active = s.id === step;
+                        const complete = s.id < step;
 
-                  {/* Strength meter */}
+                        return (
+                          <div
+                            key={s.id}
+                            className={cx(
+                              "flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition",
+                              complete &&
+                                "border-[#cfae5d]/50 bg-[#cfae5d]/15 text-[#f5e2a4]",
+                              active &&
+                                "border-[#cfae5d] bg-[#cfae5d]/20 text-white",
+                              !complete &&
+                                !active &&
+                                "border-white/10 bg-white/5 text-white/45"
+                            )}
+                          >
+                            {complete ? <Check className="h-4 w-4" /> : s.id}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/5">
+                    <motion.div
+                      initial={false}
+                      animate={{ width: `${progressPercent}%` }}
+                      transition={{ duration: 0.28, ease }}
+                      className="h-full rounded-full bg-[#cfae5d]"
+                    />
+                  </div>
+                </div>
+
+                {/* step body */}
+                <AnimatePresence mode="wait">
                   <motion.div
-                    initial={false}
-                    animate={{ opacity: draft.password ? 1 : 0.95 }}
-                    className="mt-2 rounded-2xl border border-white/10 bg-white/5 p-3"
+                    key={step}
+                    variants={stepPanel}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    className="grid gap-3 sm:grid-cols-2"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-white/50">
-                        Password strength
-                      </span>
-                      <span className="text-[11px] text-white/70">
-                        {strengthLabel(score)}
-                      </span>
-                    </div>
+                    {step === 1 && (
+                      <>
+                        <Field
+                          label="Your full name"
+                          value={draft.fullName}
+                          onChange={(v) => set("fullName", v)}
+                          placeholder="e.g. Rafael Castro"
+                          autoComplete="name"
+                        />
 
-                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/5">
-                      <div
-                        className={cx(
-                          "h-full rounded-full transition-all duration-300",
-                          score === 0 && "w-[5%] bg-red-500/35",
-                          score === 1 && "w-[25%] bg-red-500/45",
-                          score === 2 && "w-[50%] bg-amber-500/55",
-                          score === 3 && "w-[75%] bg-emerald-500/45",
-                          score === 4 && "w-[100%] bg-emerald-500/65"
-                        )}
-                      />
-                    </div>
+                        <Field
+                          label="Work email"
+                          value={draft.email}
+                          onChange={(v) => set("email", v)}
+                          type="email"
+                          placeholder="you@company.com"
+                          autoComplete="email"
+                        />
+                      </>
+                    )}
 
-                    <div className="mt-2 text-[11px] text-white/45">
-                      {strongPasswordMessage()}
-                    </div>
+                    {step === 2 && (
+                      <>
+                        <div className="sm:col-span-2">
+                          <PasswordField
+                            label="Password"
+                            value={draft.password}
+                            onChange={(v) => set("password", v)}
+                            show={showPw}
+                            onToggleShow={() => setShowPw((v) => !v)}
+                            placeholder="8+ chars, uppercase, number, symbol"
+                            hint={
+                              draft.password
+                                ? strengthLabel(score)
+                                : "Use a manager"
+                            }
+                          />
 
-                    <ul className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/45">
-                      <li className={cx(pwReq.len && "text-white/80")}>
-                        • 8+ characters
-                      </li>
-                      <li className={cx(pwReq.upper && "text-white/80")}>
-                        • 1 uppercase
-                      </li>
-                      <li className={cx(pwReq.number && "text-white/80")}>
-                        • 1 number
-                      </li>
-                      <li className={cx(pwReq.symbol && "text-white/80")}>
-                        • 1 symbol
-                      </li>
-                    </ul>
+                          <motion.div
+                            initial={false}
+                            animate={{ opacity: draft.password ? 1 : 0.95 }}
+                            className="mt-2 rounded-2xl border border-white/10 bg-white/5 p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] text-white/50">
+                                Password strength
+                              </span>
+                              <span className="text-[11px] text-white/70">
+                                {strengthLabel(score)}
+                              </span>
+                            </div>
+
+                            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/5">
+                              <div
+                                className={cx(
+                                  "h-full rounded-full transition-all duration-300",
+                                  score === 0 && "w-[5%] bg-red-500/35",
+                                  score === 1 && "w-[25%] bg-red-500/45",
+                                  score === 2 && "w-[50%] bg-amber-500/55",
+                                  score === 3 && "w-[75%] bg-emerald-500/45",
+                                  score === 4 && "w-[100%] bg-emerald-500/65"
+                                )}
+                              />
+                            </div>
+
+                            <div className="mt-2 text-[11px] text-white/45">
+                              {strongPasswordMessage()}
+                            </div>
+
+                            <ul className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/45">
+                              <li className={cx(pwReq.len && "text-white/80")}>
+                                • 8+ characters
+                              </li>
+                              <li
+                                className={cx(pwReq.upper && "text-white/80")}
+                              >
+                                • 1 uppercase
+                              </li>
+                              <li
+                                className={cx(pwReq.number && "text-white/80")}
+                              >
+                                • 1 number
+                              </li>
+                              <li
+                                className={cx(pwReq.symbol && "text-white/80")}
+                              >
+                                • 1 symbol
+                              </li>
+                            </ul>
+                          </motion.div>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <PasswordField
+                            label="Confirm password"
+                            value={draft.confirmPassword}
+                            onChange={(v) => set("confirmPassword", v)}
+                            show={showConfirm}
+                            onToggleShow={() => setShowConfirm((v) => !v)}
+                            placeholder="Re-enter your password"
+                            hint={
+                              draft.confirmPassword
+                                ? passwordsMatch
+                                  ? "Matches"
+                                  : "Doesn’t match"
+                                : undefined
+                            }
+                          />
+                          {!passwordsMatch &&
+                          draft.confirmPassword.length > 0 ? (
+                            <div className="mt-2 text-[12px] text-red-200">
+                              Passwords don’t match.
+                            </div>
+                          ) : null}
+                        </div>
+                      </>
+                    )}
+
+                    {step === 3 && (
+                      <>
+                        <Field
+                          label="Company name"
+                          value={draft.companyName}
+                          onChange={(v) => set("companyName", v)}
+                          placeholder="e.g. Roger’s Roofing"
+                          autoComplete="organization"
+                        />
+
+                        <div>
+                          <Field
+                            label="Company phone (optional)"
+                            value={draft.companyPhone}
+                            onChange={(v) =>
+                              set("companyPhone", formatPhone(v))
+                            }
+                            placeholder="(210) 555-0456"
+                            autoComplete="tel"
+                          />
+                          {draft.companyPhone && !companyPhoneOk ? (
+                            <div className="mt-2 text-[12px] text-red-200">
+                              Enter a full 10-digit phone number.
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <Field
+                            label="Company legal name (optional)"
+                            value={draft.companyLegalName}
+                            onChange={(v) => set("companyLegalName", v)}
+                            placeholder="If different from company name"
+                            autoComplete="organization"
+                            hint="For invoices/stubs"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {step === 4 && (
+                      <>
+                        <div>
+                          <Field
+                            label="Your phone (optional)"
+                            value={draft.userPhone}
+                            onChange={(v) => set("userPhone", formatPhone(v))}
+                            placeholder="(210) 555-0123"
+                            autoComplete="tel"
+                          />
+                          {draft.userPhone && !userPhoneOk ? (
+                            <div className="mt-2 text-[12px] text-red-200">
+                              Enter a full 10-digit phone number.
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+                          <div className="text-sm font-semibold text-white">
+                            Review your workspace
+                          </div>
+
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2 text-[13px]">
+                            <div>
+                              <div className="text-white/45">Full name</div>
+                              <div className="mt-1 text-white/85">
+                                {draft.fullName || "—"}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-white/45">Work email</div>
+                              <div className="mt-1 text-white/85">
+                                {draft.email || "—"}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-white/45">Company name</div>
+                              <div className="mt-1 text-white/85">
+                                {draft.companyName || "—"}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-white/45">
+                                Company legal name
+                              </div>
+                              <div className="mt-1 text-white/85">
+                                {draft.companyLegalName ||
+                                  "Same as company name"}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-white/45">Your phone</div>
+                              <div className="mt-1 text-white/85">
+                                {draft.userPhone || "Not provided"}
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-white/45">Company phone</div>
+                              <div className="mt-1 text-white/85">
+                                {draft.companyPhone || "Not provided"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </motion.div>
-                </div>
-
-                {/* Confirm */}
-                <div className="sm:col-span-2">
-                  <PasswordField
-                    label="Confirm password"
-                    value={draft.confirmPassword}
-                    onChange={(v) => set("confirmPassword", v)}
-                    show={showConfirm}
-                    onToggleShow={() => setShowConfirm((v) => !v)}
-                    placeholder="Re-enter your password"
-                    hint={
-                      draft.confirmPassword
-                        ? passwordsMatch
-                          ? "Matches"
-                          : "Doesn’t match"
-                        : undefined
-                    }
-                  />
-                  {!passwordsMatch && draft.confirmPassword.length > 0 ? (
-                    <div className="mt-2 text-[12px] text-red-200">
-                      Passwords don’t match.
-                    </div>
-                  ) : null}
-                </div>
-
-                <Field
-                  label="Your phone (optional)"
-                  value={draft.userPhone}
-                  onChange={(v) => set("userPhone", v)}
-                  placeholder="(210) 555-0123"
-                  autoComplete="tel"
-                />
-
-                <Field
-                  label="Company name"
-                  value={draft.companyName}
-                  onChange={(v) => set("companyName", v)}
-                  placeholder="e.g. Roger’s Roofing"
-                  autoComplete="organization"
-                />
-                <Field
-                  label="Company phone (optional)"
-                  value={draft.companyPhone}
-                  onChange={(v) => set("companyPhone", v)}
-                  placeholder="(210) 555-0456"
-                  autoComplete="tel"
-                />
-
-                <div className="sm:col-span-2">
-                  <Field
-                    label="Company legal name (optional)"
-                    value={draft.companyLegalName}
-                    onChange={(v) => set("companyLegalName", v)}
-                    placeholder="If different from company name"
-                    autoComplete="organization"
-                    hint="For invoices/stubs"
-                  />
-                </div>
+                </AnimatePresence>
               </div>
 
               {error ? (
@@ -506,33 +743,57 @@ export default function SignupPage() {
                   By continuing, you agree to the terms & conditions.
                 </div>
 
-                <button
-                  type="button"
-                  onClick={onSubmit}
-                  disabled={!canSubmit}
-                  className={[
-                    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold",
-                    "bg-[#cfae5d] text-[#0b0e14] hover:brightness-95",
-                    "disabled:opacity-50 disabled:cursor-not-allowed",
-                  ].join(" ")}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating…
-                    </>
-                  ) : (
-                    <>
-                      Create account
-                      <ArrowRight className="h-4 w-4" />
-                    </>
+                <div className="flex items-center gap-2 self-end">
+                  {step > 1 && (
+                    <button
+                      type="button"
+                      onClick={goBackStep}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#3a3f4b] bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer hover:bg-white/10"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back
+                    </button>
                   )}
-                </button>
+
+                  {step < 4 ? (
+                    <button
+                      type="button"
+                      onClick={goNextStep}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border-1 border-[var(--color-blue)] px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer hover:brightness-95"
+                    >
+                      Continue
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onSubmit}
+                      disabled={!canSubmit}
+                      className={[
+                        "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold",
+                        "border-1 border-[var(--color-blue)] text-white/70 hover:text-white cursor-pointer ",
+                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                      ].join(" ")}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Creating…
+                        </>
+                      ) : (
+                        <>
+                          Create account
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="mt-3 text-[11px] text-white/40">
-                After signup, you’ll land in your dashboard. You can invite
-                teammates anytime.
+                After signup, you’ll land in your dashboard to begin using the
+                service.
               </div>
             </motion.div>
           </div>
