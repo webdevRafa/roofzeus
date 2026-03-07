@@ -101,10 +101,10 @@ export default function PricingPage() {
         >
           <div className="mt-10 grid lg:grid-cols-12 gap-10 items-center">
             <motion.div variants={fadeUp} className="lg:col-span-6">
-              <h1 className="text-4xl font-extrabold leading-tight">
-                One Plan.
-                <span className="block text-[var(--color-blue)]">
-                  Everything included.
+              <h1 className="text-2xl md:text-4xl font-extrabold leading-tight">
+                One Plan,
+                <span className="block">
+                  <span className="text-[#cfae5d]">Everything</span> included.
                 </span>
               </h1>
               <motion.div
@@ -121,7 +121,7 @@ export default function PricingPage() {
             {/* Pricing Card */}
             <motion.div
               variants={cardIn}
-              className={`lg:col-span-6 rounded-2xl border-none bg-gradient-to-b from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 `}
+              className={`lg:col-span-6 rounded-2xl border-none bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)] p-6 `}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>

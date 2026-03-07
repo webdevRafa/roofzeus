@@ -306,8 +306,8 @@ export default function MarketingNav() {
             <motion.aside
               variants={drawerIn}
               className={cx(
-                "absolute right-3 top-3 w-[min(92vw,420px)]",
-                "rounded-2xl border border-[#3a3f4b] bg-[#0b0e14]/90 backdrop-blur-xl",
+                "",
+                "border border-[#3a3f4b] bg-[#0b0e14]/90 backdrop-blur-xl",
                 "shadow-[0_30px_120px_rgba(0,0,0,0.65)]"
               )}
               role="dialog"
@@ -358,7 +358,7 @@ export default function MarketingNav() {
                   ))}
                 </div>
 
-                <div className="mt-4 grid gap-2">
+                <div className="mt-4 flex gap-2 items-center justify-around max-w-[400px] mx-auto">
                   <AnimatePresence initial={false}>
                     {trialCtaRevealed && (
                       <motion.div
@@ -370,9 +370,9 @@ export default function MarketingNav() {
                         <Link
                           to="/signup"
                           className={cx(
-                            "inline-flex items-center justify-center gap-2",
-                            "rounded-xl border-[var(--color-blue)] border-1 text-white px-4 py-1 mb-2",
-                            "text-sm font-semibold text-black hover:opacity-90 transition"
+                            "inline-flex items-center justify-center gap-2 w-[200px]",
+                            "rounded-xl border-[var(--color-blue)] border-1 text-white px-4 py-1",
+                            "px-4 py-3 text-sm font-semibold text-white/85"
                           )}
                         >
                           Try it now
@@ -385,8 +385,8 @@ export default function MarketingNav() {
                   <Link
                     to="/login"
                     className={cx(
-                      "inline-flex items-center justify-center gap-2",
-                      "rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35",
+                      "flex items-center justify-center gap-2",
+                      "rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 w-[200px]",
                       "px-4 py-3 text-sm font-semibold text-white/85",
                       "hover:border-[#cfae5d] transition"
                     )}

@@ -88,28 +88,34 @@ export default function FaqPage() {
     () => [
       {
         q: "Who is ROOFZEUS built for?",
-        a: <>ROOFZEUS is designed for roofing contractors.</>,
+        a: (
+          <>
+            ROOFZEUS is designed specifically for roofing contractors — whether
+            you're just getting started or already running a growing roofing
+            company.
+          </>
+        ),
+        defaultOpen: true,
       },
       {
         q: "Is the trial really free — do I need a card to get started?",
         a: (
           <>
-            No card needed to start. The trial is{" "}
+            No card is needed to start. The trial is{" "}
             <span className="text-white/80 font-semibold">30 days</span> with
-            full access. No card up front. After the trial, you’ll be prompted
-            to add payment details if you want to continue using ROOFZEUS.
+            full access. After the trial, you’ll be prompted to add payment
+            details if you want to continue using ROOFZEUS.
           </>
         ),
-        defaultOpen: true,
       },
 
       {
         q: "Can my crew use it? What can they see?",
         a: (
           <>
-            Yes. Crew accounts are role-aware. Crew members can only see jobs
-            they have been assigned and are allowed to add notes/photos. Crew
-            members will also be able to see their own paystubs.
+            While adding your crew is optional, crew members can only see jobs
+            they have been assigned and are allowed to add notes & photos. Crew
+            members will also have access to their own paystubs.{" "}
           </>
         ),
       },
@@ -121,7 +127,7 @@ export default function FaqPage() {
             <span className="text-white/80 font-semibold"> dry-in</span>,
             <span className="text-white/80 font-semibold"> shingles</span>, and
             <span className="text-white/80 font-semibold"> punch</span>, so your
-            pipeline is visible across jobs and your team knows what’s next.
+            pipeline is clear and you always know what's next.
           </>
         ),
       },

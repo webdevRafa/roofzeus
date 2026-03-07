@@ -96,7 +96,7 @@ const docs = [
   {
     title: "Invoices",
     desc: "Create clean invoices that match the job—then send or print in seconds.",
-    bullets: ["PDF-ready", "Email from the job", "Stored per job"],
+
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
         <path
@@ -122,7 +122,7 @@ const docs = [
   {
     title: "Pay Stubs",
     desc: "Generate pay stubs with job context so crews trust the numbers.",
-    bullets: ["Pending / paid states", "Export anytime", "Crew history"],
+
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
         <path
@@ -143,7 +143,7 @@ const docs = [
   {
     title: "Warranty Reports",
     desc: "Produce a clean packet for warranty or third-party workflows.",
-    bullets: ["Job notes + photos", "Printable packet", "Attached to job"],
+
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
         <path
@@ -686,12 +686,7 @@ function StickyCtaBar({ show }: { show: boolean }) {
         >
           <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-[#0b0e14] backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] p-3">
             <div className="flex items-center gap-3 w-full">
-              <Link
-                to="/signup"
-                className="flex-1 inline-flex items-center justify-center border-1 border-[var(--color-blue)] text-white px-4 py-2.5 rounded-xl text-xs font-semibold hover:opacity-90 transition"
-              >
-                Try it free
-              </Link>
+              <a href="https://app.roofzeus.com/signup">Try it free</a>
 
               <Link
                 to="/pricing"
@@ -1135,17 +1130,7 @@ export default function HomePage() {
                   {d.desc}
                 </p>
 
-                <div className="relative mt-5 space-y-2">
-                  {d.bullets.map((b) => (
-                    <div
-                      key={b}
-                      className="flex items-center gap-2 text-[12px] text-white/65"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#cfae5d]/80" />
-                      <span className="truncate">{b}</span>
-                    </div>
-                  ))}
-                </div>
+                <div className="relative mt-5 space-y-2"></div>
               </motion.div>
             ))}
           </motion.div>
