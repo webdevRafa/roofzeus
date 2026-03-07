@@ -14,7 +14,7 @@ import {
 import { signupContractorWithEmail } from "../firebase/signupContractor";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
-
+import logo from "../assets/logo-white.svg";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const stagger: Variants = {
@@ -346,7 +346,7 @@ export default function SignupPage() {
   function strongPasswordMessage() {
     // only show guidance once they interact
     if (!draft.password)
-      return "Use 8+ chars with uppercase, number, and a symbol.";
+      return "A strong password consists of 8+ characters with at least one uppercase, one number, symbol.";
     if (score === 4) return "Strong password.";
     return "Make it stronger: add missing requirements below.";
   }
@@ -395,17 +395,13 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
-      {/* subtle background glow */}
-      <div className="pointer-events-none absolute inset-0 opacity-60">
-        <div className="absolute -top-24 left-1/2 h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-[#cfae5d]/10 blur-[120px]" />
-      </div>
-
+      <img className="w-[220px] mx-auto mt-20" src={logo} alt="" />
       <div className="relative mx-auto w-full py-10 px-4">
         <motion.div variants={stagger} initial="hidden" animate="show">
           {/* header */}
 
           {/* body */}
-          <div className="max-w-6xl mx-auto mt-20">
+          <div className="max-w-2xl mx-auto ">
             <a
               href={marketingOrigin()}
               className="inline-flex items-center text-sm text-white/65 hover:text-white mb-3 ml-3"
@@ -530,11 +526,7 @@ export default function SignupPage() {
                             show={showPw}
                             onToggleShow={() => setShowPw((v) => !v)}
                             placeholder="8+ chars, uppercase, number, symbol"
-                            hint={
-                              draft.password
-                                ? strengthLabel(score)
-                                : "Use a manager"
-                            }
+                            hint={draft.password ? strengthLabel(score) : ""}
                           />
 
                           <motion.div
@@ -568,7 +560,7 @@ export default function SignupPage() {
                               {strongPasswordMessage()}
                             </div>
 
-                            <ul className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/45">
+                            <ul className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/45 max-w-[200px]">
                               <li className={cx(pwReq.len && "text-white/80")}>
                                 • 8+ characters
                               </li>
