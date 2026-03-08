@@ -101,7 +101,7 @@ export default function PricingPage() {
         >
           <div className="mt-10 grid lg:grid-cols-12 gap-10 items-center">
             <motion.div variants={fadeUp} className="lg:col-span-6">
-              <h1 className="text-2xl md:text-4xl font-extrabold leading-tight">
+              <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">
                 One Plan,
                 <span className="block">
                   <span className="text-[#cfae5d]">Everything</span> included.

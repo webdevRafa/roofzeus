@@ -1020,17 +1020,32 @@ export default function HomePage() {
             <div className="block mx-auto">
               <motion.h2
                 variants={fadeUp}
-                className="text-3xl font-bold mb-5 text-center "
+                className="text-3xl font-bold text-center "
               >
                 Designed for how roofing actually works
               </motion.h2>
             </div>
           </div>
-
+          <div className=" text-white/70 mb-10">
+            <p
+              data-aos="slide-up"
+              data-aos-duration="1000"
+              className="text-sm text-center md:text-md max-w-6xl mx-auto leading-relaxed"
+            >
+              Stay organized, track profitability, manage crew payouts
+            </p>
+            <p
+              data-aos="fade-up"
+              data-aos-duration="1000"
+              className="text-sm text-center md:text-md max-w-6xl mt-0 mx-auto leading-relaxed"
+            >
+              Keep schedules, photos, notes, and finances in one place
+            </p>
+          </div>
           <motion.div variants={stagger} className="grid md:grid-cols-2  gap-8">
             {[
               {
-                title: "Everything about the job",
+                title: "Track everything about the job",
                 desc: "Sq footage, pricing, materials, notes, photos, and status",
               },
               {
@@ -1060,22 +1075,6 @@ export default function HomePage() {
               </motion.div>
             ))}
           </motion.div>
-          <div className="mt-10">
-            <p
-              data-aos="fade-right"
-              data-aos-duration="1000"
-              className="text-base text-center md:text-xl max-w-6xl text-white mx-auto leading-relaxed"
-            >
-              Stay organized, track profitability, manage crew payouts
-            </p>
-            <p
-              data-aos="fade-left"
-              data-aos-duration="1000"
-              className="text-base text-center md:text-xl max-w-6xl mt-0 text-white mx-auto leading-relaxed"
-            >
-              Keep schedules, photos, notes, and finances in one place
-            </p>
-          </div>
         </motion.div>
       </section>
 
@@ -1096,7 +1095,7 @@ export default function HomePage() {
               <h2 className="text-3xl font-bold">
                 Create professional documents
               </h2>
-              <p className="mt-3 max-w-2xl text-white/70">
+              <p className="text-sm text-center md:text-md max-w-6xl mx-auto leading-relaxed text-white/70">
                 Send invoices, generate pay stubs, and create warranty packets.
                 Everything stays organized and easy to find later.
               </p>
