@@ -235,7 +235,9 @@ export default function PricingPage() {
 
       {/* VALUE GRID */}
       <section className="max-w-7xl mx-auto px-6 py-16  mt-10">
-        <h1 className="text-2xl mb-4">Run your business like a pro.</h1>
+        <motion.h1 variants={fadeUp} className="text-2xl mb-4">
+          Run your business like a pro.
+        </motion.h1>
         <motion.div
           variants={stagger}
           initial="hidden"

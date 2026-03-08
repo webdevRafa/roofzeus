@@ -1026,22 +1026,14 @@ export default function HomePage() {
               </motion.h2>
             </div>
           </div>
-          <div className=" text-white/70 mb-10">
-            <p
-              data-aos="slide-up"
-              data-aos-duration="1000"
-              className="text-sm text-center md:text-md max-w-6xl mx-auto leading-relaxed"
-            >
+          <motion.div variants={fadeUp} className=" text-white/70 mb-10">
+            <p className="text-sm text-center md:text-md max-w-6xl mx-auto leading-relaxed">
               Stay organized, track profitability, manage crew payouts
             </p>
-            <p
-              data-aos="fade-up"
-              data-aos-duration="1000"
-              className="text-sm text-center md:text-md max-w-6xl mt-0 mx-auto leading-relaxed"
-            >
+            <p className="text-sm text-center md:text-md max-w-6xl mt-0 mx-auto leading-relaxed">
               Keep schedules, photos, notes, and finances in one place
             </p>
-          </div>
+          </motion.div>
           <motion.div variants={stagger} className="grid md:grid-cols-2  gap-8">
             {[
               {
