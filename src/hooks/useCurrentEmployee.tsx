@@ -41,13 +41,78 @@ export function useCurrentEmployee() {
         return;
       }
 
-      // 🔒 Signed in but email not verified — block Firestore reads/listeners
-      if (!user.emailVerified) {
-        setEmployee(null);
-        setLoading(false);
-        setError("Please verify your email to continue.");
-        return;
-      }
+      const start = async () => {
+        try {
+          await user.reload();
+        } catch {
+          // ignore reload failures
+        }
+
+        const refreshedUser = getAuth().currentUser;
+
+        if (!refreshedUser) {
+          setEmployee(null);
+          setLoading(false);
+          setError(null);
+          return;
+        }
+
+        if (!refreshedUser.emailVerified) {
+          setEmployee(null);
+          setLoading(false);
+          setError("Please verify your email to continue.");
+          return;
+        }
+
+        if (orgLoading) {
+          setEmployee(null);
+          setLoading(true);
+          setError(null);
+          return;
+        }
+
+        if (!orgId) {
+          setEmployee(null);
+          setLoading(false);
+          setError("No organization selected.");
+          return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        const ref = doc(
+          db,
+          "organizations",
+          orgId,
+          "employees",
+          refreshedUser.uid
+        );
+
+        unsubEmployee = onSnapshot(
+          ref,
+          (ds) => {
+            if (!ds.exists()) {
+              setEmployee(null);
+              setLoading(false);
+              setError("Employee profile not found for this organization.");
+              return;
+            }
+
+            setEmployee({ id: ds.id, ...(ds.data() as Omit<Employee, "id">) });
+            setLoading(false);
+            setError(null);
+          },
+          (err) => {
+            setEmployee(null);
+            setLoading(false);
+            setError(err?.message || String(err));
+          }
+        );
+      };
+
+      void start();
+      return;
 
       // Signed in but org not ready yet -> keep loading
       if (orgLoading) {
@@ -56,42 +121,6 @@ export function useCurrentEmployee() {
         setError(null);
         return;
       }
-
-      // Signed in but no org selected
-      if (!orgId) {
-        setEmployee(null);
-        setLoading(false);
-        setError("No organization selected.");
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      // ✅ ORG-NESTED employee doc
-      const ref = doc(db, "organizations", orgId, "employees", user.uid);
-
-      unsubEmployee = onSnapshot(
-        ref,
-        (ds) => {
-          if (!ds.exists()) {
-            // employee doc missing for this org
-            setEmployee(null);
-            setLoading(false);
-            setError("Employee profile not found for this organization.");
-            return;
-          }
-
-          setEmployee({ id: ds.id, ...(ds.data() as Omit<Employee, "id">) });
-          setLoading(false);
-          setError(null);
-        },
-        (err) => {
-          setEmployee(null);
-          setLoading(false);
-          setError(err?.message || String(err));
-        }
-      );
     });
 
     return () => {

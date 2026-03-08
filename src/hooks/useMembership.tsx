@@ -55,49 +55,68 @@ export function useMembership() {
         setLoading(false);
         return;
       }
-      if (!user.emailVerified) {
-        // User is signed in but has not verified email yet
-        // Do NOT open any Firestore listeners
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
 
-      const q = query(
-        collection(db, "memberships"),
-        where("userId", "==", user.uid),
-        where("status", "==", "active")
-      );
+      let unsubMemberships: (() => void) | null = null;
 
-      const unsubMemberships = onSnapshot(
-        q,
-        (snap) => {
-          const list: MembershipDoc[] = snap.docs.map((d) => ({
-            id: d.id,
-            ...(d.data() as Omit<MembershipDoc, "id">),
-          }));
+      const start = async () => {
+        try {
+          await user.reload();
+        } catch {
+          // ignore reload failures and continue with current snapshot
+        }
 
-          setMemberships(list);
+        const refreshedUser = getAuth().currentUser;
 
-          // Decide active org (persisted > first membership)
-          const stored = localStorage.getItem(LS_KEY);
-          const storedIsValid = stored && list.some((m) => m.orgId === stored);
-
-          const nextActive = (storedIsValid ? stored : list[0]?.orgId) ?? null;
-
-          setActiveOrgIdState(nextActive);
-
+        if (!refreshedUser) {
           setLoading(false);
-        },
-        () => setLoading(false)
-      );
+          return;
+        }
 
-      return unsubMemberships;
+        if (!refreshedUser.emailVerified) {
+          setLoading(false);
+          return;
+        }
+
+        setLoading(true);
+
+        const q = query(
+          collection(db, "memberships"),
+          where("userId", "==", refreshedUser.uid),
+          where("status", "==", "active")
+        );
+
+        unsubMemberships = onSnapshot(
+          q,
+          (snap) => {
+            const list: MembershipDoc[] = snap.docs.map((d) => ({
+              id: d.id,
+              ...(d.data() as Omit<MembershipDoc, "id">),
+            }));
+
+            setMemberships(list);
+
+            const stored = localStorage.getItem(LS_KEY);
+            const storedIsValid =
+              stored && list.some((m) => m.orgId === stored);
+            const nextActive =
+              (storedIsValid ? stored : list[0]?.orgId) ?? null;
+
+            setActiveOrgIdState(nextActive);
+            setLoading(false);
+          },
+          () => setLoading(false)
+        );
+      };
+
+      void start();
+
+      return () => {
+        if (unsubMemberships) unsubMemberships();
+      };
     });
 
     return () => unsubAuth();
   }, []);
-
   // 2) Load org docs for display names (optional but improves dropdown UX)
   useEffect(() => {
     const orgIds = Array.from(new Set(memberships.map((m) => m.orgId)));
