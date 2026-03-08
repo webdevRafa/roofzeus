@@ -147,7 +147,15 @@ function formatPhone(value: string) {
 function phoneDigits(value: string) {
   return value.replace(/\D/g, "");
 }
-
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 14, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease },
+  },
+};
 const stepPanel: Variants = {
   enter: { opacity: 0, x: 20, filter: "blur(6px)" },
   center: {
@@ -396,6 +404,15 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
       <img className="w-[220px] mx-auto mt-20" src={logo} alt="" />
+      <motion.h1
+        variants={fadeUp}
+        initial="hidden"
+        animate="show"
+        className="text-white/90 text-center mx-auto block max-w-[540px] mt-10 text-md px-3"
+      >
+        No card is required to get started. Try it free for 30 days. To start
+        using ROOFZEUS, please fill out the form below to create your account.
+      </motion.h1>
       <div className="relative mx-auto w-full py-10 px-4">
         <motion.div variants={stagger} initial="hidden" animate="show">
           {/* header */}
