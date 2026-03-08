@@ -7,7 +7,7 @@ import {
   sendCustomEmailVerificationCallable,
   confirmCustomEmailVerificationCallable,
 } from "../firebase/emailVerification";
-import { Mail, RefreshCcw, ShieldCheck, ArrowRight } from "lucide-react";
+import { Mail, RefreshCcw, ArrowRight } from "lucide-react";
 
 // Match the motion + visual language you’re using in HomePage.tsx
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -63,7 +63,6 @@ export default function VerifyEmailPage() {
 
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<StatusState>(null);
-
   const [email, setEmail] = useState<string | null>(
     auth.currentUser?.email ?? null
   );
@@ -235,49 +234,21 @@ export default function VerifyEmailPage() {
     }
   }
 
-  const pillStyles =
-    status?.kind === "success"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
-      : status?.kind === "error"
-      ? "border-red-500/20 bg-red-500/10 text-red-200"
-      : "border-white/10 bg-white/5 text-white/75";
-
   return (
     <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8] overflow-x-hidden">
-      {/* background texture like HomePage hero */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(207,174,93,0.10),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,255,255,0.05),transparent_55%)]" />
-      </div>
-
       <motion.div
         variants={stagger}
         initial="hidden"
         animate="show"
         className="relative max-w-7xl mx-auto px-6 pt-24 pb-16"
       >
-        <motion.div variants={fadeUp} className="mb-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-[12px] text-white/60 hover:text-white/80 transition"
-          >
-            <span className="h-2 w-2 rounded-full bg-[#cfae5d]/80" />
-            ROOFZEUS
-          </Link>
-        </motion.div>
-
         <div className="grid lg:grid-cols-12 gap-8 items-start">
           {/* Left copy */}
           <motion.div variants={fadeUp} className="lg:col-span-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#cfae5d]/35 bg-[#cfae5d]/10 px-3 py-1 text-[12px] text-white">
-              <ShieldCheck className="h-4 w-4 text-[#cfae5d]" />
-              Verification required
-            </div>
-
             <h1 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight text-white leading-[1.05]">
               Verify your email to unlock the dashboard.
             </h1>
-
+            <p className="text-white text-xs">{status?.kind}</p>
             <p className="mt-4 text-white/75 max-w-xl leading-relaxed">
               We sent a verification link to{" "}
               <span className="text-white/90 font-semibold">
@@ -285,15 +256,6 @@ export default function VerifyEmailPage() {
               </span>
               . Once you click it, this page will automatically continue.
             </p>
-
-            <div className="mt-6 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/50 px-3 py-1 text-[12px] text-white/65">
-                Helps prevent bot abuse
-              </span>
-              <span className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/50 px-3 py-1 text-[12px] text-white/65">
-                Keeps Firestore clean
-              </span>
-            </div>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
               <motion.button
@@ -334,42 +296,10 @@ export default function VerifyEmailPage() {
             animate="show"
             className="lg:col-span-6"
           >
-            <div className="relative overflow-hidden rounded-2xl border border-[#3a3f4b] bg-[#1f2430] shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
-              {/* ambient glow */}
-              <div className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full bg-[#cfae5d]/12 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full bg-white/6 blur-3xl" />
-
-              <div className="relative border-b border-[#3a3f4b] px-5 py-4 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-[#f5f6f8] truncate">
-                    Waiting for verification
-                  </div>
-                  <div className="text-[12px] text-[#cfae5d]/70 truncate">
-                    Confirm happens when you click the email link
-                  </div>
-                </div>
-
-                <div className="inline-flex items-center rounded-full border border-[#3a3f4b] bg-[#0b0e14]/40 px-3 py-1 text-[11px] text-white/70">
-                  Secure onboarding
-                </div>
-              </div>
-
-              <div className="relative p-5">
-                {status ? (
-                  <div
-                    className={`rounded-xl border px-4 py-3 text-[13px] ${pillStyles}`}
-                  >
-                    {status.text}
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-[13px] text-white/75">
-                    Click the verification link in your email — then we’ll
-                    redirect.
-                  </div>
-                )}
-
+            <div className="relative overflow-hidden rounded-2xl ">
+              <div className="relative">
                 <div className="mt-5 grid gap-3">
-                  <div className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-4">
+                  <div className="rounded-xl border  border-[#3a3f4b] bg-[#0b0e14]/35 p-4">
                     <div className="text-[11px] uppercase tracking-wide text-white/50">
                       Step 1
                     </div>
@@ -420,9 +350,6 @@ export default function VerifyEmailPage() {
                     <ArrowRight className="h-4 w-4" />
                   </div>
                 </div>
-
-                {/* top accent line */}
-                <div className="pointer-events-none absolute left-6 right-6 top-0 h-[1px] bg-[#cfae5d]/20" />
               </div>
             </div>
           </motion.div>

@@ -687,7 +687,7 @@ function StickyCtaBar({ show }: { show: boolean }) {
           <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-[#0b0e14] backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] p-3">
             <div className="flex items-center gap-3 w-full">
               <a
-                className="flex-1 inline-flex items-center justify-center border border-[#3a3f4b]  px-4 py-2.5 rounded-xl text-xs font-semibold text-white border-[var(--color-blue)] hover:border-[#cfae5d] transition"
+                className="flex-1 inline-flex items-center justify-center border   px-4 py-2.5 rounded-xl text-xs font-semibold text-white border-[var(--color-blue)] hover:border-[#cfae5d] transition"
                 href="https://app.roofzeus.com/signup"
               >
                 Try it free
@@ -1061,7 +1061,7 @@ export default function HomePage() {
               <motion.div
                 key={f.title}
                 variants={cardIn}
-                className="bg-[#0b0e14] rounded-xl p-6 border border-[#3a3f4b]"
+                className="bg-[#0b0e14] rounded-xl p-6 "
               >
                 <h3 className="font-semibold text-xl mb-2 text-[var(--color-blue)] text-center">
                   {f.title}

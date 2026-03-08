@@ -749,7 +749,11 @@ export default function SignupPage() {
 
               <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-[11px] text-white/45 leading-relaxed">
-                  By continuing, you agree to the terms & conditions.
+                  By continuing, you agree to the{" "}
+                  <span className="text-white/80 cursor-pointer hover:text-white">
+                    terms & conditions
+                  </span>
+                  .
                 </div>
 
                 <div className="flex items-center gap-2 self-end">
@@ -798,11 +802,6 @@ export default function SignupPage() {
                     </button>
                   )}
                 </div>
-              </div>
-
-              <div className="mt-3 text-[11px] text-white/40">
-                After signup, you’ll land in your dashboard to begin using the
-                service.
               </div>
             </motion.div>
           </div>
