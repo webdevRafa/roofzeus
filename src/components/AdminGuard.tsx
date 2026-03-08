@@ -11,7 +11,7 @@ import { getAuth } from "firebase/auth";
  * include admin privileges, an access denied message is shown.
  */
 export default function AdminGuard({ children }: { children: ReactNode }) {
-  const { employee, loading } = useCurrentEmployee();
+  const { employee, loading, error } = useCurrentEmployee();
   const auth = getAuth();
   if (loading) {
     return (
@@ -46,10 +46,14 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
   if (!isAdmin) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
-        <div className="rounded-2xl border border-gray-200 text-white  p-6 text-center">
-          <h2 className="text-lg font-semibold">Access denied</h2>
+        <div className="rounded-2xl border border-gray-200 text-white p-6 text-center">
+          <h2 className="text-lg font-semibold">
+            {error === "Please verify your email to continue."
+              ? "Email verification required"
+              : "Access denied"}
+          </h2>
           <p className="mt-1 text-sm text-white/70">
-            Your account doesn’t have permission to view this page.
+            {error || "Your account doesn’t have permission to view this page."}
           </p>
         </div>
       </div>
