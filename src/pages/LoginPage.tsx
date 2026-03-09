@@ -10,6 +10,7 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 // Assumes you export `auth` from ./firebase/firebaseConfig
 import { auth, db } from "../firebase/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { confirmCustomEmailVerificationCallable } from "../firebase/emailVerification";
 import {
   collection,
   doc,
@@ -28,7 +29,7 @@ import {
 } from "framer-motion";
 
 const LS_ACTIVE_ORG_KEY = "rr_activeOrgId";
-
+const PENDING_VERIFY_TOKEN_KEY = "roofzeus_pending_verify_token";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const pageStagger: Variants = {
@@ -102,6 +103,38 @@ const LoginPage = () => {
         password
       );
       const user = cred.user;
+
+      // ✅ If user clicked verify link while logged out,
+      // complete the pending verification now.
+      const pendingToken = sessionStorage.getItem(PENDING_VERIFY_TOKEN_KEY);
+
+      if (pendingToken) {
+        try {
+          await confirmCustomEmailVerificationCallable({ token: pendingToken });
+
+          // remove stored token once consumed
+          sessionStorage.removeItem(PENDING_VERIFY_TOKEN_KEY);
+
+          // refresh Firebase Auth user so emailVerified updates locally
+          await auth.currentUser?.reload();
+
+          try {
+            await auth.currentUser?.getIdToken(true);
+          } catch {
+            // ignore token refresh issues
+          }
+        } catch (verifyErr) {
+          console.error(
+            "Failed to confirm pending email verification after login:",
+            verifyErr
+          );
+
+          setErr(
+            "We signed you in, but could not finish email verification. Please open the verification link again or request a new one."
+          );
+          return;
+        }
+      }
 
       // Fetch employee record (ORG-NESTED) to determine access role
       // Resolve org via memberships, then read ORG-NESTED employee doc

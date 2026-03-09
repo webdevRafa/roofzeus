@@ -99,11 +99,18 @@ export default function VerifyEmailPage() {
     const storedToken = sessionStorage.getItem(PENDING_VERIFY_TOKEN_KEY);
     const token = urlToken || storedToken;
 
+    console.log("[verify] urlToken:", urlToken);
+    console.log("[verify] storedToken:", storedToken);
+    console.log("[verify] auth.currentUser:", auth.currentUser?.uid || null);
+
     // Nothing to confirm
     if (!token) return;
 
     // If user is not logged in, store token and send to login
     if (!auth.currentUser) {
+      console.log(
+        "[verify] no auth user, storing token and redirecting to login"
+      );
       sessionStorage.setItem(PENDING_VERIFY_TOKEN_KEY, token);
       setStatus({
         kind: "info",
@@ -126,8 +133,9 @@ export default function VerifyEmailPage() {
         // IMPORTANT:
         // Your callable should accept `{ token }` (or `{ oobCode }`).
         // Since we don’t want fragile naming, we pass BOTH keys.
+        console.log("[verify] calling confirmCustomEmailVerificationCallable");
         await confirmCustomEmailVerificationCallable({ token });
-
+        console.log("[verify] confirm callable succeeded");
         // token used successfully; clear it
         sessionStorage.removeItem(PENDING_VERIFY_TOKEN_KEY);
 
@@ -156,6 +164,7 @@ export default function VerifyEmailPage() {
           });
         }
       } catch (e) {
+        console.error("[verify] confirm callable failed:", e);
         const msg = e instanceof Error ? e.message : "Failed to confirm email.";
         if (!mountedRef.current) return;
         setStatus({ kind: "error", text: msg });
