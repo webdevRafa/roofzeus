@@ -135,14 +135,26 @@ export default function VerifyEmailPage() {
 
         setStatus({ kind: "success", text: "Email verified. Redirecting…" });
 
-        // If your backend sets custom claims, refresh token:
+        try {
+          await auth.currentUser?.reload();
+        } catch {
+          // ignore
+        }
+
         try {
           await auth.currentUser?.getIdToken(true);
         } catch {
-          // ignore; not required if you rely on Firestore field
+          // ignore
         }
 
-        nav("/dashboard", { replace: true });
+        if (auth.currentUser?.emailVerified) {
+          nav("/dashboard", { replace: true });
+        } else {
+          setStatus({
+            kind: "info",
+            text: "Email was confirmed, but your session is still refreshing. Please tap Refresh status.",
+          });
+        }
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Failed to confirm email.";
         if (!mountedRef.current) return;
@@ -153,7 +165,33 @@ export default function VerifyEmailPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loc.search, auth, nav]);
+  useEffect(() => {
+    let timer: number | null = null;
 
+    function startPolling() {
+      timer = window.setInterval(async () => {
+        const u = auth.currentUser;
+        if (!u) return;
+
+        try {
+          await u.reload();
+        } catch {
+          return;
+        }
+
+        if (auth.currentUser?.emailVerified) {
+          if (timer) window.clearInterval(timer);
+          nav("/dashboard", { replace: true });
+        }
+      }, 3000);
+    }
+
+    startPolling();
+
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
+  }, [auth, nav]);
   /**
    * RESEND FLOW (custom)
    */
@@ -218,17 +256,28 @@ export default function VerifyEmailPage() {
       }
 
       try {
+        await u.reload();
+      } catch {
+        // ignore
+      }
+
+      try {
         await u.getIdToken(true);
       } catch {
         // ignore
       }
 
-      // If you rely on Firebase emailVerified, you can also reload here:
-      // await u.reload();
+      const refreshed = auth.currentUser;
 
-      // Route attempt — if your app guard uses membership/employee isVerified,
-      // it will allow/deny correctly.
-      nav("/dashboard", { replace: true });
+      if (refreshed?.emailVerified) {
+        nav("/dashboard", { replace: true });
+        return;
+      }
+
+      setStatus({
+        kind: "info",
+        text: "Your email is not verified yet. Click the link in your inbox, then try again.",
+      });
     } finally {
       if (mountedRef.current) setBusy(false);
     }
