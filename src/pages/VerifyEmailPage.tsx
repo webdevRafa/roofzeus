@@ -2,14 +2,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
 import { getAuth } from "firebase/auth";
 import {
   sendCustomEmailVerificationCallable,
   confirmCustomEmailVerificationCallable,
 } from "../firebase/emailVerification";
-import { Mail, RefreshCcw, ArrowRight } from "lucide-react";
+import { Mail, RefreshCcw } from "lucide-react";
 
 // Match the motion + visual language you’re using in HomePage.tsx
 const ease = [0.16, 1, 0.3, 1] as const;
