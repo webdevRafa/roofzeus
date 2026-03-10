@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import roofing from "../assets/roofing.webp";
 import logo from "../assets/logo-white.svg";
-import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 // Assumes you export `auth` from ./firebase/firebaseConfig
 import { auth, db } from "../firebase/firebaseConfig";
@@ -246,49 +246,20 @@ const LoginPage = () => {
           className="h-full w-full object-cover opacity-[0.14] blur-[2px] scale-[1.03]"
           draggable={false}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/55 to-black/75" />
-
-        {/* Ambient glows */}
-        <motion.div
-          className="absolute -top-28 -left-28 h-80 w-80 rounded-full blur-3xl opacity-35 bg-[#cfae5d]"
-          animate={
-            prefersReducedMotion
-              ? undefined
-              : { opacity: [0.26, 0.4, 0.26], scale: [1, 1.05, 1] }
-          }
-          transition={
-            prefersReducedMotion
-              ? undefined
-              : { duration: 8, ease, repeat: Infinity, repeatType: "mirror" }
-          }
-        />
-        <motion.div
-          className="absolute -bottom-40 -right-24 h-[520px] w-[520px] rounded-full blur-3xl opacity-25 bg-[var(--color-logo)]"
-          animate={
-            prefersReducedMotion
-              ? undefined
-              : { opacity: [0.18, 0.3, 0.18], scale: [1, 1.06, 1] }
-          }
-          transition={
-            prefersReducedMotion
-              ? undefined
-              : { duration: 10, ease, repeat: Infinity, repeatType: "mirror" }
-          }
-        />
-        <div className="absolute inset-0 [background-image:radial-gradient(transparent_0,rgba(0,0,0,0.35)_55%,rgba(0,0,0,0.6)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/75 to-black/55" />
       </motion.div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen w-full flex items-center justify-center px-4 py-10">
+      <div className="relative z-10 min-h-screen w-full flex items-center justify-center px-4">
         <motion.div variants={fadeUp} className="w-full max-w-[980px]">
-          <motion.div
-            variants={cardIn}
-            className="rounded-2xl border border-[#3a3f4b]/70 bg-[#0b0e14]/35 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.55)] overflow-hidden"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2">
+          <motion.div variants={cardIn} className="">
+            <div className="flex-col flex">
               {/* Left (brand) */}
-              <div className="relative p-6 sm:p-8 md:p-10">
-                <motion.div variants={item} className="flex items-center gap-3">
+              <div className="relative p-6 sm:p-8 md:p-10 mx-auto w-full">
+                <motion.div
+                  variants={item}
+                  className="flex flex-col items-center justify-center"
+                >
                   <motion.div
                     whileHover={prefersReducedMotion ? undefined : hoverLift}
                     className="rounded-xl p-3"
@@ -300,65 +271,23 @@ const LoginPage = () => {
                       draggable={false}
                     />
                   </motion.div>
-                </motion.div>
-
-                <motion.div variants={item} className="mt-6">
-                  <div className="mt-2 text-white/60 text-sm leading-relaxed max-w-md">
-                    Sign in to manage jobs, track profit, schedule crews, and
-                    generate pay stubs—everything your roofing operation needs,
-                    in one place.
-                  </div>
-
-                  <motion.div
-                    variants={pageStagger}
-                    className="mt-6 grid gap-3 max-w-md"
-                  >
-                    <motion.div
-                      variants={item}
-                      whileHover={prefersReducedMotion ? undefined : hoverLift}
-                      className="flex items-start gap-3 rounded-xl border border-[#3a3f4b]/60 bg-white/5 px-4 py-3"
-                    >
-                      <ShieldCheck className="h-5 w-5 text-[#cfae5d] mt-0.5" />
-                      <div>
-                        <div className="text-sm font-semibold text-white">
-                          Role-aware access
-                        </div>
-                        <div className="text-[12px] text-white/55">
-                          Admins and crews land in the right dashboard
-                          automatically.
-                        </div>
-                      </div>
-                    </motion.div>
+                  <motion.div variants={item} className="text-center">
+                    <div className="mt-2 text-white/60 text-sm leading-relaxed max-w-md">
+                      Sign in to manage jobs, track profit, schedule crews, and
+                      generate pay stubs—everything your roofing operation
+                      needs, in one place.
+                    </div>
 
                     <motion.div
-                      variants={item}
-                      whileHover={prefersReducedMotion ? undefined : hoverLift}
-                      className="flex items-start gap-3 rounded-xl border border-[#3a3f4b]/60 bg-white/5 px-4 py-3"
-                    >
-                      <Lock className="h-5 w-5 text-[#cfae5d] mt-0.5" />
-                      <div>
-                        <div className="text-sm font-semibold text-white">
-                          Secure sign-in
-                        </div>
-                        <div className="text-[12px] text-white/55">
-                          Your data stays protected with Firebase Auth.
-                        </div>
-                      </div>
-                    </motion.div>
+                      variants={pageStagger}
+                      className="mt-6 grid gap-3 max-w-md"
+                    ></motion.div>
                   </motion.div>
-                </motion.div>
-
-                <motion.div
-                  variants={item}
-                  className="mt-8 text-[11px] text-white/45"
-                >
-                  © {new Date().getFullYear()} ROOFZEUS • Built for roofing
-                  contractors
                 </motion.div>
               </div>
 
               {/* Right (form) */}
-              <div className="p-6 sm:p-8 md:p-10 border-t md:border-t-0 md:border-l border-[#3a3f4b]/60">
+              <div className="p-6 sm:p-8 md:p-10 rounded-2xl border border-[#3a3f4b]/70 bg-[#0b0e14]/35 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.55)] overflow-hidden max-w-[600px] mx-auto w-full">
                 <motion.div
                   variants={pageStagger}
                   className="flex items-center justify-between gap-3"
@@ -366,28 +295,6 @@ const LoginPage = () => {
                   <motion.div variants={item}>
                     <div className="text-white text-lg font-semibold">
                       Sign in
-                    </div>
-                    <div className="mt-1 text-white/55 text-sm">
-                      Use your company account credentials.
-                    </div>
-                  </motion.div>
-
-                  <motion.div variants={item}>
-                    <div className="hidden sm:flex items-center gap-2 rounded-full border border-[#3a3f4b]/70 bg-white/5 px-3 py-1 text-[12px] text-white/65">
-                      <motion.span
-                        className="h-2 w-2 rounded-full bg-emerald-400/80"
-                        animate={
-                          prefersReducedMotion
-                            ? undefined
-                            : { scale: [1, 1.25, 1], opacity: [0.65, 1, 0.65] }
-                        }
-                        transition={
-                          prefersReducedMotion
-                            ? undefined
-                            : { duration: 2.2, repeat: Infinity, ease }
-                        }
-                      />
-                      System online
                     </div>
                   </motion.div>
                 </motion.div>
@@ -508,7 +415,7 @@ const LoginPage = () => {
                           : { y: 0, scale: 0.99, filter: "brightness(0.98)" }
                       }
                       className={[
-                        "w-full mt-2 rounded-xl cursor-pointer px-4 py-3 text-sm font-semibold transition",
+                        "w-full mt-10 rounded-xl cursor-pointer px-4 py-3 text-sm font-semibold transition max-w-[200px] mx-auto block",
                         "bg-[#cfae5d] text-black hover:brightness-110 active:brightness-95",
                         "disabled:opacity-70 disabled:cursor-not-allowed",
                         "shadow-[0_10px_25px_rgba(207,174,93,0.18)]",
@@ -517,34 +424,7 @@ const LoginPage = () => {
                       {submitting ? "Signing in…" : "Sign in"}
                     </motion.button>
                   </motion.div>
-
-                  <motion.div
-                    variants={item}
-                    className="flex items-center justify-between pt-2"
-                  >
-                    <div className="text-[12px] text-white/45">
-                      Having trouble? Contact your admin.
-                    </div>
-
-                    <div className="text-[12px] text-white/45">
-                      <span className="opacity-70">Tip:</span> try copying the
-                      invite link again if you were invited.
-                    </div>
-                  </motion.div>
                 </motion.form>
-
-                <motion.div
-                  variants={item}
-                  className="mt-6 rounded-xl border border-[#3a3f4b]/60 bg-white/5 px-4 py-3"
-                >
-                  <div className="text-[12px] text-white/70 font-semibold">
-                    Security note
-                  </div>
-                  <div className="mt-1 text-[12px] text-white/50 leading-relaxed">
-                    Always sign in on a trusted device. If your role changes,
-                    you’ll be routed to the correct dashboard automatically.
-                  </div>
-                </motion.div>
               </div>
             </div>
 

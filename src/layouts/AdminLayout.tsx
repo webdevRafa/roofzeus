@@ -16,7 +16,7 @@ import {
 import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 import { useOrg } from "../contexts/OrgContext";
 
-import logo from "../assets/roofzeus-white.png";
+import logo from "../assets/logo-white.svg";
 
 function navLinkBase(isActive: boolean) {
   return (
