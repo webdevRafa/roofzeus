@@ -591,9 +591,9 @@ export function DashboardJobsSection({
                   onClick={() => void createJob()}
                   disabled={loading}
                   className={[
-                    "rounded-xl px-4 py-2 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed",
+                    "rounded-xl px-4 py-2 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer",
                     "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)]",
-                    "ring-1 ring-[rgb(var(--color-border-rgb)/0.18)]",
+                    "border-1 border-[var(--color-blue)]",
                     "shadow-[0_10px_22px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_28px_rgba(0,0,0,0.16)]",
                     "active:translate-y-[1px]",
                   ].join(" ")}
