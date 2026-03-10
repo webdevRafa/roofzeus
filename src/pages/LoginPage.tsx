@@ -1,7 +1,7 @@
 // src/pages/LoginPage.tsx
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import roofing from "../assets/roofing.webp";
 import logo from "../assets/logo-white.svg";
@@ -417,6 +417,20 @@ const LoginPage = () => {
                     >
                       {submitting ? "Signing in…" : "Sign in"}
                     </motion.button>
+                    <div className="mt-6 flex items-center gap-3 text-xs text-white/30">
+                      <div className="flex-1 h-px bg-white/30"></div>
+                      <span className="text-white/30">New to RoofZeus?</span>
+                      <div className="flex-1 h-px bg-white/10"></div>
+                    </div>
+
+                    <div className="mt-4 text-center text-sm">
+                      <Link
+                        to="/signup"
+                        className="font-medium text-[#cfae5d] hover:text-[#e6c979]"
+                      >
+                        Create your account
+                      </Link>
+                    </div>
                   </motion.div>
                 </motion.form>
               </div>
