@@ -404,11 +404,6 @@ const LoginPage = () => {
                     <motion.button
                       type="submit"
                       disabled={submitting}
-                      whileHover={
-                        prefersReducedMotion || submitting
-                          ? undefined
-                          : { y: -1, filter: "brightness(1.08)" }
-                      }
                       whileTap={
                         prefersReducedMotion || submitting
                           ? undefined
@@ -416,9 +411,8 @@ const LoginPage = () => {
                       }
                       className={[
                         "w-full mt-10 rounded-xl cursor-pointer px-4 py-3 text-sm font-semibold transition max-w-[200px] mx-auto block",
-                        "bg-[#cfae5d] text-black hover:brightness-110 active:brightness-95",
+                        "border-[var(--color-blue)] border-[1.5px] text-white/70 hover:text-white hover:brightness-110 active:brightness-95",
                         "disabled:opacity-70 disabled:cursor-not-allowed",
-                        "shadow-[0_10px_25px_rgba(207,174,93,0.18)]",
                       ].join(" ")}
                     >
                       {submitting ? "Signing in…" : "Sign in"}
