@@ -1,5 +1,7 @@
 // src/pages/VerifyEmailPage.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase/firebaseConfig";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
 import { getAuth } from "firebase/auth";
@@ -201,6 +203,20 @@ export default function VerifyEmailPage() {
       if (timer) window.clearInterval(timer);
     };
   }, [auth, nav]);
+
+  useEffect(() => {
+    const u = auth.currentUser;
+    if (!u) return;
+    const userDocRef = doc(db, "users", u.uid);
+    const unsubscribe = onSnapshot(userDocRef, (snap) => {
+      const data = snap.data() as any;
+      if (data?.emailVerified) {
+        nav("/dashboard", { replace: true });
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, nav]);
+
   /**
    * RESEND FLOW (custom)
    */
@@ -325,7 +341,7 @@ export default function VerifyEmailPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#3a3f4b] bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:border-[#cfae5d] hover:bg-white/10 transition disabled:opacity-60"
               >
                 <RefreshCcw className="h-4 w-4" />
-                Refresh status
+                I've Verified My Email
               </motion.button>
 
               <motion.button
