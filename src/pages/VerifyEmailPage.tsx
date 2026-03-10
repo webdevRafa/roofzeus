@@ -358,8 +358,9 @@ export default function VerifyEmailPage() {
             </div>
 
             <div className="mt-6 text-[12px] text-white/55">
-              Tip: check spam/junk, and if you verified on your phone, keep this
-              tab open — it will redirect automatically.
+              Tip: check spam/junk. If you clicked the verification link on your
+              phone, keep this tab open — it will redirect automatically after
+              you login.
             </div>
           </motion.div>
 
@@ -380,9 +381,6 @@ export default function VerifyEmailPage() {
                     <div className="mt-1 text-sm font-semibold text-white/85">
                       Open the verification email
                     </div>
-                    <div className="mt-1 text-[12px] text-white/55">
-                      Subject usually includes “Verify” or “Confirm”.
-                    </div>
                   </div>
 
                   <div className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-4">
@@ -392,9 +390,6 @@ export default function VerifyEmailPage() {
                     <div className="mt-1 text-sm font-semibold text-white/85">
                       Click the link
                     </div>
-                    <div className="mt-1 text-[12px] text-white/55">
-                      If you’re logged out, we’ll ask you to sign in to finish.
-                    </div>
                   </div>
 
                   <div className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-4">
@@ -402,26 +397,8 @@ export default function VerifyEmailPage() {
                       Step 3
                     </div>
                     <div className="mt-1 text-sm font-semibold text-white/85">
-                      Continue to Dashboard
+                      Sign in
                     </div>
-                    <div className="mt-1 text-[12px] text-white/55">
-                      Or press “Refresh status” if needed.
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex items-center justify-between gap-3">
-                  <Link
-                    to="/login"
-                    state={{ from: loc.pathname }}
-                    className="text-[12px] text-white/60 hover:text-white/80 transition"
-                  >
-                    Having trouble? Sign in again
-                  </Link>
-
-                  <div className="inline-flex items-center gap-2 text-[12px] text-[#cfae5d]/80">
-                    <span>Continue</span>
-                    <ArrowRight className="h-4 w-4" />
                   </div>
                 </div>
               </div>
