@@ -4,22 +4,8 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 
 import CountUp from "react-countup";
 
-import {
-  collection,
-  doc,
-  onSnapshot,
-  orderBy,
-  where,
-  query,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
-import type { FieldValue } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import type { Job, JobStatus, Employee } from "../types/types";
-import { jobConverter } from "../types/types";
-import { recomputeJob, makeAddress } from "../utils/calc";
-import { useOrg } from "../contexts/OrgContext";
+import type { Job, JobStatus } from "../types/types";
+import { useOrgJobsData } from "../hooks/useOrgJobsData";
 import { DashboardJobsSection } from "../features/dashboard/DashboardJobsSection";
 
 // Chart.js imports for summary visualisations
@@ -66,26 +52,6 @@ function toMillis(x: unknown): number | null {
   }
   return null;
 }
-const toYMD = (d: Date): string => {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-function formatYmdForChip(ymd: string | ""): string {
-  if (!ymd) return "…";
-  const [yearStr, monthStr, dayStr] = ymd.split("-");
-  const year = Number(yearStr);
-  const monthIndex = Number(monthStr) - 1;
-  const day = Number(dayStr);
-  const date = new Date(year, monthIndex, day);
-  if (Number.isNaN(date.getTime())) return "…";
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 type StatusFilter = "all" | JobStatus;
 
@@ -118,57 +84,57 @@ const fadeUp: Variants = {
 };
 
 export default function JobsPage() {
-  const { orgId, loading: membershipLoading } = useOrg();
+  // Consolidated hook providing org context, job lists, filters, and a job creation helper.
+  const {
+    orgId,
+    membershipLoading,
+    jobs,
+    employees,
+    loading,
+    error,
+    statusFilter,
+    setStatusFilter,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    setDatePreset,
+    searchTerm,
+    setSearchTerm,
+    jobsPage,
+    setJobsPage,
+    JOBS_PER_PAGE,
+    openForm,
+    setOpenForm,
+    address,
+    setAddress,
+    newFeltDate,
+    setNewFeltDate,
+    newShinglesDate,
+    setNewShinglesDate,
+    newPunchDate,
+    setNewPunchDate,
+    assignedEmployeeIds,
+    setAssignedEmployeeIds,
+    filteredJobs,
+    applyPreset,
+    createJob,
+    hasActiveDateFilter,
+    rangeLabel,
+  } = useOrgJobsData();
 
-  // Jobs & employees
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  // Form & creation state
-  const [openForm, setOpenForm] = useState(false);
-  const [address, setAddress] = useState("");
-  const [newFeltDate, setNewFeltDate] = useState("");
-  const [newShinglesDate, setNewShinglesDate] = useState("");
-  const [newPunchDate, setNewPunchDate] = useState("");
-  const [assignedEmployeeIds, setAssignedEmployeeIds] = useState<string[]>([]);
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Search & filter state
+  // Additional UI state not managed by the hook.
+  // showSearch and showFilters control visibility of the search and filter panels.
   const [showSearch, setShowSearch] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-  const [datePreset, setDatePreset] = useState<
-    "custom" | "last7" | "thisMonth" | "ytd"
-  >("custom");
 
-  // Sort option state
+  // Controls whether the jobs section is expanded.
+  const [jobsOpen, setJobsOpen] = useState(true);
+
+  // Sort option state (recent, highest net, lowest net).
   const [sortOption, setSortOption] = useState<"recent" | "netDesc" | "netAsc">(
     "recent"
   );
-
-  // Pagination
-  const [jobsPage, setJobsPage] = useState(1);
-  const JOBS_PER_PAGE = 20;
-  const [jobsOpen, setJobsOpen] = useState(true);
-
-  // Load jobs from Firestore
-  useEffect(() => {
-    if (!orgId) return;
-    const q = query(
-      collection(db, "organizations", orgId, "jobs").withConverter(
-        jobConverter
-      ),
-      orderBy("updatedAt", "desc")
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-      setJobs(snap.docs.map((d) => d.data()));
-    });
-    return () => unsub();
-  }, [orgId]);
 
   // Floating sort (pinned when header scrolls away)
   const sortSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -195,103 +161,11 @@ export default function JobsPage() {
     return () => obs.disconnect();
   }, []);
 
-  // Load active employees for assignment list
-  useEffect(() => {
-    if (!orgId) return;
-    const q = query(
-      collection(db, "organizations", orgId, "employees"),
-      where("isActive", "==", true)
-    );
+  // Active employees subscription is handled by useOrgJobsData
 
-    const unsub = onSnapshot(q, (snap) => {
-      setEmployees(
-        snap.docs.map((d) => ({
-          id: d.id,
-          ...(d.data() as Omit<Employee, "id">),
-        }))
-      );
-    });
-    return () => unsub();
-  }, [orgId]);
+  // createJob is provided by useOrgJobsData
 
-  // Create a new job
-  async function createJob() {
-    if (!orgId) return;
-    setCreating(true);
-    setError(null);
-    try {
-      if (!address.trim()) {
-        throw new Error("Please enter a job address.");
-      }
-      const newRef = doc(collection(db, "organizations", orgId, "jobs"));
-
-      let job: Job = {
-        id: newRef.id,
-        orgId,
-        status: "pending",
-        address: makeAddress(address),
-        assignedEmployeeIds,
-        earnings: { totalEarningsCents: 0, entries: [], currency: "USD" },
-        expenses: {
-          totalPayoutsCents: 0,
-          totalMaterialsCents: 0,
-          payouts: [],
-          materials: [],
-          currency: "USD",
-        },
-        summaryNotes: "",
-        attachments: [],
-        createdAt: serverTimestamp() as unknown as FieldValue,
-        updatedAt: serverTimestamp() as unknown as FieldValue,
-        computed: { totalExpensesCents: 0, netProfitCents: 0 },
-      };
-      if (newFeltDate)
-        job.feltScheduledFor = new Date(newFeltDate + "T00:00:00");
-      if (newShinglesDate)
-        job.shinglesScheduledFor = new Date(newShinglesDate + "T00:00:00");
-      if (newPunchDate)
-        job.punchScheduledFor = new Date(newPunchDate + "T00:00:00");
-      job = recomputeJob(job);
-      await setDoc(newRef.withConverter(jobConverter), job);
-      // reset form
-      setAddress("");
-      setAssignedEmployeeIds([]);
-      setNewFeltDate("");
-      setNewShinglesDate("");
-      setNewPunchDate("");
-      setOpenForm(false);
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  // Filtered jobs based on search, status & dates
-  const filteredJobs = useMemo(() => {
-    const hasStart = Boolean(startDate);
-    const hasEnd = Boolean(endDate);
-    const startMs = hasStart
-      ? new Date(startDate + "T00:00:00").getTime()
-      : null;
-    const endMs = hasEnd ? new Date(endDate + "T23:59:59.999").getTime() : null;
-    const term = searchTerm.trim().toLowerCase();
-    return jobs.filter((j) => {
-      if (statusFilter !== "all" && j.status !== statusFilter) return false;
-      const reference = j.updatedAt ?? j.createdAt ?? null;
-      const ts = toMillis(reference);
-      if (ts == null) return false;
-      if (startMs != null && ts < startMs) return false;
-      if (endMs != null && ts > endMs) return false;
-      if (term.length > 0) {
-        const addressStr = [j.address?.toString() ?? ""]
-          .join(" ")
-          .toLowerCase();
-        if (!addressStr.includes(term)) return false;
-      }
-      return true;
-    });
-  }, [jobs, statusFilter, startDate, endDate, searchTerm]);
+  // filteredJobs is provided by useOrgJobsData
 
   // Sort filtered jobs based on selected option
   const sortedJobs = useMemo(() => {
@@ -367,68 +241,7 @@ export default function JobsPage() {
   }, [jobs]);
   const filters: StatusFilter[] = ["all", ...dynamicStatusOptions];
 
-  // Date preset helpers
-  function recomputeDates(p: typeof datePreset, now = new Date()) {
-    if (p === "last7") {
-      const end = now;
-      const start = new Date(end);
-      start.setDate(end.getDate() - 6);
-      setStartDate(toYMD(start));
-      setEndDate(toYMD(end));
-    } else if (p === "thisMonth") {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      setStartDate(toYMD(start));
-      setEndDate(toYMD(end));
-    } else if (p === "ytd") {
-      const start = new Date(now.getFullYear(), 0, 1);
-      setStartDate(toYMD(start));
-      setEndDate(toYMD(now));
-    }
-  }
-  function applyPreset(p: typeof datePreset) {
-    setDatePreset(p);
-    if (p !== "custom") recomputeDates(p);
-  }
-  function msUntilNextMidnight() {
-    const now = new Date();
-    const next = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate() + 1,
-      0,
-      0,
-      0,
-      50
-    );
-    return next.getTime() - now.getTime();
-  }
-  useEffect(() => {
-    if (datePreset === "custom") return;
-    recomputeDates(datePreset);
-    let timer = setTimeout(function tick() {
-      recomputeDates(datePreset);
-      timer = setTimeout(tick, msUntilNextMidnight());
-    }, msUntilNextMidnight());
-    return () => clearTimeout(timer);
-  }, [datePreset]);
-
-  // Determine active date filter label
-  const hasActiveDateFilter =
-    datePreset !== "custom" || Boolean(startDate || endDate);
-  const presetLabel =
-    datePreset === "last7"
-      ? "Last 7 days"
-      : datePreset === "thisMonth"
-      ? "This month"
-      : datePreset === "ytd"
-      ? "Year to date"
-      : null;
-  const rangeLabel =
-    presetLabel ??
-    (startDate || endDate
-      ? `${formatYmdForChip(startDate)} → ${formatYmdForChip(endDate)}`
-      : null);
+  // Date presets, applyPreset, hasActiveDateFilter and rangeLabel are provided by useOrgJobsData
 
   // Compute status counts across all jobs (unfiltered) for summary
   const statusCounts = useMemo(() => {
@@ -1030,7 +843,7 @@ export default function JobsPage() {
             address={address}
             setAddress={setAddress}
             createJob={createJob}
-            loading={creating}
+            loading={loading}
             error={error}
             filteredJobs={sortedJobs}
             pagedJobs={pagedJobs}

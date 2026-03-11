@@ -6,7 +6,7 @@ import AcceptInvitePage from "../pages/AcceptInvitePage";
 import CompleteSignupPage from "../pages/CompleteSignupPage";
 import InvoiceViewer from "../pages/InvoiceViewer";
 import SignupPage from "../pages/SignupPage";
-
+import PipelinePage from "../pages/PipelinePage";
 import RoleGuard from "../components/RoleGuard";
 
 import AdminShell from "../layouts/AdminShell";
@@ -52,6 +52,7 @@ export default function AppRouter() {
         <Route path="/job/:id" element={<JobDetailPage />} />
         <Route path="/invoices/:id" element={<InvoiceViewer />} />
         <Route path="/payouts" element={<PayoutsPage />} />
+        <Route path="/pipeline" element={<PipelinePage />} />
       </Route>
 
       {/* ✅ Crew routes */}
