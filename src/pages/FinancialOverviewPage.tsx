@@ -20,9 +20,12 @@ import type {
   InvoiceDoc,
   InvoiceStatus,
 } from "../types/types";
-import { jobConverter } from "../types/types";
 import { useOrg } from "../contexts/OrgContext";
 import JobDetailPage from "../pages/JobDetailPage";
+
+// Pull in shared dashboard hooks so this page receives the same data
+import { useOrgJobsData } from "../hooks/useOrgJobsData";
+import { useDashboardPayoutsData } from "../hooks/useDashboardPayoutsData";
 
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import CountUp from "react-countup";
@@ -294,8 +297,12 @@ function StatCard({
 export default function FinancialOverviewPage() {
   const { orgId, loading: orgLoading } = useOrg();
 
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [payouts, setPayouts] = useState<PayoutDoc[]>([]);
+  // Use shared hooks from the dashboard instead of manually subscribing
+  // These hooks already scope data to the active organization and handle
+  // loading states, filters and pagination. Using them here ensures this
+  // page receives the exact same job and payout data as the dashboard.
+  const { jobs, loading: jobsLoading } = useOrgJobsData();
+  const { payouts, payoutsLoading } = useDashboardPayoutsData();
   const [rangeOption, setRangeOption] = useState<RangeOption>("6months");
 
   const [invoices, setInvoices] = useState<InvoiceDoc[]>([]);
@@ -331,28 +338,11 @@ export default function FinancialOverviewPage() {
     };
   }, [quickViewJobId]);
 
-  // Subscribe to jobs, payouts, invoices (scoped by orgId)
+  // Subscribe to invoices for the active organization. Jobs and payouts are
+  // sourced from the dashboard hooks above, so we only need to listen for
+  // invoice updates here.
   useEffect(() => {
     if (!orgId) return;
-
-    const jobsQuery = query(
-      collection(db, "jobs").withConverter(jobConverter),
-      where("orgId", "==", orgId),
-      orderBy("updatedAt", "desc")
-    );
-    const unsubJobs = onSnapshot(jobsQuery, (snap) => {
-      setJobs(snap.docs.map((d) => d.data()));
-    });
-
-    const payoutsQuery = query(
-      collection(db, "payouts"),
-      where("orgId", "==", orgId),
-      orderBy("createdAt", "desc")
-    );
-    const unsubPayouts = onSnapshot(payoutsQuery, (snap) => {
-      setPayouts(snap.docs.map((d) => d.data() as PayoutDoc));
-    });
-
     const invoicesQuery = query(
       collection(db, "invoices"),
       where("orgId", "==", orgId),
@@ -365,10 +355,7 @@ export default function FinancialOverviewPage() {
       }));
       setInvoices(list);
     });
-
     return () => {
-      unsubJobs();
-      unsubPayouts();
       unsubInvoices();
     };
   }, [orgId]);
@@ -989,7 +976,8 @@ export default function FinancialOverviewPage() {
   // ------------------------------
   // UI
   // ------------------------------
-  if (orgLoading) {
+  // Show a loading state while any of the dependent hooks are fetching data
+  if (orgLoading || jobsLoading || payoutsLoading) {
     return (
       <div className="min-h-[calc(100vh-64px)] p-4 sm:p-6">
         <div className="max-w-6xl mx-auto">
