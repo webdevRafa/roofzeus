@@ -404,21 +404,11 @@ export default function EmployeesPage() {
         {/* Add employee */}
         <motion.section
           variants={fadeUp}
-          className="relative z-30 mb-6 rounded-2xl border p-4 md:p-5 shadow-[0_20px_70px_rgba(0,0,0,0.45)]"
-          style={{
-            borderColor: "var(--color-border)",
-            backgroundColor: "rgba(31,36,48,0.55)",
-          }}
+          className="relative z-30 mb-6 rounded-2xl border p-4 md:p-5  border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md"
         >
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <div
-                className="h-9 w-9 rounded-xl border flex items-center justify-center"
-                style={{
-                  borderColor: "rgba(207,174,93,0.25)",
-                  backgroundColor: "rgba(207,174,93,0.10)",
-                }}
-              >
+              <div className="h-9 w-9 rounded-xl border flex items-center justify-center">
                 <UserPlus
                   className="h-4 w-4"
                   style={{ color: "rgba(207,174,93,0.95)" }}
@@ -559,16 +549,9 @@ export default function EmployeesPage() {
         {/* List */}
         <motion.section
           variants={fadeUp}
-          className="relative z-0 rounded-2xl border shadow-[0_18px_70px_rgba(0,0,0,0.35)] overflow-hidden"
-          style={{
-            borderColor: "var(--color-border)",
-            backgroundColor: "rgba(31,36,48,0.40)",
-          }}
+          className="relative z-0 rounded-2xl border  border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md overflow-hidden"
         >
-          <div
-            className="px-5 py-4 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-2"
-            style={{ borderColor: "rgba(255,255,255,0.08)" }}
-          >
+          <div className="px-5 py-4 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>
               <h2 className="text-lg font-semibold">All members</h2>
               <p className="text-sm" style={{ color: "var(--color-muted)" }}>
