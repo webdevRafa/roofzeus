@@ -8,7 +8,7 @@ import {
   type MotionProps,
   type Variants,
 } from "framer-motion";
-import { Search, Filter, ChevronDown, SquarePlus } from "lucide-react";
+import { Search, Filter, ChevronDown } from "lucide-react";
 import CountUp from "react-countup";
 
 type FsTimestampLike = { toDate: () => Date };
@@ -288,16 +288,6 @@ export function DashboardJobsSection({
 }: DashboardJobsSectionProps) {
   return (
     <>
-      {/* New job (moved here) */}
-      <button
-        type="button"
-        onClick={() => setOpenForm((v) => !v)}
-        className="cursor-pointer hover:shadow-md group inline-flex items-center gap-2 rounded-md bg-[var(--color-surface)] hover:bg-[var(--btn-hover-bg)] px-3 py-3 text-[11px] font-semibold text-[var(--btn-text)] transition mb-5 border border-[var(--color-cta)]"
-        aria-label="Add New Job"
-      >
-        <SquarePlus className="h-4 w-4" />
-        New job
-      </button>
       <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md overflow-hidden">
         {/* Header */}
         <motion.header
@@ -306,13 +296,7 @@ export function DashboardJobsSection({
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="min-w-0">
-                <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-text)] tracking-wide">
-                  <Link to="/jobs" className="hover:underline">
-                    ALL JOBS
-                  </Link>
-                </h2>
-              </div>
+              <div className="min-w-0"></div>
 
               <button
                 type="button"
@@ -432,7 +416,7 @@ export function DashboardJobsSection({
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+                className="w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
                 {...fadeUp(0.02)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -440,14 +424,10 @@ export function DashboardJobsSection({
                     <h3 className="text-base font-semibold text-[var(--color-text)]">
                       Create new job
                     </h3>
-                    <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
-                      Only the address is required. You can optionally schedule
-                      felt, shingles, and punch.
-                    </p>
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-3">
+                <div className="mt-6 space-y-7">
                   {/* Address */}
                   <div>
                     <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
