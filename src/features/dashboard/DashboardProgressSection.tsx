@@ -152,9 +152,6 @@ export function DashboardProgressSection({
             <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-text)] tracking-wide">
               SCHEDULED
             </h2>
-            <div className="text-[12px] text-[var(--color-accent-gold)]/70">
-              Scheduled production & punch readiness
-            </div>
           </div>
 
           <button
@@ -198,9 +195,6 @@ export function DashboardProgressSection({
                 <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.70)]">
                   Scheduled dry-in & shingles
                 </h3>
-                <span className="text-[11px] text-[var(--color-accent-gold)]/70">
-                  Live from jobs
-                </span>
               </div>
 
               <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] overflow-hidden">

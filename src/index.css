@@ -110,6 +110,7 @@ body {
      --color-card-hover: #242b39;
      --color-border: rgba(255,255,255,0.10);
      --color-blue: #0a90f0;
+     --color-cta: #0a90f0;
    
      /* Text */
      --color-text: #eef2f7;
@@ -141,7 +142,7 @@ body {
     --kpi-value: rgb(var(--color-text-rgb) / 0.92);
     --panel-bg: rgb(var(--color-surface-rgb) / 0.65);
     --panel-bg-hover: rgb(var(--color-surface-rgb) / 0.85);
-  
+    
 
      /* Status / semantic chips (light) */
   --pill-success-rgb: 5 150 105;   /* emerald-600 */
@@ -156,6 +157,7 @@ body {
      --color-card-hover: #f3f4f6;
      --color-border: rgba(15,23,42,0.10);
      --color-blue: #0a90f0;
+     --color-cta: #ffffff;
    
      /* Text */
      --color-text: #0f172a;

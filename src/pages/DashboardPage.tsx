@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 import DashboardSummarySection from "../features/dashboard/DashboardSummarySection";
-import { DashboardJobsSection } from "../features/dashboard/DashboardJobsSection";
-import { DashboardProgressSection } from "../features/dashboard/DashboardProgressSection";
 import { DashboardPayoutsSection } from "../features/dashboard/DashboardPayoutsSection";
 import DashboardFinancialOverviewSection from "../features/dashboard/DashboardFinancialOverviewSection";
 
@@ -21,44 +19,11 @@ export default function DashboardPage() {
     orgId,
     membershipLoading,
     jobs,
-    employees,
+
     loading,
-    error,
-    statusFilter,
-    setStatusFilter,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    setDatePreset,
-    searchTerm,
-    setSearchTerm,
-    jobsPage,
-    setJobsPage,
-    JOBS_PER_PAGE,
-    openForm,
-    setOpenForm,
-    address,
-    setAddress,
-    newFeltDate,
-    setNewFeltDate,
-    newShinglesDate,
-    setNewShinglesDate,
-    newPunchDate,
-    setNewPunchDate,
-    assignedEmployeeIds,
-    setAssignedEmployeeIds,
-    filteredJobs,
-    pagedJobs,
-    totalNet,
-    jobsTotalPages,
+
     materialProgressJobs,
     readyForPunchJobs,
-    applyPreset,
-    createJob,
-    filters,
-    hasActiveDateFilter,
-    rangeLabel,
   } = useOrgJobsData();
 
   const {
@@ -88,11 +53,8 @@ export default function DashboardPage() {
     markSelectedPayoutsAsPaid,
   } = useDashboardPayoutsData();
 
-  const [jobsOpen, setJobsOpen] = useState(true);
   const [payoutsOpen, setPayoutsOpen] = useState(true);
-  const [upcomingOpen, setUpcomingOpen] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
+
   const [payTechOpen, setPayTechOpen] = useState(false);
 
   const isBusy = membershipLoading || loading;
@@ -124,62 +86,6 @@ export default function DashboardPage() {
               materialProgressJobs={materialProgressJobs}
               readyForPunchJobs={readyForPunchJobs}
               payouts={payouts}
-            />
-          </div>
-
-          <div className="lg:col-span-12">
-            <DashboardProgressSection
-              upcomingOpen={upcomingOpen}
-              setUpcomingOpen={setUpcomingOpen}
-              materialProgressJobs={materialProgressJobs}
-              readyForPunchJobs={readyForPunchJobs}
-            />
-          </div>
-
-          <div className="lg:col-span-12">
-            <DashboardJobsSection
-              jobsOpen={jobsOpen}
-              setJobsOpen={setJobsOpen}
-              showSearch={showSearch}
-              setShowSearch={setShowSearch}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              showFilters={showFilters}
-              setShowFilters={setShowFilters}
-              hasActiveDateFilter={hasActiveDateFilter}
-              rangeLabel={rangeLabel}
-              startDate={startDate}
-              endDate={endDate}
-              setDatePreset={setDatePreset}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
-              applyPreset={applyPreset}
-              filters={filters}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              openForm={openForm}
-              setOpenForm={setOpenForm}
-              address={address}
-              setAddress={setAddress}
-              newFeltDate={newFeltDate}
-              setNewFeltDate={setNewFeltDate}
-              newShinglesDate={newShinglesDate}
-              setNewShinglesDate={setNewShinglesDate}
-              newPunchDate={newPunchDate}
-              setNewPunchDate={setNewPunchDate}
-              createJob={createJob}
-              loading={loading}
-              error={error}
-              filteredJobs={filteredJobs}
-              pagedJobs={pagedJobs}
-              jobsPage={jobsPage}
-              jobsTotalPages={jobsTotalPages}
-              setJobsPage={setJobsPage}
-              JOBS_PER_PAGE={JOBS_PER_PAGE}
-              totalNet={totalNet}
-              employees={employees}
-              assignedEmployeeIds={assignedEmployeeIds}
-              setAssignedEmployeeIds={setAssignedEmployeeIds}
             />
           </div>
 

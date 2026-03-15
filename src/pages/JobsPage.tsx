@@ -408,22 +408,55 @@ export default function JobsPage() {
     <div className="min-h-screen bg-[var(--color-background)]">
       <div className="mx-auto w-[min(1200px,94vw)] space-y-8 py-8">
         {/* Page header */}
-        <section
-          className="relative overflow-visible rounded-2xl border px-5 sm:px-6 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
-          style={{
-            borderColor: "var(--color-border)",
-            backgroundColor: "rgba(31,36,48,0.55)",
-          }}
-        >
-          <div
-            className="pointer-events-none absolute -top-28 -right-28 h-72 w-72 rounded-full blur-3xl"
-            style={{ backgroundColor: "rgba(207,174,93,0.10)" }}
+        {/* Pipeline list section (uses your upgraded DashboardJobsSection exactly as-is) */}
+        <section className="mt-2">
+          <DashboardJobsSection
+            jobsOpen={jobsOpen}
+            setJobsOpen={setJobsOpen}
+            showSearch={showSearch}
+            setShowSearch={setShowSearch}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            hasActiveDateFilter={hasActiveDateFilter}
+            rangeLabel={rangeLabel}
+            setDatePreset={setDatePreset}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            applyPreset={applyPreset}
+            employees={employees}
+            assignedEmployeeIds={assignedEmployeeIds}
+            setAssignedEmployeeIds={setAssignedEmployeeIds}
+            filters={filters}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            newFeltDate={newFeltDate}
+            setNewFeltDate={setNewFeltDate}
+            newShinglesDate={newShinglesDate}
+            setNewShinglesDate={setNewShinglesDate}
+            newPunchDate={newPunchDate}
+            setNewPunchDate={setNewPunchDate}
+            openForm={openForm}
+            setOpenForm={setOpenForm}
+            address={address}
+            setAddress={setAddress}
+            createJob={createJob}
+            loading={loading}
+            error={error}
+            filteredJobs={sortedJobs}
+            pagedJobs={pagedJobs}
+            jobsPage={jobsPage}
+            jobsTotalPages={jobsTotalPages}
+            setJobsPage={setJobsPage}
+            JOBS_PER_PAGE={JOBS_PER_PAGE}
+            totalNet={totalNet}
           />
-          <div
-            className="pointer-events-none absolute -bottom-28 -left-28 h-72 w-72 rounded-full blur-3xl"
-            style={{ backgroundColor: "rgba(245,246,248,0.06)" }}
-          />
+        </section>
 
+        <section className="relative overflow-visible rounded-2xl  px-5 sm:px-6 py-5 bg-[var(--color-surface)] ">
           <div className="relative flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
@@ -441,16 +474,9 @@ export default function JobsPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <h1 className="text-lg sm:text-xl font-semibold text-white">
+                  <h1 className="text-lg sm:text-xl font-semibold text-[var(--color-text)]">
                     Jobs
                   </h1>
-                  <p
-                    className="mt-1 text-xs sm:text-[13px]"
-                    style={{ color: "var(--color-muted)" }}
-                  >
-                    Review performance, audit margin, and manage job pipeline —
-                    org scoped.
-                  </p>
                 </div>
               </div>
 
@@ -513,15 +539,9 @@ export default function JobsPage() {
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -12, filter: "blur(6px)" }}
                 transition={{ duration: 0.22, ease }}
-                className="fixed right-4 top-20 z-[300] hidden md:block"
+                className="fixed right-4 lg:right-27 top-20 lg:top-40 z-[300] hidden md:block"
               >
-                <div
-                  className="rounded-2xl border px-3 py-2 shadow-[0_22px_60px_rgba(0,0,0,0.65)] backdrop-blur"
-                  style={{
-                    borderColor: "rgba(58,63,75,0.85)",
-                    backgroundColor: "rgba(11,14,20,0.70)",
-                  }}
-                >
+                <div className="rounded-2xl border px-3 py-2 shadow-[0_22px_60px_rgba(0,0,0,0.65)] backdrop-blur bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="inline-flex items-center gap-2">
                       <SlidersHorizontal className="h-4 w-4 text-white/60" />
@@ -672,18 +692,6 @@ export default function JobsPage() {
             backgroundColor: "rgba(31,36,48,0.55)",
           }}
         >
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-white/90">
-              Jobs Overview
-            </h2>
-            <span
-              className="text-[11px]"
-              style={{ color: "var(--color-muted)" }}
-            >
-              Totals reflect current filters + sort
-            </span>
-          </div>
-
           <motion.div
             variants={stagger}
             initial="hidden"
@@ -805,54 +813,6 @@ export default function JobsPage() {
               </div>
             ))}
           </div>
-        </section>
-
-        {/* Pipeline list section (uses your upgraded DashboardJobsSection exactly as-is) */}
-        <section className="mt-2">
-          <DashboardJobsSection
-            jobsOpen={jobsOpen}
-            setJobsOpen={setJobsOpen}
-            showSearch={showSearch}
-            setShowSearch={setShowSearch}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            showFilters={showFilters}
-            setShowFilters={setShowFilters}
-            hasActiveDateFilter={hasActiveDateFilter}
-            rangeLabel={rangeLabel}
-            setDatePreset={setDatePreset}
-            startDate={startDate}
-            endDate={endDate}
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            applyPreset={applyPreset}
-            employees={employees}
-            assignedEmployeeIds={assignedEmployeeIds}
-            setAssignedEmployeeIds={setAssignedEmployeeIds}
-            filters={filters}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            newFeltDate={newFeltDate}
-            setNewFeltDate={setNewFeltDate}
-            newShinglesDate={newShinglesDate}
-            setNewShinglesDate={setNewShinglesDate}
-            newPunchDate={newPunchDate}
-            setNewPunchDate={setNewPunchDate}
-            openForm={openForm}
-            setOpenForm={setOpenForm}
-            address={address}
-            setAddress={setAddress}
-            createJob={createJob}
-            loading={loading}
-            error={error}
-            filteredJobs={sortedJobs}
-            pagedJobs={pagedJobs}
-            jobsPage={jobsPage}
-            jobsTotalPages={jobsTotalPages}
-            setJobsPage={setJobsPage}
-            JOBS_PER_PAGE={JOBS_PER_PAGE}
-            totalNet={totalNet}
-          />
         </section>
       </div>
     </div>
