@@ -333,7 +333,7 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-30 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background))] backdrop-blur px-4 py-3 max-w-7xl mx-auto">
+      <header className="sticky top-17 md:top-30 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background))] backdrop-blur px-4 py-3 max-w-7xl mx-auto">
         <div className="flex items-center gap-3 min-w-0">
           <Briefcase
             className="h-6 w-6"
@@ -351,7 +351,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setOpenForm(true)}
-            className="inline-flex items-center gap-2 rounded-md border border-[var(--color-primary)] bg-[var(--color-surface)] hover:bg-[var(--color-card-hover)] px-3 py-2 text-xs  font-semibold text-[var(--color-text)] shadow-sm transition"
+            className="inline-flex items-center gap-2 rounded-md  bg-[var(--color-surface)] hover:bg-[var(--color-card-hover)] px-3 py-2 text-xs  font-semibold text-[var(--color-text)] shadow-sm transition cursor-pointer"
           >
             <SquarePlus className="h-4 w-4" />
             New job
