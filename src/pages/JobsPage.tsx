@@ -406,7 +406,7 @@ export default function JobsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
-      <div className="mx-auto w-[min(1200px,94vw)] space-y-8 py-8">
+      <div className="mx-auto  space-y-8 py-8">
         {/* Page header */}
         {/* Pipeline list section (uses your upgraded DashboardJobsSection exactly as-is) */}
         <section className="mt-2">
