@@ -1,6 +1,6 @@
 // src/layouts/AdminLayout.tsx
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { getAuth, signOut } from "firebase/auth";
 import {
   CalendarDays,
@@ -13,16 +13,18 @@ import {
   X,
   BriefcaseBusiness,
   Wallet,
-  Image as ImageIcon,
+  ChevronDown,
 } from "lucide-react";
-import { doc, onSnapshot } from "firebase/firestore";
 
 import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 import { useOrg } from "../contexts/OrgContext";
+
+// Additional imports for brand logo and menu management
+import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import BrandLogoModal from "../components/BrandLogoModal";
 
 import logo from "../assets/logo-white.svg";
-import BrandLogoModal from "../components/BrandLogoModal";
 
 type AppNavItem = {
   to: string;
@@ -95,10 +97,14 @@ export default function AdminLayout() {
 
   const [signingOut, setSigningOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Track whether the org menu (settings dropdown) is open
+  const [orgMenuOpen, setOrgMenuOpen] = useState(false);
+  // Track whether the brand logo modal is open
   const [brandModalOpen, setBrandModalOpen] = useState(false);
-
-  // This is the org brand logo that should appear in the red-square area.
+  // Store the active organization’s logo URL (if any)
   const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
+  // Ref to detect clicks outside of the org menu
+  const orgMenuRef = useRef<HTMLDivElement>(null);
 
   const {
     orgId: activeOrgId,
@@ -108,21 +114,36 @@ export default function AdminLayout() {
     loading: membershipLoading,
   } = useOrg();
 
+  // Subscribe to the organization document to pull the logoUrl for the active org
   useEffect(() => {
     if (!activeOrgId) {
       setOrgLogoUrl(null);
       return;
     }
-
     const orgRef = doc(db, "organizations", activeOrgId);
-
     const unsub = onSnapshot(orgRef, (snap) => {
       const data = snap.data() as { logoUrl?: string | null } | undefined;
       setOrgLogoUrl(data?.logoUrl ?? null);
     });
-
     return () => unsub();
   }, [activeOrgId]);
+
+  // Close the org menu when clicking outside of it
+  useEffect(() => {
+    if (!orgMenuOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        orgMenuRef.current &&
+        !orgMenuRef.current.contains(event.target as Node)
+      ) {
+        setOrgMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [orgMenuOpen]);
 
   async function handleLogout() {
     try {
@@ -151,18 +172,17 @@ export default function AdminLayout() {
                 onClick={() => navigate("/dashboard")}
                 className="flex min-w-0 items-center gap-3 text-left"
               >
-                {/* Keep RoofZeus as the main platform logo */}
                 <img
                   src={logo}
                   alt="RoofZeus logo"
-                  className="w-[70px] shadow-md brand-logo shrink-0"
+                  className="w-[80px] shadow-md brand-logo"
                 />
 
-                {/* Replace the red-square content with org logo + text */}
-                <div className="hidden min-w-0 sm:flex items-center gap-3">
+                {/* Organization branding block */}
+                <div className=" min-w-0 flex items-center gap-3">
                   <div className="flex flex-col min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
-                      {orgLogoUrl ? (
+                      {orgLogoUrl && (
                         <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-[rgb(var(--color-border-rgb)/0.18)] bg-white/95 shadow-sm">
                           <img
                             src={orgLogoUrl}
@@ -170,13 +190,48 @@ export default function AdminLayout() {
                             className="h-full w-full object-contain"
                           />
                         </div>
-                      ) : null}
-
-                      <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
-                        {activeOrgName || activeNavLabel}
+                      )}
+                      {/* Org name with dropdown arrow */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setOrgMenuOpen((v) => !v);
+                          }}
+                          className="flex items-center gap-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)] outline-none"
+                        >
+                          <span className="truncate">
+                            {activeOrgName || activeNavLabel}
+                          </span>
+                          <ChevronDown
+                            className={`ml-1 h-3 w-3 transition-transform duration-200 ${
+                              orgMenuOpen ? "-rotate-180" : "rotate-0"
+                            }`}
+                          />
+                        </button>
+                        {/* Dropdown menu */}
+                        {orgMenuOpen && (
+                          <div
+                            ref={orgMenuRef}
+                            className="absolute z-50 mt-2 min-w-[12rem] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.98)] py-4 px-2 shadow-xl"
+                          >
+                            <button
+                              onClick={() => {
+                                setOrgMenuOpen(false);
+                                setBrandModalOpen(true);
+                              }}
+                              className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[rgb(var(--color-text-rgb)/0.88)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                            >
+                              Organization Settings
+                            </button>
+                            {/* Future options can be added here */}
+                          </div>
+                        )}
                       </div>
                     </div>
 
+                    {/* Org switcher if user is a member of multiple organizations */}
                     {!membershipLoading && memberships.length > 1 && (
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
@@ -206,15 +261,6 @@ export default function AdminLayout() {
 
               <div className="flex items-center gap-2">
                 <ThemeToggleButton />
-
-                <button
-                  type="button"
-                  onClick={() => setBrandModalOpen(true)}
-                  className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-2 text-[rgb(var(--color-text-rgb)/0.85)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                  aria-label="Edit brand settings"
-                >
-                  <ImageIcon className="h-4 w-4" />
-                </button>
 
                 <button
                   onClick={handleLogout}
@@ -270,24 +316,6 @@ export default function AdminLayout() {
             {/* Mobile nav panel */}
             {mobileOpen && (
               <div className="mt-3 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.70)] p-2 backdrop-blur md:hidden">
-                <div className="mb-3 flex items-center gap-3 px-2 pt-1">
-                  {orgLogoUrl ? (
-                    <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-[rgb(var(--color-border-rgb)/0.18)] bg-white/95 shadow-sm">
-                      <img
-                        src={orgLogoUrl}
-                        alt={`${activeOrgName || "Organization"} logo`}
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
-                      {activeOrgName || activeNavLabel}
-                    </div>
-                  </div>
-                </div>
-
                 <div className="grid gap-1">
                   {NAV_ITEMS.map((item) => {
                     const Icon = item.icon;
@@ -316,10 +344,11 @@ export default function AdminLayout() {
         <Outlet />
       </main>
 
+      {/* Brand logo modal: allows users to update their organization logo */}
       {brandModalOpen && activeOrgId && (
         <BrandLogoModal
           orgId={activeOrgId}
-          currentLogoUrl={orgLogoUrl}
+          currentLogoUrl={orgLogoUrl ?? undefined}
           onClose={() => setBrandModalOpen(false)}
         />
       )}

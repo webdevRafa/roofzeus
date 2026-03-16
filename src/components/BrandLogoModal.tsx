@@ -9,7 +9,12 @@
 // ensure consistent sizing across the application.
 
 import { useState, useEffect } from "react";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import { getFirestore, doc, updateDoc } from "firebase/firestore";
 
 interface BrandLogoModalProps {
@@ -26,7 +31,11 @@ interface BrandLogoModalProps {
   onClose: () => void;
 }
 
-export default function BrandLogoModal({ orgId, currentLogoUrl, onClose }: BrandLogoModalProps) {
+export default function BrandLogoModal({
+  orgId,
+  currentLogoUrl,
+  onClose,
+}: BrandLogoModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -75,10 +84,14 @@ export default function BrandLogoModal({ orgId, currentLogoUrl, onClose }: Brand
     const srcY = (imageBitmap.height - size) / 2;
     ctx.drawImage(imageBitmap, srcX, srcY, size, size, 0, 0, 512, 512);
     return await new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) reject(new Error("Failed to create image blob"));
-        else resolve(blob);
-      }, "image/png", 0.95);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) reject(new Error("Failed to create image blob"));
+          else resolve(blob);
+        },
+        "image/png",
+        0.95
+      );
     });
   }
 
@@ -119,7 +132,9 @@ export default function BrandLogoModal({ orgId, currentLogoUrl, onClose }: Brand
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--color-overlay-rgb,0,0,0)/0.40)] backdrop-blur-sm p-4">
       <div className="w-full max-w-md rounded-xl bg-[rgb(var(--color-surface-rgb)/1)] p-6 shadow-2xl">
-        <h2 className="mb-4 text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.94)]">Update Brand Logo</h2>
+        <h2 className="mb-4 text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.94)]">
+          Update Brand Logo
+        </h2>
         <div className="space-y-4">
           {/* Preview area: shows existing or selected logo on light and dark backgrounds to help the user choose a high‑contrast image. */}
           <div className="grid grid-cols-2 gap-4">
@@ -127,27 +142,47 @@ export default function BrandLogoModal({ orgId, currentLogoUrl, onClose }: Brand
             <div className="flex flex-col items-center gap-2">
               <div className="h-24 w-24 overflow-hidden rounded-md border border-[rgb(var(--color-border-rgb)/0.18)] bg-gray-800 flex items-center justify-center">
                 {preview ? (
-                  <img src={preview} alt="Logo preview" className="h-full w-full object-cover" />
+                  <img
+                    src={preview}
+                    alt="Logo preview"
+                    className="h-full w-full object-cover"
+                  />
                 ) : currentLogoUrl ? (
-                  <img src={currentLogoUrl} alt="Current logo preview" className="h-full w-full object-cover" />
+                  <img
+                    src={currentLogoUrl}
+                    alt="Current logo preview"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="text-xs text-gray-400">No logo</span>
                 )}
               </div>
-              <span className="text-[11px] text-[rgb(var(--color-text-rgb)/0.75)]">Dark theme</span>
+              <span className="text-[11px] text-[rgb(var(--color-text-rgb)/0.75)]">
+                Dark theme
+              </span>
             </div>
             {/* Light background preview */}
             <div className="flex flex-col items-center gap-2">
               <div className="h-24 w-24 overflow-hidden rounded-md border border-[rgb(var(--color-border-rgb)/0.18)] bg-white flex items-center justify-center">
                 {preview ? (
-                  <img src={preview} alt="Logo preview light" className="h-full w-full object-cover" />
+                  <img
+                    src={preview}
+                    alt="Logo preview light"
+                    className="h-full w-full object-cover"
+                  />
                 ) : currentLogoUrl ? (
-                  <img src={currentLogoUrl} alt="Current logo preview light" className="h-full w-full object-cover" />
+                  <img
+                    src={currentLogoUrl}
+                    alt="Current logo preview light"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="text-xs text-gray-400">No logo</span>
                 )}
               </div>
-              <span className="text-[11px] text-[rgb(var(--color-text-rgb)/0.75)]">Light theme</span>
+              <span className="text-[11px] text-[rgb(var(--color-text-rgb)/0.75)]">
+                Light theme
+              </span>
             </div>
           </div>
 
