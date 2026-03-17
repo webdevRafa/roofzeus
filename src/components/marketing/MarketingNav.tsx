@@ -232,7 +232,7 @@ export default function MarketingNav() {
                 to="/login"
                 className={cx(
                   "hidden lg:inline-flex items-center justify-center gap-2",
-                  "rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35",
+                  "rounded-xl transition! bg-[var(--color-surface)] hover:bg-[#191f2c]    duration-300 ease-in-out",
                   "px-3 py-2 text-sm font-semibold text-white/80",
                   "hover:border-[#cfae5d] hover:text-white transition"
                 )}
@@ -255,7 +255,7 @@ export default function MarketingNav() {
                       to="/signup"
                       className={cx(
                         "inline-flex items-center justify-center gap-2",
-                        "rounded-xl border-[var(--color-blue)]/40 hover:border-[var(--color-blue)] transition-all duration-500 ease-in-out border-1 px-4 py-2 text-sm font-semibold text-white",
+                        "rounded-xl transition! bg-[var(--color-surface)] hover:bg-[#191f2c]    duration-300 ease-in-out px-4 py-2 text-sm font-semibold text-white",
                         "hover:opacity-90 transition"
                       )}
                     >

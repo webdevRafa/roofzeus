@@ -44,7 +44,7 @@ function FaqItem({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-2xl mb-4 bg-[var(--color-surface)]/70 overflow-hidden">
+    <div className="rounded-2xl mb-4 bg-[var(--color-surface)]/10 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -73,7 +73,7 @@ function FaqItem({
             transition={{ duration: 0.22, ease }}
             className="overflow-hidden"
           >
-            <div className="px-4 sm:px-5 pb-5 text-sm text-white/65 leading-relaxed">
+            <div className="px-4 sm:px-5 pb-5 text-lg text-white/65 leading-relaxed">
               {a}
             </div>
           </motion.div>
@@ -208,7 +208,7 @@ export default function FaqPage() {
   return (
     <main className="min-h-[calc(100vh-64px)] text-[#f5f6f8] overflow-x-hidden">
       {/* HERO */}
-      <section className="max-w-7xl mx-auto px-6 pt-14 pb-10">
+      <section className="max-w-5xl mx-auto px-6 pt-14 pb-10">
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -225,7 +225,7 @@ export default function FaqPage() {
       </section>
 
       {/* FAQ LIST */}
-      <section className="max-w-7xl mx-auto px-6 pb-14">
+      <section className="max-w-5xl mx-auto px-6 pb-14">
         <motion.div
           variants={stagger}
           initial="hidden"

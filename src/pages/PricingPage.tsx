@@ -121,7 +121,7 @@ export default function PricingPage() {
             {/* Pricing Card */}
             <motion.div
               variants={cardIn}
-              className={`lg:col-span-6 rounded-md border-none bg-[var(--color-surface)]  p-6 `}
+              className={`lg:col-span-6 rounded-md border-none   p-6 `}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
