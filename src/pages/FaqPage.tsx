@@ -52,7 +52,13 @@ function FaqItem({
         aria-expanded={open}
       >
         <div className="min-w-0">
-          <div className="text-md  text-[#e5c26a] leading-snug">{q}</div>
+          <div
+            className={`text-md  text-[#e5c26a] leading-snug ${
+              open ? "text-[#e5c26a]" : "text-white/50"
+            }`}
+          >
+            {q}
+          </div>
         </div>
 
         <div className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
@@ -73,7 +79,7 @@ function FaqItem({
             transition={{ duration: 0.22, ease }}
             className="overflow-hidden"
           >
-            <div className="px-4 sm:px-5 pb-5 text-lg text-white/65 leading-relaxed">
+            <div className="px-4 sm:px-5 pb-5 text-lg text-white/80 leading-relaxed">
               {a}
             </div>
           </motion.div>

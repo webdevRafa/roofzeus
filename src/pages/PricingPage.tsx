@@ -243,7 +243,7 @@ export default function PricingPage() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.25 }}
-          className="grid lg:grid-cols-12 gap-10 bg-[var(--color-surface)]"
+          className="grid lg:grid-cols-12 gap-10 bg-gradient-to-b from-[var(--color-surface)] to-[var(--color-card)]"
         >
           <motion.div variants={fadeUp} className="lg:col-span-12">
             <div className="rounded-2xl  px-6 py-20">
