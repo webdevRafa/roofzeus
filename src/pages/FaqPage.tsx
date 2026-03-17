@@ -44,17 +44,19 @@ function FaqItem({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-2xl mb-4 bg-[var(--color-surface)]/10 overflow-hidden">
+    <div className="rounded-2xl mb-4 bg-[var(--color-surface)]/10 overflow-hidden group py-3">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="w-full px-4 sm:px-5 py-4 flex items-start justify-between gap-4 text-left"
         aria-expanded={open}
       >
-        <div className="min-w-0">
+        <div className="min-w-0 ">
           <div
-            className={`text-md  text-[#e5c26a] leading-snug ${
-              open ? "text-[#e5c26a]" : "text-white/50"
+            className={`text-md  text-[#fae2a4] leading-snug ${
+              open
+                ? "text-[#e5c26a]"
+                : "text-white/50 group-hover:text-white cursor-pointer"
             }`}
           >
             {q}
