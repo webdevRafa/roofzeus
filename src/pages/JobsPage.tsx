@@ -93,13 +93,7 @@ function SortMenu({
         type="button"
         onClick={() => setOpen((s) => !s)}
         whileTap={{ scale: 0.98 }}
-        className="group inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold outline-none transition"
-        style={{
-          borderColor: open ? "rgba(207,174,93,0.55)" : "rgba(58,63,75,0.85)",
-          backgroundColor: "rgba(11,14,20,0.55)",
-          color: "rgba(245,246,248,0.92)",
-          boxShadow: open ? "0 0 0 3px rgba(207,174,93,0.18)" : "none",
-        }}
+        className="group inline-flex items-center gap-2   px-3 py-2 text-xs font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -129,11 +123,7 @@ function SortMenu({
             animate={{ opacity: 1, y: 10, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: 8, scale: 0.985, filter: "blur(6px)" }}
             transition={{ duration: 0.18, ease }}
-            className="absolute right-0 z-50 mt-2 w-[240px] overflow-hidden rounded-2xl border shadow-[0_22px_60px_rgba(0,0,0,0.65)]"
-            style={{
-              borderColor: "rgba(58,63,75,0.9)",
-              backgroundColor: "rgba(11,14,20,0.92)",
-            }}
+            className="absolute right-0 z-50 mt-2 w-[240px] overflow-hidden  bg-[var(--color-background)] shadow-sm"
             role="menu"
           >
             <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-white/45">
@@ -151,22 +141,17 @@ function SortMenu({
                       onChange(opt.value);
                       setOpen(false);
                     }}
-                    className="w-full px-3 py-2 text-left transition"
-                    style={{
-                      backgroundColor: selected
-                        ? "rgba(207,174,93,0.14)"
-                        : "transparent",
-                    }}
+                    className="w-full px-3 py-2 text-left transition cursor-pointer"
                     role="menuitem"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3 hover:shadow-md">
                       <div className="min-w-0">
                         <div
-                          className="text-xs font-semibold"
+                          className="text-xs "
                           style={{
                             color: selected
-                              ? "rgba(207,174,93,0.95)"
-                              : "rgba(245,246,248,0.88)",
+                              ? "text-[var(--color-surface)]"
+                              : "text-[var(--color-surface)] opacity-20",
                           }}
                         >
                           {opt.label}
@@ -178,12 +163,7 @@ function SortMenu({
 
                       {selected && (
                         <span
-                          className="inline-flex h-6 w-6 items-center justify-center rounded-full border"
-                          style={{
-                            borderColor: "rgba(207,174,93,0.45)",
-                            backgroundColor: "rgba(207,174,93,0.12)",
-                            color: "rgba(207,174,93,0.95)",
-                          }}
+                          className="inline-flex h-6 w-6 items-center justify-center "
                           aria-hidden="true"
                         >
                           ✓
@@ -193,13 +173,6 @@ function SortMenu({
                   </button>
                 );
               })}
-            </div>
-
-            <div
-              className="border-t px-3 py-2 text-[11px] text-white/45"
-              style={{ borderColor: "rgba(58,63,75,0.65)" }}
-            >
-              Tip: use “Highest net profit” to find your best patterns fast.
             </div>
           </motion.div>
         )}
@@ -333,7 +306,7 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-17 md:top-30 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background))] backdrop-blur px-4 py-3 max-w-7xl mx-auto">
+      <header className="sticky top-17 md:top-28 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background))] backdrop-blur px-4 py-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-3 min-w-0">
           <Briefcase
             className="h-6 w-6"
@@ -351,7 +324,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setOpenForm(true)}
-            className="inline-flex items-center gap-2 rounded-md  bg-[var(--color-surface)] hover:bg-[var(--color-card-hover)] px-3 py-2 text-xs  font-semibold text-[var(--color-text)] shadow-sm transition cursor-pointer"
+            className="inline-flex items-center gap-2  px-3 py-2 text-xs  font-semibold text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer"
           >
             <SquarePlus className="h-4 w-4" />
             New job
@@ -359,9 +332,7 @@ export default function JobsPage() {
           {/* Sort menu */}
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="h-4 w-4 text-[var(--color-muted)]" />
-            <label className="text-xs font-semibold text-[var(--color-muted)]">
-              Sort
-            </label>
+
             <SortMenu value={sortOption} onChange={(v) => setSortOption(v)} />
           </div>
         </div>

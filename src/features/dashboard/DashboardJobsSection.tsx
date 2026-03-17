@@ -8,7 +8,7 @@ import {
   type MotionProps,
   type Variants,
 } from "framer-motion";
-import { Search, Filter, ChevronDown } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import CountUp from "react-countup";
 
 type FsTimestampLike = { toDate: () => Date };
@@ -237,7 +237,6 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 export function DashboardJobsSection({
   jobsOpen,
-  setJobsOpen,
 
   showSearch,
   setShowSearch,
@@ -288,7 +287,7 @@ export function DashboardJobsSection({
 }: DashboardJobsSectionProps) {
   return (
     <>
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md overflow-hidden">
+      <section className="rounded-2xl  hover:shadow-md overflow-hidden">
         {/* Header */}
         <motion.header
           className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-4"
@@ -297,38 +296,23 @@ export function DashboardJobsSection({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 min-w-0">
               <div className="min-w-0"></div>
-
-              <button
-                type="button"
-                onClick={() => setJobsOpen((v) => !v)}
-                className="ml-2 inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1.5 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
-              >
-                <ChevronDown
-                  className={`h-4 w-4 transition-transform ${
-                    jobsOpen ? "rotate-0" : "-rotate-90"
-                  }`}
-                />
-                <span className="hidden sm:inline">
-                  {jobsOpen ? "Collapse" : "Expand"}
-                </span>
-              </button>
             </div>
 
             {/* Right chips + primary action */}
-            <div className="flex flex-wrap items-center justify-end gap-2 text-[11px]">
+            <div className="flex flex-wrap items-center justify-end gap-2 text-sm md:text-md ">
               {hasActiveDateFilter ? (
-                <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[var(--color-accent-gold)]/80">
+                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
                   Date: {rangeLabel || "Custom range"}
                 </span>
               ) : (
-                <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
+                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
                   Date: All time
                 </span>
               )}
 
-              <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
+              <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
                 Status:{" "}
-                <span className="ml-1 font-semibold text-[rgb(var(--color-text-rgb)/0.92)]/80">
+                <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
                   {statusFilter === "all" ? "All" : statusFilter}
                 </span>
               </span>
@@ -336,7 +320,7 @@ export function DashboardJobsSection({
           </div>
 
           {/* Controls row */}
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             {/* Search toggle */}
             <div className="relative">
               <button
