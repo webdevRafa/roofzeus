@@ -81,8 +81,8 @@ function navLinkBase(isActive: boolean) {
   return (
     "inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition whitespace-nowrap " +
     (isActive
-      ? "bg-[rgb(var(--color-surface-rgb)/0.88)] text-[rgb(var(--color-text-rgb)/0.94)] "
-      : "text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[rgb(var(--color-text-rgb)/0.94)]")
+      ? "text-[var(--color-text)]"
+      : "text-[var(--color-text)]/50 hover:text-[var(--color-text)]")
   );
 }
 
@@ -164,8 +164,8 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 select-none">
-        <div className="border-b border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-background-rgb)/0.88)] backdrop-blur">
+      <header className="sticky top-0 z-100 select-none ">
+        <div className="border-b border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-background)]/40 backdrop-blur">
           <div className="mx-auto w-[min(1400px,95vw)] py-4">
             <div className="flex items-center justify-between gap-3">
               <button

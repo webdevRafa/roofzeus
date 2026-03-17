@@ -290,79 +290,76 @@ export function DashboardJobsSection({
       <section className="rounded-2xl  hover:shadow-md overflow-hidden">
         {/* Header */}
         <motion.header
-          className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-4"
+          className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-4 relative z-50"
           {...fadeUp(0)}
         >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="min-w-0"></div>
-            </div>
-
-            {/* Right chips + primary action */}
-            <div className="flex flex-wrap items-center justify-end gap-2 text-sm md:text-md ">
-              {hasActiveDateFilter ? (
-                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
-                  Date: {rangeLabel || "Custom range"}
-                </span>
-              ) : (
-                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
-                  Date: All time
-                </span>
-              )}
-
-              <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
-                Status:{" "}
-                <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
-                  {statusFilter === "all" ? "All" : statusFilter}
-                </span>
-              </span>
-            </div>
-          </div>
-
-          {/* Controls row */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            {/* Search toggle */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowSearch((v) => !v)}
-                className="cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
-                title="Search addresses"
-                aria-label="Search addresses"
-              >
-                <Search size={18} className="mr-2" />
-                <span>Search</span>
-              </button>
-
-              <AnimatePresence initial={false}>
-                {showSearch && (
-                  <motion.div
-                    {...fadeUp(0.02)}
-                    className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-2 shadow-[0_5px_5px_rgba(0,0,0,0.35)]"
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ">
+            <div className="w-full flex justify-between">
+              {/* Controls row */}
+              <div className="flex gap-3  sm:items-center">
+                {/* Search toggle */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowSearch((v) => !v)}
+                    className="cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)]  transition"
+                    title="Search addresses"
+                    aria-label="Search addresses"
                   >
-                    <input
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search by address…"
-                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    <Search size={18} className="mr-2" />
+                    <span>Search</span>
+                  </button>
 
-            {/* Date filter toggle */}
-            <button
-              type="button"
-              onClick={() => setShowFilters((v) => !v)}
-              className=" cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
-              title="Filter by last updated date"
-            >
-              <Filter size={16} className="mr-2" />
-              <span>
-                {hasActiveDateFilter ? "Edit date range" : "Date filters"}
-              </span>
-            </button>
+                  <AnimatePresence initial={false}>
+                    {showSearch && (
+                      <motion.div
+                        {...fadeUp(0.02)}
+                        className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 shadow-lg  bg-[var(--color-background)] backdrop-blur px-4 py-5  z-60 relative "
+                      >
+                        <input
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          placeholder="Search by address…"
+                          className="w-full  border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 "
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Date filter toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowFilters((v) => !v)}
+                  className=" cursor-pointer hover:shadow-md inline-flex items-center justify-center  px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
+                  title="Filter by last updated date"
+                >
+                  <Filter size={16} className="mr-2" />
+                  <span>
+                    {hasActiveDateFilter ? "Edit date range" : "Date filters"}
+                  </span>
+                </button>
+              </div>
+              {/* Right chips + primary action */}
+              <div className="flex flex-wrap items-center justify-end gap-2 text-sm md:text-md ">
+                {hasActiveDateFilter ? (
+                  <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                    Date: {rangeLabel || "Custom range"}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                    Date: All time
+                  </span>
+                )}
+
+                <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
+                  Status:{" "}
+                  <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
+                    {statusFilter === "all" ? "All" : statusFilter}
+                  </span>
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Status Filters row (only when expanded) */}
@@ -572,7 +569,7 @@ export function DashboardJobsSection({
           {showFilters && (
             <motion.section
               id="date-filters"
-              className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 sm:px-6 py-4"
+              className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] mt-10 px-4 sm:px-6 py-4 relative z-40"
               {...fadeUp(0.06)}
             >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

@@ -147,7 +147,7 @@ function SortMenu({
                     <div className="flex items-center justify-between gap-3 hover:shadow-md">
                       <div className="min-w-0">
                         <div
-                          className="text-xs "
+                          className="text-xs px-2 py-1 "
                           style={{
                             color: selected
                               ? "text-[var(--color-surface)]"
@@ -304,9 +304,9 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
+    <div className="min-h-screen bg-[var(--color-background)] relative">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-17 md:top-28 z-20 flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background))] backdrop-blur px-4 py-6 max-w-7xl mx-auto">
+      <header className="sticky top-16 md:top-28  flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background))] backdrop-blur px-4 py-6 max-w-7xl mx-auto z-80">
         <div className="flex items-center gap-3 min-w-0">
           <Briefcase
             className="h-6 w-6"
