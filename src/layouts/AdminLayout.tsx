@@ -81,7 +81,7 @@ function navLinkBase(isActive: boolean) {
   return (
     "inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition whitespace-nowrap " +
     (isActive
-      ? "bg-[rgb(var(--color-surface-rgb)/0.88)] text-[rgb(var(--color-text-rgb)/0.94)] ring-1 ring-[rgb(var(--color-border-rgb)/0.18)]"
+      ? "bg-[rgb(var(--color-surface-rgb)/0.88)] text-[rgb(var(--color-text-rgb)/0.94)] "
       : "text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[rgb(var(--color-text-rgb)/0.94)]")
   );
 }
@@ -181,56 +181,6 @@ export default function AdminLayout() {
                 {/* Organization branding block */}
                 <div className=" min-w-0 flex items-center gap-3">
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {orgLogoUrl && (
-                        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-[rgb(var(--color-border-rgb)/0.18)] bg-white/95 shadow-sm">
-                          <img
-                            src={orgLogoUrl}
-                            alt={`${activeOrgName || "Organization"} logo`}
-                            className="h-full w-full object-contain"
-                          />
-                        </div>
-                      )}
-                      {/* Org name with dropdown arrow */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setOrgMenuOpen((v) => !v);
-                          }}
-                          className="flex items-center gap-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)] outline-none"
-                        >
-                          <span className="truncate">
-                            {activeOrgName || activeNavLabel}
-                          </span>
-                          <ChevronDown
-                            className={`ml-1 h-3 w-3 transition-transform duration-200 ${
-                              orgMenuOpen ? "-rotate-180" : "rotate-0"
-                            }`}
-                          />
-                        </button>
-                        {/* Dropdown menu */}
-                        {orgMenuOpen && (
-                          <div
-                            ref={orgMenuRef}
-                            className="absolute z-50 mt-2 min-w-[12rem] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.98)] py-4 px-2 shadow-xl"
-                          >
-                            <button
-                              onClick={() => {
-                                setOrgMenuOpen(false);
-                                setBrandModalOpen(true);
-                              }}
-                              className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[rgb(var(--color-text-rgb)/0.88)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                            >
-                              Organization Settings
-                            </button>
-                            {/* Future options can be added here */}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
                     {/* Org switcher if user is a member of multiple organizations */}
                     {!membershipLoading && memberships.length > 1 && (
                       <div className="mt-1 flex items-center gap-2">
@@ -290,6 +240,55 @@ export default function AdminLayout() {
             <div className="mt-4 hidden md:block">
               <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <nav className="flex min-w-max items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {orgLogoUrl && (
+                      <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-[rgb(var(--color-border-rgb)/0.18)] bg-white/95 shadow-sm">
+                        <img
+                          src={orgLogoUrl}
+                          alt={`${activeOrgName || "Organization"} logo`}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                    )}
+                    {/* Org name with dropdown arrow */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setOrgMenuOpen((v) => !v);
+                        }}
+                        className="flex items-center gap-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)] outline-none"
+                      >
+                        <span className="truncate">
+                          {activeOrgName || activeNavLabel}
+                        </span>
+                        <ChevronDown
+                          className={`ml-1 h-3 w-3 transition-transform duration-200 ${
+                            orgMenuOpen ? "-rotate-180" : "rotate-0"
+                          }`}
+                        />
+                      </button>
+                      {/* Dropdown menu */}
+                      {orgMenuOpen && (
+                        <div
+                          ref={orgMenuRef}
+                          className="absolute z-50 mt-2 min-w-[12rem] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.98)] py-4 px-2 shadow-xl"
+                        >
+                          <button
+                            onClick={() => {
+                              setOrgMenuOpen(false);
+                              setBrandModalOpen(true);
+                            }}
+                            className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[rgb(var(--color-text-rgb)/0.88)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                          >
+                            Organization Settings
+                          </button>
+                          {/* Future options can be added here */}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {NAV_ITEMS.map((item) => {
                     const Icon = item.icon;
                     return (
