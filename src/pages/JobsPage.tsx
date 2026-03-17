@@ -306,7 +306,7 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] relative">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-16 md:top-28  flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background))] backdrop-blur px-4 py-6 max-w-7xl mx-auto z-80">
+      <header className="sticky top-16 md:top-28  flex items-center justify-between  bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-7xl mx-auto z-80">
         <div className="flex items-center gap-3 min-w-0">
           <Briefcase
             className="h-6 w-6"
@@ -339,7 +339,7 @@ export default function JobsPage() {
       </header>
 
       {/* Main content area with the job list and filters */}
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+      <main className="mx-auto max-w-7xl space-y-6 px-4 ">
         <DashboardJobsSection
           jobsOpen={jobsOpen}
           setJobsOpen={setJobsOpen}

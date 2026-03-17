@@ -287,13 +287,13 @@ export function DashboardJobsSection({
 }: DashboardJobsSectionProps) {
   return (
     <>
-      <section className="rounded-2xl  hover:shadow-md overflow-hidden">
+      <section className="rounded-2xl  hover:shadow-md overflow-hidden bg-[var(--color-section)]">
         {/* Header */}
         <motion.header
-          className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-4 relative z-50"
+          className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-1.5 relative z-50"
           {...fadeUp(0)}
         >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between  ">
             <div className="w-full flex justify-between">
               {/* Controls row */}
               <div className="flex gap-3  sm:items-center">
@@ -361,43 +361,19 @@ export function DashboardJobsSection({
               </div>
             </div>
           </div>
-
-          {/* Status Filters row (only when expanded) */}
-          {jobsOpen && (
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {filters.map((f) => {
-                const active = statusFilter === f;
-                return (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setStatusFilter(f)}
-                    className={cx(
-                      "whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition hover:shadow-md",
-                      active
-                        ? "border-[var(--color-accent-gold)]/35 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]"
-                        : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                    )}
-                  >
-                    {f}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </motion.header>
 
         {/* Create Job modal */}
         <AnimatePresence>
           {openForm && (
             <motion.div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+              className="fixed inset-0 z-90 flex items-center justify-center bg-black/60 px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
                 {...fadeUp(0.02)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -540,7 +516,7 @@ export function DashboardJobsSection({
                       setNewShinglesDate("");
                       setNewPunchDate("");
                     }}
-                    className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
+                    className=" px-3 py-2 text-xs font-semibold text-[var(--color-text)]/70 hover:text-[var(--color-text)] cursor-pointer transition"
                   >
                     Cancel
                   </button>
@@ -549,10 +525,8 @@ export function DashboardJobsSection({
                     onClick={() => void createJob()}
                     disabled={loading}
                     className={[
-                      "rounded-xl px-4 py-2 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer",
-                      "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-text)]",
-                      "border-1 border-[var(--color-blue)]",
-                      "shadow-[0_10px_22px_rgba(0,0,0,0.12)] hover:shadow-[0_14px_28px_rgba(0,0,0,0.16)]",
+                      " px-4 py-2 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer",
+                      " text-[var(--color-text)]/70 hover:text-[var(--color-text)]",
                       "active:translate-y-[1px]",
                     ].join(" ")}
                   >
@@ -569,7 +543,7 @@ export function DashboardJobsSection({
           {showFilters && (
             <motion.section
               id="date-filters"
-              className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] mt-10 px-4 sm:px-6 py-4 relative z-40"
+              className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] mt-5 px-4 sm:px-6 py-4 relative z-40"
               {...fadeUp(0.06)}
             >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -655,10 +629,33 @@ export function DashboardJobsSection({
         {/* Content */}
         {jobsOpen && (
           <div className="px-4 sm:px-6 py-5">
+            {/* Status Filters row (only when expanded) */}
+            {jobsOpen && (
+              <div className="my-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {filters.map((f) => {
+                  const active = statusFilter === f;
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setStatusFilter(f)}
+                      className={cx(
+                        "whitespace-nowrap cursor-pointer   px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition hover:shadow-md",
+                        active
+                          ? " text-[var(--color-text)]"
+                          : " text-[var(--color-text)]/70 hover:text-[var(--color-text)]"
+                      )}
+                    >
+                      {f}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <div className="grid min-w-0 gap-4 xl:grid-cols-12 xl:items-start">
               {/* Main list/table */}
-              <motion.div {...fadeUp(0.08)} className="xl:col-span-8 min-w-0">
-                <div className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] overflow-hidden">
+              <motion.div {...fadeUp(0.08)} className="xl:col-span-9 min-w-0">
+                <div className=" overflow-hidden">
                   {/* Mobile cards */}
                   <div className="grid gap-2 p-2 md:hidden">
                     {pagedJobs.map((job) => {
@@ -789,7 +786,7 @@ export function DashboardJobsSection({
                   >
                     <div className="relative overflow-auto section-scroll">
                       <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                        <thead className="sticky top-0 z-30 bg-[var(--color-surface)] backdrop-blur text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)] border-b border-[var(--color-border)]/60">
+                        <thead className="sticky top-0 z-30 bg-[var(--color-section)] backdrop-blur text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)] border-b border-[var(--color-border)]/60">
                           <tr>
                             <th className="text-left px-4 py-3">Job</th>
                             <th className="text-left px-4 py-3 whitespace-nowrap">
@@ -916,7 +913,7 @@ export function DashboardJobsSection({
 
                       {/* Sticky pagination footer */}
                       {filteredJobs.length > 0 && (
-                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-surface)] px-4 py-2 backdrop-blur text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-section)] px-4 py-2 backdrop-blur text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                           <span>
                             Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                             {Math.min(
@@ -963,9 +960,9 @@ export function DashboardJobsSection({
               {/* Right rail: totals / quick stats */}
               <motion.aside
                 {...fadeUp(0.12)}
-                className="xl:col-span-4 min-w-0 w-full xl:justify-self-end"
+                className="xl:col-span-3 min-w-0 w-full xl:justify-self-end"
               >
-                <div className="rounded-xl border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-4">
+                <div className="bg-var(--color-background)] p-4">
                   <div className="text-[11px] uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
                     Total net
                   </div>
@@ -998,19 +995,6 @@ export function DashboardJobsSection({
                         {statusFilter === "all" ? "All" : statusFilter}
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-4 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] leading-relaxed">
-                    Tip: use{" "}
-                    <span className="text-[rgb(var(--color-text-rgb)/0.92)]/80">
-                      Date filters
-                    </span>{" "}
-                    +
-                    <span className="text-[rgb(var(--color-text-rgb)/0.92)]/80">
-                      {" "}
-                      Status
-                    </span>{" "}
-                    to isolate a production window and audit profit quickly.
                   </div>
                 </div>
               </motion.aside>

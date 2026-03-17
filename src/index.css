@@ -104,6 +104,7 @@ body {
 
      /* Base */
      --color-background: #0b0e14;
+     --color-section: #0b0e14;
      --color-fixed-background: #0b0e14;
      --color-surface: #121826;          /* elevated canvas */
      --color-card: #0c101a;             /* primary card */
@@ -150,7 +151,7 @@ body {
   --pill-danger-rgb: 220 38 38;    /* red-600 */
   
      /* Base */
-     --color-background: #ffffff;
+     --color-background: #f9fafc;
      --color-fixed-background: #0b0e14;
      --color-surface: #ffffff;
      --color-card: #ffffff;
@@ -158,6 +159,7 @@ body {
      --color-border: rgba(15,23,42,0.10);
      --color-blue: #0a90f0;
      --color-cta: #ffffff;
+     --color-section: #ffffff;
    
      /* Text */
      --color-text: #0f172a;
