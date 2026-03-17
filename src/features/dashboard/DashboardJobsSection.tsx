@@ -302,7 +302,7 @@ export function DashboardJobsSection({
                   <button
                     type="button"
                     onClick={() => setShowSearch((v) => !v)}
-                    className="cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)]  transition"
+                    className="cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-[10px] md:text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)]  transition"
                     title="Search addresses"
                     aria-label="Search addresses"
                   >
@@ -331,7 +331,7 @@ export function DashboardJobsSection({
                 <button
                   type="button"
                   onClick={() => setShowFilters((v) => !v)}
-                  className=" cursor-pointer hover:shadow-md inline-flex items-center justify-center  px-3 py-2 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
+                  className=" cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-[10px] md:text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
                   title="Filter by last updated date"
                 >
                   <Filter size={16} className="mr-2" />
@@ -543,12 +543,12 @@ export function DashboardJobsSection({
           {showFilters && (
             <motion.section
               id="date-filters"
-              className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)] mt-5 px-4 sm:px-6 py-4 relative z-40"
+              className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)]  px-4 sm:px-6 py-4 relative z-40"
               {...fadeUp(0.06)}
             >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--color-text)]">
+                  <h3 className="text-xs md:text-sm font-semibold text-[var(--color-text)]">
                     Filter Dates
                   </h3>
                 </div>
