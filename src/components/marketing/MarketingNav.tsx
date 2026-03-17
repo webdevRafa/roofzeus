@@ -215,7 +215,7 @@ export default function MarketingNav() {
                       {isActive && (
                         <motion.span
                           layoutId="mk-nav-active"
-                          className="absolute inset-0 rounded-xl bg-white/5 ring-1 ring-white/10"
+                          className="absolute inset-0 rounded-xl  bg-[var(--color-surface)]"
                           transition={{ duration: 0.25, ease }}
                         />
                       )}
@@ -232,7 +232,7 @@ export default function MarketingNav() {
                 to="/login"
                 className={cx(
                   "hidden lg:inline-flex items-center justify-center gap-2",
-                  "rounded-xl transition! bg-[var(--color-surface)] hover:bg-[#191f2c]    duration-300 ease-in-out",
+                  "transition! bg-[var(--color-surface)] hover:bg-[#191f2c]    duration-300 ease-in-out",
                   "px-3 py-2 text-sm font-semibold text-white/80",
                   "hover:border-[#cfae5d] hover:text-white transition"
                 )}
@@ -255,7 +255,7 @@ export default function MarketingNav() {
                       to="/signup"
                       className={cx(
                         "inline-flex items-center justify-center gap-2",
-                        "rounded-xl transition! bg-[var(--color-surface)] hover:bg-[#191f2c]    duration-300 ease-in-out px-4 py-2 text-sm font-semibold text-white",
+                        "transition! bg-[var(--color-surface)] hover:bg-[#191f2c]    duration-300 ease-in-out px-4 py-2 text-sm font-semibold text-white",
                         "hover:opacity-90 transition"
                       )}
                     >

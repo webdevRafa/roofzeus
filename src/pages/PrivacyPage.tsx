@@ -27,7 +27,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[#3a3f4b] bg-[#1f2430]/55 p-6">
+    <div className="rounded-2xl  bg-[var(--color-surface)]/20 mb-2 p-6">
       <div className="text-lg font-bold">{title}</div>
       <div className="mt-2 text-sm text-white/65 leading-relaxed">
         {children}
