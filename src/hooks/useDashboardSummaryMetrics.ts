@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Job, PayoutDoc } from "../../types/types";
+import type { Job, PayoutDoc } from "../types/types";
 
 /**
  * Hook to compute additional dashboard summary metrics.
