@@ -1,7 +1,7 @@
 // src/pages/JobDetailPage.tsx
 // NOTE: This page uses framer-motion and react-countup.
 // Install:  npm i framer-motion react-countup lucide-react
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
@@ -221,37 +221,6 @@ type JobDetailPageProps = {
   variant?: "page" | "modal";
 };
 
-type DetailTabKey =
-  | "schedule"
-  | "pricing"
-  | "overview"
-  | "activity"
-  | "payouts"
-  | "materials"
-  | "notes"
-  | "photos";
-
-type DetailTab = {
-  key: DetailTabKey;
-  label: string;
-  shortLabel?: string;
-};
-
-const DETAIL_TABS: DetailTab[] = [
-  { key: "schedule", label: "Schedule" },
-  { key: "pricing", label: "Pricing" },
-  { key: "overview", label: "Overview" },
-  { key: "activity", label: "Activity" },
-  { key: "payouts", label: "Payouts" },
-  { key: "materials", label: "Materials" },
-  { key: "notes", label: "Notes" },
-  { key: "photos", label: "Photos" },
-];
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function JobDetailPage({
   jobId,
   onClose,
@@ -290,18 +259,6 @@ export default function JobDetailPage({
   const [materialModalOpen, setMaterialModalOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
-
-  const [activeDetailTab, setActiveDetailTab] =
-    useState<DetailTabKey>("schedule");
-
-  const [mobileTabBarVisible, setMobileTabBarVisible] = useState(true);
-
-  const lastScrollYRef = useRef(0);
-  const mobileTabSentinelRef = useRef<HTMLDivElement | null>(null);
-
-  const handleSelectDetailTab = useCallback((tab: DetailTabKey) => {
-    setActiveDetailTab(tab);
-  }, []);
 
   // Felt / shingles scheduling controls
   const [feltScheduleEditing, setFeltScheduleEditing] = useState(false);
@@ -631,67 +588,6 @@ export default function JobDetailPage({
       },
     });
   }
-
-  useEffect(() => {
-    const isMobile = () => window.innerWidth < 1024;
-
-    let ticking = false;
-
-    const onScroll = () => {
-      if (!isMobile()) {
-        setMobileTabBarVisible(true);
-        return;
-      }
-
-      if (ticking) return;
-      ticking = true;
-
-      window.requestAnimationFrame(() => {
-        const currentY = window.scrollY;
-        const delta = currentY - lastScrollYRef.current;
-
-        // Always show near top
-        if (currentY <= 80) {
-          setMobileTabBarVisible(true);
-        } else if (Math.abs(delta) > 8) {
-          if (delta > 0) {
-            // scrolling down
-            setMobileTabBarVisible(false);
-          } else {
-            // scrolling up
-            setMobileTabBarVisible(true);
-          }
-        }
-
-        lastScrollYRef.current = currentY;
-        ticking = false;
-      });
-    };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // If the sentinel is visible, show the mobile menu.
-        if (entry.isIntersecting) {
-          setMobileTabBarVisible(true);
-        }
-      },
-      {
-        root: null,
-        threshold: 0.05,
-      }
-    );
-
-    const node = mobileTabSentinelRef.current;
-    if (node) observer.observe(node);
-
-    lastScrollYRef.current = window.scrollY;
-    window.addEventListener("scroll", onScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      observer.disconnect();
-    };
-  }, []);
 
   useEffect(() => {
     // Wait until org context is ready
@@ -1662,135 +1558,6 @@ export default function JobDetailPage({
       ).toFixed(2)}`
     : null;
 
-  function renderDetailPanel() {
-    switch (activeDetailTab) {
-      case "schedule":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Schedule
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your existing schedule content.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Schedule section placeholder
-            </div>
-          </div>
-        );
-
-      case "pricing":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Pricing
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your pricing editor / breakdown.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Pricing section placeholder
-            </div>
-          </div>
-        );
-
-      case "overview":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Overview
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your earnings / expenses / profit
-              overview.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Overview section placeholder
-            </div>
-          </div>
-        );
-
-      case "activity":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Activity
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your latest activity timeline.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Activity section placeholder
-            </div>
-          </div>
-        );
-
-      case "payouts":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Payouts
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your payouts UI.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Payouts section placeholder
-            </div>
-          </div>
-        );
-
-      case "materials":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Materials
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your materials section.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Materials section placeholder
-            </div>
-          </div>
-        );
-
-      case "notes":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Notes
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your notes section.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Notes section placeholder
-            </div>
-          </div>
-        );
-
-      case "photos":
-        return (
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-6">
-            <div className="text-lg font-semibold text-[var(--color-text)]">
-              Photos
-            </div>
-            <div className="mt-2 text-sm text-[var(--color-muted)]">
-              Replace this placeholder with your photos gallery / upload
-              section.
-            </div>
-            <div className="mt-4 min-h-[420px] rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-sm text-[var(--color-muted)]">
-              Photos section placeholder
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  }
-
   return (
     <>
       <div className="w-full relative py-3">
@@ -1840,118 +1607,6 @@ export default function JobDetailPage({
           </div>
         </div>
 
-        {/* sentinel for mobile observer */}
-        <div ref={mobileTabSentinelRef} className="h-px w-full" />
-
-        {/* MOBILE TAB BAR */}
-        <div
-          className={cx(
-            "lg:hidden sticky z-30 top-[72px] mb-4 transition-transform duration-300",
-            mobileTabBarVisible
-              ? "translate-y-0 opacity-100"
-              : "-translate-y-[120%] opacity-0"
-          )}
-        >
-          <div className="rounded-2xl border border-[var(--color-border)] bg-[rgb(var(--color-background-rgb)/0.88)] p-2 backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
-            <div className="grid grid-cols-2 gap-2">
-              {DETAIL_TABS.map((tab) => {
-                const active = activeDetailTab === tab.key;
-
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => handleSelectDetailTab(tab.key)}
-                    className={cx(
-                      "rounded-xl border px-3 py-3 text-sm font-medium transition",
-                      active
-                        ? "border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-text)]"
-                        : "border-[var(--color-border)] bg-[var(--color-surface)]/45 text-[var(--color-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
-          {/* LEFT STICKY DESKTOP NAV */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-sm">
-                <div className="px-3 pb-3 pt-1">
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                    Job sections
-                  </div>
-                  <div className="mt-1 text-sm text-[var(--color-text)]">
-                    Quick navigation
-                  </div>
-                </div>
-
-                <nav className="flex flex-col gap-1">
-                  {DETAIL_TABS.map((tab) => {
-                    const active = activeDetailTab === tab.key;
-
-                    return (
-                      <button
-                        key={tab.key}
-                        type="button"
-                        onClick={() => handleSelectDetailTab(tab.key)}
-                        className={cx(
-                          "flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-medium transition",
-                          active
-                            ? "bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-text)] ring-1 ring-[rgb(var(--color-primary-rgb)/0.22)]"
-                            : "text-[var(--color-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
-                        )}
-                      >
-                        <span>{tab.label}</span>
-                        <span
-                          className={cx(
-                            "h-2 w-2 rounded-full transition",
-                            active
-                              ? "bg-[var(--color-primary)] opacity-100"
-                              : "bg-[var(--color-border)] opacity-0"
-                          )}
-                        />
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-            </div>
-          </aside>
-
-          {/* RIGHT COLUMN = ALL PAGE CONTENT */}
-          <div className="min-w-0 space-y-8">
-            {renderDetailPanel()}
-
-            <motion.header
-              className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
-              {...fadeUp(0)}
-            >
-              {/* keep your existing header content exactly as-is */}
-            </motion.header>
-
-            <motion.div
-              key={resolvedJobId}
-              className="w-full overflow-x-hidden"
-              {...fadeUp(0)}
-            >
-              {/* keep all your existing sections here exactly as-is:
-          stats
-          latest activity
-          payouts
-          materials
-          notes
-          photos
-          modals trigger sections
-      */}
-            </motion.div>
-          </div>
-        </div>
         {/* Header */}
         <motion.header
           className="mb-8 relative w-full mx-auto md:mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
@@ -2483,7 +2138,7 @@ export default function JobDetailPage({
       </div>
       <motion.div
         key={resolvedJobId}
-        className="w-full overflow-x-hidden py-2"
+        className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
         {...fadeUp(0)}
       >
         {/* Stat row + profit bar */}
