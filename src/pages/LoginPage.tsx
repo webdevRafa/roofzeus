@@ -3,7 +3,6 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import roofing from "../assets/roofing.webp";
 import logo from "../assets/logo-white.svg";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
@@ -234,21 +233,6 @@ const LoginPage = () => {
       variants={pageStagger}
       className="min-h-screen w-full relative overflow-hidden bg-[#0b0e14]"
     >
-      {/* Background image + overlays */}
-      <motion.div
-        variants={fade}
-        className="absolute inset-0"
-        aria-hidden="true"
-      >
-        <img
-          src={roofing}
-          alt=""
-          className="h-full w-full object-cover opacity-[0.14] blur-[2px] scale-[1.03]"
-          draggable={false}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/75 to-black/55" />
-      </motion.div>
-
       {/* Content */}
       <div className="relative z-10 min-h-screen w-full flex items-center justify-center px-4">
         <motion.div variants={fadeUp} className="w-full max-w-[980px]">
@@ -287,7 +271,7 @@ const LoginPage = () => {
               </div>
 
               {/* Right (form) */}
-              <div className="p-6 sm:p-8 md:p-10 rounded-2xl border border-[#3a3f4b]/70 bg-[#0b0e14]/35 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.55)] overflow-hidden max-w-[600px] mx-auto w-full">
+              <div className="p-6 sm:p-8 md:p-10    overflow-hidden max-w-[600px] mx-auto w-full">
                 <motion.div
                   variants={pageStagger}
                   className="flex items-center justify-between gap-3"
@@ -349,7 +333,7 @@ const LoginPage = () => {
                         placeholder="you@company.com"
                         className={[
                           "w-full rounded-xl border px-10 py-3 outline-none transition",
-                          "bg-white/5 border-[#3a3f4b]/70 text-white placeholder:text-white/30",
+                          "bg-white/3 border-[#3a3f4b]/70 text-white placeholder:text-white/30",
                           "focus:border-[#cfae5d]/70 focus:ring-2 focus:ring-[#cfae5d]/15",
                         ].join(" ")}
                       />
@@ -377,7 +361,7 @@ const LoginPage = () => {
                         placeholder="••••••••"
                         className={[
                           "w-full rounded-xl border px-10 py-3 pr-12 outline-none transition",
-                          "bg-white/5 border-[#3a3f4b]/70 text-white placeholder:text-white/30",
+                          "bg-white/3 border-[#3a3f4b]/70 text-white placeholder:text-white/30",
                           "focus:border-[#cfae5d]/70 focus:ring-2 focus:ring-[#cfae5d]/15",
                         ].join(" ")}
                       />
@@ -410,7 +394,7 @@ const LoginPage = () => {
                           : { y: 0, scale: 0.99, filter: "brightness(0.98)" }
                       }
                       className={[
-                        "w-full mt-10 rounded-xl cursor-pointer px-4 py-3 text-sm font-semibold transition max-w-[200px] mx-auto block",
+                        "w-full mt-10 cursor-pointer px-2 py-1.5 text-sm font-semibold transition max-w-[100px] mx-auto block",
                         "border-[var(--color-blue)] border-[1.5px] text-white/70 hover:text-white hover:brightness-110 active:brightness-95",
                         "disabled:opacity-70 disabled:cursor-not-allowed",
                       ].join(" ")}
