@@ -1572,41 +1572,44 @@ export default function JobDetailPage({
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/30 to-white" />
           </div>
         )}
-        <div className="w-full max-w-[1000px] mx-auto text-center mb-4 flex flex-col md:flex-row justify-center items-center ">
-          <div className="mx-auto mb-4 md:mb-0">
+        <div className="w-full mx-auto text-center flex flex-col md:flex-row justify-center items-center mb-5 md:mb-0 ">
+          <div className="mx-auto mb-0!">
             <h1 className="mt-2 text-2xl sm:text-3xl font-bold uppercase text-[var(--color-logo)] leading-tight">
               {job.address?.fullLine}
             </h1>
 
-            <div className="mt-1 text-xs sm:text-sm text-[var(--color-muted)]">
+            <div className="text-xs sm:text-sm text-[var(--color-muted)]">
               Last updated: {lastStr}
             </div>
-          </div>
-          <div className="rounded-2xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 shadow-sm backdrop-blur-md p-4 max-w-[400px] w-full mx-auto">
-            {isModal ? (
-              <button
-                type="button"
-                onClick={handleClose}
-                className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
-              >
-                <X className="text-[var(--color-muted)]" size={22} />
-                <span>Close</span>
-              </button>
-            ) : (
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
-              >
-                <ChevronLeft className="text-[var(--color-muted)]" size={24} />
-                <span>Back to dashboard</span>
-              </Link>
-            )}
+            <div className="">
+              {isModal ? (
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
+                >
+                  <X className="text-[var(--color-muted)]" size={22} />
+                  <span>Close</span>
+                </button>
+              ) : (
+                <Link
+                  to="/jobs"
+                  className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] group transition mt-3"
+                >
+                  <ChevronLeft
+                    className="text-[var(--color-muted)] group-hover:text-white"
+                    size={15}
+                  />
+                  <span>Back to jobs</span>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Header */}
         <motion.header
-          className="mb-8 relative w-full max-w-[1200px] mx-auto md:mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
+          className="mb-8 relative w-full mx-auto md:mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
           {...fadeUp(0)}
         >
           <div className="relative p-4 sm:p-5">
@@ -2135,7 +2138,7 @@ export default function JobDetailPage({
       </div>
       <motion.div
         key={resolvedJobId}
-        className="mx-auto w-full max-w-full md:max-w-[1400px] overflow-x-hidden  py-8  md:px-10"
+        className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
         {...fadeUp(0)}
       >
         {/* Stat row + profit bar */}
