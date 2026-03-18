@@ -181,7 +181,7 @@ export default function AdminLayout() {
                   <img
                     src={logo}
                     alt="RoofZeus logo"
-                    className="w-[78px] sm:w-[86px] brand-logo"
+                    className="w-[40px] brand-logo"
                   />
                 </button>
                 {/* MOBILE: org row */}

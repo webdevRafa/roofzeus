@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Briefcase, SlidersHorizontal, SquarePlus } from "lucide-react";
+import { SlidersHorizontal, SquarePlus } from "lucide-react";
 import type { JobStatus } from "../types/types";
 import { useOrgJobsData } from "../hooks/useOrgJobsData";
 import { DashboardJobsSection } from "../features/dashboard/DashboardJobsSection";
@@ -308,10 +308,6 @@ export default function JobsPage() {
       {/* Sticky header with page title, new job button, and sort controls */}
       <header className="sticky top-16 md:top-18  flex items-center justify-between  bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-7xl mx-auto z-80">
         <div className="flex items-center gap-3 min-w-0">
-          <Briefcase
-            className="h-6 w-6"
-            style={{ color: "var(--color-accent-gold)" }}
-          />
           <h1 className="text-lg sm:text-xl font-semibold text-[var(--color-text)]">
             Jobs
           </h1>
