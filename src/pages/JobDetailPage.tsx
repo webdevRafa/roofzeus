@@ -255,6 +255,20 @@ export default function JobDetailPage({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deletingJob, setDeletingJob] = useState(false);
 
+  const sections = [
+    "Schedule",
+    "Pricing",
+    "Overview",
+    "Activity",
+    "Payouts",
+    "Materials",
+    "Notes",
+    "Photos",
+  ];
+
+  const [activeSection, setActiveSection] =
+    useState<(typeof sections)[number]>("Schedule");
+
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
   const [materialModalOpen, setMaterialModalOpen] = useState(false);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
@@ -1490,12 +1504,6 @@ export default function JobDetailPage({
     }
   }
 
-  // Use the most recent photo (if any) as a soft page background
-  const latestPhoto = photos[0] ?? null;
-  const latestPhotoUrl = latestPhoto
-    ? (latestPhoto as any).fullUrl ?? latestPhoto.url
-    : null;
-
   if (loading)
     return <div className="p-8 text-[var(--color-text)]">Loading…</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
@@ -1560,2269 +1568,2463 @@ export default function JobDetailPage({
 
   return (
     <>
-      <div className="w-full relative py-3">
-        {/* Soft background using latest photo */}
-        {latestPhotoUrl && (
-          <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-            <img
-              src={latestPhotoUrl}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover scale-105  opacity-80"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/30 to-white" />
-          </div>
-        )}
-        <div className="w-full mx-auto text-center flex flex-col md:flex-row justify-center items-center mb-5 md:mb-0 ">
-          <div className="mx-auto mb-0!">
-            <h1 className="mt-2 text-2xl sm:text-3xl font-bold uppercase text-[var(--color-logo)] leading-tight">
-              {job.address?.fullLine}
-            </h1>
+      <div className="w-full relative">
+        <div className="py-3">
+          {/* Soft background using latest photo */}
 
-            <div className="text-xs sm:text-sm text-[var(--color-muted)]">
-              Last updated: {lastStr}
-            </div>
-            <div className="">
-              {isModal ? (
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
-                >
-                  <X className="text-[var(--color-muted)]" size={22} />
-                  <span>Close</span>
-                </button>
-              ) : (
-                <Link
-                  to="/jobs"
-                  className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] group transition mt-3"
-                >
-                  <ChevronLeft
-                    className="text-[var(--color-muted)] group-hover:text-white"
-                    size={15}
-                  />
-                  <span>Back to jobs</span>
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
+          <div className="w-full mx-auto text-center flex flex-col md:flex-row justify-center items-center mb-5 md:mb-0 ">
+            <div className="mx-auto mb-0!">
+              <h1 className="mt-2 text-2xl sm:text-3xl font-bold uppercase text-[var(--color-logo)] leading-tight">
+                {job.address?.fullLine}
+              </h1>
 
-        {/* Header */}
-        <motion.header
-          className="mb-8 relative w-full mx-auto md:mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
-          {...fadeUp(0)}
-        >
-          <div className="relative p-4 sm:p-5">
-            {/* Top row: job meta + actions */}
-            <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-              <div className="flex w-full flex-col gap-2 lg:items-end">
-                {/* Actions + status */}
-                <div className="flex w-full flex-wrap items-center justify-start gap-2 lg:justify-end">
+              <div className="text-xs sm:text-sm text-[var(--color-muted)]">
+                Last updated: {lastStr}
+              </div>
+              <div className="">
+                {isModal ? (
                   <button
                     type="button"
-                    onClick={() => setWarrantyEditOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                    title="Edit warranty details and notes"
+                    onClick={handleClose}
+                    className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
                   >
-                    Warranty
+                    <X className="text-[var(--color-muted)]" size={22} />
+                    <span>Close</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setWarrantyModalOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                    title="Create printable report"
+                ) : (
+                  <Link
+                    to="/jobs"
+                    className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] group transition mt-3"
                   >
-                    Create report
-                  </button>
+                    <ChevronLeft
+                      className="text-[var(--color-muted)] group-hover:text-white"
+                      size={15}
+                    />
+                    <span>Back to jobs</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
 
-                  <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/35 px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ring-1 ring-white/10">
-                    <span>Status</span>
-                    <span
-                      className={`rounded-lg px-2 text-[10px] py-0.5 ${statusClasses(
-                        job.status as JobStatus
-                      )}`}
-                    >
-                      {job.status}
-                    </span>
+          {/* new design */}
+          <div className="mx-auto w-full py-6">
+            <div className="grid min-h-0 grid-cols-1 gap-6 xl:h-[calc(100dvh-140px)] xl:grid-cols-[260px_minmax(0,1fr)]">
+              {/* LEFT PANEL */}
+              <aside className="min-h-0">
+                <div className="xl:sticky xl:top-24 xl:self-start">
+                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/35 shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur-md">
+                    <div className="border-b border-white/10 px-4 py-4">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
+                        Job Sections
+                      </p>
+                      <h2 className="mt-1 text-sm font-semibold text-[var(--color-text)]">
+                        Sticky menu
+                      </h2>
+                    </div>
+
+                    <nav className="flex flex-col p-2">
+                      {sections.map((item) => {
+                        const isActive = activeSection === item;
+
+                        return (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => setActiveSection(item)}
+                            className={[
+                              "flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium transition",
+                              isActive
+                                ? "bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-sm"
+                                : "text-[var(--color-text)]/75 hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]",
+                            ].join(" ")}
+                          >
+                            <span>{item}</span>
+                            {isActive ? (
+                              <span className="h-2 w-2 rounded-full bg-current opacity-90" />
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </nav>
                   </div>
                 </div>
+              </aside>
 
-                {/* Scheduling controls */}
-                <div className="w-full rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md ring-1 ring-white/10 shadow-sm p-3 sm:p-4">
-                  <div className="grid gap-3 md:grid-cols-3">
-                    {/* DRY IN */}
-                    <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                            Dry in
-                          </div>
-                          <div className="mt-1 text-[12px] text-[var(--color-text)]">
-                            {feltCompletedMs
-                              ? `Completed ${new Date(
-                                  feltCompletedMs
-                                ).toLocaleDateString()}`
-                              : feltScheduledMs
-                              ? `Scheduled ${new Date(
-                                  feltScheduledMs
-                                ).toLocaleDateString()}`
-                              : "Not scheduled"}
-                          </div>
-                        </div>
-
-                        {feltCompletedMs ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
-                            <CheckCircle2 size={14} />
-                            Done
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
-                            <Clock size={14} />
-                            Pending
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {!feltCompletedMs ? (
-                          <>
-                            <button
-                              type="button"
-                              disabled={jobIsLocked}
-                              onClick={() => {
-                                if (jobIsLocked) return;
-                                setFeltScheduleDate(
-                                  feltScheduledMs
-                                    ? toYMD(new Date(feltScheduledMs))
-                                    : toYMD(new Date())
-                                );
-                                setFeltScheduleEditing(true);
-                              }}
-                              className={
-                                "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
-                                (jobIsLocked
-                                  ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                  : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                              }
-                            >
-                              {feltScheduledMs ? "Reschedule" : "Schedule"}
-                            </button>
-
-                            <button
-                              type="button"
-                              disabled={jobIsLocked}
-                              onClick={() => {
-                                if (jobIsLocked) return;
-                                setConfirmFeltDoneOpen(true);
-                              }}
-                              className={
-                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
-                                (jobIsLocked
-                                  ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                  : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
-                              }
-                            >
-                              Mark done
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={jobIsLocked}
-                            onClick={() => {
-                              if (jobIsLocked) return;
-                              void reopenFelt();
-                            }}
-                            className={
-                              "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
-                              (jobIsLocked
-                                ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                            }
-                            title="Undo dry-in completion"
-                          >
-                            Reopen
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Shingles */}
-                    <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                            Shingles
-                          </div>
-                          <div className="mt-1 text-[12px] text-[var(--color-text)]">
-                            {shinglesCompletedMs
-                              ? `Completed ${new Date(
-                                  shinglesCompletedMs
-                                ).toLocaleDateString()}`
-                              : shinglesScheduledMs
-                              ? `Scheduled ${new Date(
-                                  shinglesScheduledMs
-                                ).toLocaleDateString()}`
-                              : "Not scheduled"}
-                          </div>
-                        </div>
-
-                        {shinglesCompletedMs ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
-                            <CheckCircle2 size={14} />
-                            Done
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
-                            <Clock size={14} />
-                            Pending
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {!shinglesCompletedMs ? (
-                          <>
-                            <button
-                              type="button"
-                              disabled={jobIsLocked}
-                              onClick={() => {
-                                if (jobIsLocked) return;
-                                setShinglesScheduleDate(
-                                  shinglesScheduledMs
-                                    ? toYMD(new Date(shinglesScheduledMs))
-                                    : toYMD(new Date())
-                                );
-                                setShinglesScheduleEditing(true);
-                              }}
-                              className={
-                                "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
-                                (jobIsLocked
-                                  ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                  : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                              }
-                            >
-                              {shinglesScheduledMs ? "Reschedule" : "Schedule"}
-                            </button>
-
-                            <button
-                              type="button"
-                              disabled={!canMarkShinglesDone}
-                              title={
-                                !feltCompletedMs
-                                  ? "Complete DRY IN first to mark shingles done."
-                                  : undefined
-                              }
-                              onClick={() => {
-                                if (!canMarkShinglesDone) return;
-                                setConfirmShinglesDoneOpen(true);
-                              }}
-                              className={
-                                "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
-                                (!canMarkShinglesDone
-                                  ? "bg-white/10 text-white/40 cursor-not-allowed opacity-70 ring-white/10"
-                                  : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
-                              }
-                            >
-                              Mark done
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={jobIsLocked}
-                            onClick={() => {
-                              if (jobIsLocked) return;
-                              void reopenShingles();
-                            }}
-                            className={
-                              "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
-                              (jobIsLocked
-                                ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                            }
-                            title="Undo shingles completion"
-                          >
-                            Reopen
-                          </button>
-                        )}
-                      </div>
-
-                      {!feltCompletedMs && !shinglesCompletedMs ? (
-                        <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--color-muted)]">
-                          <AlertTriangle size={14} className="opacity-80" />
-                          <span>
-                            Shingles completion requires dry in first.
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {/* Punch */}
-                    <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                            Punch
-                          </div>
-                          <div className="mt-1 text-[12px] text-[var(--color-text)]">
-                            {punchedAtLabel
-                              ? `Punched on ${punchedAtLabel}`
-                              : punchScheduledLabel
-                              ? `Scheduled ${punchScheduledLabel}`
-                              : "Not scheduled"}
-                          </div>
-                        </div>
-
-                        {punchedAtLabel ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
-                            <CheckCircle2 size={14} />
-                            Done
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
-                            <Clock size={14} />
-                            Pending
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {punchedAtLabel ? (
-                          <button
-                            type="button"
-                            disabled={
-                              job.status === "closed" ||
-                              job.status === "archived"
-                            }
-                            onClick={() => setConfirmUndoPunchOpen(true)}
-                            className={
-                              "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
-                              (job.status === "closed" ||
-                              job.status === "archived"
-                                ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                            }
-                            title="Undo punch completion and reopen this job"
-                          >
-                            Undo punch
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              disabled={!canSchedulePunch}
-                              onClick={() => {
-                                if (!canSchedulePunch) return;
-                                setSchedulePunchOpen(true);
-
-                                const base =
-                                  job.punchScheduledFor ?? new Date();
-                                setSchedulePunchDate(toYMD(base));
-                              }}
-                              className={
-                                "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
-                                (!canSchedulePunch
-                                  ? "bg-white/10 text-white/40 cursor-not-allowed opacity-60 ring-white/10"
-                                  : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
-                              }
-                            >
-                              {job.punchScheduledFor
-                                ? "Reschedule"
-                                : "Schedule"}
-                            </button>
-
-                            {canSchedulePunch && (
-                              <button
-                                type="button"
-                                onClick={() => setConfirmPunchedOpen(true)}
-                                className="rounded-lg bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold   transition "
-                              >
-                                Mark punched
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
+              {/* RIGHT PANEL */}
+              <main className="min-h-0">
+                <div className="h-full min-h-0 overflow-y-auto   backdrop-blur-md">
+                  <div className="border-b border-white/10 px-5 py-4 sm:px-6">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
+                      Active Section
+                    </p>
+                    <h3 className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                      {activeSection}
+                    </h3>
                   </div>
-                </div>
 
-                {/* Pricing (existing block kept as-is below) */}
-                <div className="w-full">
-                  {!hasPricing || editingPricing ? (
-                    <div className="rounded-2xl bg-[var(--color-surface)]/30 backdrop-blur-md ring-1 ring-white/10 shadow-sm px-5 py-3 text-right w-full">
-                      <div className="mb-2 text-xs text-[var(--color-muted)]">
-                        Total Job Pay
-                      </div>
-                      <div className="text-2xl font-semibold text-[var(--color-text)]">
-                        <CountMoney cents={totalJobPayCentsPreview} />
-                      </div>
-                      {hasFlashingPay && (
-                        <div className="mt-1 text-xs text-[var(--color-muted)]">
-                          Includes{" "}
-                          <span className="font-medium text-[var(--color-text)]">
-                            Flashing (C/J/L)
-                          </span>
-                          :{" "}
-                          <span className="font-medium text-[var(--color-text)]">
-                            <CountMoney cents={flashingSavedCents} />
-                          </span>
-                          {flashingSavedLabel ? (
-                            <span className="ml-2 opacity-70">
-                              ({flashingSavedLabel})
-                            </span>
-                          ) : null}
-                        </div>
-                      )}
+                  <div className="p-4 sm:p-6">
+                    {activeSection === "Schedule" && (
+                      <section className="rounded-2xl  p-5">
+                        {/* Scheduling controls */}
+                        <div className="w-full rounded-2xl  p-3 sm:p-4">
+                          <div className="grid gap-3 md:grid-cols-3">
+                            {/* DRY IN */}
+                            <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                    Dry in
+                                  </div>
+                                  <div className="mt-1 text-[12px] text-[var(--color-text)]">
+                                    {feltCompletedMs
+                                      ? `Completed ${new Date(
+                                          feltCompletedMs
+                                        ).toLocaleDateString()}`
+                                      : feltScheduledMs
+                                      ? `Scheduled ${new Date(
+                                          feltScheduledMs
+                                        ).toLocaleDateString()}`
+                                      : "Not scheduled"}
+                                  </div>
+                                </div>
 
-                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2 text-xs">
-                        <input
-                          value={sqft}
-                          onChange={(e) => setSqft(e.target.value)}
-                          type="number"
-                          min={0}
-                          step="1"
-                          placeholder="Sq. ft"
-                          className="w-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                        />
-                        <select
-                          value={rate}
-                          onChange={(e) =>
-                            setRate(Number(e.target.value) as 31 | 35)
-                          }
-                          className="w-20 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                          title="Pay rate"
-                        >
-                          <option value={31}>$31</option>
-                          <option value={35}>$35</option>
-                        </select>
-                        <span className="text-[var(--color-muted)]">
-                          + $35 fee
-                        </span>
-                        <button
-                          onClick={() => {
-                            if (!job) return;
-
-                            const nSqft = Math.max(0, Number(sqft) || 0);
-
-                            // 1) base labor pay (sqft * rate + $35 fee)
-                            const basePayCents = Math.round(
-                              (nSqft * rate + 35) * 100
-                            );
-
-                            // 2) material pay add-ons (optional)
-                            // IMPORTANT: this assumes you added job.earnings.materialPay: { amountCents: number }[]
-                            const flashingPayCents =
-                              job.earnings?.flashingPay?.amountCents ?? 0;
-
-                            const updated: Job = {
-                              ...job,
-                              pricing: {
-                                sqft: nSqft,
-                                ratePerSqFt: rate,
-                                feeCents: 3500,
-                              },
-                              earnings: {
-                                ...(job.earnings ?? {}),
-                                totalEarningsCents:
-                                  basePayCents + flashingPayCents,
-                              },
-                            };
-
-                            void saveJob(updated);
-                            setEditingPricing(false);
-                          }}
-                          className="ml-2 rounded-xl bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out px-3 py-1 text-[var(--btn-text)]"
-                        >
-                          Apply
-                        </button>
-                        {hasPricing && (
-                          <button
-                            onClick={() => {
-                              setSqft(String(job.pricing?.sqft ?? ""));
-                              setRate(
-                                (job.pricing?.ratePerSqFt as 31 | 35) ?? 31
-                              );
-                              setEditingPricing(false);
-                            }}
-                            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1"
-                          >
-                            Cancel
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full sm:w-auto">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSqft(String(job.pricing?.sqft ?? ""));
-                          setRate((job.pricing?.ratePerSqFt as 31 | 35) ?? 31);
-
-                          // ✅ NEW: prefill flashing inputs from saved job data
-                          prefillFlashingInputs();
-
-                          setEditingPricing(true);
-                        }}
-                        className="group w-full sm:min-w-[360px] rounded-2xl bg-[var(--color-surface)]/35 shadow-md ring-1 ring-white/10 px-4 py-3 text-left transition hover:bg-[var(--color-card-hover)]"
-                        title="Edit pricing"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                              Pricing
-                            </div>
-
-                            <div className="mt-0.5 truncate text-sm font-medium text-[var(--color-text)]">
-                              {Number(displaySqft || 0).toLocaleString()} sq @ $
-                              {displayRate}
-                              /sq.ft <span className="opacity-70">• + $35</span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <div className="text-right">
-                              <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                                Total
+                                {feltCompletedMs ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
+                                    <CheckCircle2 size={14} />
+                                    Done
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                                    <Clock size={14} />
+                                    Pending
+                                  </span>
+                                )}
                               </div>
-                              <div className="text-xl font-semibold text-[var(--color-text)] leading-none">
-                                <CountMoney cents={displayTotal} />
+
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                {!feltCompletedMs ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={jobIsLocked}
+                                      onClick={() => {
+                                        if (jobIsLocked) return;
+                                        setFeltScheduleDate(
+                                          feltScheduledMs
+                                            ? toYMD(new Date(feltScheduledMs))
+                                            : toYMD(new Date())
+                                        );
+                                        setFeltScheduleEditing(true);
+                                      }}
+                                      className={
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        (jobIsLocked
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                      }
+                                    >
+                                      {feltScheduledMs
+                                        ? "Reschedule"
+                                        : "Schedule"}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      disabled={jobIsLocked}
+                                      onClick={() => {
+                                        if (jobIsLocked) return;
+                                        setConfirmFeltDoneOpen(true);
+                                      }}
+                                      className={
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
+                                        (jobIsLocked
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                          : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
+                                      }
+                                    >
+                                      Mark done
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={jobIsLocked}
+                                    onClick={() => {
+                                      if (jobIsLocked) return;
+                                      void reopenFelt();
+                                    }}
+                                    className={
+                                      "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                      (jobIsLocked
+                                        ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                        : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                    }
+                                    title="Undo dry-in completion"
+                                  >
+                                    Reopen
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Shingles */}
+                            <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                    Shingles
+                                  </div>
+                                  <div className="mt-1 text-[12px] text-[var(--color-text)]">
+                                    {shinglesCompletedMs
+                                      ? `Completed ${new Date(
+                                          shinglesCompletedMs
+                                        ).toLocaleDateString()}`
+                                      : shinglesScheduledMs
+                                      ? `Scheduled ${new Date(
+                                          shinglesScheduledMs
+                                        ).toLocaleDateString()}`
+                                      : "Not scheduled"}
+                                  </div>
+                                </div>
+
+                                {shinglesCompletedMs ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
+                                    <CheckCircle2 size={14} />
+                                    Done
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                                    <Clock size={14} />
+                                    Pending
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                {!shinglesCompletedMs ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={jobIsLocked}
+                                      onClick={() => {
+                                        if (jobIsLocked) return;
+                                        setShinglesScheduleDate(
+                                          shinglesScheduledMs
+                                            ? toYMD(
+                                                new Date(shinglesScheduledMs)
+                                              )
+                                            : toYMD(new Date())
+                                        );
+                                        setShinglesScheduleEditing(true);
+                                      }}
+                                      className={
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        (jobIsLocked
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                      }
+                                    >
+                                      {shinglesScheduledMs
+                                        ? "Reschedule"
+                                        : "Schedule"}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      disabled={!canMarkShinglesDone}
+                                      title={
+                                        !feltCompletedMs
+                                          ? "Complete DRY IN first to mark shingles done."
+                                          : undefined
+                                      }
+                                      onClick={() => {
+                                        if (!canMarkShinglesDone) return;
+                                        setConfirmShinglesDoneOpen(true);
+                                      }}
+                                      className={
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
+                                        (!canMarkShinglesDone
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed opacity-70 ring-white/10"
+                                          : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
+                                      }
+                                    >
+                                      Mark done
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={jobIsLocked}
+                                    onClick={() => {
+                                      if (jobIsLocked) return;
+                                      void reopenShingles();
+                                    }}
+                                    className={
+                                      "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                      (jobIsLocked
+                                        ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                        : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                    }
+                                    title="Undo shingles completion"
+                                  >
+                                    Reopen
+                                  </button>
+                                )}
+                              </div>
+
+                              {!feltCompletedMs && !shinglesCompletedMs ? (
+                                <div className="mt-2 flex items-center gap-2 text-[11px] text-[var(--color-muted)]">
+                                  <AlertTriangle
+                                    size={14}
+                                    className="opacity-80"
+                                  />
+                                  <span>
+                                    Shingles completion requires dry in first.
+                                  </span>
+                                </div>
+                              ) : null}
+                            </div>
+
+                            {/* Punch */}
+                            <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                    Punch
+                                  </div>
+                                  <div className="mt-1 text-[12px] text-[var(--color-text)]">
+                                    {punchedAtLabel
+                                      ? `Punched on ${punchedAtLabel}`
+                                      : punchScheduledLabel
+                                      ? `Scheduled ${punchScheduledLabel}`
+                                      : "Not scheduled"}
+                                  </div>
+                                </div>
+
+                                {punchedAtLabel ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
+                                    <CheckCircle2 size={14} />
+                                    Done
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                                    <Clock size={14} />
+                                    Pending
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                {punchedAtLabel ? (
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      job.status === "closed" ||
+                                      job.status === "archived"
+                                    }
+                                    onClick={() =>
+                                      setConfirmUndoPunchOpen(true)
+                                    }
+                                    className={
+                                      "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                      (job.status === "closed" ||
+                                      job.status === "archived"
+                                        ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                        : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                    }
+                                    title="Undo punch completion and reopen this job"
+                                  >
+                                    Undo punch
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={!canSchedulePunch}
+                                      onClick={() => {
+                                        if (!canSchedulePunch) return;
+                                        setSchedulePunchOpen(true);
+
+                                        const base =
+                                          job.punchScheduledFor ?? new Date();
+                                        setSchedulePunchDate(toYMD(base));
+                                      }}
+                                      className={
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        (!canSchedulePunch
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed opacity-60 ring-white/10"
+                                          : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                      }
+                                    >
+                                      {job.punchScheduledFor
+                                        ? "Reschedule"
+                                        : "Schedule"}
+                                    </button>
+
+                                    {canSchedulePunch && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setConfirmPunchedOpen(true)
+                                        }
+                                        className="rounded-lg bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold   transition "
+                                      >
+                                        Mark punched
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </section>
+                    )}
+
+                    {activeSection === "Pricing" && (
+                      <section className=" p-5">
+                        {/* Pricing (existing block kept as-is below) */}
+                        <div className="w-full max-w-[600px]">
+                          {!hasPricing || editingPricing ? (
+                            <div className="rounded-2xl  shadow-sm px-5 py-6 text-right w-full">
+                              <div className="mb-2 text-xs text-[var(--color-muted)]">
+                                Total Job Pay
+                              </div>
+                              <div className="text-2xl font-semibold text-[var(--color-text)]">
+                                <CountMoney cents={totalJobPayCentsPreview} />
                               </div>
                               {hasFlashingPay && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation(); // IMPORTANT: don't trigger the Pricing card click
-                                    prefillFlashingInputs();
-                                    setFlashingModalOpen(true);
-                                  }}
-                                  className="mt-1 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
-                                  title="Edit flashing pay"
-                                >
-                                  + <CountMoney cents={flashingSavedCents} />{" "}
-                                  &nbsp; flashing included • Edit
-                                </button>
+                                <div className="mt-1 text-xs text-[var(--color-muted)]">
+                                  Includes{" "}
+                                  <span className="font-medium text-[var(--color-text)]">
+                                    Flashing (C/J/L)
+                                  </span>
+                                  :{" "}
+                                  <span className="font-medium text-[var(--color-text)]">
+                                    <CountMoney cents={flashingSavedCents} />
+                                  </span>
+                                  {flashingSavedLabel ? (
+                                    <span className="ml-2 opacity-70">
+                                      ({flashingSavedLabel})
+                                    </span>
+                                  ) : null}
+                                </div>
                               )}
-                              {!hasFlashingPay && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    prefillFlashingInputs();
-                                    setFlashingModalOpen(true);
-                                  }}
-                                  className="mt-2  items-center hidden rounded-full bg-[var(--color-surface)]/35 px-2 py-0.5 text-[10px] font-medium text-[var(--color-text)] ring-1 ring-white/10 hover:bg-[var(--color-card-hover)]"
-                                  title="Add flashing pay"
-                                >
-                                  + Add flashing pay
-                                </button>
-                              )}
-                            </div>
 
-                            <span className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/30 text-[var(--color-muted)] shadow-sm transition group-hover:bg-[var(--color-surface)]/35">
-                              <Pencil className="h-4 w-4" />
-                            </span>
-                          </div>
+                              <div className="mt-3 flex flex-wrap items-center justify-end gap-2 text-xs">
+                                <input
+                                  value={sqft}
+                                  onChange={(e) => setSqft(e.target.value)}
+                                  type="number"
+                                  min={0}
+                                  step="1"
+                                  placeholder="Sq. ft"
+                                  className="w-24 rounded-xl border border-[var(--color-border)]  px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                />
+                                <select
+                                  value={rate}
+                                  onChange={(e) =>
+                                    setRate(Number(e.target.value) as 31 | 35)
+                                  }
+                                  className="w-20 rounded-xl border border-[var(--color-border)]  px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                  title="Pay rate"
+                                >
+                                  <option value={31}>$31</option>
+                                  <option value={35}>$35</option>
+                                </select>
+                                <span className="text-[var(--color-muted)]">
+                                  + $35 fee
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    if (!job) return;
+
+                                    const nSqft = Math.max(
+                                      0,
+                                      Number(sqft) || 0
+                                    );
+
+                                    // 1) base labor pay (sqft * rate + $35 fee)
+                                    const basePayCents = Math.round(
+                                      (nSqft * rate + 35) * 100
+                                    );
+
+                                    // 2) material pay add-ons (optional)
+                                    // IMPORTANT: this assumes you added job.earnings.materialPay: { amountCents: number }[]
+                                    const flashingPayCents =
+                                      job.earnings?.flashingPay?.amountCents ??
+                                      0;
+
+                                    const updated: Job = {
+                                      ...job,
+                                      pricing: {
+                                        sqft: nSqft,
+                                        ratePerSqFt: rate,
+                                        feeCents: 3500,
+                                      },
+                                      earnings: {
+                                        ...(job.earnings ?? {}),
+                                        totalEarningsCents:
+                                          basePayCents + flashingPayCents,
+                                      },
+                                    };
+
+                                    void saveJob(updated);
+                                    setEditingPricing(false);
+                                  }}
+                                  className="ml-2 rounded-xl bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out px-3 py-1 text-[var(--btn-text)]"
+                                >
+                                  Apply
+                                </button>
+                                {hasPricing && (
+                                  <button
+                                    onClick={() => {
+                                      setSqft(String(job.pricing?.sqft ?? ""));
+                                      setRate(
+                                        (job.pricing?.ratePerSqFt as 31 | 35) ??
+                                          31
+                                      );
+                                      setEditingPricing(false);
+                                    }}
+                                    className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="w-full sm:w-auto">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSqft(String(job.pricing?.sqft ?? ""));
+                                  setRate(
+                                    (job.pricing?.ratePerSqFt as 31 | 35) ?? 31
+                                  );
+
+                                  // ✅ NEW: prefill flashing inputs from saved job data
+                                  prefillFlashingInputs();
+
+                                  setEditingPricing(true);
+                                }}
+                                className="group w-full sm:min-w-[360px]   px-4 py-3 text-left transition hover:bg-[var(--color-card-hover)]"
+                                title="Edit pricing"
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+                                      Pricing
+                                    </div>
+
+                                    <div className="mt-0.5 truncate text-sm font-medium text-[var(--color-text)]">
+                                      {Number(
+                                        displaySqft || 0
+                                      ).toLocaleString()}{" "}
+                                      sq @ ${displayRate}
+                                      /sq.ft{" "}
+                                      <span className="opacity-70">
+                                        • + $35
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-right">
+                                      <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+                                        Total
+                                      </div>
+                                      <div className="text-xl font-semibold text-[var(--color-text)] leading-none">
+                                        <CountMoney cents={displayTotal} />
+                                      </div>
+                                      {hasFlashingPay && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation(); // IMPORTANT: don't trigger the Pricing card click
+                                            prefillFlashingInputs();
+                                            setFlashingModalOpen(true);
+                                          }}
+                                          className="mt-1 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
+                                          title="Edit flashing pay"
+                                        >
+                                          +{" "}
+                                          <CountMoney
+                                            cents={flashingSavedCents}
+                                          />{" "}
+                                          &nbsp; flashing included • Edit
+                                        </button>
+                                      )}
+                                      {!hasFlashingPay && (
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            prefillFlashingInputs();
+                                            setFlashingModalOpen(true);
+                                          }}
+                                          className="mt-2  items-center hidden rounded-full bg-[var(--color-surface)]/35 px-2 py-0.5 text-[10px] font-medium text-[var(--color-text)] ring-1 ring-white/10 hover:bg-[var(--color-card-hover)]"
+                                          title="Add flashing pay"
+                                        >
+                                          + Add flashing pay
+                                        </button>
+                                      )}
+                                    </div>
+
+                                    <span className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/30 text-[var(--color-muted)] shadow-sm transition group-hover:bg-[var(--color-surface)]/35">
+                                      <Pencil className="h-4 w-4" />
+                                    </span>
+                                  </div>
+                                </div>
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      </button>
+                      </section>
+                    )}
+
+                    {activeSection === "Overview" && (
+                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
+                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
+                          Overview
+                        </h4>
+                        <p className="mt-2 text-sm text-[var(--color-muted)]">
+                          Put your Overview content here.
+                        </p>
+                      </section>
+                    )}
+
+                    {activeSection === "Activity" && (
+                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
+                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
+                          Activity
+                        </h4>
+                        <p className="mt-2 text-sm text-[var(--color-muted)]">
+                          Put your Activity content here.
+                        </p>
+                      </section>
+                    )}
+
+                    {activeSection === "Payouts" && (
+                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
+                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
+                          Payouts
+                        </h4>
+                        <p className="mt-2 text-sm text-[var(--color-muted)]">
+                          Put your Payouts content here.
+                        </p>
+                      </section>
+                    )}
+
+                    {activeSection === "Materials" && (
+                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
+                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
+                          Materials
+                        </h4>
+                        <p className="mt-2 text-sm text-[var(--color-muted)]">
+                          Put your Materials content here.
+                        </p>
+                      </section>
+                    )}
+
+                    {activeSection === "Notes" && (
+                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
+                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
+                          Notes
+                        </h4>
+                        <p className="mt-2 text-sm text-[var(--color-muted)]">
+                          Put your Notes content here.
+                        </p>
+                      </section>
+                    )}
+
+                    {activeSection === "Photos" && (
+                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
+                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
+                          Photos
+                        </h4>
+                        <p className="mt-2 text-sm text-[var(--color-muted)]">
+                          Put your Photos content here.
+                        </p>
+                      </section>
+                    )}
+                  </div>
+                </div>
+              </main>
+            </div>
+          </div>
+          {/* Header */}
+          <motion.header
+            className="mb-8 relative w-full mx-auto md:mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
+            {...fadeUp(0)}
+          >
+            <div className="relative p-4 sm:p-5">
+              {/* Top row: job meta + actions */}
+              <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
+                <div className="flex w-full flex-col gap-2 lg:items-end">
+                  {/* Actions + status */}
+                  <div className="flex w-full flex-wrap items-center justify-start gap-2 lg:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setWarrantyEditOpen(true)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                      title="Edit warranty details and notes"
+                    >
+                      Warranty
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setWarrantyModalOpen(true)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                      title="Create printable report"
+                    >
+                      Create report
+                    </button>
+
+                    <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/35 px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ring-1 ring-white/10">
+                      <span>Status</span>
+                      <span
+                        className={`rounded-lg px-2 text-[10px] py-0.5 ${statusClasses(
+                          job.status as JobStatus
+                        )}`}
+                      >
+                        {job.status}
+                      </span>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </motion.header>
-      </div>
-      <motion.div
-        key={resolvedJobId}
-        className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
-        {...fadeUp(0)}
-      >
-        {/* Stat row + profit bar */}
-        <motion.div
-          className="rounded-2xl bg-[var(--color-surface)]/35 backdrop-blur-md p-4 shadow-sm ring-1 ring-white/10"
-          {...fadeUp(0.05)}
-        >
-          <div className="grid gap-4 sm:grid-cols-4 ">
-            <Stat label="Payouts" cents={totals.payouts} />
-            <Stat label="Materials" cents={totals.materials} />
-            <Stat label="All Expenses" cents={totals.expenses} />
-            <div
-              className={
-                "rounded-xl " +
-                (totals.net >= 0
-                  ? "shadow-[0_12px_10px_-8px_rgba(16,185,129,0.8)]"
-                  : "shadow-[0_12px_10px_-8px_rgba(220,38,38,0.8)]")
-              }
+          </motion.header>
+          <motion.div
+            key={resolvedJobId}
+            className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
+            {...fadeUp(0)}
+          >
+            {/* Stat row + profit bar */}
+            <motion.div
+              className="rounded-2xl bg-[var(--color-surface)]/35 backdrop-blur-md p-4 shadow-sm ring-1 ring-white/10"
+              {...fadeUp(0.05)}
             >
-              <Stat label="Profit" cents={totals.net} />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center justify-between text-xs text-[var(--color-muted)]">
-              <span>Expenses</span>
-              <span>
-                <CountMoney cents={totals.expenses} /> /{" "}
-                <CountMoney cents={totals.earnings} />
-              </span>
-            </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/10">
-              <motion.div
-                className="h-full bg-[var(--color-primary)]/40"
-                initial={{ width: 0 }}
-                animate={{ width: `${totals.expensePortion * 100}%` }}
-                transition={{ duration: 0.6, ease: EASE }}
-                aria-label="Expense portion of earnings"
-              />
-            </div>
-          </div>
-        </motion.div>
-        <section className="mt-6 rounded-2xl bg-[var(--color-surface)]/20 p-6 shadow">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-[var(--color-text)]">
-              Latest activity
-            </h2>
-            <span className="text-xs text-[var(--color-muted)]">
-              {activityItems.length
-                ? `${activityItems.length} updates`
-                : "No updates yet"}
-            </span>
-          </div>
-
-          <div className="max-h-64 overflow-y-auto pr-1">
-            {!activityItems.length ? (
-              <div className="rounded-xl bg-[var(--color-surface)]/25 p-4 text-sm text-[var(--color-muted)]">
-                No recent activity for this job yet.
+              <div className="grid gap-4 sm:grid-cols-4 ">
+                <Stat label="Payouts" cents={totals.payouts} />
+                <Stat label="Materials" cents={totals.materials} />
+                <Stat label="All Expenses" cents={totals.expenses} />
+                <div
+                  className={
+                    "rounded-xl " +
+                    (totals.net >= 0
+                      ? "shadow-[0_12px_10px_-8px_rgba(16,185,129,0.8)]"
+                      : "shadow-[0_12px_10px_-8px_rgba(220,38,38,0.8)]")
+                  }
+                >
+                  <Stat label="Profit" cents={totals.net} />
+                </div>
               </div>
-            ) : (
-              <ul className="space-y-2">
-                {activityItems.map((a) => (
-                  <li
-                    key={a.id}
-                    className="rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-start gap-3">
-                        {a.kind === "photo" && a.photoUrl ? (
-                          <img
-                            src={a.photoUrl}
-                            alt={a.photoCaption ?? "Job photo"}
-                            className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
-                            loading="lazy"
-                          />
-                        ) : null}
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-xs text-[var(--color-muted)]">
+                  <span>Expenses</span>
+                  <span>
+                    <CountMoney cents={totals.expenses} /> /{" "}
+                    <CountMoney cents={totals.earnings} />
+                  </span>
+                </div>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/10">
+                  <motion.div
+                    className="h-full bg-[var(--color-primary)]/40"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${totals.expensePortion * 100}%` }}
+                    transition={{ duration: 0.6, ease: EASE }}
+                    aria-label="Expense portion of earnings"
+                  />
+                </div>
+              </div>
+            </motion.div>
 
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold text-[var(--color-text)]">
-                            {a.title}
-                          </div>
+            {/* LATEST ACTIVITY SECTION */}
+            <section className="mt-6 rounded-2xl bg-[var(--color-surface)]/20 p-6 shadow">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-[var(--color-text)]">
+                  Latest activity
+                </h2>
+                <span className="text-xs text-[var(--color-muted)]">
+                  {activityItems.length
+                    ? `${activityItems.length} updates`
+                    : "No updates yet"}
+                </span>
+              </div>
 
-                          {a.detail ? (
-                            <div className="mt-1 text-xs text-[var(--color-muted)] whitespace-pre-wrap break-words">
-                              {a.detail}
+              <div className="max-h-64 overflow-y-auto pr-1">
+                {!activityItems.length ? (
+                  <div className="rounded-xl bg-[var(--color-surface)]/25 p-4 text-sm text-[var(--color-muted)]">
+                    No recent activity for this job yet.
+                  </div>
+                ) : (
+                  <ul className="space-y-2">
+                    {activityItems.map((a) => (
+                      <li
+                        key={a.id}
+                        className="rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-start gap-3">
+                            {a.kind === "photo" && a.photoUrl ? (
+                              <img
+                                src={a.photoUrl}
+                                alt={a.photoCaption ?? "Job photo"}
+                                className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
+                                loading="lazy"
+                              />
+                            ) : null}
+
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold text-[var(--color-text)]">
+                                {a.title}
+                              </div>
+
+                              {a.detail ? (
+                                <div className="mt-1 text-xs text-[var(--color-muted)] whitespace-pre-wrap break-words">
+                                  {a.detail}
+                                </div>
+                              ) : null}
                             </div>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <div className="shrink-0 text-xs text-[var(--color-muted)]">
-                        {a.at.toLocaleString()}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-
-        {/* Quick edit / add panel */}
-        <div className="mt-8 grid grid-cols-1 max-w-full gap-6 lg:grid-cols-2">
-          {/* Payouts */}
-          <MotionCard
-            title="Payouts"
-            delay={0.1}
-            right={
-              <button
-                type="button"
-                onClick={() => setPayoutModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                title="Add payout"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            }
-          >
-            {/* Existing list */}
-            <div className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}>
-              <ul className="rounded-lg bg-[var(--color-surface)]/30">
-                {(job?.expenses?.payouts ?? []).map((p) => (
-                  <motion.li
-                    key={p.id}
-                    className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
-                    variants={item}
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="text-sm font-semibold text-[var(--color-text)]">
-                        {p.payeeNickname}
-                      </span>
-                      {typeof p.sqft === "number" &&
-                        typeof p.ratePerSqFt === "number" && (
-                          <div className="text-[11px] text-[var(--color-muted)]">
-                            {p.sqft.toLocaleString()} sq @ ${p.ratePerSqFt}
-                            /sq.ft
                           </div>
-                        )}
-                      {p.category && (
-                        <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--color-text)]">
-                          {p.category}
-                        </span>
-                      )}
-                      <span className="ml-2 text-xs text-[var(--color-muted)]">
-                        {p.paidAt ? fmtDate(p.paidAt) : ""}
-                      </span>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                      <CountMoney
-                        cents={p.amountCents}
-                        className="text-sm text-[var(--color-text)]"
-                      />
-                      <button
-                        onClick={() => removePayout(p.id)}
-                        className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
-                        title="Delete"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </motion.li>
-                ))}
-                {(job?.expenses?.payouts ?? []).length === 0 && (
-                  <li className="p-3 text-sm text-[var(--color-muted)]">
-                    No payouts yet.
-                  </li>
+                          <div className="shrink-0 text-xs text-[var(--color-muted)]">
+                            {a.at.toLocaleString()}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </ul>
-            </div>
-          </MotionCard>
+              </div>
+            </section>
 
-          {/* Materials */}
-          <MotionCard
-            title="Materials"
-            delay={0.15}
-            right={
-              <button
-                type="button"
-                onClick={() => setMaterialModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                title="Add payout"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            }
-          >
-            <div className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}>
-              <ul className="rounded-lg mt-0">
-                {(job?.expenses?.materials ?? []).map((m) => (
-                  <motion.li
-                    key={m.id}
-                    className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
-                    variants={item}
+            {/* Quick edit / add panel */}
+
+            {/* GRID CONTAINER FOR 4 SECTIONS */}
+            <div className="mt-8 grid grid-cols-1 max-w-full gap-6 lg:grid-cols-2">
+              {/* Payouts */}
+              <MotionCard
+                title="Payouts"
+                delay={0.1}
+                right={
+                  <button
+                    type="button"
+                    onClick={() => setPayoutModalOpen(true)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                    title="Add payout"
                   >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-[var(--color-text)]">
-                          {m.category === "coilNails" && "Coil Nails"}
-                          {m.category === "tinCaps" && "Tin Caps"}
-                          {m.category === "plasticJacks" && "Plastic Jacks"}
-                          {m.category === "counterFlashing" &&
-                            "Counter Flashing"}
-                          {m.category === "jFlashing" && "J/L Flashing"}
-                          {m.category === "rainDiverter" && "Rain Diverter"}
-                          {m.category === "np1Seal" && "NP1 Seal"}
-                        </span>
-                        {m.vendor && (
-                          <span className="ml-2 text-xs text-[var(--color-muted)]">
-                            • {m.vendor}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-[var(--color-muted)]">
-                        {m.quantity} × ${(m.unitPriceCents / 100).toFixed(2)}
-                        {m.createdAt ? ` • ${fmtDate(m.createdAt)}` : ""}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <CountMoney
-                        cents={m.amountCents}
-                        className="text-sm text-[var(--color-text)]"
-                      />
-                      <button
-                        onClick={() => removeMaterial(m.id)}
-                        className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
-                        title="Delete"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </motion.li>
-                ))}
-                {(job?.expenses?.materials ?? []).length === 0 && (
-                  <li className="p-3 text-sm text-[var(--color-muted)]">
-                    No materials added yet.
-                  </li>
-                )}
-              </ul>
-            </div>
-          </MotionCard>
-
-          {/* Notes */}
-          <MotionCard
-            title="Notes"
-            delay={0.2}
-            right={
-              <button
-                type="button"
-                onClick={() => setNoteModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                title="Add payout"
+                    <Plus className="h-4 w-4" />
+                  </button>
+                }
               >
-                <Plus className="h-4 w-4" />
-              </button>
-            }
-          >
-            {/* TAB CONTENT */}
-
-            <>
-              {/* Job notes list */}
-              <div
-                className={`mt-3 ${LIST_MAX_H} overflow-y-auto overflow-x-hidden pr-1`}
-              >
-                <ul>
-                  {(job?.notes ?? [])
-                    .slice()
-                    .reverse()
-                    .map((n) => (
+                {/* Existing list */}
+                <div className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}>
+                  <ul className="rounded-lg bg-[var(--color-surface)]/30">
+                    {(job?.expenses?.payouts ?? []).map((p) => (
                       <motion.li
-                        key={n.id}
-                        className="mb-2 flex items-start gap-3 rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                        key={p.id}
+                        className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
                         variants={item}
                       >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm text-[var(--color-text)] whitespace-pre-wrap break-words break-all mr-3">
-                            {n.text}
-                          </p>
-                          <div className="mt-1 text-xs text-[var(--color-muted)]">
-                            {n.createdAt ? fmtDate(n.createdAt) : ""}
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="text-sm font-semibold text-[var(--color-text)]">
+                            {p.payeeNickname}
+                          </span>
+                          {typeof p.sqft === "number" &&
+                            typeof p.ratePerSqFt === "number" && (
+                              <div className="text-[11px] text-[var(--color-muted)]">
+                                {p.sqft.toLocaleString()} sq @ ${p.ratePerSqFt}
+                                /sq.ft
+                              </div>
+                            )}
+                          {p.category && (
+                            <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--color-text)]">
+                              {p.category}
+                            </span>
+                          )}
+                          <span className="ml-2 text-xs text-[var(--color-muted)]">
+                            {p.paidAt ? fmtDate(p.paidAt) : ""}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <CountMoney
+                            cents={p.amountCents}
+                            className="text-sm text-[var(--color-text)]"
+                          />
+                          <button
+                            onClick={() => removePayout(p.id)}
+                            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                            title="Delete"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </motion.li>
+                    ))}
+                    {(job?.expenses?.payouts ?? []).length === 0 && (
+                      <li className="p-3 text-sm text-[var(--color-muted)]">
+                        No payouts yet.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </MotionCard>
+
+              {/* Materials */}
+              <MotionCard
+                title="Materials"
+                delay={0.15}
+                right={
+                  <button
+                    type="button"
+                    onClick={() => setMaterialModalOpen(true)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                    title="Add payout"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                }
+              >
+                <div className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}>
+                  <ul className="rounded-lg mt-0">
+                    {(job?.expenses?.materials ?? []).map((m) => (
+                      <motion.li
+                        key={m.id}
+                        className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                        variants={item}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-[var(--color-text)]">
+                              {m.category === "coilNails" && "Coil Nails"}
+                              {m.category === "tinCaps" && "Tin Caps"}
+                              {m.category === "plasticJacks" && "Plastic Jacks"}
+                              {m.category === "counterFlashing" &&
+                                "Counter Flashing"}
+                              {m.category === "jFlashing" && "J/L Flashing"}
+                              {m.category === "rainDiverter" && "Rain Diverter"}
+                              {m.category === "np1Seal" && "NP1 Seal"}
+                            </span>
+                            {m.vendor && (
+                              <span className="ml-2 text-xs text-[var(--color-muted)]">
+                                • {m.vendor}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-[var(--color-muted)]">
+                            {m.quantity} × $
+                            {(m.unitPriceCents / 100).toFixed(2)}
+                            {m.createdAt ? ` • ${fmtDate(m.createdAt)}` : ""}
                           </div>
                         </div>
+
+                        <div className="flex items-center gap-3">
+                          <CountMoney
+                            cents={m.amountCents}
+                            className="text-sm text-[var(--color-text)]"
+                          />
+                          <button
+                            onClick={() => removeMaterial(m.id)}
+                            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                            title="Delete"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </motion.li>
+                    ))}
+                    {(job?.expenses?.materials ?? []).length === 0 && (
+                      <li className="p-3 text-sm text-[var(--color-muted)]">
+                        No materials added yet.
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </MotionCard>
+
+              {/* Notes */}
+              <MotionCard
+                title="Notes"
+                delay={0.2}
+                right={
+                  <button
+                    type="button"
+                    onClick={() => setNoteModalOpen(true)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                    title="Add payout"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                }
+              >
+                {/* TAB CONTENT */}
+
+                <>
+                  {/* Job notes list */}
+                  <div
+                    className={`mt-3 ${LIST_MAX_H} overflow-y-auto overflow-x-hidden pr-1`}
+                  >
+                    <ul>
+                      {(job?.notes ?? [])
+                        .slice()
+                        .reverse()
+                        .map((n) => (
+                          <motion.li
+                            key={n.id}
+                            className="mb-2 flex items-start gap-3 rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                            variants={item}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm text-[var(--color-text)] whitespace-pre-wrap break-words break-all mr-3">
+                                {n.text}
+                              </p>
+                              <div className="mt-1 text-xs text-[var(--color-muted)]">
+                                {n.createdAt ? fmtDate(n.createdAt) : ""}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => removeNote(n.id)}
+                              className="shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                              title="Delete"
+                            >
+                              Delete
+                            </button>
+                          </motion.li>
+                        ))}
+
+                      {(job?.notes ?? []).length === 0 && (
+                        <li className="p-3 text-sm text-[var(--color-muted)]">
+                          No notes yet.
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </>
+              </MotionCard>
+
+              {/* Photos — fixed: full-width card inside the parent grid */}
+              <MotionCard
+                title="Photos"
+                delay={0.25}
+                right={
+                  <button
+                    type="button"
+                    onClick={() => setPhotoModalOpen(true)}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                    title="Add payout"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                }
+              >
+                {/* Thumbnails grid */}
+                <div className={`${LIST_MAX_H} overflow-y-auto pr-1`}>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {photos.map((p, i) => (
+                      <motion.div
+                        key={p.id}
+                        className="group relative"
+                        variants={item}
+                      >
                         <button
-                          onClick={() => removeNote(n.id)}
-                          className="shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                          type="button"
+                          onClick={() => openViewer(i)}
+                          className="block w-full focus:outline-none"
+                          aria-label="Open photo"
+                          title="Open"
+                        >
+                          <img
+                            src={
+                              p.thumbUrl ??
+                              p.previewUrl ??
+                              p.fullUrl ??
+                              p.url ??
+                              ""
+                            }
+                            alt={p.caption || ""}
+                            className="h-32 w-full rounded-lg object-cover"
+                            loading="lazy"
+                          />
+                        </button>
+
+                        <button
+                          onClick={() => deletePhoto(p.id)}
+                          className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
                           title="Delete"
                         >
                           Delete
                         </button>
-                      </motion.li>
+
+                        {p.caption && (
+                          <div className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/50 p-1 text-center text-[10px] text-white">
+                            {p.caption}
+                          </div>
+                        )}
+                      </motion.div>
                     ))}
-
-                  {(job?.notes ?? []).length === 0 && (
-                    <li className="p-3 text-sm text-[var(--color-muted)]">
-                      No notes yet.
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </>
-          </MotionCard>
-
-          {/* Photos — fixed: full-width card inside the parent grid */}
-          <MotionCard
-            title="Photos"
-            delay={0.25}
-            right={
-              <button
-                type="button"
-                onClick={() => setPhotoModalOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                title="Add payout"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            }
-          >
-            {/* Thumbnails grid */}
-            <div className={`${LIST_MAX_H} overflow-y-auto pr-1`}>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {photos.map((p, i) => (
-                  <motion.div
-                    key={p.id}
-                    className="group relative"
-                    variants={item}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => openViewer(i)}
-                      className="block w-full focus:outline-none"
-                      aria-label="Open photo"
-                      title="Open"
-                    >
-                      <img
-                        src={
-                          p.thumbUrl ?? p.previewUrl ?? p.fullUrl ?? p.url ?? ""
-                        }
-                        alt={p.caption || ""}
-                        className="h-32 w-full rounded-lg object-cover"
-                        loading="lazy"
-                      />
-                    </button>
-
-                    <button
-                      onClick={() => deletePhoto(p.id)}
-                      className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
-                      title="Delete"
-                    >
-                      Delete
-                    </button>
-
-                    {p.caption && (
-                      <div className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/50 p-1 text-center text-[10px] text-white">
-                        {p.caption}
+                    {photos.length === 0 && (
+                      <div className="p-3 text-sm text-[var(--color-muted)]">
+                        No photos yet.
                       </div>
                     )}
-                  </motion.div>
-                ))}
-                {photos.length === 0 && (
-                  <div className="p-3 text-sm text-[var(--color-muted)]">
-                    No photos yet.
                   </div>
-                )}
-              </div>
-            </div>
-          </MotionCard>
-        </div>
-        {/* ===== Global Toast ===== */}
-        {toast && (
-          <div className="fixed right-4 top-20 z-50">
-            <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35/95 px-4 py-3 text-sm shadow-lg">
-              <div className="mt-0.5">
-                {toast.status === "success" ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                )}
-              </div>
-              <div className="flex-1">
-                <div
-                  className={
-                    "font-semibold " +
-                    (toast.status === "success"
-                      ? "text-emerald-700"
-                      : "text-red-600")
-                  }
-                >
-                  {toast.title}
                 </div>
-                <div className="mt-0.5 text-xs text-[var(--color-muted)]">
-                  {toast.message}
+              </MotionCard>
+            </div>
+
+            {/* ===== Global Toast ===== */}
+            {toast && (
+              <div className="fixed right-4 top-20 z-50">
+                <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35/95 px-4 py-3 text-sm shadow-lg">
+                  <div className="mt-0.5">
+                    {toast.status === "success" ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div
+                      className={
+                        "font-semibold " +
+                        (toast.status === "success"
+                          ? "text-emerald-700"
+                          : "text-red-600")
+                      }
+                    >
+                      {toast.title}
+                    </div>
+                    <div className="mt-0.5 text-xs text-[var(--color-muted)]">
+                      {toast.message}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setToast(null)}
+                    className="ml-2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    aria-label="Dismiss"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setToast(null)}
-                className="ml-2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                aria-label="Dismiss"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ===== Photo Lightbox ===== */}
-        {viewerOpen && photos.length > 0 && (
-          <div
-            className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center"
-            aria-modal="true"
-            role="dialog"
-            onClick={(e) => {
-              // close on backdrop click only (not when clicking the image or buttons)
-              if (e.target === e.currentTarget) closeViewer();
-            }}
-          >
-            {/* Close button */}
-            <button
-              onClick={closeViewer}
-              className="absolute right-4 top-4 rounded-full p-2 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
-              aria-label="Close viewer"
-              title="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            {/* Prev / Next controls */}
-            {photos.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    prevPhoto();
-                  }}
-                  className="absolute left-4 md:left-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
-                  aria-label="Previous photo"
-                  title="Previous"
-                >
-                  <ChevronLeft className="h-7 w-7" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    nextPhoto();
-                  }}
-                  className="absolute right-4 md:right-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
-                  aria-label="Next photo"
-                  title="Next"
-                >
-                  <ChevronRight className="h-7 w-7" />
-                </button>
-              </>
             )}
 
-            {/* Image + caption */}
-            <div className="mx-4 md:mx-12 max-w-[min(96vw,1200px)]">
-              {(() => {
-                const p = photos[viewerIndex];
-                const src = (p as any)?.fullUrl ?? p.url; // graceful if you later add fullUrl in CF
-                return (
-                  <figure className="flex flex-col items-center">
-                    <img
-                      src={src}
-                      alt={p.caption || ""}
-                      className="max-h-[80vh] w-auto rounded-xl shadow-2xl object-contain"
-                    />
-                    {p.caption && (
-                      <figcaption className="mt-3 text-sm text-white/90 text-center">
-                        {p.caption}
-                      </figcaption>
-                    )}
-                    <div className="mt-1 text-xs text-white/60">
-                      {viewerIndex + 1} / {photos.length}
-                    </div>
-                  </figure>
-                );
-              })()}
-            </div>
-          </div>
-        )}
-        {/* ===== Schedule Felt Modal ===== */}
-        {feltScheduleEditing && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Schedule DRY IN
-                </h2>
+            {/* ===== Photo Lightbox ===== */}
+            {viewerOpen && photos.length > 0 && (
+              <div
+                className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center"
+                aria-modal="true"
+                role="dialog"
+                onClick={(e) => {
+                  // close on backdrop click only (not when clicking the image or buttons)
+                  if (e.target === e.currentTarget) closeViewer();
+                }}
+              >
+                {/* Close button */}
                 <button
-                  type="button"
-                  onClick={() => setFeltScheduleEditing(false)}
-                  className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
+                  onClick={closeViewer}
+                  className="absolute right-4 top-4 rounded-full p-2 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
+                  aria-label="Close viewer"
+                  title="Close"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-6 w-6" />
                 </button>
+
+                {/* Prev / Next controls */}
+                {photos.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevPhoto();
+                      }}
+                      className="absolute left-4 md:left-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
+                      aria-label="Previous photo"
+                      title="Previous"
+                    >
+                      <ChevronLeft className="h-7 w-7" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextPhoto();
+                      }}
+                      className="absolute right-4 md:right-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
+                      aria-label="Next photo"
+                      title="Next"
+                    >
+                      <ChevronRight className="h-7 w-7" />
+                    </button>
+                  </>
+                )}
+
+                {/* Image + caption */}
+                <div className="mx-4 md:mx-12 max-w-[min(96vw,1200px)]">
+                  {(() => {
+                    const p = photos[viewerIndex];
+                    const src = (p as any)?.fullUrl ?? p.url; // graceful if you later add fullUrl in CF
+                    return (
+                      <figure className="flex flex-col items-center">
+                        <img
+                          src={src}
+                          alt={p.caption || ""}
+                          className="max-h-[80vh] w-auto rounded-xl shadow-2xl object-contain"
+                        />
+                        {p.caption && (
+                          <figcaption className="mt-3 text-sm text-white/90 text-center">
+                            {p.caption}
+                          </figcaption>
+                        )}
+                        <div className="mt-1 text-xs text-white/60">
+                          {viewerIndex + 1} / {photos.length}
+                        </div>
+                      </figure>
+                    );
+                  })()}
+                </div>
               </div>
+            )}
 
-              <label className="mb-2 block text-xs text-[var(--color-muted)]">
-                DRY IN date
-              </label>
-              <input
-                type="date"
-                value={feltScheduleDate}
-                onChange={(e) => setFeltScheduleDate(e.target.value)}
-                className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-              />
+            {/* ===== Schedule Felt Modal ===== */}
+            {feltScheduleEditing && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Schedule DRY IN
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setFeltScheduleEditing(false)}
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
 
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setFeltScheduleEditing(false)}
-                  className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void saveFeltSchedule()}
-                  className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== Schedule Shingles Modal ===== */}
-        {shinglesScheduleEditing && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Schedule shingles
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setShinglesScheduleEditing(false)}
-                  className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <label className="mb-2 block text-xs text-[var(--color-muted)]">
-                Shingles date
-              </label>
-              <input
-                type="date"
-                value={shinglesScheduleDate}
-                onChange={(e) => setShinglesScheduleDate(e.target.value)}
-                className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-              />
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShinglesScheduleEditing(false)}
-                  className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void saveShinglesSchedule()}
-                  className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* ===== Flashing Pay Modal ===== */}
-        {flashingModalOpen && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Flashing (C/J/L) Pay
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setFlashingModalOpen(false)}
-                  className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="text-xs text-[var(--color-muted)] mb-3">
-                Optional add-on that increases total job pay.
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                    Units
+                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
+                    DRY IN date
                   </label>
                   <input
-                    value={flashingUnits}
-                    onChange={(e) => setFlashingUnits(e.target.value)}
-                    type="number"
-                    min={0}
-                    step="1"
-                    className={UI.input}
-                    placeholder="1"
+                    type="date"
+                    value={feltScheduleDate}
+                    onChange={(e) => setFeltScheduleDate(e.target.value)}
+                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                   />
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFeltScheduleEditing(false)}
+                      className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void saveFeltSchedule()}
+                      className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Schedule Shingles Modal ===== */}
+            {shinglesScheduleEditing && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Schedule shingles
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setShinglesScheduleEditing(false)}
+                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
+                    Shingles date
+                  </label>
+                  <input
+                    type="date"
+                    value={shinglesScheduleDate}
+                    onChange={(e) => setShinglesScheduleDate(e.target.value)}
+                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShinglesScheduleEditing(false)}
+                      className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void saveShinglesSchedule()}
+                      className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* ===== Flashing Pay Modal ===== */}
+            {flashingModalOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Flashing (C/J/L) Pay
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setFlashingModalOpen(false)}
+                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="text-xs text-[var(--color-muted)] mb-3">
+                    Optional add-on that increases total job pay.
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                        Units
+                      </label>
+                      <input
+                        value={flashingUnits}
+                        onChange={(e) => setFlashingUnits(e.target.value)}
+                        type="number"
+                        min={0}
+                        step="1"
+                        className={UI.input}
+                        placeholder="1"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                        $ / unit
+                      </label>
+                      <input
+                        value={flashingUnitPrice}
+                        onChange={(e) => setFlashingUnitPrice(e.target.value)}
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        className={UI.input}
+                        placeholder="10.00"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-2 text-xs text-[var(--color-muted)]">
+                    Preview: + <CountMoney cents={flashingAmountCentsPreview} />
+                  </div>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    {(job.earnings?.flashingPay?.amountCents ?? 0) > 0 && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await clearFlashingPay();
+                          setFlashingModalOpen(false);
+                        }}
+                        className={UI.btnSoft}
+                      >
+                        Remove
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setFlashingModalOpen(false)}
+                      className={UI.btnSoft}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await saveFlashingPay();
+                        setFlashingModalOpen(false);
+                      }}
+                      className={UI.btnPrimary}
+                      disabled={
+                        Number(flashingUnits) <= 0 ||
+                        Number(flashingUnitPrice) <= 0
+                      }
+                    >
+                      {(job.earnings?.flashingPay?.amountCents ?? 0) > 0
+                        ? "Update"
+                        : "Add"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Schedule Punch Modal ===== */}
+            {schedulePunchOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Schedule punch
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setSchedulePunchOpen(false)}
+                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
+                    Punch date
+                  </label>
+                  <input
+                    type="date"
+                    value={schedulePunchDate}
+                    onChange={(e) => setSchedulePunchDate(e.target.value)}
+                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSchedulePunchOpen(false)}
+                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!job || !schedulePunchDate) return;
+
+                        const [year, month, day] = schedulePunchDate
+                          .split("-")
+                          .map((x) => Number(x));
+                        const scheduledDate = new Date(year, month - 1, day);
+
+                        const wasScheduledBefore = !!job.punchScheduledFor;
+
+                        await saveJob({
+                          ...job,
+                          punchScheduledFor: Timestamp.fromDate(scheduledDate),
+                        });
+
+                        setSchedulePunchOpen(false);
+
+                        const label = scheduledDate.toLocaleDateString();
+                        setToast({
+                          status: "success",
+                          title: wasScheduledBefore
+                            ? "Punch rescheduled"
+                            : "Punch scheduled",
+                          message: `Punch is now set for ${label}.`,
+                        });
+                      }}
+                      className="rounded-sm cursor-pointer bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* ===== Confirm Mark as Punched Modal ===== */}
+            {confirmPunchedOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Confirm job completion
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmPunchedOpen(false)}
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    Are you sure this house has been fully punched and the job
+                    is complete? This will mark the job as{" "}
+                    <span className="font-semibold">completed</span>.
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmPunchedOpen(false)}
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmMarkPunched}
+                      className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                    >
+                      Yes, mark job{" "}
+                      <strong className="font-semibold">COMPLETE</strong>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {confirmUndoPunchOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Undo punch?
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmUndoPunchOpen(false)}
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    This will reopen the job and remove the punch completion
+                    timestamp. You’ll be able to reschedule punch again.
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmUndoPunchOpen(false)}
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmUndoPunch}
+                      className="rounded-lg bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                    >
+                      Yes, undo punch
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Confirm Felt Completed Modal ===== */}
+            {confirmFeltDoneOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Mark <strong className="font-semibold">DRY IN</strong> as
+                      completed?
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmFeltDoneOpen(false)}
+                      className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    Are you sure the felt work for this job is fully completed?
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmFeltDoneOpen(false)}
+                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await markFeltCompleted();
+                        setConfirmFeltDoneOpen(false);
+                        setToast({
+                          status: "success",
+                          title: "DRY IN marked complete",
+                          message:
+                            "DRY IN has been marked as completed for this job.",
+                        });
+                      }}
+                      className="rounded-sm bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600 cursor-pointer"
+                    >
+                      Yes, mark{" "}
+                      <strong className="font-semibold">DRY IN</strong> done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Confirm Shingles Completed Modal ===== */}
+            {confirmShinglesDoneOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Mark <strong className="font-semibold">SHINGLES</strong>{" "}
+                      as completed?
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmShinglesDoneOpen(false)}
+                      className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    Are you sure the shingles work for this job is fully
+                    completed?
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmShinglesDoneOpen(false)}
+                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await markShinglesCompleted();
+                        setConfirmShinglesDoneOpen(false);
+                        setToast({
+                          status: "success",
+                          title: "Shingles marked complete",
+                          message:
+                            "Shingles have been marked as completed for this job.",
+                        });
+                      }}
+                      className="rounded-sm cursor-pointer bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                    >
+                      Yes, mark{" "}
+                      <strong className="font-semibold">SHINGLES</strong> done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Danger zone ===== */}
+            <motion.section className="mt-10 rounded-2xl p-4" {...fadeUp(0.27)}>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  className="rounded-md bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-600"
+                  title="Permanently delete this job"
+                >
+                  Permanently delete job…
+                </button>
+              </div>
+            </motion.section>
+            {/* ===== Confirm Permanently Delete Job Modal ===== */}
+            {confirmDeleteOpen && job && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Permanently delete this job?
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteOpen(false)}
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    This will permanently remove{" "}
+                    <span className="font-semibold">
+                      {job.address?.fullLine || job.id}
+                    </span>{" "}
+                    and all of its materials, notes, and photos.{" "}
+                    <span className="font-semibold">
+                      This cannot be undone.
+                    </span>
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteOpen(false)}
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void permanentlyDeleteJob()}
+                      disabled={deletingJob}
+                      className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {deletingJob ? "Deleting…" : "Yes, delete job"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Add Payout Modal */}
+            <ModalShell
+              open={payoutModalOpen}
+              title="Add payout"
+              onClose={() => setPayoutModalOpen(false)}
+            >
+              {/* Tabs */}
+              <div className="mb-3 inline-flex max-w-full flex-wrap rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-1 text-xs">
+                {(["shingles", "felt", "technician"] as PayoutTab[]).map(
+                  (t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setPayoutTab(t)}
+                      className={
+                        "px-3 py-1 rounded-md capitalize " +
+                        (payoutTab === t
+                          ? "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out text-[var(--btn-text)]"
+                          : "text-[var(--color-text)] hover:bg-[var(--color-card-hover)]")
+                      }
+                    >
+                      {t}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <form
+                className={
+                  payoutTab === "technician"
+                    ? "grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_160px_110px] items-stretch"
+                    : "grid w-full gap-2 sm:grid-cols-[120px_140px_110px] items-stretch"
+                }
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleAddPayoutSubmit();
+                }}
+              >
+                <div className="sm:col-span-full">
+                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                    Employee
+                  </label>
+
+                  <select
+                    ref={payeeRef as any}
+                    value={activePayout.employeeId ?? ""}
+                    onChange={(e) => {
+                      const id = e.target.value || undefined;
+                      const emp = employees.find((x) => x.id === id);
+                      setActivePayout({
+                        employeeId: id,
+                        payeeNickname: emp?.name ?? "",
+                      });
+                    }}
+                    className={`${UI.select} sm:col-span-full`}
+                  >
+                    <option value="">
+                      {activeEmployees.length
+                        ? "Select active employee…"
+                        : employees.length
+                        ? "No active employees (toggle status on Employees page)."
+                        : "No employees yet (add on Employees page)."}
+                    </option>
+                    {activeEmployees.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                    $ / unit
-                  </label>
+                {payoutTab === "technician" ? (
                   <input
-                    value={flashingUnitPrice}
-                    onChange={(e) => setFlashingUnitPrice(e.target.value)}
+                    value={activePayout.amount}
+                    onChange={(e) =>
+                      setActivePayout({ amount: e.target.value })
+                    }
                     type="number"
                     min={0}
                     step="0.01"
+                    placeholder="Amount $"
                     className={UI.input}
-                    placeholder="10.00"
                   />
-                </div>
-              </div>
-
-              <div className="mt-2 text-xs text-[var(--color-muted)]">
-                Preview: + <CountMoney cents={flashingAmountCentsPreview} />
-              </div>
-
-              <div className="mt-4 flex justify-end gap-2">
-                {(job.earnings?.flashingPay?.amountCents ?? 0) > 0 && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      await clearFlashingPay();
-                      setFlashingModalOpen(false);
-                    }}
-                    className={UI.btnSoft}
-                  >
-                    Remove
-                  </button>
+                ) : (
+                  <>
+                    <input
+                      value={activePayout.sqft}
+                      onChange={(e) =>
+                        setActivePayout({ sqft: e.target.value })
+                      }
+                      type="number"
+                      min={0}
+                      step="1"
+                      placeholder="Sq"
+                      className={UI.input}
+                    />
+                    <input
+                      value={activePayout.rate}
+                      onChange={(e) =>
+                        setActivePayout({ rate: e.target.value })
+                      }
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      placeholder="Rate $/sq.ft"
+                      className={UI.input}
+                    />
+                  </>
                 )}
 
                 <button
-                  type="button"
-                  onClick={() => setFlashingModalOpen(false)}
-                  className={UI.btnSoft}
+                  type="submit"
+                  disabled={!payoutCanSubmit}
+                  className={[
+                    UI.btnPrimary,
+                    "text-white py-0 text-sm w-full shrink-0",
+                    !payoutCanSubmit ? "opacity-60 cursor-not-allowed" : "",
+                  ].join(" ")}
                 >
-                  Cancel
+                  Add
                 </button>
+              </form>
 
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await saveFlashingPay();
-                    setFlashingModalOpen(false);
-                  }}
-                  className={UI.btnPrimary}
-                  disabled={
-                    Number(flashingUnits) <= 0 || Number(flashingUnitPrice) <= 0
-                  }
-                >
-                  {(job.earnings?.flashingPay?.amountCents ?? 0) > 0
-                    ? "Update"
-                    : "Add"}
-                </button>
+              <div className="mt-2 text-xs text-[var(--color-muted)]">
+                Computed payout ({payoutTab}):{" "}
+                <span className="font-medium text-[var(--color-text)]">
+                  ${(payoutAmountCents / 100).toFixed(2)}
+                </span>
+                {payoutTab !== "technician" ? (
+                  <span className="ml-2 opacity-70">
+                    ({activePayout.sqft || 0} sq @ ${activePayout.rate || 0}
+                    /sq.ft)
+                  </span>
+                ) : null}
               </div>
-            </div>
-          </div>
-        )}
+            </ModalShell>
 
-        {/* ===== Schedule Punch Modal ===== */}
-        {schedulePunchOpen && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Schedule punch
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setSchedulePunchOpen(false)}
-                  className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <label className="mb-2 block text-xs text-[var(--color-muted)]">
-                Punch date
-              </label>
-              <input
-                type="date"
-                value={schedulePunchDate}
-                onChange={(e) => setSchedulePunchDate(e.target.value)}
-                className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-              />
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSchedulePunchOpen(false)}
-                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!job || !schedulePunchDate) return;
-
-                    const [year, month, day] = schedulePunchDate
-                      .split("-")
-                      .map((x) => Number(x));
-                    const scheduledDate = new Date(year, month - 1, day);
-
-                    const wasScheduledBefore = !!job.punchScheduledFor;
-
-                    await saveJob({
-                      ...job,
-                      punchScheduledFor: Timestamp.fromDate(scheduledDate),
-                    });
-
-                    setSchedulePunchOpen(false);
-
-                    const label = scheduledDate.toLocaleDateString();
-                    setToast({
-                      status: "success",
-                      title: wasScheduledBefore
-                        ? "Punch rescheduled"
-                        : "Punch scheduled",
-                      message: `Punch is now set for ${label}.`,
-                    });
-                  }}
-                  className="rounded-sm cursor-pointer bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* ===== Confirm Mark as Punched Modal ===== */}
-        {confirmPunchedOpen && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Confirm job completion
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setConfirmPunchedOpen(false)}
-                  className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <p className="text-sm text-[var(--color-muted)]">
-                Are you sure this house has been fully punched and the job is
-                complete? This will mark the job as{" "}
-                <span className="font-semibold">completed</span>.
-              </p>
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmPunchedOpen(false)}
-                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmMarkPunched}
-                  className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
-                >
-                  Yes, mark job{" "}
-                  <strong className="font-semibold">COMPLETE</strong>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        {confirmUndoPunchOpen && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Undo punch?
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setConfirmUndoPunchOpen(false)}
-                  className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <p className="text-sm text-[var(--color-muted)]">
-                This will reopen the job and remove the punch completion
-                timestamp. You’ll be able to reschedule punch again.
-              </p>
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmUndoPunchOpen(false)}
-                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmUndoPunch}
-                  className="rounded-lg bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
-                >
-                  Yes, undo punch
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== Confirm Felt Completed Modal ===== */}
-        {confirmFeltDoneOpen && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Mark <strong className="font-semibold">DRY IN</strong> as
-                  completed?
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setConfirmFeltDoneOpen(false)}
-                  className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <p className="text-sm text-[var(--color-muted)]">
-                Are you sure the felt work for this job is fully completed?
-              </p>
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmFeltDoneOpen(false)}
-                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await markFeltCompleted();
-                    setConfirmFeltDoneOpen(false);
-                    setToast({
-                      status: "success",
-                      title: "DRY IN marked complete",
-                      message:
-                        "DRY IN has been marked as completed for this job.",
-                    });
-                  }}
-                  className="rounded-sm bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600 cursor-pointer"
-                >
-                  Yes, mark <strong className="font-semibold">DRY IN</strong>{" "}
-                  done
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== Confirm Shingles Completed Modal ===== */}
-        {confirmShinglesDoneOpen && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Mark <strong className="font-semibold">SHINGLES</strong> as
-                  completed?
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setConfirmShinglesDoneOpen(false)}
-                  className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <p className="text-sm text-[var(--color-muted)]">
-                Are you sure the shingles work for this job is fully completed?
-              </p>
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmShinglesDoneOpen(false)}
-                  className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await markShinglesCompleted();
-                    setConfirmShinglesDoneOpen(false);
-                    setToast({
-                      status: "success",
-                      title: "Shingles marked complete",
-                      message:
-                        "Shingles have been marked as completed for this job.",
-                    });
-                  }}
-                  className="rounded-sm cursor-pointer bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
-                >
-                  Yes, mark <strong className="font-semibold">SHINGLES</strong>{" "}
-                  done
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ===== Danger zone ===== */}
-        <motion.section className="mt-10 rounded-2xl p-4" {...fadeUp(0.27)}>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              onClick={() => setConfirmDeleteOpen(true)}
-              className="rounded-md bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-600"
-              title="Permanently delete this job"
+            {/* Add Materials Modal */}
+            <ModalShell
+              open={materialModalOpen}
+              title="Add materials"
+              onClose={() => setMaterialModalOpen(false)}
             >
-              Permanently delete job…
-            </button>
-          </div>
-        </motion.section>
-        {/* ===== Confirm Permanently Delete Job Modal ===== */}
-        {confirmDeleteOpen && job && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Permanently delete this job?
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDeleteOpen(false)}
-                  className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <p className="text-sm text-[var(--color-muted)]">
-                This will permanently remove{" "}
-                <span className="font-semibold">
-                  {job.address?.fullLine || job.id}
-                </span>{" "}
-                and all of its materials, notes, and photos.{" "}
-                <span className="font-semibold">This cannot be undone.</span>
-              </p>
-
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmDeleteOpen(false)}
-                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void permanentlyDeleteJob()}
-                  disabled={deletingJob}
-                  className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {deletingJob ? "Deleting…" : "Yes, delete job"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        <ModalShell
-          open={payoutModalOpen}
-          title="Add payout"
-          onClose={() => setPayoutModalOpen(false)}
-        >
-          {/* Tabs */}
-          <div className="mb-3 inline-flex max-w-full flex-wrap rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-1 text-xs">
-            {(["shingles", "felt", "technician"] as PayoutTab[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setPayoutTab(t)}
-                className={
-                  "px-3 py-1 rounded-md capitalize " +
-                  (payoutTab === t
-                    ? "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out text-[var(--btn-text)]"
-                    : "text-[var(--color-text)] hover:bg-[var(--color-card-hover)]")
-                }
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <form
-            className={
-              payoutTab === "technician"
-                ? "grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_160px_110px] items-stretch"
-                : "grid w-full gap-2 sm:grid-cols-[120px_140px_110px] items-stretch"
-            }
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await handleAddPayoutSubmit();
-            }}
-          >
-            <div className="sm:col-span-full">
-              <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                Employee
-              </label>
-
-              <select
-                ref={payeeRef as any}
-                value={activePayout.employeeId ?? ""}
-                onChange={(e) => {
-                  const id = e.target.value || undefined;
-                  const emp = employees.find((x) => x.id === id);
-                  setActivePayout({
-                    employeeId: id,
-                    payeeNickname: emp?.name ?? "",
-                  });
+              <form
+                className="grid gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleAddMaterialsSubmit();
                 }}
-                className={`${UI.select} sm:col-span-full`}
               >
-                <option value="">
-                  {activeEmployees.length
-                    ? "Select active employee…"
-                    : employees.length
-                    ? "No active employees (toggle status on Employees page)."
-                    : "No employees yet (add on Employees page)."}
-                </option>
-                {activeEmployees.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {/* Scrollable list */}
+                <div className="section-scroll rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 p-3">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div>
+                      <div className="text-sm font-medium text-[var(--color-text)]">
+                        Material items
+                      </div>
+                      <div className="text-xs text-[var(--color-muted)]">
+                        Add one or more items, then submit once.
+                      </div>
+                    </div>
 
-            {payoutTab === "technician" ? (
-              <input
-                value={activePayout.amount}
-                onChange={(e) => setActivePayout({ amount: e.target.value })}
-                type="number"
-                min={0}
-                step="0.01"
-                placeholder="Amount $"
-                className={UI.input}
-              />
-            ) : (
-              <>
-                <input
-                  value={activePayout.sqft}
-                  onChange={(e) => setActivePayout({ sqft: e.target.value })}
-                  type="number"
-                  min={0}
-                  step="1"
-                  placeholder="Sq"
-                  className={UI.input}
-                />
-                <input
-                  value={activePayout.rate}
-                  onChange={(e) => setActivePayout({ rate: e.target.value })}
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  placeholder="Rate $/sq.ft"
-                  className={UI.input}
-                />
-              </>
-            )}
-
-            <button
-              type="submit"
-              disabled={!payoutCanSubmit}
-              className={[
-                UI.btnPrimary,
-                "text-white py-0 text-sm w-full shrink-0",
-                !payoutCanSubmit ? "opacity-60 cursor-not-allowed" : "",
-              ].join(" ")}
-            >
-              Add
-            </button>
-          </form>
-
-          <div className="mt-2 text-xs text-[var(--color-muted)]">
-            Computed payout ({payoutTab}):{" "}
-            <span className="font-medium text-[var(--color-text)]">
-              ${(payoutAmountCents / 100).toFixed(2)}
-            </span>
-            {payoutTab !== "technician" ? (
-              <span className="ml-2 opacity-70">
-                ({activePayout.sqft || 0} sq @ ${activePayout.rate || 0}/sq.ft)
-              </span>
-            ) : null}
-          </div>
-        </ModalShell>
-        <ModalShell
-          open={materialModalOpen}
-          title="Add materials"
-          onClose={() => setMaterialModalOpen(false)}
-        >
-          <form
-            className="grid gap-3"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await handleAddMaterialsSubmit();
-            }}
-          >
-            {/* Scrollable list */}
-            <div className="section-scroll rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 p-3">
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div>
-                  <div className="text-sm font-medium text-[var(--color-text)]">
-                    Material items
+                    <button
+                      type="button"
+                      onClick={addLineToList}
+                      className={`${UI.btnSoft} h-8 px-3 inline-flex`}
+                      title="Add another material"
+                    >
+                      + Add item
+                    </button>
                   </div>
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Add one or more items, then submit once.
+
+                  <div className="grid gap-3">
+                    {materialDrafts.map((m, idx) => {
+                      const lineTotal = materialLineTotal(m);
+                      const canSubmitLine = materialLineCanSubmit(m);
+
+                      return (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Item {idx + 1}
+                              </div>
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Total:{" "}
+                                <span className="font-medium text-[var(--color-text)]">
+                                  ${lineTotal.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => removeLineFromList(idx)}
+                              className={`${UI.btnSoft} h-8 px-3 inline-flex`}
+                              title="Remove item"
+                            >
+                              Remove
+                            </button>
+                          </div>
+
+                          <div className="mt-3 grid gap-3">
+                            <div>
+                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                Category
+                              </label>
+                              <select
+                                value={m.category}
+                                onChange={(e) =>
+                                  updateLine(
+                                    idx,
+                                    "category",
+                                    e.target.value as MaterialCategory
+                                  )
+                                }
+                                className={UI.select}
+                              >
+                                <option value="coilNails">
+                                  Coil Nails (per box)
+                                </option>
+                                <option value="tinCaps">
+                                  Tin Caps (per box)
+                                </option>
+                                <option value="plasticJacks">
+                                  Plastic Jacks (per unit)
+                                </option>
+                                <option value="np1Seal">
+                                  NP1 Seal (per unit)
+                                </option>
+                                <option value="counterFlashing">
+                                  Flashing — Counter (per unit)
+                                </option>
+                                <option value="jFlashing">
+                                  Flashing — J/L (per unit)
+                                </option>
+                                <option value="rainDiverter">
+                                  Flashing — Rain Diverter (per unit)
+                                </option>
+                              </select>
+                            </div>
+
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <div>
+                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                  Unit price ($)
+                                </label>
+                                <input
+                                  value={m.unitPrice}
+                                  onChange={(e) =>
+                                    updateLine(idx, "unitPrice", e.target.value)
+                                  }
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className={UI.input}
+                                />
+                              </div>
+
+                              <div>
+                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                  Quantity
+                                </label>
+                                <input
+                                  value={m.quantity}
+                                  onChange={(e) =>
+                                    updateLine(idx, "quantity", e.target.value)
+                                  }
+                                  type="number"
+                                  min={0}
+                                  step="1"
+                                  placeholder="1"
+                                  className={UI.input}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <div>
+                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                  Vendor (optional)
+                                </label>
+                                <input
+                                  value={m.vendor || ""}
+                                  onChange={(e) =>
+                                    updateLine(idx, "vendor", e.target.value)
+                                  }
+                                  placeholder="e.g., ABC Supply"
+                                  className={UI.input}
+                                />
+                              </div>
+
+                              <div className="flex items-end justify-between rounded-xl bg-[var(--color-surface)] px-3 py-2">
+                                <div className="text-xs text-[var(--color-muted)]">
+                                  Line status
+                                </div>
+                                <div
+                                  className={`text-xs font-medium ${
+                                    canSubmitLine
+                                      ? "text-emerald-700"
+                                      : "text-[var(--color-muted)]"
+                                  }`}
+                                >
+                                  {canSubmitLine
+                                    ? "Ready"
+                                    : "Missing price/qty"}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={addLineToList}
-                  className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                  title="Add another material"
-                >
-                  + Add item
-                </button>
-              </div>
+                {/* Footer summary + actions */}
+                <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setMaterialModalOpen(false)}
+                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
 
-              <div className="grid gap-3">
-                {materialDrafts.map((m, idx) => {
-                  const lineTotal = materialLineTotal(m);
-                  const canSubmitLine = materialLineCanSubmit(m);
+                  <div className="flex items-center gap-2 ml-auto">
+                    <div className="text-xs text-[var(--color-muted)] mr-2">
+                      Total:{" "}
+                      <span className="font-medium text-[var(--color-text)]">
+                        ${materialsGrandTotal.toFixed(2)}
+                      </span>
+                    </div>
 
-                  return (
-                    <div
-                      key={idx}
-                      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3"
+                    <button
+                      type="button"
+                      onClick={clearLines}
+                      disabled={
+                        !materialDrafts.some(
+                          (d) => d.unitPrice || d.quantity || d.vendor
+                        )
+                      }
+                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                      title="Reset all items"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="text-xs text-[var(--color-muted)]">
-                            Item {idx + 1}
-                          </div>
-                          <div className="text-xs text-[var(--color-muted)]">
-                            Total:{" "}
-                            <span className="font-medium text-[var(--color-text)]">
-                              ${lineTotal.toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
+                      Clear
+                    </button>
 
+                    <button
+                      type="submit"
+                      disabled={!anyMaterialValid}
+                      className={`${UI.btnPrimary} h-8 px-5 inline-flex ${
+                        !anyMaterialValid ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      Add materials
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-[var(--color-muted)]">
+                  Tip: you can add multiple items here and save once. The list
+                  area scrolls when it gets long.
+                </div>
+              </form>
+            </ModalShell>
+
+            {/* Add Notes Modal */}
+            <ModalShell
+              open={noteModalOpen}
+              title="Add note"
+              onClose={() => setNoteModalOpen(false)}
+            >
+              <form
+                className="grid gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleAddNoteSubmit();
+                }}
+              >
+                {/* Label + helper */}
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
+                      Note
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
+                    {noteText?.length ?? 0}/600
+                  </div>
+                </div>
+
+                {/* Textarea "writing surface" */}
+                <textarea
+                  ref={noteRef}
+                  value={noteText}
+                  onChange={(e) => {
+                    // simple max length guard (optional)
+                    const next = e.target.value;
+                    setNoteText(next.length > 600 ? next.slice(0, 600) : next);
+                  }}
+                  placeholder="Type your note…"
+                  rows={7}
+                  className={`${
+                    (UI as any).textarea ?? UI.input
+                  } min-h-[180px]`}
+                />
+
+                {/* Footer actions (mobile-friendly) */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNoteText("");
+                      setNoteModalOpen(false);
+                    }}
+                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
+
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => setNoteText("")}
+                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                      disabled={!noteText.trim()}
+                      title="Clear note"
+                    >
+                      Clear
+                    </button>
+
+                    <button
+                      type="submit"
+                      className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
+                      disabled={!noteText.trim()}
+                    >
+                      Add note
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </ModalShell>
+            {/* Add Photos Modal */}
+            <ModalShell
+              open={photoModalOpen}
+              title="Upload photo"
+              onClose={() => {
+                setPhotoModalOpen(false);
+                setPhotoFile(null);
+                setPhotoCaption("");
+              }}
+            >
+              <form
+                className="grid gap-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleUploadPhotoSubmit();
+                }}
+              >
+                {/* CAMERA ONLY input */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setPhotoFile(file);
+                  }}
+                  className="sr-only"
+                />
+
+                {/* GALLERY ONLY input */}
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setPhotoFile(file);
+                  }}
+                  className="sr-only"
+                />
+
+                {/* Picker / Dropzone card */}
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 shadow-sm">
+                  <div className="flex flex-col gap-3 p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-[var(--color-text)]">
+                          Photo
+                        </div>
+                        <div className="text-xs text-[var(--color-muted)]">
+                          Take a picture on-site or choose one from your
+                          gallery.
+                        </div>
+                      </div>
+
+                      {photoFile && (
                         <button
                           type="button"
-                          onClick={() => removeLineFromList(idx)}
-                          className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                          title="Remove item"
+                          onClick={() => {
+                            setPhotoFile(null);
+                            setPhotoCaption("");
+                          }}
+                          className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                          title="Remove selected photo"
                         >
                           Remove
                         </button>
-                      </div>
+                      )}
+                    </div>
 
-                      <div className="mt-3 grid gap-3">
-                        <div>
-                          <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                            Category
-                          </label>
-                          <select
-                            value={m.category}
-                            onChange={(e) =>
-                              updateLine(
-                                idx,
-                                "category",
-                                e.target.value as MaterialCategory
-                              )
-                            }
-                            className={UI.select}
-                          >
-                            <option value="coilNails">
-                              Coil Nails (per box)
-                            </option>
-                            <option value="tinCaps">Tin Caps (per box)</option>
-                            <option value="plasticJacks">
-                              Plastic Jacks (per unit)
-                            </option>
-                            <option value="np1Seal">NP1 Seal (per unit)</option>
-                            <option value="counterFlashing">
-                              Flashing — Counter (per unit)
-                            </option>
-                            <option value="jFlashing">
-                              Flashing — J/L (per unit)
-                            </option>
-                            <option value="rainDiverter">
-                              Flashing — Rain Diverter (per unit)
-                            </option>
-                          </select>
-                        </div>
-
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <div>
-                            <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                              Unit price ($)
-                            </label>
-                            <input
-                              value={m.unitPrice}
-                              onChange={(e) =>
-                                updateLine(idx, "unitPrice", e.target.value)
-                              }
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              placeholder="0.00"
-                              className={UI.input}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                              Quantity
-                            </label>
-                            <input
-                              value={m.quantity}
-                              onChange={(e) =>
-                                updateLine(idx, "quantity", e.target.value)
-                              }
-                              type="number"
-                              min={0}
-                              step="1"
-                              placeholder="1"
-                              className={UI.input}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <div>
-                            <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                              Vendor (optional)
-                            </label>
-                            <input
-                              value={m.vendor || ""}
-                              onChange={(e) =>
-                                updateLine(idx, "vendor", e.target.value)
-                              }
-                              placeholder="e.g., ABC Supply"
-                              className={UI.input}
-                            />
-                          </div>
-
-                          <div className="flex items-end justify-between rounded-xl bg-[var(--color-surface)] px-3 py-2">
-                            <div className="text-xs text-[var(--color-muted)]">
-                              Line status
+                    {/* Empty vs Selected state */}
+                    {!previewUrl ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
+                              <Camera className="h-5 w-5 text-[var(--color-primary)]" />
+                            </span>
+                            <div>
+                              <div className="text-sm font-semibold text-[var(--color-text)]">
+                                Use camera
+                              </div>
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Best for job-site photos
+                              </div>
                             </div>
-                            <div
-                              className={`text-xs font-medium ${
-                                canSubmitLine
-                                  ? "text-emerald-700"
-                                  : "text-[var(--color-muted)]"
-                              }`}
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => galleryInputRef.current?.click()}
+                          className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
+                              <ImageIcon className="h-5 w-5 text-[var(--color-primary)]" />
+                            </span>
+                            <div>
+                              <div className="text-sm font-semibold text-[var(--color-text)]">
+                                Choose from gallery
+                              </div>
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Select an existing photo
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:items-start">
+                        <img
+                          src={previewUrl}
+                          alt="Selected preview"
+                          className="h-36 w-full rounded-xl object-cover ring-1 ring-white/10 sm:h-28"
+                        />
+
+                        <div className="min-w-0">
+                          <div className="text-xs font-medium text-[var(--color-muted)]">
+                            Selected
+                          </div>
+
+                          <div className="mt-1 flex items-center justify-between gap-2">
+                            <div className="min-w-0 text-sm font-semibold text-[var(--color-text)] truncate">
+                              {photoFile?.name ?? "Photo selected"}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => galleryInputRef.current?.click()}
+                              className="shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                              title="Pick a different file"
                             >
-                              {canSubmitLine ? "Ready" : "Missing price/qty"}
-                            </div>
+                              Change
+                            </button>
+                          </div>
+
+                          <div className="mt-1 text-xs text-[var(--color-muted)]">
+                            Add a caption below if needed (optional).
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Footer summary + actions */}
-            <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-              <button
-                type="button"
-                onClick={() => setMaterialModalOpen(false)}
-                className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-              >
-                Cancel
-              </button>
-
-              <div className="flex items-center gap-2 ml-auto">
-                <div className="text-xs text-[var(--color-muted)] mr-2">
-                  Total:{" "}
-                  <span className="font-medium text-[var(--color-text)]">
-                    ${materialsGrandTotal.toFixed(2)}
-                  </span>
+                    )}
+                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={clearLines}
-                  disabled={
-                    !materialDrafts.some(
-                      (d) => d.unitPrice || d.quantity || d.vendor
-                    )
-                  }
-                  className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                  title="Reset all items"
-                >
-                  Clear
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={!anyMaterialValid}
-                  className={`${UI.btnPrimary} h-8 px-5 inline-flex ${
-                    !anyMaterialValid ? "opacity-60 cursor-not-allowed" : ""
-                  }`}
-                >
-                  Add materials
-                </button>
-              </div>
-            </div>
-
-            <div className="text-[11px] text-[var(--color-muted)]">
-              Tip: you can add multiple items here and save once. The list area
-              scrolls when it gets long.
-            </div>
-          </form>
-        </ModalShell>
-
-        <ModalShell
-          open={noteModalOpen}
-          title="Add note"
-          onClose={() => setNoteModalOpen(false)}
-        >
-          <form
-            className="grid gap-3"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await handleAddNoteSubmit();
-            }}
-          >
-            {/* Label + helper */}
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-[var(--color-text)]">
-                  Note
-                </div>
-              </div>
-
-              <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
-                {noteText?.length ?? 0}/600
-              </div>
-            </div>
-
-            {/* Textarea "writing surface" */}
-            <textarea
-              ref={noteRef}
-              value={noteText}
-              onChange={(e) => {
-                // simple max length guard (optional)
-                const next = e.target.value;
-                setNoteText(next.length > 600 ? next.slice(0, 600) : next);
-              }}
-              placeholder="Type your note…"
-              rows={7}
-              className={`${(UI as any).textarea ?? UI.input} min-h-[180px]`}
-            />
-
-            {/* Footer actions (mobile-friendly) */}
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  setNoteText("");
-                  setNoteModalOpen(false);
-                }}
-                className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-              >
-                Cancel
-              </button>
-
-              <div className="flex items-center gap-2 ml-auto">
-                <button
-                  type="button"
-                  onClick={() => setNoteText("")}
-                  className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                  disabled={!noteText.trim()}
-                  title="Clear note"
-                >
-                  Clear
-                </button>
-
-                <button
-                  type="submit"
-                  className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
-                  disabled={!noteText.trim()}
-                >
-                  Add note
-                </button>
-              </div>
-            </div>
-          </form>
-        </ModalShell>
-
-        <ModalShell
-          open={photoModalOpen}
-          title="Upload photo"
-          onClose={() => {
-            setPhotoModalOpen(false);
-            setPhotoFile(null);
-            setPhotoCaption("");
-          }}
-        >
-          <form
-            className="grid gap-4"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              await handleUploadPhotoSubmit();
-            }}
-          >
-            {/* CAMERA ONLY input */}
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setPhotoFile(file);
-              }}
-              className="sr-only"
-            />
-
-            {/* GALLERY ONLY input */}
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] ?? null;
-                setPhotoFile(file);
-              }}
-              className="sr-only"
-            />
-
-            {/* Picker / Dropzone card */}
-            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 shadow-sm">
-              <div className="flex flex-col gap-3 p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
-                      Photo
+                {/* Caption */}
+                <div className="space-y-2">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--color-text)]">
+                        Caption
+                      </div>
+                      <div className="text-xs text-[var(--color-muted)]">
+                        Optional — helps identify what the photo shows.
+                      </div>
                     </div>
-                    <div className="text-xs text-[var(--color-muted)]">
-                      Take a picture on-site or choose one from your gallery.
+                    <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
+                      {photoCaption?.length ?? 0}/200
                     </div>
                   </div>
 
-                  {photoFile && (
+                  <textarea
+                    value={photoCaption}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setPhotoCaption(
+                        next.length > 200 ? next.slice(0, 200) : next
+                      );
+                    }}
+                    placeholder="e.g., ‘Rear valley before install’, ‘Warranty shingle batch label’, ‘Deck damage’…"
+                    rows={4}
+                    className={`${UI.input} min-h-[110px] resize-none py-3 leading-6`}
+                  />
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhotoModalOpen(false);
+                      setPhotoFile(null);
+                      setPhotoCaption("");
+                    }}
+                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
+
+                  <div className="flex items-center gap-2 ml-auto">
                     <button
                       type="button"
                       onClick={() => {
                         setPhotoFile(null);
                         setPhotoCaption("");
                       }}
-                      className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                      title="Remove selected photo"
+                      disabled={!photoFile && !photoCaption}
+                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                      title="Reset form"
                     >
-                      Remove
-                    </button>
-                  )}
-                </div>
-
-                {/* Empty vs Selected state */}
-                {!previewUrl ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() => cameraInputRef.current?.click()}
-                      className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
-                          <Camera className="h-5 w-5 text-[var(--color-primary)]" />
-                        </span>
-                        <div>
-                          <div className="text-sm font-semibold text-[var(--color-text)]">
-                            Use camera
-                          </div>
-                          <div className="text-xs text-[var(--color-muted)]">
-                            Best for job-site photos
-                          </div>
-                        </div>
-                      </div>
+                      Clear
                     </button>
 
                     <button
-                      type="button"
-                      onClick={() => galleryInputRef.current?.click()}
-                      className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
+                      type="submit"
+                      disabled={uploading || !photoFile}
+                      className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
-                          <ImageIcon className="h-5 w-5 text-[var(--color-primary)]" />
-                        </span>
-                        <div>
-                          <div className="text-sm font-semibold text-[var(--color-text)]">
-                            Choose from gallery
-                          </div>
-                          <div className="text-xs text-[var(--color-muted)]">
-                            Select an existing photo
-                          </div>
-                        </div>
-                      </div>
+                      {uploading ? "Uploading…" : "Upload photo"}
                     </button>
                   </div>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:items-start">
-                    <img
-                      src={previewUrl}
-                      alt="Selected preview"
-                      className="h-36 w-full rounded-xl object-cover ring-1 ring-white/10 sm:h-28"
-                    />
-
-                    <div className="min-w-0">
-                      <div className="text-xs font-medium text-[var(--color-muted)]">
-                        Selected
-                      </div>
-
-                      <div className="mt-1 flex items-center justify-between gap-2">
-                        <div className="min-w-0 text-sm font-semibold text-[var(--color-text)] truncate">
-                          {photoFile?.name ?? "Photo selected"}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => galleryInputRef.current?.click()}
-                          className="shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                          title="Pick a different file"
-                        >
-                          Change
-                        </button>
-                      </div>
-
-                      <div className="mt-1 text-xs text-[var(--color-muted)]">
-                        Add a caption below if needed (optional).
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Caption */}
-            <div className="space-y-2">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-[var(--color-text)]">
-                    Caption
-                  </div>
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Optional — helps identify what the photo shows.
-                  </div>
                 </div>
-                <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
-                  {photoCaption?.length ?? 0}/200
-                </div>
-              </div>
 
-              <textarea
-                value={photoCaption}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setPhotoCaption(
-                    next.length > 200 ? next.slice(0, 200) : next
-                  );
+                {/* Micro helper */}
+                <div className="text-[11px] text-[var(--color-muted)]">
+                  Tip: photos get attached to this job and can be used in
+                  warranty packets later.
+                </div>
+              </form>
+            </ModalShell>
+
+            {/* Warranty Modal */}
+            {warrantyModalOpen && job && (
+              <WarrantyReportModal
+                open={warrantyModalOpen}
+                onClose={() => setWarrantyModalOpen(false)}
+                job={job}
+                photos={photos}
+                totals={{
+                  earnings: totals.earnings,
+                  expenses: totals.expenses,
+                  net: totals.net,
                 }}
-                placeholder="e.g., ‘Rear valley before install’, ‘Warranty shingle batch label’, ‘Deck damage’…"
-                rows={4}
-                className={`${UI.input} min-h-[110px] resize-none py-3 leading-6`}
               />
-            </div>
+            )}
+            <WarrantyEditModal
+              open={warrantyEditOpen}
+              onClose={() => setWarrantyEditOpen(false)}
+              job={job}
+              onSave={saveWarranty}
+            />
 
-            {/* Footer actions */}
-            <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setPhotoModalOpen(false);
-                  setPhotoFile(null);
-                  setPhotoCaption("");
-                }}
-                className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-              >
-                Cancel
-              </button>
-
-              <div className="flex items-center gap-2 ml-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPhotoFile(null);
-                    setPhotoCaption("");
-                  }}
-                  disabled={!photoFile && !photoCaption}
-                  className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                  title="Reset form"
-                >
-                  Clear
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={uploading || !photoFile}
-                  className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
-                >
-                  {uploading ? "Uploading…" : "Upload photo"}
-                </button>
-              </div>
-            </div>
-
-            {/* Micro helper */}
-            <div className="text-[11px] text-[var(--color-muted)]">
-              Tip: photos get attached to this job and can be used in warranty
-              packets later.
-            </div>
-          </form>
-        </ModalShell>
-
-        {/* Warranty Modal */}
-        {warrantyModalOpen && job && (
-          <WarrantyReportModal
-            open={warrantyModalOpen}
-            onClose={() => setWarrantyModalOpen(false)}
-            job={job}
-            photos={photos}
-            totals={{
-              earnings: totals.earnings,
-              expenses: totals.expenses,
-              net: totals.net,
-            }}
-          />
-        )}
-        <WarrantyEditModal
-          open={warrantyEditOpen}
-          onClose={() => setWarrantyEditOpen(false)}
-          job={job}
-          onSave={saveWarranty}
-        />
-
-        {/* Invoice Modal */}
-        {invoiceModalOpen && job && (
-          <InvoiceCreateModal
-            job={job}
-            open={invoiceModalOpen}
-            onClose={() => setInvoiceModalOpen(false)}
-          />
-        )}
-      </motion.div>
+            {/* Invoice Modal */}
+            {invoiceModalOpen && job && (
+              <InvoiceCreateModal
+                job={job}
+                open={invoiceModalOpen}
+                onClose={() => setInvoiceModalOpen(false)}
+              />
+            )}
+          </motion.div>
+        </div>
+      </div>
     </>
   );
 }
-
+// Stat pills
 function Stat({ label, cents }: { label: string; cents: number }) {
   return (
     <motion.div
