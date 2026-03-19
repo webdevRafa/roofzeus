@@ -114,6 +114,7 @@ body {
      --color-blue: #0a90f0;
      --color-cta: #0a90f0;
       --color-mark-done: #104902;
+      --color-done: #064e3b;
      /* Text */
      --color-text: #eef2f7;
      --color-muted: rgba(238,242,247,0.70);
@@ -154,7 +155,7 @@ body {
   --pill-danger-rgb: 220 38 38;    /* red-600 */
   
      /* Base */
-     --color-background: #f5f7fc;
+     --color-background: #f8fbff;
      --color-fixed-background: #0b0e14;
      --color-primary-text: #ffffff;
      --bg-pending: #feffbf;
@@ -166,6 +167,7 @@ body {
      --color-cta: #ffffff;
      --color-section: #ffffff;
      --color-mark-done: #79f083;
+     --color-done: #046e52;
      /* Text */
      --color-text: #0f172a;
      --color-muted: rgba(15,23,42,0.65);

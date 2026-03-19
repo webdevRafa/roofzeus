@@ -1719,7 +1719,7 @@ export default function JobDetailPage({
                                 </div>
 
                                 {feltCompletedMs ? (
-                                  <span className="inline-flex items-center gap-1  bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
+                                  <span className="inline-flex items-center gap-1 rounded-full  bg-[var(--color-done)] px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
                                     <CheckCircle2 size={14} />
                                     Done
                                   </span>
@@ -1769,7 +1769,7 @@ export default function JobDetailPage({
                                         "px-2.5 py-1 text-xs font-semibold cursor-pointer transition " +
                                         (jobIsLocked
                                           ? "text-[var(--color-text)] cursor-not-allowed "
-                                          : "bg-[var(--color-mark-done)] border-[var(--color-mark-done)] border-1 text-[var(--color-text)]")
+                                          : "bg-[var(--color-done)]  text-[var(--color-text)]")
                                       }
                                     >
                                       Mark done
@@ -1818,7 +1818,7 @@ export default function JobDetailPage({
                                 </div>
 
                                 {shinglesCompletedMs ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-done)] px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
                                     <CheckCircle2 size={14} />
                                     Done
                                   </span>
@@ -1872,10 +1872,10 @@ export default function JobDetailPage({
                                         setConfirmShinglesDoneOpen(true);
                                       }}
                                       className={
-                                        "px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition " +
+                                        "px-2.5 py-1 text-xs font-semibold cursor-pointer transition " +
                                         (!canMarkShinglesDone
                                           ? "text-[var(--color-text)] cursor-not-allowed ring-1   ring-white/10 hover:bg-[var(--color-card-hover)] "
-                                          : "bg-[var(--color-mark-done)] border-[var(--color-mark-done)] text-[var(--color-text)]")
+                                          : "bg-[var(--color-done)] border-[var(--color-mark-done)] text-[var(--color-text)]")
                                       }
                                     >
                                       Mark done
@@ -1932,12 +1932,12 @@ export default function JobDetailPage({
                                 </div>
 
                                 {punchedAtLabel ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-done)] px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
                                     <CheckCircle2 size={14} />
                                     Done
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                                  <span className="inline-flex items-center gap-1   px-2 py-1 text-sm font-semibold text-[var(--color-pending)] bg-[var(--bg-pending)]">
                                     <Clock size={14} />
                                     Pending
                                   </span>
@@ -1956,7 +1956,7 @@ export default function JobDetailPage({
                                       setConfirmUndoPunchOpen(true)
                                     }
                                     className={
-                                      "px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                      "px-2.5 py-1 text-[11px] font-semibold transition ring-1 cursor-pointer " +
                                       (job.status === "closed" ||
                                       job.status === "archived"
                                         ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
@@ -1997,7 +1997,7 @@ export default function JobDetailPage({
                                         onClick={() =>
                                           setConfirmPunchedOpen(true)
                                         }
-                                        className=" bg-[var(--color-mark-done)] text-[var(--color-text)] px-2.5 py-1 text-[11px] font-semibold cursor-pointer   transition "
+                                        className=" bg-[var(--color-done)] text-[var(--color-text)] px-2.5 py-1 text-xs font-semibold cursor-pointer   transition "
                                       >
                                         Mark punched
                                       </button>
@@ -2014,13 +2014,13 @@ export default function JobDetailPage({
                     {activeSection === "Pricing" && (
                       <section className=" p-5">
                         {/* Pricing (existing block kept as-is below) */}
-                        <div className="w-full max-w-[600px]">
+                        <div className="w-full max-w-[500px] ">
                           {!hasPricing || editingPricing ? (
-                            <div className="rounded-2xl  shadow-sm px-5 py-6 text-right w-full">
-                              <div className="mb-2 text-xs text-[var(--color-muted)]">
+                            <div className="rounded-2xl  shadow-sm px-5 py-6 text-left w-full">
+                              <div className="mb-2 text-sm md:text-xl lg:text-2xl text-[var(--color-text)] text-right">
                                 Total Job Pay
                               </div>
-                              <div className="text-2xl font-semibold text-[var(--color-text)]">
+                              <div className="text-2xl font-semibold text-[var(--color-text)] mx-auto text-right">
                                 <CountMoney cents={totalJobPayCentsPreview} />
                               </div>
                               {hasFlashingPay && (
@@ -2102,7 +2102,7 @@ export default function JobDetailPage({
                                     void saveJob(updated);
                                     setEditingPricing(false);
                                   }}
-                                  className="ml-2 rounded-xl bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out px-3 py-1 text-[var(--btn-text)]"
+                                  className="ml-2 rounded-xl bg-[var(--color-done)] cursor-pointer transition duration-300 ease-in-out px-3 py-1 text-[var(--color-text)]"
                                 >
                                   Apply
                                 </button>
@@ -2138,16 +2138,12 @@ export default function JobDetailPage({
 
                                   setEditingPricing(true);
                                 }}
-                                className="group w-full sm:min-w-[360px]   px-4 py-3 text-left transition hover:bg-[var(--color-card-hover)]"
+                                className="group w-full sm:min-w-[360px]   px-4 py-3 md:py-10 text-left transition bg-[var(--color-card)]"
                                 title="Edit pricing"
                               >
                                 <div className="flex items-center justify-between gap-3">
                                   <div className="min-w-0">
-                                    <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                                      Pricing
-                                    </div>
-
-                                    <div className="mt-0.5 truncate text-sm font-medium text-[var(--color-text)]">
+                                    <div className="mt-0.5 truncate text-sm md:text-lg font-medium text-[var(--color-text)]">
                                       {Number(
                                         displaySqft || 0
                                       ).toLocaleString()}{" "}
@@ -2693,8 +2689,8 @@ export default function JobDetailPage({
 
             {/* ===== Global Toast ===== */}
             {toast && (
-              <div className="fixed right-4 top-20 z-50">
-                <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35/95 px-4 py-3 text-sm shadow-lg">
+              <div className="fixed max-w-[300px] right-20 top-20 z-100">
+                <div className="flex items-start gap-3  bg-[var(--color-card)] px-4 py-10 text-sm shadow-lg ">
                   <div className="mt-0.5">
                     {toast.status === "success" ? (
                       <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -2856,7 +2852,7 @@ export default function JobDetailPage({
             {/* ===== Schedule Shingles Modal ===== */}
             {shinglesScheduleEditing && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
                       Schedule shingles
@@ -2864,7 +2860,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setShinglesScheduleEditing(false)}
-                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
+                      className="rounded-full cursor-pointer p-1 text-gray-500 hover:bg-gray-100"
                       aria-label="Close"
                     >
                       <X className="h-4 w-4" />
@@ -2885,14 +2881,14 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setShinglesScheduleEditing(false)}
-                      className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={() => void saveShinglesSchedule()}
-                      className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                      className="bg-[var(--color-done)] cursor-pointer px-3 py-1.5 text-xs font-semibold text-white"
                     >
                       Apply
                     </button>
@@ -3004,7 +3000,7 @@ export default function JobDetailPage({
             {/* ===== Schedule Punch Modal ===== */}
             {schedulePunchOpen && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
                       Schedule punch
@@ -3119,7 +3115,7 @@ export default function JobDetailPage({
             )}
             {confirmUndoPunchOpen && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
                       Undo punch?
@@ -3127,7 +3123,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setConfirmUndoPunchOpen(false)}
-                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
                       aria-label="Close"
                     >
                       <X className="h-4 w-4" />
@@ -3143,14 +3139,14 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setConfirmUndoPunchOpen(false)}
-                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)] cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={confirmUndoPunch}
-                      className="rounded-lg bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
                     >
                       Yes, undo punch
                     </button>
@@ -3240,7 +3236,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setConfirmShinglesDoneOpen(false)}
-                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className=" cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
@@ -4041,10 +4037,12 @@ export default function JobDetailPage({
 function Stat({ label, cents }: { label: string; cents: number }) {
   return (
     <motion.div
-      className="rounded-xl shadow-md bg-[var(--color-surface)]/35 p-5"
+      className="shadow-md bg-[var(--color-card)] p-5 lg:p-8"
       variants={item}
     >
-      <div className="text-xs text-[var(--color-muted)]">{label}</div>
+      <div className="text-sm md:text-lg text-[var(--color-muted)]">
+        {label}
+      </div>
       <div className="text-lg font-semibold text-[var(--color-text)]">
         <CountMoney cents={cents} />
       </div>
