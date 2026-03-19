@@ -306,7 +306,7 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] relative">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-16 md:top-18  flex items-center justify-between  bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-7xl mx-auto z-80">
+      <header className="sticky top-16 mt-20 md:top-18  flex items-center justify-between  bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-7xl mx-auto z-80">
         <div className="flex items-center gap-3 min-w-0">
           <h1 className="text-lg sm:text-xl font-semibold text-[var(--color-text)]">
             Jobs

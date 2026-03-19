@@ -103,11 +103,11 @@ body {
   --pill-danger-rgb: 254 202 202;  /* red-200 */
 
      /* Base */
-     --color-background: #0b0e14;
+     --color-background: #0f1625;
      --color-section: #0b0e14;
      --color-fixed-background: #0b0e14;
      --color-surface: #121826;          /* elevated canvas */
-     --color-card: #0c101a;             /* primary card */
+     --color-card: #141e36;             /* primary card */
      --color-card-hover: #242b39;
      --color-border: rgba(255,255,255,0.10);
      --color-blue: #0a90f0;

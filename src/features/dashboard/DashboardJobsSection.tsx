@@ -287,7 +287,7 @@ export function DashboardJobsSection({
 }: DashboardJobsSectionProps) {
   return (
     <>
-      <section className="rounded-2xl  hover:shadow-md overflow-hidden bg-[var(--color-section)]">
+      <section className=" hover:shadow-md overflow-hidden bg-[var(--color-card)] mt-5">
         {/* Header */}
         <motion.header
           className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-1.5 relative z-50"
@@ -373,7 +373,7 @@ export function DashboardJobsSection({
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-card)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
                 {...fadeUp(0.02)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -543,7 +543,7 @@ export function DashboardJobsSection({
           {showFilters && (
             <motion.section
               id="date-filters"
-              className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.55)]  px-4 sm:px-6 py-4 relative z-40"
+              className="bg-[var(--color-card)]  px-4 sm:px-6 py-4 relative z-40"
               {...fadeUp(0.06)}
             >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -786,7 +786,7 @@ export function DashboardJobsSection({
                   >
                     <div className="relative overflow-auto section-scroll">
                       <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                        <thead className="sticky top-0 z-30 bg-[var(--color-section)] backdrop-blur text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)] border-b border-[var(--color-border)]/60">
+                        <thead className="sticky top-0 z-30 bg-[var(--color-card)] backdrop-blur text-[11px] uppercase tracking-wide text-[var(--color-text)]">
                           <tr>
                             <th className="text-left px-4 py-3">Job</th>
                             <th className="text-left px-4 py-3 whitespace-nowrap">
@@ -817,7 +817,7 @@ export function DashboardJobsSection({
                                   idx % 2 === 0
                                     ? "bg-[rgb(var(--color-surface-rgb)/0.35)]"
                                     : "bg-transparent",
-                                  "hover:bg-[var(--color-card-hover)]"
+                                  "hover:bg-white/1"
                                 )}
                               >
                                 <td className="px-4 py-3">
@@ -831,7 +831,7 @@ export function DashboardJobsSection({
                                       </Link>
                                     </div>
                                     {(a.city || a.state || a.zip) && (
-                                      <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
+                                      <div className="text-sm md:text-xl text-[var(--color-text)]">
                                         {[a.city, a.state, a.zip]
                                           .filter(Boolean)
                                           .join(", ")}
@@ -913,7 +913,7 @@ export function DashboardJobsSection({
 
                       {/* Sticky pagination footer */}
                       {filteredJobs.length > 0 && (
-                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-section)] px-4 py-2 backdrop-blur text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-card)] px-4 py-2 backdrop-blur text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                           <span>
                             Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                             {Math.min(

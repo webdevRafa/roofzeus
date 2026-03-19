@@ -1581,6 +1581,47 @@ export default function JobDetailPage({
               <div className="text-xs sm:text-sm text-[var(--color-muted)]">
                 Last updated: {lastStr}
               </div>
+              {/* Header */}
+
+              <div className="relative mt-2">
+                {/* Top row: job meta + actions */}
+                <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
+                  <div className="flex w-full flex-col gap-2 lg:items-end">
+                    {/* Actions + status */}
+                    <div className="flex w-full flex-wrap items-center justify-start gap-2 lg:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setWarrantyEditOpen(true)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                        title="Edit warranty details and notes"
+                      >
+                        Warranty
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWarrantyModalOpen(true)}
+                        className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                        title="Create printable report"
+                      >
+                        Create report
+                      </button>
+
+                      <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/35 px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ring-1 ring-white/10">
+                        <span>Status</span>
+                        <span
+                          className={`rounded-lg px-2 text-[10px] py-0.5 ${statusClasses(
+                            job.status as JobStatus
+                          )}`}
+                        >
+                          {job.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="">
                 {isModal ? (
                   <button
@@ -1613,16 +1654,7 @@ export default function JobDetailPage({
               {/* LEFT PANEL */}
               <aside className="min-h-0">
                 <div className="xl:sticky xl:top-24 xl:self-start">
-                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/35 shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur-md">
-                    <div className="border-b border-white/10 px-4 py-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
-                        Job Sections
-                      </p>
-                      <h2 className="mt-1 text-sm font-semibold text-[var(--color-text)]">
-                        Sticky menu
-                      </h2>
-                    </div>
-
+                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/20 shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur-md">
                     <nav className="flex flex-col p-2">
                       {sections.map((item) => {
                         const isActive = activeSection === item;
@@ -1655,9 +1687,6 @@ export default function JobDetailPage({
               <main className="min-h-0">
                 <div className="h-full min-h-0 overflow-y-auto   backdrop-blur-md">
                   <div className="border-b border-white/10 px-5 py-4 sm:px-6">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--color-muted)]">
-                      Active Section
-                    </p>
                     <h3 className="mt-1 text-xl font-semibold text-[var(--color-text)]">
                       {activeSection}
                     </h3>
@@ -1668,12 +1697,12 @@ export default function JobDetailPage({
                       <section className="rounded-2xl  p-5">
                         {/* Scheduling controls */}
                         <div className="w-full rounded-2xl  p-3 sm:p-4">
-                          <div className="grid gap-3 md:grid-cols-3">
+                          <div className="grid gap-5 md:grid-cols-3">
                             {/* DRY IN */}
                             <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-muted)]">
                                     Dry in
                                   </div>
                                   <div className="mt-1 text-[12px] text-[var(--color-text)]">
@@ -1772,7 +1801,7 @@ export default function JobDetailPage({
                             <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-muted)]">
                                     Shingles
                                   </div>
                                   <div className="mt-1 text-[12px] text-[var(--color-text)]">
@@ -1890,7 +1919,7 @@ export default function JobDetailPage({
                             <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-muted)]">
                                     Punch
                                   </div>
                                   <div className="mt-1 text-[12px] text-[var(--color-text)]">
@@ -2185,13 +2214,40 @@ export default function JobDetailPage({
                     )}
 
                     {activeSection === "Overview" && (
-                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
-                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
-                          Overview
-                        </h4>
-                        <p className="mt-2 text-sm text-[var(--color-muted)]">
-                          Put your Overview content here.
-                        </p>
+                      <section className=" p-5">
+                        {/* Stat row + profit bar */}
+                        <motion.div className=" p-4 " {...fadeUp(0.05)}>
+                          <div className="grid gap-4 sm:grid-cols-4 ">
+                            <Stat label="Payouts" cents={totals.payouts} />
+                            <Stat label="Materials" cents={totals.materials} />
+                            <Stat
+                              label="All Expenses"
+                              cents={totals.expenses}
+                            />
+                            <div className={"rounded-xl "}>
+                              <Stat label="Profit" cents={totals.net} />
+                            </div>
+                          </div>
+                          <div className="mt-4">
+                            <div className="flex items-center justify-between text-xs text-[var(--color-muted)]">
+                              <span>
+                                <CountMoney cents={totals.expenses} /> /{" "}
+                                <CountMoney cents={totals.earnings} />
+                              </span>
+                            </div>
+                            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/10">
+                              <motion.div
+                                className="h-full bg-[var(--color-primary)]/40"
+                                initial={{ width: 0 }}
+                                animate={{
+                                  width: `${totals.expensePortion * 100}%`,
+                                }}
+                                transition={{ duration: 0.6, ease: EASE }}
+                                aria-label="Expense portion of earnings"
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
                       </section>
                     )}
 
@@ -2254,50 +2310,7 @@ export default function JobDetailPage({
               </main>
             </div>
           </div>
-          {/* Header */}
-          <motion.header
-            className="mb-8 relative w-full mx-auto md:mt-10 overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/10 shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
-            {...fadeUp(0)}
-          >
-            <div className="relative p-4 sm:p-5">
-              {/* Top row: job meta + actions */}
-              <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-                <div className="flex w-full flex-col gap-2 lg:items-end">
-                  {/* Actions + status */}
-                  <div className="flex w-full flex-wrap items-center justify-start gap-2 lg:justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setWarrantyEditOpen(true)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                      title="Edit warranty details and notes"
-                    >
-                      Warranty
-                    </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setWarrantyModalOpen(true)}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                      title="Create printable report"
-                    >
-                      Create report
-                    </button>
-
-                    <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/35 px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ring-1 ring-white/10">
-                      <span>Status</span>
-                      <span
-                        className={`rounded-lg px-2 text-[10px] py-0.5 ${statusClasses(
-                          job.status as JobStatus
-                        )}`}
-                      >
-                        {job.status}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.header>
           <motion.div
             key={resolvedJobId}
             className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
@@ -4028,7 +4041,7 @@ export default function JobDetailPage({
 function Stat({ label, cents }: { label: string; cents: number }) {
   return (
     <motion.div
-      className="rounded-xl shadow-md bg-[var(--color-surface)]/35 p-3"
+      className="rounded-xl shadow-md bg-[var(--color-surface)]/35 p-5"
       variants={item}
     >
       <div className="text-xs text-[var(--color-muted)]">{label}</div>
