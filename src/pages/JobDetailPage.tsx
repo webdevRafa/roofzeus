@@ -1570,7 +1570,7 @@ export default function JobDetailPage({
   return (
     <>
       <div className="w-full relative">
-        <h1 className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight  bg-[var(--color-background)] sticky top-18 text-center z-90 py-1">
+        <h1 className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight  bg-[var(--color-background)] sticky top-18 text-center z-50 py-1">
           {job.address?.fullLine}
         </h1>
         <div className="py-3">
@@ -2230,24 +2230,131 @@ export default function JobDetailPage({
                     )}
 
                     {activeSection === "Activity" && (
-                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
-                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
-                          Activity
-                        </h4>
-                        <p className="mt-2 text-sm text-[var(--color-muted)]">
-                          Put your Activity content here.
-                        </p>
+                      <section className=" p-5">
+                        {/* LATEST ACTIVITY SECTION */}
+                        <section className="">
+                          <div className="max-h-64 overflow-y-auto pr-1">
+                            {!activityItems.length ? (
+                              <div className="rounded-xl bg-[var(--color-surface)]/25 p-4 text-sm text-[var(--color-muted)]">
+                                No recent activity for this job yet.
+                              </div>
+                            ) : (
+                              <ul className="space-y-2">
+                                {activityItems.map((a) => (
+                                  <li
+                                    key={a.id}
+                                    className=" bg-[var(--color-card)] p-3  transition"
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex min-w-0 items-start gap-3">
+                                        {a.kind === "photo" && a.photoUrl ? (
+                                          <img
+                                            src={a.photoUrl}
+                                            alt={a.photoCaption ?? "Job photo"}
+                                            className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
+                                            loading="lazy"
+                                          />
+                                        ) : null}
+
+                                        <div className="min-w-0">
+                                          <div className="text-sm font-semibold text-[var(--color-text)]">
+                                            {a.title}
+                                          </div>
+
+                                          {a.detail ? (
+                                            <div className="mt-1 text-xs text-[var(--color-muted)] whitespace-pre-wrap break-words">
+                                              {a.detail}
+                                            </div>
+                                          ) : null}
+                                        </div>
+                                      </div>
+
+                                      <div className="shrink-0 text-xs text-[var(--color-muted)]">
+                                        {a.at.toLocaleString()}
+                                      </div>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </section>
                       </section>
                     )}
 
                     {activeSection === "Payouts" && (
-                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
-                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
-                          Payouts
-                        </h4>
-                        <p className="mt-2 text-sm text-[var(--color-muted)]">
-                          Put your Payouts content here.
-                        </p>
+                      <section className=" p-5">
+                        {/* Payouts */}
+                        <MotionCard
+                          title=""
+                          delay={0.1}
+                          right={
+                            <button
+                              type="button"
+                              onClick={() => setPayoutModalOpen(true)}
+                              className="inline-flex h-9 w-9 items-center justify-center   text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                              title="Add payout"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          }
+                        >
+                          {/* Existing list */}
+                          <div
+                            className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}
+                          >
+                            <ul className="">
+                              {(job?.expenses?.payouts ?? []).map((p) => (
+                                <motion.li
+                                  key={p.id}
+                                  className="mb-2 flex items-center justify-between bg-[var(--color-card)] p-3  transition"
+                                  variants={item}
+                                >
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <span className="text-sm font-semibold text-[var(--color-text)]">
+                                      {p.payeeNickname}
+                                    </span>
+                                    {typeof p.sqft === "number" &&
+                                      typeof p.ratePerSqFt === "number" && (
+                                        <div className="text-[11px] text-[var(--color-muted)]">
+                                          {p.sqft.toLocaleString()} sq @ $
+                                          {p.ratePerSqFt}
+                                          /sq.ft
+                                        </div>
+                                      )}
+                                    {p.category && (
+                                      <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--color-text)]">
+                                        {p.category}
+                                      </span>
+                                    )}
+                                    <span className="ml-2 text-xs text-[var(--color-muted)]">
+                                      {p.paidAt ? fmtDate(p.paidAt) : ""}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-3">
+                                    <CountMoney
+                                      cents={p.amountCents}
+                                      className="text-sm text-[var(--color-text)]"
+                                    />
+                                    <button
+                                      onClick={() => removePayout(p.id)}
+                                      className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                                      title="Delete"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </motion.li>
+                              ))}
+                              {(job?.expenses?.payouts ?? []).length === 0 && (
+                                <li className="p-3 text-sm text-[var(--color-muted)]">
+                                  No payouts yet.
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        </MotionCard>
                       </section>
                     )}
 
@@ -2294,106 +2401,6 @@ export default function JobDetailPage({
             className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
             {...fadeUp(0)}
           >
-            {/* Stat row + profit bar */}
-            <motion.div
-              className="rounded-2xl bg-[var(--color-surface)]/35 backdrop-blur-md p-4 shadow-sm ring-1 ring-white/10"
-              {...fadeUp(0.05)}
-            >
-              <div className="grid gap-4 sm:grid-cols-4 ">
-                <Stat label="Payouts" cents={totals.payouts} />
-                <Stat label="Materials" cents={totals.materials} />
-                <Stat label="All Expenses" cents={totals.expenses} />
-                <div
-                  className={
-                    "rounded-xl " +
-                    (totals.net >= 0
-                      ? "shadow-[0_12px_10px_-8px_rgba(16,185,129,0.8)]"
-                      : "shadow-[0_12px_10px_-8px_rgba(220,38,38,0.8)]")
-                  }
-                >
-                  <Stat label="Profit" cents={totals.net} />
-                </div>
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-xs text-[var(--color-muted)]">
-                  <span>Expenses</span>
-                  <span>
-                    <CountMoney cents={totals.expenses} /> /{" "}
-                    <CountMoney cents={totals.earnings} />
-                  </span>
-                </div>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/10">
-                  <motion.div
-                    className="h-full bg-[var(--color-primary)]/40"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${totals.expensePortion * 100}%` }}
-                    transition={{ duration: 0.6, ease: EASE }}
-                    aria-label="Expense portion of earnings"
-                  />
-                </div>
-              </div>
-            </motion.div>
-
-            {/* LATEST ACTIVITY SECTION */}
-            <section className="mt-6 rounded-2xl bg-[var(--color-surface)]/20 p-6 shadow">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[var(--color-text)]">
-                  Latest activity
-                </h2>
-                <span className="text-xs text-[var(--color-muted)]">
-                  {activityItems.length
-                    ? `${activityItems.length} updates`
-                    : "No updates yet"}
-                </span>
-              </div>
-
-              <div className="max-h-64 overflow-y-auto pr-1">
-                {!activityItems.length ? (
-                  <div className="rounded-xl bg-[var(--color-surface)]/25 p-4 text-sm text-[var(--color-muted)]">
-                    No recent activity for this job yet.
-                  </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {activityItems.map((a) => (
-                      <li
-                        key={a.id}
-                        className="rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-3">
-                            {a.kind === "photo" && a.photoUrl ? (
-                              <img
-                                src={a.photoUrl}
-                                alt={a.photoCaption ?? "Job photo"}
-                                className="h-12 w-12 shrink-0 rounded-lg object-cover ring-1 ring-white/10"
-                                loading="lazy"
-                              />
-                            ) : null}
-
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold text-[var(--color-text)]">
-                                {a.title}
-                              </div>
-
-                              {a.detail ? (
-                                <div className="mt-1 text-xs text-[var(--color-muted)] whitespace-pre-wrap break-words">
-                                  {a.detail}
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-
-                          <div className="shrink-0 text-xs text-[var(--color-muted)]">
-                            {a.at.toLocaleString()}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </section>
-
             {/* Quick edit / add panel */}
 
             {/* GRID CONTAINER FOR 4 SECTIONS */}
@@ -4045,7 +4052,7 @@ function MotionCard({
 }) {
   return (
     <motion.section
-      className="w-full max-w-full justify-self-stretch rounded-2xl bg-[var(--color-surface)]/35 backdrop-blur-md shadow-sm ring-1 ring-white/10 hover:shadow-md transition duration-300 ease-out"
+      className="w-full max-w-full justify-self-stretch   backdrop-blur-md  transition duration-300 ease-out"
       {...fadeUp(delay)}
     >
       <div className="flex items-center justify-between px-4 sm:px-5 pt-4 gap-3">
