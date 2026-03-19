@@ -1570,16 +1570,15 @@ export default function JobDetailPage({
   return (
     <>
       <div className="w-full relative">
+        <h1 className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight  bg-[var(--color-background)] sticky top-18 text-center z-90 py-1">
+          {job.address?.fullLine}
+        </h1>
         <div className="py-3">
           {/* Soft background using latest photo */}
 
           <div className="w-full mx-auto text-center flex flex-col md:flex-row justify-center items-center mb-5 md:mb-0 ">
             <div className="mx-auto mb-0!">
-              <h1 className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight">
-                {job.address?.fullLine}
-              </h1>
-
-              <div className="text-xs sm:text-sm text-[var(--color-muted)]">
+              <div className="text-xs sm:text-sm text-[var(--color-muted)] text-left">
                 Last updated: {lastStr}
               </div>
               {/* Header */}
@@ -1593,7 +1592,7 @@ export default function JobDetailPage({
                       <button
                         type="button"
                         onClick={() => setWarrantyEditOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
                         title="Edit warranty details and notes"
                       >
                         Warranty
@@ -1602,16 +1601,16 @@ export default function JobDetailPage({
                       <button
                         type="button"
                         onClick={() => setWarrantyModalOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/45 hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
                         title="Create printable report"
                       >
                         Create report
                       </button>
 
-                      <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-surface)]/35 px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ring-1 ring-white/10">
+                      <div className="inline-flex items-center gap-2   px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ">
                         <span>Status</span>
                         <span
-                          className={`rounded-lg px-2 text-[10px] py-0.5 ${statusClasses(
+                          className={`px-2 text-[10px] py-0.5 ${statusClasses(
                             job.status as JobStatus
                           )}`}
                         >
@@ -1622,26 +1621,6 @@ export default function JobDetailPage({
                   </div>
                 </div>
               </div>
-
-              <div className="">
-                {isModal ? (
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
-                  >
-                    <X className="text-[var(--color-muted)]" size={22} />
-                    <span>Close</span>
-                  </button>
-                ) : (
-                  <Link
-                    to="/jobs"
-                    className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] group transition mt-3"
-                  >
-                    <span>Back to jobs</span>
-                  </Link>
-                )}
-              </div>
             </div>
           </div>
 
@@ -1650,7 +1629,7 @@ export default function JobDetailPage({
             <div className="grid min-h-0 grid-cols-1 gap-6 xl:h-[calc(100dvh-140px)] xl:grid-cols-[260px_minmax(0,1fr)]">
               {/* LEFT PANEL */}
               <aside className="min-h-0">
-                <div className="xl:sticky xl:top-24 xl:self-start">
+                <div className="xl:sticky xl:top-34 xl:self-start">
                   <div className="overflow-hidden  ">
                     <Link to="/jobs">
                       <div className="flex gap-2 hover:bg-[var(--color-card-hover)] py-3 px-1 ">
