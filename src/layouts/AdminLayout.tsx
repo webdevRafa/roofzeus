@@ -181,7 +181,7 @@ export default function AdminLayout() {
                   <img
                     src={logo}
                     alt="RoofZeus logo"
-                    className="w-[40px] brand-logo"
+                    className="w-[40px] brand-logo mr-6 lg:mr-20"
                   />
                 </button>
                 {/* MOBILE: org row */}
@@ -305,7 +305,7 @@ export default function AdminLayout() {
                 <button
                   onClick={handleLogout}
                   disabled={signingOut}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-white shadow-[0_10px_22px_rgba(0,0,0,0.10)] transition hover:bg-red-500 disabled:opacity-60"
+                  className="inline-flex p-2 items-center justify-center rounded-xl bg-red-600/20 border-1 border-red-600/30 text-white  transition hover:bg-red-500/50 cursor-pointer disabled:opacity-60 mr-4 md:mr-0"
                   aria-label="Sign out"
                   title={signingOut ? "Signing out..." : "Sign out"}
                 >

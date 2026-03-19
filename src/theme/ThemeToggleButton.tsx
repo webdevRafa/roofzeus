@@ -10,7 +10,7 @@ export function ThemeToggleButton() {
       type="button"
       onClick={toggleTheme}
       className={[
-        "inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold",
+        "inline-flex items-center gap-2 rounded-xl p-2 text-sm font-semibold",
         "ring-1 ring-[rgb(var(--color-border-rgb)/0.14)]",
         "bg-[rgb(var(--color-surface-rgb)/0.45)] hover:bg-[rgb(var(--color-surface-rgb)/0.65)]",
         "text-[rgb(var(--color-text-rgb)/0.90)]",
