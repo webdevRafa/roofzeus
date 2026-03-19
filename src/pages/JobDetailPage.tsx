@@ -23,6 +23,7 @@ import {
 import {
   X,
   ChevronLeft,
+  Undo,
   ChevronRight,
   Camera,
   Image as ImageIcon,
@@ -1574,7 +1575,7 @@ export default function JobDetailPage({
 
           <div className="w-full mx-auto text-center flex flex-col md:flex-row justify-center items-center mb-5 md:mb-0 ">
             <div className="mx-auto mb-0!">
-              <h1 className="mt-2 text-2xl sm:text-3xl font-bold uppercase text-[var(--color-logo)] leading-tight">
+              <h1 className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight">
                 {job.address?.fullLine}
               </h1>
 
@@ -1637,10 +1638,6 @@ export default function JobDetailPage({
                     to="/jobs"
                     className="inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)] group transition mt-3"
                   >
-                    <ChevronLeft
-                      className="text-[var(--color-muted)] group-hover:text-white"
-                      size={15}
-                    />
                     <span>Back to jobs</span>
                   </Link>
                 )}
@@ -1654,7 +1651,13 @@ export default function JobDetailPage({
               {/* LEFT PANEL */}
               <aside className="min-h-0">
                 <div className="xl:sticky xl:top-24 xl:self-start">
-                  <div className="overflow-hidden rounded-2xl   ">
+                  <div className="overflow-hidden  ">
+                    <Link to="/jobs">
+                      <div className="flex gap-2 hover:bg-[var(--color-card-hover)] py-3 px-1 ">
+                        <Undo />
+                        <h1>Back to jobs</h1>
+                      </div>
+                    </Link>
                     <nav className="flex flex-col p-2">
                       {sections.map((item) => {
                         const isActive = activeSection === item;
@@ -1665,10 +1668,10 @@ export default function JobDetailPage({
                             type="button"
                             onClick={() => setActiveSection(item)}
                             className={[
-                              "flex items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium transition",
+                              "flex items-center cursor-pointer justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium transition",
                               isActive
                                 ? "bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-sm"
-                                : "text-[var(--color-text)]/75 hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]",
+                                : "text-[var(--color-text)]/50 hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]",
                             ].join(" ")}
                           >
                             <span>{item}</span>
