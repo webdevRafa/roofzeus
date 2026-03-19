@@ -1654,7 +1654,7 @@ export default function JobDetailPage({
               {/* LEFT PANEL */}
               <aside className="min-h-0">
                 <div className="xl:sticky xl:top-24 xl:self-start">
-                  <div className="overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/20 shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur-md">
+                  <div className="overflow-hidden rounded-2xl   ">
                     <nav className="flex flex-col p-2">
                       {sections.map((item) => {
                         const isActive = activeSection === item;
@@ -1699,13 +1699,13 @@ export default function JobDetailPage({
                         <div className="w-full rounded-2xl  p-3 sm:p-4">
                           <div className="grid gap-5 md:grid-cols-3">
                             {/* DRY IN */}
-                            <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
+                            <div className="bg-[var(--color-card)]  p-6 shadow-md">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
                                     Dry in
                                   </div>
-                                  <div className="mt-1 text-[12px] text-[var(--color-text)]">
+                                  <div className="mt-1 text-sm md:text-lg text-[var(--color-text)]/80">
                                     {feltCompletedMs
                                       ? `Completed ${new Date(
                                           feltCompletedMs
@@ -1719,19 +1719,19 @@ export default function JobDetailPage({
                                 </div>
 
                                 {feltCompletedMs ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
+                                  <span className="inline-flex items-center gap-1  bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
                                     <CheckCircle2 size={14} />
                                     Done
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                                  <span className="inline-flex items-center gap-1   px-2 py-1 text-sm font-semibold text-[var(--color-pending)] bg-[var(--bg-pending)]">
                                     <Clock size={14} />
                                     Pending
                                   </span>
                                 )}
                               </div>
 
-                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <div className="mt-7 flex flex-wrap items-center gap-2">
                                 {!feltCompletedMs ? (
                                   <>
                                     <button
@@ -1747,7 +1747,7 @@ export default function JobDetailPage({
                                         setFeltScheduleEditing(true);
                                       }}
                                       className={
-                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        "px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
                                         (jobIsLocked
                                           ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
                                           : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
@@ -1766,10 +1766,10 @@ export default function JobDetailPage({
                                         setConfirmFeltDoneOpen(true);
                                       }}
                                       className={
-                                        "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
+                                        "px-2.5 py-1 text-xs font-semibold cursor-pointer transition " +
                                         (jobIsLocked
-                                          ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                          : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
+                                          ? "text-[var(--color-text)] cursor-not-allowed "
+                                          : "bg-[var(--color-mark-done)] border-[var(--color-mark-done)] border-1 text-[var(--color-text)]")
                                       }
                                     >
                                       Mark done
@@ -1798,13 +1798,13 @@ export default function JobDetailPage({
                             </div>
 
                             {/* Shingles */}
-                            <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
+                            <div className="bg-[var(--color-card)] p-6">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
                                     Shingles
                                   </div>
-                                  <div className="mt-1 text-[12px] text-[var(--color-text)]">
+                                  <div className="mt-1 text-sm md:text-lg text-[var(--color-text)]/80">
                                     {shinglesCompletedMs
                                       ? `Completed ${new Date(
                                           shinglesCompletedMs
@@ -1823,14 +1823,14 @@ export default function JobDetailPage({
                                     Done
                                   </span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-semibold text-yellow-200 ring-1 ring-yellow-500/30">
+                                  <span className="inline-flex items-center gap-1  px-2 py-0.5 text-sm font-semibold text-[var(--color-pending)] bg-[var(--bg-pending)]">
                                     <Clock size={14} />
                                     Pending
                                   </span>
                                 )}
                               </div>
 
-                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <div className="mt-7 flex flex-wrap items-center gap-2">
                                 {!shinglesCompletedMs ? (
                                   <>
                                     <button
@@ -1848,7 +1848,7 @@ export default function JobDetailPage({
                                         setShinglesScheduleEditing(true);
                                       }}
                                       className={
-                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        "px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
                                         (jobIsLocked
                                           ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
                                           : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
@@ -1872,10 +1872,10 @@ export default function JobDetailPage({
                                         setConfirmShinglesDoneOpen(true);
                                       }}
                                       className={
-                                        "rounded-lg px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition ring-1 " +
+                                        "px-2.5 py-1 text-[11px] font-semibold cursor-pointer transition " +
                                         (!canMarkShinglesDone
-                                          ? "bg-white/10 text-white/40 cursor-not-allowed opacity-70 ring-white/10"
-                                          : "bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 hover:bg-emerald-900/80")
+                                          ? "text-[var(--color-text)] cursor-not-allowed ring-1   ring-white/10 hover:bg-[var(--color-card-hover)] "
+                                          : "bg-[var(--color-mark-done)] border-[var(--color-mark-done)] text-[var(--color-text)]")
                                       }
                                     >
                                       Mark done
@@ -1916,13 +1916,13 @@ export default function JobDetailPage({
                             </div>
 
                             {/* Punch */}
-                            <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3">
+                            <div className="bg-[var(--color-card)]  p-6">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
                                     Punch
                                   </div>
-                                  <div className="mt-1 text-[12px] text-[var(--color-text)]">
+                                  <div className="mt-1 text-sm md:text-lg text-[var(--color-text)]/80">
                                     {punchedAtLabel
                                       ? `Punched on ${punchedAtLabel}`
                                       : punchScheduledLabel
@@ -1944,7 +1944,7 @@ export default function JobDetailPage({
                                 )}
                               </div>
 
-                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <div className="mt-7 flex flex-wrap items-center gap-2">
                                 {punchedAtLabel ? (
                                   <button
                                     type="button"
@@ -1956,7 +1956,7 @@ export default function JobDetailPage({
                                       setConfirmUndoPunchOpen(true)
                                     }
                                     className={
-                                      "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                      "px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
                                       (job.status === "closed" ||
                                       job.status === "archived"
                                         ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
@@ -1980,10 +1980,10 @@ export default function JobDetailPage({
                                         setSchedulePunchDate(toYMD(base));
                                       }}
                                       className={
-                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        "px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
                                         (!canSchedulePunch
                                           ? "bg-white/10 text-white/40 cursor-not-allowed opacity-60 ring-white/10"
-                                          : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                          : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10 cursor-pointer")
                                       }
                                     >
                                       {job.punchScheduledFor
@@ -1997,7 +1997,7 @@ export default function JobDetailPage({
                                         onClick={() =>
                                           setConfirmPunchedOpen(true)
                                         }
-                                        className="rounded-lg bg-emerald-900/40 text-emerald-100 ring-1 ring-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold   transition "
+                                        className=" bg-[var(--color-mark-done)] text-[var(--color-text)] px-2.5 py-1 text-[11px] font-semibold cursor-pointer   transition "
                                       >
                                         Mark punched
                                       </button>
@@ -3161,8 +3161,8 @@ export default function JobDetailPage({
 
             {/* ===== Confirm Felt Completed Modal ===== */}
             {confirmFeltDoneOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
+                <div className="w-full max-w-sm  bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20 ">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
                       Mark <strong className="font-semibold">DRY IN</strong> as
@@ -3186,7 +3186,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setConfirmFeltDoneOpen(false)}
-                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className=" cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
@@ -3202,7 +3202,7 @@ export default function JobDetailPage({
                             "DRY IN has been marked as completed for this job.",
                         });
                       }}
-                      className="rounded-sm bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600 cursor-pointer"
+                      className=" bg-[var(--color-mark-done)] px-3 py-1.5 text-xs font-semibold text-white  cursor-pointer"
                     >
                       Yes, mark{" "}
                       <strong className="font-semibold">DRY IN</strong> done
@@ -3214,8 +3214,8 @@ export default function JobDetailPage({
 
             {/* ===== Confirm Shingles Completed Modal ===== */}
             {confirmShinglesDoneOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
                       Mark <strong className="font-semibold">SHINGLES</strong>{" "}
@@ -3256,7 +3256,7 @@ export default function JobDetailPage({
                             "Shingles have been marked as completed for this job.",
                         });
                       }}
-                      className="rounded-sm cursor-pointer bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                      className="bg-[var(--color-mark-done)] px-3 py-1.5 text-xs font-semibold text-white  cursor-pointer"
                     >
                       Yes, mark{" "}
                       <strong className="font-semibold">SHINGLES</strong> done

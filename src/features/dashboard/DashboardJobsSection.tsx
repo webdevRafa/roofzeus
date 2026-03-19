@@ -117,7 +117,7 @@ function statusClasses(status: JobStatus) {
     case "active":
       return "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]";
     case "pending":
-      return "border-[rgb(var(--pill-warning-rgb)/0.35)] bg-[rgb(var(--pill-warning-rgb)/0.14)] text-[rgb(var(--pill-warning-rgb))]";
+      return "border-none  text-[rgb(var(--pill-warning-rgb))]";
     case "invoiced":
       return "border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)]";
 

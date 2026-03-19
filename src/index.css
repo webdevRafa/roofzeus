@@ -103,22 +103,25 @@ body {
   --pill-danger-rgb: 254 202 202;  /* red-200 */
 
      /* Base */
-     --color-background: #0f1625;
+     --color-background: #0c1527;
+     --color-primary-text: #0c1527;
      --color-section: #0b0e14;
      --color-fixed-background: #0b0e14;
      --color-surface: #121826;          /* elevated canvas */
-     --color-card: #141e36;             /* primary card */
-     --color-card-hover: #242b39;
+     --color-card: #101d35;             /* primary card */
+     --color-card-hover: #131f3d;
      --color-border: rgba(255,255,255,0.10);
      --color-blue: #0a90f0;
      --color-cta: #0a90f0;
-   
+      --color-mark-done: #104902;
      /* Text */
      --color-text: #eef2f7;
      --color-muted: rgba(238,242,247,0.70);
    
      /* Accents (keep your brand feel) */
      --color-primary: #cfae5d;          /* “gold” accent used across UI */
+     --color-pending: #f3dd5f;
+     --bg-pending: #101d35;
      --color-danger: #ef4444;
      --color-success: #22c55e;
    
@@ -151,8 +154,10 @@ body {
   --pill-danger-rgb: 220 38 38;    /* red-600 */
   
      /* Base */
-     --color-background: #f9fafc;
+     --color-background: #f5f7fc;
      --color-fixed-background: #0b0e14;
+     --color-primary-text: #ffffff;
+     --bg-pending: #feffbf;
      --color-surface: #ffffff;
      --color-card: #ffffff;
      --color-card-hover: #f3f4f6;
@@ -160,7 +165,7 @@ body {
      --color-blue: #0a90f0;
      --color-cta: #ffffff;
      --color-section: #ffffff;
-   
+     --color-mark-done: #79f083;
      /* Text */
      --color-text: #0f172a;
      --color-muted: rgba(15,23,42,0.65);
@@ -169,7 +174,7 @@ body {
      --color-primary: #9a7b2e;          /* slightly deeper gold for contrast on white */
      --color-danger: #dc2626;
      --color-success: #16a34a;
-   
+    --color-pending: #0f172a;
      /* RGB helpers */
      --color-background-rgb: 246 247 251;
      --color-surface-rgb: 255 255 255;
