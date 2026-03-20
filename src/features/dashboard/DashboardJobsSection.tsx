@@ -287,7 +287,7 @@ export function DashboardJobsSection({
 }: DashboardJobsSectionProps) {
   return (
     <>
-      <section className=" hover:shadow-md overflow-hidden bg-[var(--color-card)] mt-5">
+      <section className=" hover:shadow-md overflow-hidden  mt-5">
         {/* Header */}
         <motion.header
           className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-1.5 relative z-50"
@@ -913,7 +913,7 @@ export function DashboardJobsSection({
 
                       {/* Sticky pagination footer */}
                       {filteredJobs.length > 0 && (
-                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-card)] px-4 py-2 backdrop-blur text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-card)] px-4 py-2  text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                           <span>
                             Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                             {Math.min(
@@ -963,10 +963,10 @@ export function DashboardJobsSection({
                 className="xl:col-span-3 min-w-0 w-full xl:justify-self-end"
               >
                 <div className="bg-var(--color-background)] p-4">
-                  <div className="text-[11px] uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
+                  <div className="text-sm md:text-lg uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
                     Total net
                   </div>
-                  <div className="mt-1 text-2xl font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+                  <div className="mt-1 text-2xl font-semibold text-[var(--color-text)]">
                     <CountMoney cents={totalNet} />
                   </div>
                   <div className="mt-1 text-[12px] text-[var(--color-accent-gold)]/70">
@@ -975,23 +975,23 @@ export function DashboardJobsSection({
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-3">
-                      <div className="text-[11px] uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
+                    <div className="p-3 text-sm md:text-md">
+                      <div className=" uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
                         Showing
                       </div>
-                      <div className="mt-1 text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+                      <div className="mt-1  font-semibold text-[var(--color-text)]">
                         {pagedJobs.length}
                       </div>
-                      <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
+                      <div className="mt-1 text-[var(--color-text)] text-xs">
                         On this page
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-3">
-                      <div className="text-[11px] uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
+                    <div className="text-sm md:text-md p-3">
+                      <div className="uppercase tracking-wider text-[var(--color-text)]">
                         Filter
                       </div>
-                      <div className="mt-1 text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+                      <div className="mt-1 text-xs font-semibold text-[var(--color-text)]">
                         {statusFilter === "all" ? "All" : statusFilter}
                       </div>
                     </div>

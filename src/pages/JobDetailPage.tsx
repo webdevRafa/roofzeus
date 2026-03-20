@@ -2031,14 +2031,14 @@ export default function JobDetailPage({
                                   min={0}
                                   step="1"
                                   placeholder="Sq. ft"
-                                  className="w-24 rounded-xl border border-[var(--color-border)]  px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                  className="w-24  border border-[var(--color-border)]  px-2 py-2 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                                 />
                                 <select
                                   value={rate}
                                   onChange={(e) =>
                                     setRate(Number(e.target.value) as 31 | 35)
                                   }
-                                  className="w-20 rounded-xl border border-[var(--color-border)]  px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                  className="w-20  border border-[var(--color-border)] cursor-pointer px-2 py-2 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                                   title="Pay rate"
                                 >
                                   <option value={31}>$31</option>
@@ -2084,7 +2084,7 @@ export default function JobDetailPage({
                                     void saveJob(updated);
                                     setEditingPricing(false);
                                   }}
-                                  className="ml-2 rounded-xl bg-[var(--color-done)] cursor-pointer transition duration-300 ease-in-out px-3 py-1 text-[var(--color-text)]"
+                                  className="ml-2  bg-[var(--color-done)] cursor-pointer transition duration-300 ease-in-out px-3 py-1 text-[var(--color-text)]"
                                 >
                                   Apply
                                 </button>
@@ -2232,8 +2232,8 @@ export default function JobDetailPage({
                     {activeSection === "Activity" && (
                       <section className=" p-5">
                         {/* LATEST ACTIVITY SECTION */}
-                        <section className="">
-                          <div className="max-h-64 overflow-y-auto pr-1">
+                        <section className="max-w-[700px]">
+                          <div className="max-h-64 overflow-y-auto pr-1 section-scroll lg:section-scroll-lg">
                             {!activityItems.length ? (
                               <div className="rounded-xl bg-[var(--color-surface)]/25 p-4 text-sm text-[var(--color-muted)]">
                                 No recent activity for this job yet.
@@ -2243,7 +2243,7 @@ export default function JobDetailPage({
                                 {activityItems.map((a) => (
                                   <li
                                     key={a.id}
-                                    className=" bg-[var(--color-card)] p-3  transition"
+                                    className="hover:bg-[var(--color-card)] p-3  transition duration-300 ease-in-out"
                                   >
                                     <div className="flex items-start justify-between gap-3">
                                       <div className="flex min-w-0 items-start gap-3">
@@ -2283,50 +2283,51 @@ export default function JobDetailPage({
                     )}
 
                     {activeSection === "Payouts" && (
-                      <section className=" p-5">
-                        {/* Payouts */}
-                        <MotionCard
-                          title=""
-                          delay={0.1}
-                          right={
+                      <section className="">
+                        <MotionCard delay={0.1}>
+                          {/* Left-aligned action */}
+                          <div className="flex items-center justify-start">
                             <button
                               type="button"
                               onClick={() => setPayoutModalOpen(true)}
-                              className="inline-flex h-9 w-9 items-center justify-center   text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                              className="inline-flex items-center gap-2 cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
                               title="Add payout"
                             >
                               <Plus className="h-4 w-4" />
+                              <span>Add Payout</span>
                             </button>
-                          }
-                        >
+                          </div>
+
                           {/* Existing list */}
                           <div
-                            className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}
+                            className={`mt-1 section-scroll lg:section-scroll-lg max-w-[700px]  pr-1`}
                           >
                             <ul className="">
                               {(job?.expenses?.payouts ?? []).map((p) => (
                                 <motion.li
                                   key={p.id}
-                                  className="mb-2 flex items-center justify-between bg-[var(--color-card)] p-3  transition"
+                                  className="mb-3 flex items-center justify-between cursor-pointer hover:bg-[var(--color-card)] p-3 transition duration-300 ease-in-out"
                                   variants={item}
                                 >
                                   <div className="flex min-w-0 items-center gap-2">
                                     <span className="text-sm font-semibold text-[var(--color-text)]">
                                       {p.payeeNickname}
                                     </span>
+
                                     {typeof p.sqft === "number" &&
                                       typeof p.ratePerSqFt === "number" && (
                                         <div className="text-[11px] text-[var(--color-muted)]">
                                           {p.sqft.toLocaleString()} sq @ $
-                                          {p.ratePerSqFt}
-                                          /sq.ft
+                                          {p.ratePerSqFt}/sq.ft
                                         </div>
                                       )}
+
                                     {p.category && (
                                       <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--color-text)]">
                                         {p.category}
                                       </span>
                                     )}
+
                                     <span className="ml-2 text-xs text-[var(--color-muted)]">
                                       {p.paidAt ? fmtDate(p.paidAt) : ""}
                                     </span>
@@ -2339,7 +2340,7 @@ export default function JobDetailPage({
                                     />
                                     <button
                                       onClick={() => removePayout(p.id)}
-                                      className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                                      className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
                                       title="Delete"
                                     >
                                       Delete
@@ -2347,6 +2348,7 @@ export default function JobDetailPage({
                                   </div>
                                 </motion.li>
                               ))}
+
                               {(job?.expenses?.payouts ?? []).length === 0 && (
                                 <li className="p-3 text-sm text-[var(--color-muted)]">
                                   No payouts yet.
@@ -2426,7 +2428,7 @@ export default function JobDetailPage({
                     {(job?.expenses?.payouts ?? []).map((p) => (
                       <motion.li
                         key={p.id}
-                        className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                        className="mb-2 flex items-center justify-between  transition"
                         variants={item}
                       >
                         <div className="flex min-w-0 items-center gap-2">
@@ -4045,7 +4047,7 @@ function MotionCard({
   delay = 0,
   right,
 }: {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   delay?: number;
   right?: React.ReactNode;
