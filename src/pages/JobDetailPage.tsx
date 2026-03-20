@@ -2246,7 +2246,7 @@ export default function JobDetailPage({
                                     className="hover:bg-[var(--color-card)] p-3  transition duration-300 ease-in-out"
                                   >
                                     <div className="flex items-start justify-between gap-3">
-                                      <div className="flex min-w-0 items-start gap-3">
+                                      <div className="flex min-w-0 items-start gap-3 ">
                                         {a.kind === "photo" && a.photoUrl ? (
                                           <img
                                             src={a.photoUrl}
@@ -2309,7 +2309,7 @@ export default function JobDetailPage({
                                   className="mb-3 flex items-center justify-between cursor-pointer hover:bg-[var(--color-card)] p-3 transition duration-300 ease-in-out"
                                   variants={item}
                                 >
-                                  <div className="flex min-w-0 items-center gap-2">
+                                  <div className="flex min-w-0 items-center gap-6">
                                     <span className="text-sm font-semibold text-[var(--color-text)]">
                                       {p.payeeNickname}
                                     </span>
@@ -2333,7 +2333,7 @@ export default function JobDetailPage({
                                     </span>
                                   </div>
 
-                                  <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-3 lg:gap-6">
                                     <CountMoney
                                       cents={p.amountCents}
                                       className="text-sm text-[var(--color-text)]"
