@@ -387,7 +387,7 @@ export default function JobDetailPage({
 
   const UI = {
     input:
-      "h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 text-sm text-[var(--color-text)] outline-none " +
+      "h-10 w-full min-w-0  border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 text-sm text-[var(--color-text)] outline-none " +
       "focus:ring-2 focus:ring-[var(--color-accent)] shadow-sm",
     textarea:
       "w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-4 py-3 text-sm leading-6 " +
@@ -395,8 +395,8 @@ export default function JobDetailPage({
       "placeholder:text-[var(--color-muted)] resize-none",
 
     select:
-      "h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 text-sm text-[var(--color-text)] outline-none " +
-      "focus:ring-2 focus:ring-[var(--color-accent)] shadow-sm",
+      "h-11 w-full min-w-0  border border-[var(--color-border)] bg-[var(--color-card)] px-3 pr-10 text-sm text-[var(--color-text)] outline-none shadow-sm transition " +
+      "hover:bg-[var(--color-card-hover)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] appearance-none cursor-pointer",
     btnPrimary:
       "h-8 inline-flex items-center justify-center rounded-md bg-[var(--btn-bg)] px-2 text-xs font-medium " +
       "text-[var(--btn-text)] shadow-sm hover:bg-[var(--btn-hover-bg)] transition disabled:opacity-60 disabled:cursor-not-allowed",
@@ -2215,26 +2215,24 @@ export default function JobDetailPage({
 
                                   setEditingPricing(true);
                                 }}
-                                className="group w-full sm:min-w-[360px]   px-4 py-3 md:py-10 text-left transition bg-[var(--color-card)]"
+                                className="group w-full sm:min-w-[360px]   px-4 py-3 md:py-10 text-left transition "
                                 title="Edit pricing"
                               >
-                                <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-end justify-between gap-3">
                                   <div className="min-w-0">
                                     <div className="mt-0.5 truncate text-sm md:text-lg font-medium text-[var(--color-text)]">
                                       {Number(
                                         displaySqft || 0
                                       ).toLocaleString()}{" "}
                                       sq @ ${displayRate}
-                                      /sq.ft{" "}
-                                      <span className="opacity-70">
-                                        • + $35
-                                      </span>
+                                      /sq{" "}
+                                      <span className="opacity-70">+ $35</span>
                                     </div>
                                   </div>
 
                                   <div className="flex items-center gap-2">
                                     <div className="text-right">
-                                      <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+                                      <div className="text-xs md:text-md mb-2 uppercase tracking-wide text-[var(--color-muted)]">
                                         Total
                                       </div>
                                       <div className="text-xl font-semibold text-[var(--color-text)] leading-none">
@@ -2274,7 +2272,7 @@ export default function JobDetailPage({
                                       )}
                                     </div>
 
-                                    <span className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/30 text-[var(--color-muted)] shadow-sm transition group-hover:bg-[var(--color-surface)]/35">
+                                    <span className="ml-1 inline-flex cursor-pointer h-9 w-9 items-center justify-center   bg-[var(--color-surface)]/30 text-[var(--color-muted)] hover:text-white  transition group-hover:bg-[var(--color-surface)]/35">
                                       <Pencil className="h-4 w-4" />
                                     </span>
                                   </div>
@@ -2401,7 +2399,7 @@ export default function JobDetailPage({
                               {(job?.expenses?.payouts ?? []).map((p) => (
                                 <motion.li
                                   key={p.id}
-                                  className="mb-3 flex items-center justify-between cursor-pointer hover:bg-[var(--color-card)] p-3 transition duration-300 ease-in-out"
+                                  className="mb-3 flex items-center justify-between cursor-pointer bg-[var(--color-card)] p-3 transition duration-300 ease-in-out"
                                   variants={item}
                                 >
                                   <div className="flex min-w-0 items-center gap-6">
@@ -3430,24 +3428,22 @@ export default function JobDetailPage({
               onClose={() => setPayoutModalOpen(false)}
             >
               {/* Tabs */}
-              <div className="mb-3 inline-flex max-w-full flex-wrap rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-1 text-xs">
-                {(["shingles", "felt", "technician"] as PayoutTab[]).map(
-                  (t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setPayoutTab(t)}
-                      className={
-                        "px-3 py-1 rounded-md capitalize " +
-                        (payoutTab === t
-                          ? "bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition duration-300 ease-in-out text-[var(--btn-text)]"
-                          : "text-[var(--color-text)] hover:bg-[var(--color-card-hover)]")
-                      }
-                    >
-                      {t}
-                    </button>
-                  )
-                )}
+              <div className="mb-3 inline-flex max-w-full flex-wrap  p-1 text-sm">
+                {(["shingles", "felt"] as PayoutTab[]).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setPayoutTab(t)}
+                    className={
+                      "px-3 py-1 capitalize " +
+                      (payoutTab === t
+                        ? " transition duration-300 ease-in-out text-[var(--btn-text)] border-b-1 border-b-[var(--color-muted)]/20"
+                        : "text-[var(--color-muted)]/60 hover:text-[var(--color-text)]")
+                    }
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
 
               <form
@@ -3537,8 +3533,7 @@ export default function JobDetailPage({
                   type="submit"
                   disabled={!payoutCanSubmit}
                   className={[
-                    UI.btnPrimary,
-                    "text-white py-0 text-sm w-full shrink-0",
+                    "text-white py-0 text-sm w-full shrink-0 bg-[var(--color-done)] max-w-[100px] mx-auto cursor-pointer",
                     !payoutCanSubmit ? "opacity-60 cursor-not-allowed" : "",
                   ].join(" ")}
                 >
@@ -3546,15 +3541,15 @@ export default function JobDetailPage({
                 </button>
               </form>
 
-              <div className="mt-2 text-xs text-[var(--color-muted)]">
-                Computed payout ({payoutTab}):{" "}
+              <div className="mt-5  text-[var(--color-muted)]">
+                Total {payoutTab} labor:{" "}
                 <span className="font-medium text-[var(--color-text)]">
                   ${(payoutAmountCents / 100).toFixed(2)}
                 </span>
                 {payoutTab !== "technician" ? (
                   <span className="ml-2 opacity-70">
-                    ({activePayout.sqft || 0} sq @ ${activePayout.rate || 0}
-                    /sq.ft)
+                    {activePayout.sqft || 0} sq @ ${activePayout.rate || 0}
+                    /sq
                   </span>
                 ) : null}
               </div>

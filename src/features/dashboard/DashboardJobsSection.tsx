@@ -817,7 +817,7 @@ export function DashboardJobsSection({
                                   idx % 2 === 0
                                     ? "bg-[rgb(var(--color-surface-rgb)/0.35)]"
                                     : "bg-transparent",
-                                  "hover:bg-white/1"
+                                  "hover:bg-[var(--color-card)]/50"
                                 )}
                               >
                                 <td className="px-4 py-3">
@@ -882,7 +882,7 @@ export function DashboardJobsSection({
                                 <td className="px-4 py-3 text-right whitespace-nowrap">
                                   <Link
                                     to={`/job/${job.id}`}
-                                    className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
+                                    className="inline-flex items-center justify-center  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                                   >
                                     View job
                                   </Link>

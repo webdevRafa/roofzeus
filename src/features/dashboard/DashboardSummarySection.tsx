@@ -67,7 +67,6 @@ function KpiCard({
   return (
     <motion.div
       variants={fadeUp}
-      whileHover={{ y: -2, transition: { duration: 0.22, ease } }}
       className=" bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] p-4 hover:shadow-md select-none  "
     >
       <div className="text-[14px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)]">

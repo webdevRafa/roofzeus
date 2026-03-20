@@ -346,28 +346,21 @@ export default function EmployeesPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
               <div className="flex items-center gap-3">
-                <div
-                  className="h-11 w-11 rounded-2xl border flex items-center justify-center"
-                  style={{
-                    borderColor: "var(--color-border)",
-                    backgroundColor: "rgba(31,36,48,0.45)",
-                  }}
-                >
+                <div className="h-11 w-11 flex items-center justify-center">
                   <Users
                     className="h-5 w-5"
                     style={{ color: "rgba(207,174,93,0.95)" }}
                   />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+                  <h1 className="text-sm md:text-lg font-semibold tracking-tight">
                     Members
                   </h1>
                   <p
                     className="mt-1 text-sm"
                     style={{ color: "var(--color-muted)" }}
                   >
-                    Create employees, invite crew, and manage access — scoped
-                    per organization.
+                    Create employees, invite crew, and manage access.
                   </p>
                 </div>
               </div>
@@ -404,18 +397,20 @@ export default function EmployeesPage() {
         {/* Add employee */}
         <motion.section
           variants={fadeUp}
-          className="relative z-30 mb-6 rounded-2xl border p-4 md:p-5  border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md"
+          className="relative z-30 mb-6  p-4 md:p-5  "
         >
-          <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center justify-between gap-3 flex-wrap mt-20">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl border flex items-center justify-center">
+              <div className="h-9 w-9  flex items-center justify-center">
                 <UserPlus
                   className="h-4 w-4"
                   style={{ color: "rgba(207,174,93,0.95)" }}
                 />
               </div>
               <div>
-                <div className="text-sm font-semibold">Add a new member</div>
+                <div className="text-sm font-semibold text-[var(--color-text)]">
+                  Add a new member
+                </div>
                 <div
                   className="text-[12px]"
                   style={{ color: "var(--color-muted)" }}
@@ -423,13 +418,6 @@ export default function EmployeesPage() {
                   Add now, invite later — or invite immediately by email.
                 </div>
               </div>
-            </div>
-
-            <div
-              className="text-[12px]"
-              style={{ color: "rgba(207,174,93,0.75)" }}
-            >
-              Org scoped • crew access by default
             </div>
           </div>
 
@@ -441,12 +429,7 @@ export default function EmployeesPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Jose Martinez"
-                  className="w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.10)",
-                    backgroundColor: "rgba(11,14,20,0.55)",
-                    color: "var(--color-text)",
-                  }}
+                  className={`w-full bg-[var(--color-card)]  px-3 py-2.5 text-sm outline-none focus:ring-2`}
                 />
               </div>
             </div>
@@ -464,12 +447,7 @@ export default function EmployeesPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="for invites"
-                  className="w-full rounded-xl border pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.10)",
-                    backgroundColor: "rgba(11,14,20,0.55)",
-                    color: "var(--color-text)",
-                  }}
+                  className="w-full bg-[var(--color-card)] pl-9 pr-3 py-2.5 text-sm outline-none focus:ring-2"
                 />
               </div>
             </div>
@@ -549,22 +527,15 @@ export default function EmployeesPage() {
         {/* List */}
         <motion.section
           variants={fadeUp}
-          className="relative z-0 rounded-2xl border  border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md overflow-hidden"
+          className="relative z-0    hover:shadow-md overflow-hidden"
         >
-          <div className="px-5 py-4 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div className="px-5 py-4 border-b border-b-[var(--color-text)]/20 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>
               <h2 className="text-lg font-semibold">All members</h2>
-              <p className="text-sm" style={{ color: "var(--color-muted)" }}>
+              <p className="text-sm text-[var(--color-text)]/70">
                 Active employees can be selected on jobs. Inactive stay for
                 history only.
               </p>
-            </div>
-
-            <div
-              className="text-[12px]"
-              style={{ color: "rgba(207,174,93,0.75)" }}
-            >
-              Tip: Click a row to view/edit
             </div>
           </div>
 
@@ -615,17 +586,9 @@ export default function EmployeesPage() {
                         }
                       }}
                       className={cx(
-                        "group rounded-2xl border p-4 cursor-pointer transition",
+                        "group  p-4 cursor-pointer transition bg-[var(--color-card)] mb-3",
                         "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                       )}
-                      style={{
-                        borderColor: "rgba(255,255,255,0.10)",
-                        backgroundColor: "rgba(11,14,20,0.45)",
-                      }}
-                      whileHover={{
-                        y: -2,
-                        transition: { duration: 0.22, ease },
-                      }}
                     >
                       <div className="flex items-start justify-between gap-4">
                         {/* Left */}
@@ -840,10 +803,8 @@ function KpiChip({
 
   return (
     <div
-      className="inline-flex items-center gap-2 rounded-full border px-3 py-1"
+      className="inline-flex items-center gap-2  px-3 py-1"
       style={{
-        backgroundColor: palette.bg,
-        borderColor: palette.br,
         color: palette.tx,
       }}
     >
@@ -1048,15 +1009,7 @@ function RoleMenu({
         type="button"
         onClick={() => setOpen((s) => !s)}
         whileTap={{ scale: 0.98 }}
-        className="group w-full inline-flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold outline-none transition"
-        style={{
-          borderColor: open
-            ? "rgba(207,174,93,0.55)"
-            : "rgba(255,255,255,0.10)",
-          backgroundColor: "rgba(11,14,20,0.55)",
-          color: "rgba(245,246,248,0.92)",
-          boxShadow: open ? "0 0 0 3px rgba(207,174,93,0.18)" : "none",
-        }}
+        className="group w-full inline-flex items-center justify-between gap-2  focus:ring-1  px-3 py-2.5 text-sm font-semibold outline-none transition bg-[var(--color-card)]"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -1086,11 +1039,7 @@ function RoleMenu({
             animate={{ opacity: 1, y: 10, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: 8, scale: 0.985, filter: "blur(6px)" }}
             transition={{ duration: 0.18, ease }}
-            className="absolute left-0 right-0 z-[210] mt-2 overflow-hidden rounded-2xl border shadow-[0_22px_60px_rgba(0,0,0,0.65)] pointer-events-auto"
-            style={{
-              borderColor: "rgba(58,63,75,0.9)",
-              backgroundColor: "rgba(11,14,20,0.92)",
-            }}
+            className="absolute left-0 right-0 z-[210] mt-2 overflow-hidden  pointer-events-auto bg-[var(--color-card)]"
             role="menu"
           >
             <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-white/45">
@@ -1108,12 +1057,9 @@ function RoleMenu({
                       onChange(opt.value);
                       setOpen(false);
                     }}
-                    className="w-full px-3 py-2 text-left transition"
-                    style={{
-                      backgroundColor: selected
-                        ? "rgba(207,174,93,0.14)"
-                        : "transparent",
-                    }}
+                    className={`w-full px-3 py-2 text-left transition hover:bg-[var(--color-card-hover)] ${
+                      selected ? "bg-[var(--color-primary)]/10" : "transparent"
+                    }`}
                     role="menuitem"
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -1150,13 +1096,6 @@ function RoleMenu({
                   </button>
                 );
               })}
-            </div>
-
-            <div
-              className="border-t px-3 py-2 text-[11px] text-white/45"
-              style={{ borderColor: "rgba(58,63,75,0.65)" }}
-            >
-              Tip: Roles can later control permissions throughout the app.
             </div>
           </motion.div>
         )}
