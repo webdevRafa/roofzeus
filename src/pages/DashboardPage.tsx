@@ -89,7 +89,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="lg:col-span-12 xl:col-span-7">
+          <div className="lg:col-span-12 xl:col-span-7 hidden">
             <DashboardPayoutsSection
               payoutsOpen={payoutsOpen}
               setPayoutsOpen={setPayoutsOpen}
@@ -116,7 +116,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          <div className="lg:col-span-12 xl:col-span-5">
+          <div className="lg:col-span-12 xl:col-span-5 hidden">
             <DashboardFinancialOverviewSection jobs={jobs} payouts={payouts} />
           </div>
         </motion.div>

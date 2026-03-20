@@ -108,7 +108,7 @@ export default function DashboardSummarySection({
          * columns on medium, and up to six on extra‑large screens.  Feel free
          * to tweak these breakpoints to better fit your design.
          */
-        className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-2 max-w-4xl mx-auto"
       >
         <KpiCard
           label="Jobs Pending Completion"

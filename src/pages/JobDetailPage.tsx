@@ -267,6 +267,15 @@ export default function JobDetailPage({
     "Photos",
   ];
 
+  const [editPayoutModalOpen, setEditPayoutModalOpen] = useState(false);
+  const [editingPayoutId, setEditingPayoutId] = useState<string | null>(null);
+
+  const [editPayoutCategory, setEditPayoutCategory] = useState<
+    "shingles" | "felt"
+  >("shingles");
+  const [editPayoutSqft, setEditPayoutSqft] = useState("");
+  const [editPayoutRate, setEditPayoutRate] = useState("");
+
   const [activeSection, setActiveSection] =
     useState<(typeof sections)[number]>("Schedule");
 
@@ -399,6 +408,16 @@ export default function JobDetailPage({
       "hover:bg-[var(--color-card-hover)]",
   } as const;
 
+  function openEditPayoutModal(p: Payout) {
+    setEditingPayoutId(p.id);
+    setEditPayoutCategory(p.category === "felt" ? "felt" : "shingles");
+    setEditPayoutSqft(typeof p.sqft === "number" ? String(p.sqft) : "");
+    setEditPayoutRate(
+      typeof p.ratePerSqFt === "number" ? String(p.ratePerSqFt) : ""
+    );
+    setEditPayoutModalOpen(true);
+  }
+
   const LIST_MAX_H = "max-h-[300px]"; // tweak to taste
 
   // Lightbox state
@@ -509,6 +528,74 @@ export default function JobDetailPage({
 
     if (!asDate || Number.isNaN(asDate.getTime())) return deleteField();
     return Timestamp.fromDate(asDate);
+  }
+
+  async function saveEditedPayout() {
+    if (!job || !editingPayoutId) return;
+    if (!payoutsColRef) return;
+
+    const sqft = Number(editPayoutSqft);
+    const rate = Number(editPayoutRate);
+
+    if (!Number.isFinite(sqft) || sqft <= 0) {
+      alert("Please enter a valid sq amount.");
+      return;
+    }
+
+    if (!Number.isFinite(rate) || rate <= 0) {
+      alert("Please enter a valid rate per sq.");
+      return;
+    }
+
+    const nextAmountCents = Math.round(sqft * rate * 100);
+
+    const nextPayouts = (job.expenses?.payouts ?? []).map((p) => {
+      if (p.id !== editingPayoutId) return p;
+
+      return {
+        ...p,
+        category: editPayoutCategory,
+        sqft,
+        ratePerSqFt: rate,
+        amountCents: nextAmountCents,
+      };
+    });
+
+    const updatedJob: Job = {
+      ...job,
+      expenses: {
+        ...(job.expenses ?? {}),
+        payouts: nextPayouts,
+      },
+    };
+
+    await saveJob(updatedJob);
+
+    try {
+      await setDoc(
+        doc(payoutsColRef, editingPayoutId),
+        {
+          category: editPayoutCategory,
+          sqft,
+          ratePerSqFt: rate,
+          amountCents: nextAmountCents,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      console.error("Failed to update mirrored payout doc", e);
+    }
+
+    setEditPayoutModalOpen(false);
+    setEditingPayoutId(null);
+    setEditPayoutSqft("");
+    setEditPayoutRate("");
+    setToast({
+      status: "success",
+      title: "Payout updated",
+      message: "Payout changes were saved successfully.",
+    });
   }
 
   async function saveWarranty(nextWarranty: NonNullable<Job["warranty"]>) {
@@ -722,6 +809,14 @@ export default function JobDetailPage({
   const [photoCaption, setPhotoCaption] = useState("");
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const editingPayout = useMemo(() => {
+    if (!editingPayoutId) return null;
+    return (
+      (job?.expenses?.payouts ?? []).find((p) => p.id === editingPayoutId) ??
+      null
+    );
+  }, [editingPayoutId, job]);
 
   // Generic toast (photo uploads, scheduling, etc.)
   type ToastStatus = "success" | "error";
@@ -1570,15 +1665,15 @@ export default function JobDetailPage({
   return (
     <>
       <div className="w-full relative">
-        <h1 className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight  bg-[var(--color-background)] sticky top-18 text-center z-50 py-1">
+        <h1 className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight  bg-[var(--color-background)] text-center sticky top-18 z-40 py-1">
           {job.address?.fullLine}
         </h1>
-        <div className="py-3">
+        <div className="">
           {/* Soft background using latest photo */}
 
           <div className="w-full mx-auto text-center flex flex-col md:flex-row justify-center items-center mb-5 md:mb-0 ">
             <div className="mx-auto mb-0!">
-              <div className="text-xs sm:text-sm text-[var(--color-muted)] text-left">
+              <div className="text-xs sm:text-sm text-[var(--color-muted)] text-center">
                 Last updated: {lastStr}
               </div>
               {/* Header */}
@@ -1678,10 +1773,10 @@ export default function JobDetailPage({
                     {activeSection === "Schedule" && (
                       <section className="rounded-2xl  p-5">
                         {/* Scheduling controls */}
-                        <div className="w-full rounded-2xl  p-3 sm:p-4">
+                        <div className="w-full  rounded-2xl  p-3 sm:p-4">
                           <div className="grid gap-5 md:grid-cols-3">
                             {/* DRY IN */}
-                            <div className="bg-[var(--color-card)]  p-6 shadow-md">
+                            <div className="  p-6 ">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
@@ -1780,7 +1875,7 @@ export default function JobDetailPage({
                             </div>
 
                             {/* Shingles */}
-                            <div className="bg-[var(--color-card)] p-6">
+                            <div className=" p-6">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
@@ -1898,7 +1993,7 @@ export default function JobDetailPage({
                             </div>
 
                             {/* Punch */}
-                            <div className="bg-[var(--color-card)]  p-6">
+                            <div className="  p-6">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
@@ -2333,12 +2428,25 @@ export default function JobDetailPage({
                                     </span>
                                   </div>
 
-                                  <div className="flex items-center gap-3 lg:gap-6">
+                                  <div className="flex items-center gap-2 lg:gap-3">
                                     <CountMoney
                                       cents={p.amountCents}
                                       className="text-sm text-[var(--color-text)]"
                                     />
+
+                                    {p.category !== "technician" && (
+                                      <button
+                                        type="button"
+                                        onClick={() => openEditPayoutModal(p)}
+                                        className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                                        title="Edit"
+                                      >
+                                        Edit
+                                      </button>
+                                    )}
+
                                     <button
+                                      type="button"
                                       onClick={() => removePayout(p.id)}
                                       className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
                                       title="Delete"
@@ -2795,7 +2903,7 @@ export default function JobDetailPage({
             {/* ===== Schedule Felt Modal ===== */}
             {feltScheduleEditing && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)] p-4 md:py-6 md:px-8 shadow-xl">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
                       Schedule DRY IN
@@ -2824,14 +2932,14 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setFeltScheduleEditing(false)}
-                      className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className=" border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={() => void saveFeltSchedule()}
-                      className="rounded-sm bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
                     >
                       Apply
                     </button>
@@ -3452,6 +3560,114 @@ export default function JobDetailPage({
               </div>
             </ModalShell>
 
+            {/* Edit Payouts Modal */}
+            <ModalShell
+              open={editPayoutModalOpen}
+              title="Edit payout"
+              onClose={() => {
+                setEditPayoutModalOpen(false);
+                setEditingPayoutId(null);
+              }}
+            >
+              <div className="mb-3">
+                <div className="text-xs text-[var(--color-muted)]">
+                  Editing payout for
+                </div>
+                <div className="text-sm font-semibold text-[var(--color-text)]">
+                  {editingPayout?.payeeNickname ?? "—"}
+                </div>
+              </div>
+
+              <form
+                className="grid gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await saveEditedPayout();
+                }}
+              >
+                <div>
+                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                    Material labor
+                  </label>
+                  <select
+                    value={editPayoutCategory}
+                    onChange={(e) =>
+                      setEditPayoutCategory(
+                        e.target.value as "shingles" | "felt"
+                      )
+                    }
+                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  >
+                    <option value="shingles">Shingles</option>
+                    <option value="felt">Felt</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                    Sq
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editPayoutSqft}
+                    onChange={(e) => setEditPayoutSqft(e.target.value)}
+                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                    Rate per sq
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editPayoutRate}
+                    onChange={(e) => setEditPayoutRate(e.target.value)}
+                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                </div>
+
+                <div className="mt-3 px-3 py-2">
+                  <div className="text-xs md:text-lg text-[var(--color-muted)]">
+                    Updated total
+                  </div>
+                  <div className="text-xs md:text-lg font-semibold text-[var(--color-text)]">
+                    $
+                    {(
+                      (Number(editPayoutSqft) || 0) *
+                      (Number(editPayoutRate) || 0)
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditPayoutModalOpen(false);
+                      setEditingPayoutId(null);
+                    }}
+                    className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="bg-[var(--color-done)] cursor-pointer px-3 py-2 text-sm font-medium text-[var(--btn-text)] "
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </ModalShell>
             {/* Add Materials Modal */}
             <ModalShell
               open={materialModalOpen}
@@ -4116,13 +4332,12 @@ function ModalShell({
         <div
           className={[
             // Mobile: bottom sheet
-            "w-full sm:w-full",
-            "rounded-t-2xl sm:rounded-2xl",
-            "bg-[var(--color-surface)] shadow-2xl ring-1 ring-white/10",
+            "w-full sm:w-full lg:p-2",
+            "bg-[var(--color-card)]  ",
             // Height behavior
             "max-h-[92vh] sm:max-h-[85vh]",
             // Width cap on larger screens
-            "sm:max-w-lg",
+            "sm:max-w-lg lg:max-w-xl",
             // Prevent layout overflow
             "overflow-hidden",
           ].join(" ")}
@@ -4134,16 +4349,12 @@ function ModalShell({
               <h2 className="truncate text-base font-semibold text-[var(--color-text)] sm:text-lg">
                 {title}
               </h2>
-              {/* Optional subtle helper line that makes it feel “premium” */}
-              <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-                Keep it short and specific for future you.
-              </p>
             </div>
 
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-black/5"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-white cursor-pointer"
               aria-label="Close"
               title="Close"
             >
