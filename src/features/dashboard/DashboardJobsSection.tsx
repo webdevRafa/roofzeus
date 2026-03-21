@@ -367,18 +367,18 @@ export function DashboardJobsSection({
         <AnimatePresence>
           {openForm && (
             <motion.div
-              className="fixed inset-0 z-90 flex items-center justify-center bg-black/60 px-4"
+              className="fixed inset-0 z-90 flex items-center justify-center bg-black/20 backdrop-blur-xs px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-card)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-background)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
                 {...fadeUp(0.02)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-semibold text-[var(--color-text)]">
+                    <h3 className="text-2xl uppercase font-bebas font-semibold text-[var(--color-text)]">
                       Create new job
                     </h3>
                   </div>
@@ -387,14 +387,14 @@ export function DashboardJobsSection({
                 <div className="mt-6 space-y-7">
                   {/* Address */}
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text)]">
                       Job address <span className="text-red-300">*</span>
                     </label>
                     <input
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 Main St, San Antonio, TX"
-                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                      className="w-full  bg-[var(--color-card)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40"
                     />
                   </div>
 
@@ -402,12 +402,12 @@ export function DashboardJobsSection({
                   <div>
                     <div className="text-sm font-semibold text-[var(--color-text)]">
                       Assign workers{" "}
-                      <span className="text-[rgb(var(--color-text-rgb)/0.55)]">
+                      <span className="text-[var(--color-text)]/70">
                         (optional)
                       </span>
                     </div>
 
-                    <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] p-2">
+                    <div className="mt-2 max-h-40 overflow-auto  bg-[var(--color-card)] p-2 outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40">
                       {employees.length === 0 ? (
                         <div className="text-sm text-[rgb(var(--color-text-rgb)/0.62)]">
                           No active members found.
@@ -418,7 +418,7 @@ export function DashboardJobsSection({
                           return (
                             <label
                               key={emp.id}
-                              className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-[rgb(var(--color-surface-rgb)/0.55)]"
+                              className="flex cursor-pointer items-center justify-between gap-3  px-2 py-2 "
                             >
                               <div className="min-w-0">
                                 <div className="truncate text-sm font-medium text-[rgb(var(--color-text-rgb)/0.90)]">
@@ -462,7 +462,7 @@ export function DashboardJobsSection({
                   </div>
 
                   {/* Schedule fields */}
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3 w-full">
                     <div>
                       <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                         Schedule felt (optional)
