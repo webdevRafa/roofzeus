@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SlidersHorizontal, SquarePlus } from "lucide-react";
+import { SlidersHorizontal, Plus } from "lucide-react";
 import type { JobStatus } from "../types/types";
 import { useOrgJobsData } from "../hooks/useOrgJobsData";
 import { DashboardJobsSection } from "../features/dashboard/DashboardJobsSection";
@@ -93,11 +93,11 @@ function SortMenu({
         type="button"
         onClick={() => setOpen((s) => !s)}
         whileTap={{ scale: 0.98 }}
-        className="group inline-flex items-center gap-2   px-3 py-2 text-xs font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
+        className="group inline-flex items-center gap-2   px-3 py-2 font-bebas text-xl font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <span className="whitespace-nowrap">{active.label}</span>
+        <span className="whitespace-nowrap ">{active.label}</span>
 
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
@@ -306,13 +306,13 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] relative">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-16 mt-20 md:top-18  flex items-center justify-between  bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-7xl mx-auto z-80">
+      <header className="sticky top-16  md:top-18  flex items-center justify-between  bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-7xl mx-auto z-80">
         <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-lg sm:text-xl font-semibold text-[var(--color-text)]">
+          <h1 className="text-2xl font-semibold text-[var(--color-text)] uppercase font-bebas">
             Jobs
           </h1>
-          <span className="ml-2 text-xs sm:text-sm text-[var(--color-muted)]">
-            ({totalJobs})
+          <span className="ml-1 text-xs sm:text-sm text-[var(--color-muted)]">
+            {totalJobs}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -320,9 +320,9 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setOpenForm(true)}
-            className="inline-flex items-center gap-2  px-3 py-2 text-xs  font-semibold text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer"
+            className="inline-flex items-center gap-2  px-3 py-2 text-xl  font-bebas  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer"
           >
-            <SquarePlus className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
             New job
           </button>
           {/* Sort menu */}

@@ -81,7 +81,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 
 function navLinkBase(isActive: boolean) {
   return cx(
-    "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+    "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm transition-colors",
     isActive
       ? " text-[var(--color-text)] "
       : "text-[var(--color-text)]/70 hover:text-[var(--color-text)]"
@@ -278,7 +278,7 @@ export default function AdminLayout() {
               {/* CENTER: scrollable desktop nav */}
               <div className="hidden min-w-0 flex-1 md:block">
                 <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <nav className="flex min-w-max items-center gap-1.5 pl-1">
+                  <nav className="flex min-w-max items-center gap-1.5 pl-1 ">
                     {NAV_ITEMS.map((item) => {
                       const Icon = item.icon;
                       const active = isActivePath(location.pathname, item);
