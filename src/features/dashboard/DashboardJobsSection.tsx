@@ -124,7 +124,7 @@ function statusClasses(status: JobStatus) {
     case "paid":
       return "border-[rgb(var(--pill-success-rgb)/0.35)] bg-[rgb(var(--pill-success-rgb)/0.14)] text-[rgb(var(--pill-success-rgb))]";
     case "completed":
-      return "border-[rgb(var(--pill-success-rgb)/0.35)] bg-[rgb(var(--pill-success-rgb)/0.14)] text-[rgb(var(--pill-success-rgb))]";
+      return "border-none text-[rgb(var(--pill-success-rgb))]";
     case "closed":
       return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
     case "archived":
@@ -172,6 +172,7 @@ export interface DashboardJobsSectionProps {
   setStartDate: Dispatch<SetStateAction<string>>;
   setEndDate: Dispatch<SetStateAction<string>>;
   applyPreset: (p: DatePreset) => void;
+  datePreset: DatePreset;
 
   employees: Employee[];
   assignedEmployeeIds: string[];
@@ -253,7 +254,7 @@ export function DashboardJobsSection({
   endDate,
   setEndDate,
   applyPreset,
-
+  datePreset,
   employees,
   assignedEmployeeIds,
   setAssignedEmployeeIds,
@@ -302,7 +303,11 @@ export function DashboardJobsSection({
                   <button
                     type="button"
                     onClick={() => setShowSearch((v) => !v)}
-                    className="cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-[10px] md:text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)]  transition"
+                    className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-[10px] md:text-[12px] font-semibold   transition  ${
+                      showSearch === true
+                        ? "text-[var(--color-primary)]"
+                        : "text-[var(--color-text)]"
+                    }`}
                     title="Search addresses"
                     aria-label="Search addresses"
                   >
@@ -331,7 +336,11 @@ export function DashboardJobsSection({
                 <button
                   type="button"
                   onClick={() => setShowFilters((v) => !v)}
-                  className=" cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-[10px] md:text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
+                  className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-[10px] md:text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+                    showFilters
+                      ? "text-[var(--color-primary)]"
+                      : "text-[var(--color-text)]"
+                  }`}
                   title="Filter by last updated date"
                 >
                   <Filter size={16} className="mr-2" />
@@ -339,25 +348,6 @@ export function DashboardJobsSection({
                     {hasActiveDateFilter ? "Edit date range" : "Date filters"}
                   </span>
                 </button>
-              </div>
-              {/* Right chips + primary action */}
-              <div className="flex flex-wrap items-center justify-end gap-2 text-sm md:text-md ">
-                {hasActiveDateFilter ? (
-                  <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
-                    Date: {rangeLabel || "Custom range"}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
-                    Date: All time
-                  </span>
-                )}
-
-                <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
-                  Status:{" "}
-                  <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
-                    {statusFilter === "all" ? "All" : statusFilter}
-                  </span>
-                </span>
               </div>
             </div>
           </div>
@@ -543,14 +533,28 @@ export function DashboardJobsSection({
           {showFilters && (
             <motion.section
               id="date-filters"
-              className="bg-[var(--color-card)]  px-4 sm:px-6 py-4 relative z-40"
+              className="bg-[var(--color-background)]  px-4 sm:px-6 py-4 relative z-40"
               {...fadeUp(0.06)}
             >
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h3 className="text-xs md:text-sm font-semibold text-[var(--color-text)]">
-                    Filter Dates
-                  </h3>
+              <div className="flex flex-col  lg:flex-row lg:items-end lg:justify-between">
+                {/* Right chips + primary action */}
+                <div className="flex flex-wrap items-end justify-start gap-2 text-sm md:text-lg mb-3 md:mb-0">
+                  {hasActiveDateFilter ? (
+                    <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                      Date: {rangeLabel || "Custom range"}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                      Date: All time
+                    </span>
+                  )}
+
+                  <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
+                    Status:{" "}
+                    <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
+                      {statusFilter === "all" ? "All" : statusFilter}
+                    </span>
+                  </span>
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -590,24 +594,39 @@ export function DashboardJobsSection({
                     <button
                       type="button"
                       onClick={() => applyPreset("last7")}
-                      className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
+                      className={` px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
+                        datePreset === "last7"
+                          ? " shadow-sm bg-[var(--color-card-hover)] text-[var(--color-text)]"
+                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                      }`}
                     >
                       Last 7 days
                     </button>
+
                     <button
                       type="button"
                       onClick={() => applyPreset("thisMonth")}
-                      className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
+                      className={` px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
+                        datePreset === "thisMonth"
+                          ? " bg-[var(--color-card-hover)] text-[var(--color-text)]"
+                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                      }`}
                     >
                       This month
                     </button>
+
                     <button
                       type="button"
                       onClick={() => applyPreset("ytd")}
-                      className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
+                      className={`  px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
+                        datePreset === "ytd"
+                          ? " bg-[var(--color-card)] text-[var(--color-text)]"
+                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                      }`}
                     >
                       Year to date
                     </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -615,7 +634,7 @@ export function DashboardJobsSection({
                         setStartDate("");
                         setEndDate("");
                       }}
-                      className="rounded-full border border-red-300/20 bg-red-300/10 hover:bg-red-300/15 px-3 py-2 text-xs font-semibold text-red-200 transition"
+                      className=" border border-red-300/20 bg-red-300/10 hover:bg-red-300/15 px-3 py-2 text-xs font-semibold text-red-200 transition cursor-pointer hover:text-white"
                     >
                       Clear
                     </button>
@@ -786,7 +805,7 @@ export function DashboardJobsSection({
                   >
                     <div className="relative overflow-auto section-scroll">
                       <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                        <thead className="sticky top-0 z-30 bg-[var(--color-card)] backdrop-blur text-[11px] uppercase tracking-wide text-[var(--color-text)]">
+                        <thead className="sticky top-0 z-30 bg-[var(--color-background)] pb-4 backdrop-blur text-[11px] uppercase tracking-wide text-[var(--color-text)]">
                           <tr>
                             <th className="text-left px-4 py-3">Job</th>
                             <th className="text-left px-4 py-3 whitespace-nowrap">
@@ -913,7 +932,7 @@ export function DashboardJobsSection({
 
                       {/* Sticky pagination footer */}
                       {filteredJobs.length > 0 && (
-                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-card)] px-4 py-2  text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-background)] px-4 py-2  text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                           <span>
                             Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                             {Math.min(

@@ -217,6 +217,7 @@ export default function JobsPage() {
     setAssignedEmployeeIds,
     filteredJobs,
     applyPreset,
+    datePreset,
     createJob,
     hasActiveDateFilter,
     rangeLabel,
@@ -320,7 +321,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setOpenForm(true)}
-            className="inline-flex items-center gap-2  px-3 py-2 text-xl  font-bebas  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer"
+            className="inline-flex items-center gap-2  px-3 py-2 text-xl  font-bebas  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
           >
             <Plus className="h-4 w-4" />
             New job
@@ -353,6 +354,7 @@ export default function JobsPage() {
           setStartDate={setStartDate}
           setEndDate={setEndDate}
           applyPreset={applyPreset}
+          datePreset={datePreset}
           employees={employees}
           assignedEmployeeIds={assignedEmployeeIds}
           setAssignedEmployeeIds={setAssignedEmployeeIds}

@@ -1763,8 +1763,8 @@ export default function JobDetailPage({
               {/* RIGHT PANEL */}
               <main className="min-h-0">
                 <div className="h-full min-h-0 overflow-y-auto   backdrop-blur-md">
-                  <div className="border-b border-white/10 px-5 py-4 sm:px-6">
-                    <h3 className="mt-1 text-xl font-semibold text-[var(--color-text)]">
+                  <div className="border-b border-white/10 px-5 sm:px-6">
+                    <h3 className="my-1 text-2xl font-bebas uppercase font-semibold text-[var(--color-text)]">
                       {activeSection}
                     </h3>
                   </div>
@@ -2387,7 +2387,9 @@ export default function JobDetailPage({
                               title="Add payout"
                             >
                               <Plus className="h-4 w-4" />
-                              <span>Add Payout</span>
+                              <span className="font-bebas text-md uppercase">
+                                Add Payout
+                              </span>
                             </button>
                           </div>
 
@@ -2399,7 +2401,7 @@ export default function JobDetailPage({
                               {(job?.expenses?.payouts ?? []).map((p) => (
                                 <motion.li
                                   key={p.id}
-                                  className="mb-3 flex items-center justify-between cursor-pointer bg-[var(--color-card)] p-3 transition duration-300 ease-in-out"
+                                  className="mb-3 flex items-center justify-between cursor-pointer hover:bg-[var(--color-card)] p-3 transition duration-300 ease-in-out"
                                   variants={item}
                                 >
                                   <div className="flex min-w-0 items-center gap-6">

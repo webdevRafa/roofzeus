@@ -82,6 +82,18 @@ body {
    Default: DARK
    Toggle by setting: <html data-theme="dark|light">
    ========================= */
+/* Target native calendar icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* default for dark mode */
+  opacity: 0.8;
+  cursor: pointer;
+  transform: scale(1.2); /* makes it slightly bigger */
+}
+
+/* LIGHT MODE override */
+html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0); /* dark icon for light mode */
+}
 
    html[data-theme="light"] .section-scroll::-webkit-scrollbar-thumb {
     background-color: rgba(15, 23, 42, 0.18);
