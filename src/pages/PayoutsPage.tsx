@@ -22,7 +22,6 @@ import {
   X,
   ChevronRight,
   FileText,
-  Wallet,
   BadgeDollarSign,
   Users,
 } from "lucide-react";
@@ -450,17 +449,16 @@ export default function PayoutsPage() {
 
   // ---------- UI ----------
   const pillBase =
-    "inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80 hover:bg-white/10 transition";
+    "inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-[var(--color-text)]/80 hover:bg-white/10 transition";
   const pillActive =
     "bg-[rgba(207,174,93,0.18)] border-[rgba(207,174,93,0.35)] text-[rgba(245,246,248,0.95)]";
 
-  const card =
-    "rounded-2xl border border-white/10 bg-white/[0.04] shadow-[0_14px_40px_rgba(0,0,0,0.35)]";
+  const card = "bg-[var(--color-background)] shadow-md";
   const innerCard = "rounded-2xl border border-white/10 bg-white/[0.03]";
 
   if (orgLoading || payoutsLoading) {
     return (
-      <div className="mx-auto w-[min(1200px,94vw)] py-10 text-white/70">
+      <div className="mx-auto w-[min(1200px,94vw)] py-10 text-[var(--color-text)]/70">
         <div className={card + " p-6"}>Loading payouts…</div>
       </div>
     );
@@ -490,20 +488,9 @@ export default function PayoutsPage() {
       <motion.div {...fadeUp(0)} className="mb-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5">
-                <Wallet className="h-5 w-5 text-[rgba(207,174,93,0.95)]" />
-              </div>
-              <div>
-                <h1 className="text-xl font-extrabold tracking-tight text-white">
-                  Payouts
-                </h1>
-                <p className="text-sm text-white/60">
-                  Review, audit, and pay crews. Create stubs, mark payouts paid,
-                  and keep clean history.
-                </p>
-              </div>
-            </div>
+            <h1 className="text-2xl font-bebas uppercase font-extrabold tracking-tight text-[var(--color-text)]">
+              Payouts
+            </h1>
           </div>
 
           <div className="flex items-center justify-between gap-2 md:hidden">
@@ -530,7 +517,7 @@ export default function PayoutsPage() {
           <div className="hidden items-center gap-2 md:flex">
             <button
               onClick={() => setDayRateOpen(true)}
-              className="inline-flex items-center gap-2 rounded-2xl bg-[rgba(207,174,93,0.95)] px-4 py-2 text-sm font-extrabold text-black shadow hover:brightness-110 transition"
+              className="inline-flex items-center gap-2 bg-[var(--color-card)] px-4 py-2 text-sm font-extrabold text-[var(--color-text)] cursor-pointer shadow hover:brightness-110 transition"
             >
               <Users className="h-4 w-4" />
               Day-rate payout
@@ -538,7 +525,7 @@ export default function PayoutsPage() {
 
             <button
               onClick={exportCsv}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/85 hover:bg-white/10 transition"
+              className="inline-flex items-center gap-2  px-4 py-2 text-sm font-semibold text-[var(--color-text)] cursor-pointer  transition"
             >
               <Download className="h-4 w-4" />
               Export CSV
@@ -555,57 +542,63 @@ export default function PayoutsPage() {
         className="grid gap-3 md:grid-cols-5"
       >
         <motion.div variants={fadeUpItem} className={card + " p-4"}>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text)]">
             Pending total
           </div>
-          <div className="mt-2 text-2xl font-extrabold text-white">
+          <div className="mt-2 text-2xl font-extrabold text-[var(--color-text)]">
             <CountUp end={kpis.pendingTotal / 100} decimals={2} prefix="$" />
           </div>
-          <div className="mt-1 text-xs text-white/55">
+          <div className="mt-1 text-xs text-[var(--color-text)]">
             {kpis.pendingCount} pending payouts
           </div>
         </motion.div>
 
         <motion.div variants={fadeUpItem} className={card + " p-4"}>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text)]">
             Paid total
           </div>
-          <div className="mt-2 text-2xl font-extrabold text-white">
+          <div className="mt-2 text-2xl font-extrabold text-[var(--color-text)]">
             <CountUp end={kpis.paidTotal / 100} decimals={2} prefix="$" />
           </div>
-          <div className="mt-1 text-xs text-white/55">
+          <div className="mt-1 text-xs text-[var(--color-text)]">
             {kpis.paidCount} paid payouts
           </div>
         </motion.div>
 
         <motion.div variants={fadeUpItem} className={card + " p-4"}>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text)]">
             Avg payout
           </div>
-          <div className="mt-2 text-2xl font-extrabold text-white">
+          <div className="mt-2 text-2xl font-extrabold text-[var(--color-text)]">
             <CountUp end={kpis.avgPayoutCents / 100} decimals={2} prefix="$" />
           </div>
-          <div className="mt-1 text-xs text-white/55">All payouts</div>
+          <div className="mt-1 text-xs text-[var(--color-text)]">
+            All payouts
+          </div>
         </motion.div>
 
         <motion.div variants={fadeUpItem} className={card + " p-4"}>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text)]">
             Avg pending
           </div>
-          <div className="mt-2 text-2xl font-extrabold text-white">
+          <div className="mt-2 text-2xl font-extrabold text-[var(--color-text)]">
             <CountUp end={kpis.avgPendingCents / 100} decimals={2} prefix="$" />
           </div>
-          <div className="mt-1 text-xs text-white/55">Pending only</div>
+          <div className="mt-1 text-xs text-[var(--color-text)]">
+            Pending only
+          </div>
         </motion.div>
 
         <motion.div variants={fadeUpItem} className={card + " p-4"}>
-          <div className="text-xs font-semibold uppercase tracking-wide text-white/50">
+          <div className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text)]">
             Stub count
           </div>
-          <div className="mt-2 text-2xl font-extrabold text-white">
+          <div className="mt-2 text-2xl font-extrabold text-[var(--color-text)]">
             <CountUp end={stubs.length} />
           </div>
-          <div className="mt-1 text-xs text-white/55">Payout stub history</div>
+          <div className="mt-1 text-xs text-[var(--color-text)]">
+            Payout stub history
+          </div>
         </motion.div>
       </motion.div>
 
@@ -659,7 +652,7 @@ export default function PayoutsPage() {
                 </button>
                 <button
                   onClick={exportCsv}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/85 hover:bg-white/10 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-[var(--color-text)]/85 hover:bg-white/10 transition"
                 >
                   <Download className="h-4 w-4" />
                   CSV
@@ -669,12 +662,12 @@ export default function PayoutsPage() {
 
             <div className="mt-3 grid gap-2 md:grid-cols-[1fr_auto_auto]">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text)]" />
                 <input
                   value={payoutSearch}
                   onChange={(e) => setPayoutSearch(e.target.value)}
                   placeholder="Search member or address…"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-white/90 placeholder:text-white/35 outline-none focus:border-[rgba(207,174,93,0.35)]"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 py-2 pl-10 pr-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text)]/35 outline-none focus:border-[rgba(207,174,93,0.35)]"
                 />
               </div>
 
@@ -683,13 +676,13 @@ export default function PayoutsPage() {
                   value={dateStart}
                   onChange={(e) => setDateStart(e.target.value)}
                   type="date"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/85 outline-none focus:border-[rgba(207,174,93,0.35)]"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-[var(--color-text)] outline-none focus:border-[rgba(207,174,93,0.35)]"
                 />
                 <input
                   value={dateEnd}
                   onChange={(e) => setDateEnd(e.target.value)}
                   type="date"
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/85 outline-none focus:border-[rgba(207,174,93,0.35)]"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-[var(--color-text)] outline-none focus:border-[rgba(207,174,93,0.35)]"
                 />
               </div>
 
@@ -697,7 +690,7 @@ export default function PayoutsPage() {
                 <select
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/85 outline-none focus:border-[rgba(207,174,93,0.35)]"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-[var(--color-text)] outline-none focus:border-[rgba(207,174,93,0.35)]"
                 >
                   <option value="all">Member</option>
                   {employees.map((e) => (
@@ -710,7 +703,7 @@ export default function PayoutsPage() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/85 outline-none focus:border-[rgba(207,174,93,0.35)]"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-[var(--color-text)] outline-none focus:border-[rgba(207,174,93,0.35)]"
                 >
                   <option value="all">Category</option>
                   {categories.map((c) => (
@@ -723,7 +716,7 @@ export default function PayoutsPage() {
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/85 outline-none focus:border-[rgba(207,174,93,0.35)]"
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-[var(--color-text)] outline-none focus:border-[rgba(207,174,93,0.35)]"
                 >
                   <option value="all">Method</option>
                   {methods.map((m) => (
@@ -735,16 +728,16 @@ export default function PayoutsPage() {
               </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-between text-xs text-white/50">
+            <div className="mt-3 flex items-center justify-between text-xs text-[var(--color-text)]">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
                 <span>
                   Showing{" "}
-                  <span className="text-white/80 font-semibold">
+                  <span className="text-[var(--color-text)] font-semibold">
                     {paged.length}
                   </span>{" "}
                   of{" "}
-                  <span className="text-white/80 font-semibold">
+                  <span className="text-[var(--color-text)] font-semibold">
                     {filtered.length}
                   </span>
                 </span>
@@ -765,7 +758,7 @@ export default function PayoutsPage() {
             >
               <div className="p-4">
                 <div className={innerCard + " overflow-hidden"}>
-                  <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                  <div className="grid grid-cols-[1fr_auto] border-b border-white/10 px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text)]">
                     <div>Payout</div>
                     <div className="text-right">Amount</div>
                   </div>
@@ -784,7 +777,7 @@ export default function PayoutsPage() {
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <div className="truncate text-sm font-bold text-white">
+                              <div className="truncate text-sm font-bold text-[var(--color-text)]">
                                 {getEmployeeDisplayName(p)}
                               </div>
 
@@ -799,20 +792,20 @@ export default function PayoutsPage() {
                                 {isPaid(p) ? "paid" : "pending"}
                               </span>
 
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text)]">
                                 {getCategory(p)}
                               </span>
 
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
+                              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text)]">
                                 {getMethod(p)}
                               </span>
                             </div>
 
-                            <div className="mt-1 truncate text-xs text-white/55">
+                            <div className="mt-1 truncate text-xs text-[var(--color-text)]">
                               {getJobAddress(p) || "—"}
                             </div>
 
-                            <div className="mt-1 text-[11px] text-white/45">
+                            <div className="mt-1 text-[11px] text-[var(--color-text)]">
                               Created {fmtDateTime((p as any).createdAt)}
                               {isPaid(p) ? (
                                 <span className="ml-2 text-emerald-200/70">
@@ -824,10 +817,10 @@ export default function PayoutsPage() {
 
                           <div className="flex shrink-0 flex-col items-end justify-between gap-2">
                             <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-right">
-                              <div className="text-[10px] font-semibold uppercase tracking-wide text-white/50">
+                              <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text)]">
                                 Amount
                               </div>
-                              <div className="text-sm font-extrabold text-white">
+                              <div className="text-sm font-extrabold text-[var(--color-text)]">
                                 {money(amountCents)}
                               </div>
                             </div>
@@ -836,7 +829,7 @@ export default function PayoutsPage() {
                               {(p as any).jobId ? (
                                 <button
                                   onClick={() => onViewJob((p as any).jobId)}
-                                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-white/80 hover:bg-white/10 transition"
+                                  className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-[var(--color-text)] hover:bg-white/10 transition"
                                 >
                                   View job
                                 </button>
@@ -847,8 +840,8 @@ export default function PayoutsPage() {
                                 className={
                                   "inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-bold transition " +
                                   (selected
-                                    ? "border-[rgba(207,174,93,0.35)] bg-[rgba(207,174,93,0.18)] text-white"
-                                    : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10")
+                                    ? "border-[rgba(207,174,93,0.35)] bg-[rgba(207,174,93,0.18)] text-[var(--color-text)]"
+                                    : "border-white/10 bg-white/5 text-[var(--color-text)]/80 hover:bg-white/10")
                                 }
                               >
                                 {selected ? (
@@ -865,7 +858,7 @@ export default function PayoutsPage() {
                     })}
 
                     {paged.length === 0 ? (
-                      <div className="px-4 py-10 text-center text-sm text-white/55">
+                      <div className="px-4 py-10 text-center text-sm text-[var(--color-text)]">
                         No payouts match your filters.
                       </div>
                     ) : null}
@@ -887,9 +880,9 @@ export default function PayoutsPage() {
                     className="px-4 py-3"
                   >
                     <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                      <div className="text-sm text-white/75">
+                      <div className="text-sm text-[var(--color-text)]/75">
                         Selected{" "}
-                        <span className="font-extrabold text-white">
+                        <span className="font-extrabold text-[var(--color-text)]">
                           {selectedPayoutIds.length}
                         </span>{" "}
                         payout{selectedPayoutIds.length === 1 ? "" : "s"}.
@@ -904,7 +897,7 @@ export default function PayoutsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={clearSelectedPayouts}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10 transition"
+                          className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-[var(--color-text)]/80 hover:bg-white/10 transition"
                         >
                           <X className="h-4 w-4" />
                           Clear
@@ -925,15 +918,15 @@ export default function PayoutsPage() {
               </AnimatePresence>
 
               <div className="px-4 py-3">
-                <div className="flex items-center justify-between text-xs text-white/60">
+                <div className="flex items-center justify-between text-xs text-[var(--color-text)]/60">
                   <div>
                     Showing{" "}
-                    <span className="text-white/85 font-semibold">
+                    <span className="text-[var(--color-text)]/85 font-semibold">
                       {(pageSafe - 1) * PER_PAGE + (paged.length ? 1 : 0)}–
                       {(pageSafe - 1) * PER_PAGE + paged.length}
                     </span>{" "}
                     of{" "}
-                    <span className="text-white/85 font-semibold">
+                    <span className="text-[var(--color-text)]/85 font-semibold">
                       {filtered.length}
                     </span>
                   </div>
@@ -942,14 +935,14 @@ export default function PayoutsPage() {
                     <button
                       disabled={pageSafe <= 1}
                       onClick={() => setPayoutsPage((p) => Math.max(1, p - 1))}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-white/80 disabled:opacity-40 hover:bg-white/10 transition"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-[var(--color-text)]/80 disabled:opacity-40 hover:bg-white/10 transition"
                     >
                       Prev
                     </button>
 
                     <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
                       Page{" "}
-                      <span className="text-white/85 font-semibold">
+                      <span className="text-[var(--color-text)]/85 font-semibold">
                         {pageSafe}
                       </span>{" "}
                       / {pageCount}
@@ -960,7 +953,7 @@ export default function PayoutsPage() {
                       onClick={() =>
                         setPayoutsPage((p) => Math.min(pageCount, p + 1))
                       }
-                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-white/80 disabled:opacity-40 hover:bg-white/10 transition"
+                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 font-semibold text-[var(--color-text)]/80 disabled:opacity-40 hover:bg-white/10 transition"
                     >
                       Next
                     </button>
@@ -986,16 +979,16 @@ export default function PayoutsPage() {
                   <FileText className="h-4 w-4 text-[rgba(207,174,93,0.95)]" />
                 </div>
                 <div>
-                  <div className="text-sm font-extrabold text-white">
+                  <div className="text-sm font-extrabold text-[var(--color-text)]">
                     Stub history
                   </div>
-                  <div className="text-xs text-white/55">
+                  <div className="text-xs text-[var(--color-text)]">
                     Printable records created when payouts are marked paid.
                   </div>
                 </div>
               </div>
 
-              <div className="hidden md:block text-xs text-white/55">
+              <div className="hidden md:block text-xs text-[var(--color-text)]">
                 {stubs.length} stub{stubs.length === 1 ? "" : "s"}
               </div>
             </div>
@@ -1011,16 +1004,16 @@ export default function PayoutsPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-extrabold text-white">
+                      <div className="truncate text-sm font-extrabold text-[var(--color-text)]">
                         {(s as any).number ||
                           `Stub ${s.id.slice(0, 6).toUpperCase()}`}
                       </div>
-                      <div className="truncate text-xs text-white/55">
+                      <div className="truncate text-xs text-[var(--color-text)]">
                         {(s as any).employeeNameSnapshot || "Member"} •{" "}
                         {money((s as any).totalCents || 0)}
                       </div>
                     </div>
-                    <div className="text-[11px] text-white/45">
+                    <div className="text-[11px] text-[var(--color-text)]/45">
                       {fmtDate((s as any).paidAt)}
                     </div>
                   </div>
@@ -1028,14 +1021,14 @@ export default function PayoutsPage() {
               ))}
 
               {stubs.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-white/55">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-[var(--color-text)]">
                   No stubs yet. Select payouts and create a stub when you mark
                   them paid.
                 </div>
               ) : null}
             </div>
 
-            <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/60">
+            <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-[var(--color-text)]/60">
               Tip: Use filters on the left to isolate a week/pay period, then
               create a stub for a single member.
             </div>

@@ -206,7 +206,7 @@ export function DashboardProgressSection({
     };
 
   return (
-    <section className="mt-8  bg-[var(--color-background)] hover:shadow-md overflow-hidden">
+    <section className="mt-8  bg-[var(--color-surface)] shadow-md overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3 min-w-0">

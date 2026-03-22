@@ -123,7 +123,7 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      --color-primary-text: #0c1527;
      --color-section: #0b0e14;
      --color-fixed-background: #0b0e14;
-     --color-surface: #121826;          /* elevated canvas */
+     --color-surface: #0c1527;          /* elevated canvas */
      --color-card: #17233a;             /* primary card */
      --color-card-hover: #1b283f;
      --color-border: rgba(255,255,255,0.10);
@@ -171,11 +171,11 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
   --pill-danger-rgb: 220 38 38;    /* red-600 */
   
      /* Base */
-     --color-background: #fcfdff;
+     --color-background: #f8fbfd;
      --color-fixed-background: #0b0e14;
      --color-primary-text: #ffffff;
      --bg-pending: #feffbf;
-     --color-surface: #ffffff;
+     --color-surface: #f6f9fc;
      --color-card: #ffffff;
      --color-card-hover: #f3f4f6;
      --color-border: rgba(15,23,42,0.10);
