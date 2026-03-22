@@ -1,39 +1,39 @@
-import type { Dispatch, SetStateAction } from "react";
+import {
+  useRef,
+  type RefObject,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { Link } from "react-router-dom";
-import { motion, type MotionProps, type Variants } from "framer-motion";
-import { ChevronDown, Clock } from "lucide-react";
+import { motion, type MotionProps } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { Job } from "../../types/types";
 
 // ----- Animation helpers -----
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+// Simple fade-up animation; reused for sections
 const fadeUp = (delay = 0): Partial<MotionProps> => ({
   initial: { opacity: 0, y: 12, filter: "blur(6px)" },
   animate: { opacity: 1, y: 0, filter: "blur(0px)" },
   transition: { duration: 0.5, ease: EASE, delay },
 });
 
-const staggerParent: Variants = {
-  initial: { opacity: 0 },
-  animate: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.02 },
-  },
-};
+// ----- Utility helpers -----
 
-const item: Variants = {
-  initial: { opacity: 0, y: 6 },
-  animate: { opacity: 1, y: 0 },
-};
-
-// ----- Date utils -----
+/**
+ * Determine if an arbitrary value is a Firestore-like timestamp.
+ */
 type FsTs = { toDate: () => Date };
 
 function isFsTimestamp(val: unknown): val is FsTs {
   return typeof (val as FsTs)?.toDate === "function";
 }
 
+/**
+ * Convert various date-like values into milliseconds. Returns null if invalid.
+ */
 function toMillis(x: unknown): number | null {
   if (x == null) return null;
   if (x instanceof Date) return x.getTime();
@@ -49,20 +49,22 @@ function toMillis(x: unknown): number | null {
   return null;
 }
 
-function fmtDateTime(x: unknown): string {
-  const ms = toMillis(x);
-  return ms == null
-    ? "—"
-    : new Date(ms).toLocaleString(undefined, {
+/**
+ * Format a millisecond timestamp into an abbreviated date string.
+ * Returns an empty string if ms is null.
+ */
+const fmt = (ms: number | null) =>
+  ms == null
+    ? ""
+    : new Date(ms).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
         year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
       });
-}
 
-// ----- Address + status helpers (mirrors DashboardPage) -----
+/**
+ * Extract a normalized address from a Job's address field. Copied from older implementation.
+ */
 function pickString(obj: Record<string, unknown>, keys: string[]): string {
   for (const k of keys) {
     const v = obj[k];
@@ -98,395 +100,296 @@ function addr(a: Job["address"] | null | undefined) {
   return { display, line1, city, state, zip };
 }
 
-type JobStatus = Job["status"];
-
-/**
- * Dark-mode friendly status pill styles.
- * (Your older ones were light-theme oriented: bg-yellow-100 etc.)
- */
-function statusClasses(status: JobStatus) {
-  switch (status) {
-    case "active":
-      return "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]";
-    case "pending":
-      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.70)]";
-
-    case "invoiced":
-      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.70)]";
-
-    case "paid":
-      return "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]";
-
-    case "completed":
-      return "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]";
-
-    case "closed":
-      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
-    case "archived":
-      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
-    case "draft":
-    default:
-      return "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)]";
-  }
-}
-
 export interface DashboardProgressSectionProps {
+  /** Whether the section is expanded or collapsed */
   upcomingOpen: boolean;
+  /** Toggle for collapsing/expanding the section */
   setUpcomingOpen: Dispatch<SetStateAction<boolean>>;
+  /** List of jobs with material progress (dry-in/shingles), as provided by the parent hook */
   materialProgressJobs: Job[];
+  /** List of jobs ready for punch, as provided by the parent hook */
   readyForPunchJobs: Job[];
 }
 
+/**
+ * DashboardProgressSection displays upcoming jobs separated into Dry In, Shingles, and Punch.
+ * Only jobs with scheduled dates on or after the current date are shown for each section.
+ * Punch jobs are determined purely by the presence of a punchScheduledFor date.
+ */
 export function DashboardProgressSection({
   upcomingOpen,
-  setUpcomingOpen,
   materialProgressJobs,
   readyForPunchJobs,
 }: DashboardProgressSectionProps) {
+  // Determine the start of the current day (00:00 in the user's locale)
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayMs = todayStart.getTime();
+
+  // Derive Dry In jobs: those with a feltScheduledFor date today or later
+  const dryInJobs = materialProgressJobs.filter((job) => {
+    const scheduleMs = toMillis((job as any).feltScheduledFor ?? null);
+    return scheduleMs != null && scheduleMs >= todayMs;
+  });
+
+  // Derive Shingles jobs: those with a shinglesScheduledFor date today or later
+  const shinglesJobs = materialProgressJobs.filter((job) => {
+    const scheduleMs = toMillis((job as any).shinglesScheduledFor ?? null);
+    return scheduleMs != null && scheduleMs >= todayMs;
+  });
+
+  // Derive Punch jobs: include both materialProgressJobs and readyForPunchJobs, and pick those with a punchScheduledFor date today or later
+  const punchJobs = [...materialProgressJobs, ...readyForPunchJobs].filter(
+    (job) => {
+      const scheduleMs = toMillis((job as any).punchScheduledFor ?? null);
+      return scheduleMs != null && scheduleMs >= todayMs;
+    }
+  );
+  // Label creators for each section; they return the scheduled date string
+  const getDryLabel = (job: Job) => {
+    const ms = toMillis((job as any).feltScheduledFor ?? null);
+    return ms != null ? fmt(ms) : "";
+  };
+  const getShinglesLabel = (job: Job) => {
+    const ms = toMillis((job as any).shinglesScheduledFor ?? null);
+    return ms != null ? fmt(ms) : "";
+  };
+  const getPunchLabel = (job: Job) => {
+    const ms = toMillis((job as any).punchScheduledFor ?? null);
+    return ms != null ? fmt(ms) : "";
+  };
+
+  // Refs for horizontal scrollable containers
+  const dryRef = useRef<HTMLDivElement>(null);
+  const shinglesRef = useRef<HTMLDivElement>(null);
+  const punchRef = useRef<HTMLDivElement>(null);
+
+  // Function factory to scroll a container left/right by 80% of its width
+  const createScrollBy =
+    (ref: RefObject<HTMLDivElement | null>, dir: number) => () => {
+      const el = ref.current;
+      if (!el) return;
+      const scrollAmount = el.clientWidth * 0.8;
+      el.scrollBy({ left: dir * scrollAmount, behavior: "smooth" });
+    };
+
   return (
-    <section className="mt-8 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md overflow-hidden">
+    <section className="mt-8  bg-[var(--color-background)] hover:shadow-md overflow-hidden">
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
-            <h2 className="text-lg sm:text-xl font-semibold text-[var(--color-text)] tracking-wide">
+            <h2 className="text-lg md:text-2xl font-bebas font-semibold text-[var(--color-text)] tracking-wide">
               SCHEDULED
             </h2>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setUpcomingOpen((v) => !v)}
-            className="ml-2 inline-flex items-center gap-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1.5 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition"
-          >
-            <ChevronDown
-              className={`h-4 w-4 transition-transform ${
-                upcomingOpen ? "rotate-0" : "-rotate-90"
-              }`}
-            />
-            <span className="hidden sm:inline">
-              {upcomingOpen ? "Collapse" : "Expand"}
-            </span>
-          </button>
         </div>
-
         <div className="flex flex-wrap gap-2 text-[11px]">
-          {materialProgressJobs.length > 0 && (
+          {dryInJobs.length > 0 && (
             <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-info-rgb))]">
-              {materialProgressJobs.length} job
-              {materialProgressJobs.length === 1 ? "" : "s"} in progress
+              {dryInJobs.length} Dry In
+              {dryInJobs.length === 1 ? "" : " jobs"}
             </span>
           )}
-
-          {readyForPunchJobs.length > 0 && (
+          {shinglesJobs.length > 0 && (
+            <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-info-rgb))]">
+              {shinglesJobs.length} Shingles
+              {shinglesJobs.length === 1 ? "" : " jobs"}
+            </span>
+          )}
+          {punchJobs.length > 0 && (
             <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-success-rgb))]">
-              {readyForPunchJobs.length} ready for punch
+              {punchJobs.length} Punch
+              {punchJobs.length === 1 ? "" : " jobs"}
             </span>
           )}
         </div>
       </div>
 
       {upcomingOpen && (
-        <div className="px-4 sm:px-6 py-5">
-          <div className="grid gap-4 lg:grid-cols-2">
-            {/* Scheduled dry-in + shingles */}
-            <motion.div {...fadeUp(0.05)} className="min-w-0">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.70)]">
-                  Scheduled dry-in & shingles
-                </h3>
+        <div className="px-4 sm:px-6 py-5 space-y-10">
+          {/* Dry In Section */}
+          <motion.div {...fadeUp(0.05)}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-text)]">
+                Dry In
+              </h3>
+              <div className="hidden md:flex gap-1">
+                <button
+                  type="button"
+                  onClick={createScrollBy(dryRef, -1)}
+                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={createScrollBy(dryRef, 1)}
+                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-
-              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] overflow-hidden">
-                {materialProgressJobs.length === 0 ? (
-                  <div className="px-4 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
-                    No jobs have felt or shingles scheduled yet. As you update
-                    each job, they&apos;ll show up here.
-                  </div>
-                ) : (
-                  <motion.div
-                    className="max-h-[60vh] overflow-y-auto section-scroll space-y-2 p-2"
-                    variants={staggerParent}
-                    initial="initial"
-                    animate="animate"
-                  >
-                    {materialProgressJobs.map((job) => {
-                      const a = addr(job.address);
-
-                      const feltSch = toMillis(
-                        (job as any).feltScheduledFor ?? null
-                      );
-                      const feltDone = toMillis(
-                        (job as any).feltCompletedAt ?? null
-                      );
-                      const shinglesSch = toMillis(
-                        (job as any).shinglesScheduledFor ?? null
-                      );
-                      const shinglesDone = toMillis(
-                        (job as any).shinglesCompletedAt ?? null
-                      );
-
-                      const fmt = (ms: number | null) =>
-                        ms == null
-                          ? ""
-                          : new Date(ms).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            });
-
-                      const feltLabel = feltDone
-                        ? `Completed ${fmt(feltDone)}`
-                        : feltSch
-                        ? `Scheduled ${fmt(feltSch)}`
-                        : "Not scheduled";
-
-                      const shinglesLabel = shinglesDone
-                        ? `Completed ${fmt(shinglesDone)}`
-                        : shinglesSch
-                        ? `Scheduled ${fmt(shinglesSch)}`
-                        : "Not scheduled";
-
-                      const pillClass = (
-                        done: number | null,
-                        scheduled: number | null
-                      ) =>
-                        done != null
-                          ? "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]"
-                          : scheduled != null
-                          ? "border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] text-[rgb(var(--pill-info-rgb))]"
-                          : "border-[rgb(var(--color-border-rgb)/0.14)] bg-white/5 text-[rgb(var(--color-text-rgb)/0.92)]/60";
-
-                      return (
-                        <motion.div
-                          key={job.id}
-                          variants={item}
-                          whileHover={{
-                            y: -1,
-                            transition: { duration: 0.2, ease: EASE },
-                          }}
-                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.12)] transition px-3 py-3"
+            </div>
+            {dryInJobs.length === 0 ? (
+              <div className="px-2 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] border border-[rgb(var(--color-border-rgb)/0.16)] rounded-xl bg-[rgb(var(--color-surface-rgb)/0.35)]">
+                No dry-in jobs scheduled for today or later.
+              </div>
+            ) : (
+              <div
+                ref={dryRef}
+                className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
+              >
+                {dryInJobs.map((job) => {
+                  const a = addr(job.address);
+                  const label = getDryLabel(job);
+                  return (
+                    <div
+                      key={job.id}
+                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]  transition p-3"
+                    >
+                      <div className="text-lg text-[var(--color-text)] truncate">
+                        {label}
+                      </div>
+                      <div className="mt-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
+                        {a.display || "—"}
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Link
+                          to={`/job/${job.id}`}
+                          className="inline-flex items-center justify-center rounded-md border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                         >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
-                              {a.display || "—"}
-                            </div>
-
-                            <span
-                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${statusClasses(
-                                job.status
-                              )}`}
-                            >
-                              {job.status}
-                            </span>
-                          </div>
-
-                          <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
-                            <span
-                              className={
-                                "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 " +
-                                pillClass(feltDone, feltSch)
-                              }
-                            >
-                              <span className="font-semibold uppercase">
-                                Dry in
-                              </span>
-                              <span className="truncate max-w-[180px]">
-                                {feltLabel}
-                              </span>
-                            </span>
-
-                            <span
-                              className={
-                                "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 " +
-                                pillClass(shinglesDone, shinglesSch)
-                              }
-                            >
-                              <span className="font-semibold uppercase">
-                                Shingles
-                              </span>
-                              <span className="truncate max-w-[180px]">
-                                {shinglesLabel}
-                              </span>
-                            </span>
-                          </div>
-
-                          <div className="mt-2 flex justify-between items-center gap-3">
-                            <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
-                              Last updated {fmtDateTime(job.updatedAt)}
-                            </div>
-
-                            <Link
-                              to={`/job/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]
- px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
-                            >
-                              View job
-                            </Link>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                )}
+                          View job
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </motion.div>
+            )}
+          </motion.div>
 
-            {/* Ready for punch */}
-            <motion.div {...fadeUp(0.12)} className="min-w-0">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
-                  Ready for punch
-                </h3>
-                <span className="text-[11px] text-[var(--color-accent-gold)]/70">
-                  Final pass queue
-                </span>
+          {/* Shingles Section */}
+          <motion.div {...fadeUp(0.08)}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-text)]">
+                Shingles
+              </h3>
+              <div className="hidden md:flex gap-1">
+                <button
+                  type="button"
+                  onClick={createScrollBy(shinglesRef, -1)}
+                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={createScrollBy(shinglesRef, 1)}
+                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-
-              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] overflow-hidden">
-                {readyForPunchJobs.length === 0 ? (
-                  <div className="px-4 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
-                    Once both felt and shingles are marked completed on a job,
-                    it will appear here as ready to be punched.
-                  </div>
-                ) : (
-                  <motion.div
-                    className="max-h-[60vh] overflow-y-auto section-scroll space-y-2 p-2"
-                    variants={staggerParent}
-                    initial="initial"
-                    animate="animate"
-                  >
-                    {readyForPunchJobs.map((job) => {
-                      const a = addr(job.address);
-
-                      const feltDone = toMillis(
-                        (job as any).feltCompletedAt ?? null
-                      );
-                      const shinglesDone = toMillis(
-                        (job as any).shinglesCompletedAt ?? null
-                      );
-                      const lastStage = Math.max(
-                        feltDone ?? 0,
-                        shinglesDone ?? 0
-                      );
-                      const readySince =
-                        lastStage > 0
-                          ? new Date(lastStage).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
-                          : null;
-
-                      const punchMs = toMillis(
-                        (job as any).punchScheduledFor ?? null
-                      );
-                      const punchDate =
-                        punchMs != null
-                          ? new Date(punchMs).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
-                          : null;
-
-                      return (
-                        <motion.div
-                          key={job.id}
-                          variants={item}
-                          whileHover={{
-                            y: -1,
-                            transition: { duration: 0.2, ease: EASE },
-                          }}
-                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-[0_10px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.12)] transition px-3 py-3"
+            </div>
+            {shinglesJobs.length === 0 ? (
+              <div className="px-2 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] border border-[rgb(var(--color-border-rgb)/0.16)] rounded-xl bg-[rgb(var(--color-surface-rgb)/0.35)]">
+                No shingles jobs scheduled for today or later.
+              </div>
+            ) : (
+              <div
+                ref={shinglesRef}
+                className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
+              >
+                {shinglesJobs.map((job) => {
+                  const a = addr(job.address);
+                  const label = getShinglesLabel(job);
+                  return (
+                    <div
+                      key={job.id}
+                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-[0_4px_8px_rgba(0,0,0,0.05)] transition p-3"
+                    >
+                      <div className="text-lg text-[var(--color-text)] truncate">
+                        {label}
+                      </div>
+                      <div className="mt-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
+                        {a.display || "—"}
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Link
+                          to={`/job/${job.id}`}
+                          className="inline-flex items-center justify-center rounded-md border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                         >
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
-                                  {a.display || "—"}
-                                </div>
-                                <span
-                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase ${statusClasses(
-                                    job.status
-                                  )}`}
-                                >
-                                  {job.status}
-                                </span>
-                              </div>
-
-                              <div className="mt-1 grid gap-1 text-[11px]">
-                                <div className="flex items-center gap-2">
-                                  {readySince ? (
-                                    <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
-                                      Ready since {readySince}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[rgb(var(--color-text-rgb)/0.45)]">
-                                      Ready
-                                    </span>
-                                  )}
-                                </div>
-
-                                {punchDate ? (
-                                  <div>
-                                    <span
-                                      className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold
-                   border-[rgb(var(--pill-warning-rgb)/0.30)]
-                   bg-[rgb(var(--pill-warning-rgb)/0.12)]
-                   text-[rgb(var(--pill-warning-rgb))]"
-                                    >
-                                      <Clock className="h-3 w-3 opacity-80" />
-                                      Scheduled {punchDate}
-                                    </span>
-                                  </div>
-                                ) : null}
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col gap-1 text-[11px] shrink-0">
-                              <span
-                                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5
-                 border-[rgb(var(--pill-success-rgb)/0.30)]
-                 bg-[rgb(var(--pill-success-rgb)/0.12)]
-                 text-[rgb(var(--pill-success-rgb))]"
-                              >
-                                <span className="font-semibold uppercase">
-                                  Dry in
-                                </span>
-                                <span>Completed</span>
-                              </span>
-                              <span
-                                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5
-                 border-[rgb(var(--pill-success-rgb)/0.30)]
-                 bg-[rgb(var(--pill-success-rgb)/0.12)]
-                 text-[rgb(var(--pill-success-rgb))]"
-                              >
-                                <span className="font-semibold uppercase">
-                                  Shingles
-                                </span>
-                                <span>Completed</span>
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="mt-2 flex justify-end">
-                            <Link
-                              to={`/job/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]
- px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
-                            >
-                              View job
-                            </Link>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </motion.div>
-                )}
+                          View job
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </motion.div>
-          </div>
+            )}
+          </motion.div>
+
+          {/* Punch Section */}
+          <motion.div {...fadeUp(0.11)}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-text)]">
+                Punch
+              </h3>
+              <div className="hidden md:flex gap-1">
+                <button
+                  type="button"
+                  onClick={createScrollBy(punchRef, -1)}
+                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={createScrollBy(punchRef, 1)}
+                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            {punchJobs.length === 0 ? (
+              <div className="px-2 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] border border-[rgb(var(--color-border-rgb)/0.16)] rounded-xl bg-[rgb(var(--color-surface-rgb)/0.35)]">
+                No punch jobs scheduled for today or later.
+              </div>
+            ) : (
+              <div
+                ref={punchRef}
+                className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
+              >
+                {punchJobs.map((job) => {
+                  const a = addr(job.address);
+                  const label = getPunchLabel(job);
+                  return (
+                    <div
+                      key={job.id}
+                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]  shadow-[0_4px_8px_rgba(0,0,0,0.05)] transition p-3"
+                    >
+                      <div className="text-lg text-[var(--color-text)] truncate">
+                        {label}
+                      </div>
+                      <div className="mt-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
+                        {a.display || "—"}
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <Link
+                          to={`/job/${job.id}`}
+                          className="inline-flex items-center justify-center rounded-md border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
+                        >
+                          View job
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </motion.div>
         </div>
       )}
     </section>
