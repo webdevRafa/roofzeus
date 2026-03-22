@@ -100,6 +100,19 @@ function addr(a: Job["address"] | null | undefined) {
   return { display, line1, city, state, zip };
 }
 
+function matchesAddress(job: Job, term: string) {
+  const q = term.trim().toLowerCase();
+  if (!q) return true;
+
+  const a = addr(job.address);
+  const haystack = [a.display, a.line1, a.city, a.state, a.zip]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(q);
+}
+
 export interface DashboardProgressSectionProps {
   /** Whether the section is expanded or collapsed */
   upcomingOpen: boolean;
@@ -109,6 +122,10 @@ export interface DashboardProgressSectionProps {
   materialProgressJobs: Job[];
   /** List of jobs ready for punch, as provided by the parent hook */
   readyForPunchJobs: Job[];
+  /** Local pipeline search term */
+  searchTerm: string;
+  /** Setter for local pipeline search term */
+  setSearchTerm: Dispatch<SetStateAction<string>>;
 }
 
 /**
@@ -120,6 +137,8 @@ export function DashboardProgressSection({
   upcomingOpen,
   materialProgressJobs,
   readyForPunchJobs,
+  searchTerm,
+  setSearchTerm,
 }: DashboardProgressSectionProps) {
   // Determine the start of the current day (00:00 in the user's locale)
   const now = new Date();
@@ -145,6 +164,19 @@ export function DashboardProgressSection({
       return scheduleMs != null && scheduleMs >= todayMs;
     }
   );
+
+  const filteredDryInJobs = dryInJobs.filter((job) =>
+    matchesAddress(job, searchTerm)
+  );
+
+  const filteredShinglesJobs = shinglesJobs.filter((job) =>
+    matchesAddress(job, searchTerm)
+  );
+
+  const filteredPunchJobs = punchJobs.filter((job) =>
+    matchesAddress(job, searchTerm)
+  );
+
   // Label creators for each section; they return the scheduled date string
   const getDryLabel = (job: Job) => {
     const ms = toMillis((job as any).feltScheduledFor ?? null);
@@ -176,7 +208,7 @@ export function DashboardProgressSection({
   return (
     <section className="mt-8  bg-[var(--color-background)] hover:shadow-md overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
+      <div className="flex flex-col gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
             <h2 className="text-lg md:text-2xl font-bebas font-semibold text-[var(--color-text)] tracking-wide">
@@ -184,25 +216,40 @@ export function DashboardProgressSection({
             </h2>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 text-[11px]">
-          {dryInJobs.length > 0 && (
-            <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-info-rgb))]">
-              {dryInJobs.length} Dry In
-              {dryInJobs.length === 1 ? "" : " jobs"}
-            </span>
-          )}
-          {shinglesJobs.length > 0 && (
-            <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-info-rgb))]">
-              {shinglesJobs.length} Shingles
-              {shinglesJobs.length === 1 ? "" : " jobs"}
-            </span>
-          )}
-          {punchJobs.length > 0 && (
-            <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-success-rgb))]">
-              {punchJobs.length} Punch
-              {punchJobs.length === 1 ? "" : " jobs"}
-            </span>
-          )}
+
+        <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-[360px] lg:items-end">
+          <div className="w-full lg:w-[360px]">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search pipeline by address..."
+              className="w-full  border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none transition placeholder:text-[rgb(var(--color-text-rgb)/0.45)] focus:border-[rgb(var(--pill-info-rgb)/0.40)] focus:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-[11px]">
+            {filteredDryInJobs.length > 0 && (
+              <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-info-rgb))]">
+                {filteredDryInJobs.length} Dry In
+                {filteredDryInJobs.length === 1 ? "" : " jobs"}
+              </span>
+            )}
+
+            {filteredShinglesJobs.length > 0 && (
+              <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-info-rgb)/0.30)] bg-[rgb(var(--pill-info-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-info-rgb))]">
+                {filteredShinglesJobs.length} Shingles
+                {filteredShinglesJobs.length === 1 ? "" : " jobs"}
+              </span>
+            )}
+
+            {filteredPunchJobs.length > 0 && (
+              <span className="inline-flex items-center rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-success-rgb))]">
+                {filteredPunchJobs.length} Punch
+                {filteredPunchJobs.length === 1 ? "" : " jobs"}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -231,16 +278,18 @@ export function DashboardProgressSection({
                 </button>
               </div>
             </div>
-            {dryInJobs.length === 0 ? (
-              <div className="px-2 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] border border-[rgb(var(--color-border-rgb)/0.16)] rounded-xl bg-[rgb(var(--color-surface-rgb)/0.35)]">
-                No dry-in jobs scheduled for today or later.
+            {filteredDryInJobs.length === 0 ? (
+              <div className="px-2 py-3 text-sm md:text-lg text-[rgb(var(--color-text-rgb)/0.55)]   bg-[rgb(var(--color-surface-rgb)/0.35)]">
+                {searchTerm.trim()
+                  ? "No dry-in jobs match that address."
+                  : "No dry-in jobs scheduled for today or later."}
               </div>
             ) : (
               <div
                 ref={dryRef}
                 className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
               >
-                {dryInJobs.map((job) => {
+                {filteredDryInJobs.map((job) => {
                   const a = addr(job.address);
                   const label = getDryLabel(job);
                   return (
@@ -292,16 +341,18 @@ export function DashboardProgressSection({
                 </button>
               </div>
             </div>
-            {shinglesJobs.length === 0 ? (
-              <div className="px-2 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] border border-[rgb(var(--color-border-rgb)/0.16)] rounded-xl bg-[rgb(var(--color-surface-rgb)/0.35)]">
-                No shingles jobs scheduled for today or later.
+            {filteredShinglesJobs.length === 0 ? (
+              <div className="px-2 py-3 text-sm md:text-lg text-[rgb(var(--color-text-rgb)/0.55)]   bg-[rgb(var(--color-surface-rgb)/0.35)]">
+                {searchTerm.trim()
+                  ? "No shingles jobs match that address."
+                  : "No shingles jobs scheduled for today or later."}
               </div>
             ) : (
               <div
                 ref={shinglesRef}
                 className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
               >
-                {shinglesJobs.map((job) => {
+                {filteredShinglesJobs.map((job) => {
                   const a = addr(job.address);
                   const label = getShinglesLabel(job);
                   return (
@@ -353,16 +404,18 @@ export function DashboardProgressSection({
                 </button>
               </div>
             </div>
-            {punchJobs.length === 0 ? (
-              <div className="px-2 py-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] border border-[rgb(var(--color-border-rgb)/0.16)] rounded-xl bg-[rgb(var(--color-surface-rgb)/0.35)]">
-                No punch jobs scheduled for today or later.
+            {filteredPunchJobs.length === 0 ? (
+              <div className="px-2 py-3 text-sm md:text-lg text-[rgb(var(--color-text-rgb)/0.55)]   bg-[rgb(var(--color-surface-rgb)/0.35)]">
+                {searchTerm.trim()
+                  ? "No punch jobs match that address."
+                  : "No punch jobs scheduled for today or later."}
               </div>
             ) : (
               <div
                 ref={punchRef}
                 className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
               >
-                {punchJobs.map((job) => {
+                {filteredPunchJobs.map((job) => {
                   const a = addr(job.address);
                   const label = getPunchLabel(job);
                   return (

@@ -7,6 +7,7 @@ export default function PipelinePage() {
     useOrgJobsData();
 
   const [upcomingOpen, setUpcomingOpen] = useState(true);
+  const [pipelineSearchTerm, setPipelineSearchTerm] = useState("");
 
   if (membershipLoading) {
     return <div className="p-4">Loading organization…</div>;
@@ -27,6 +28,8 @@ export default function PipelinePage() {
         setUpcomingOpen={setUpcomingOpen}
         materialProgressJobs={materialProgressJobs}
         readyForPunchJobs={readyForPunchJobs}
+        searchTerm={pipelineSearchTerm}
+        setSearchTerm={setPipelineSearchTerm}
       />
     </div>
   );
