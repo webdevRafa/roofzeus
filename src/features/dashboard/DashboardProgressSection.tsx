@@ -246,7 +246,7 @@ export function DashboardProgressSection({
                   return (
                     <div
                       key={job.id}
-                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]  transition p-3"
+                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px]  bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]  transition p-3 shadow-md"
                     >
                       <div className="text-lg text-[var(--color-text)] truncate">
                         {label}
@@ -307,7 +307,7 @@ export function DashboardProgressSection({
                   return (
                     <div
                       key={job.id}
-                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-[0_4px_8px_rgba(0,0,0,0.05)] transition p-3"
+                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px]  bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-md  transition p-3"
                     >
                       <div className="text-lg text-[var(--color-text)] truncate">
                         {label}
@@ -368,7 +368,7 @@ export function DashboardProgressSection({
                   return (
                     <div
                       key={job.id}
-                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px] border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]  shadow-[0_4px_8px_rgba(0,0,0,0.05)] transition p-3"
+                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px]  bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-md  transition p-3"
                     >
                       <div className="text-lg text-[var(--color-text)] truncate">
                         {label}

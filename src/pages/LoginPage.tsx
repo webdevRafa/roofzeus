@@ -231,7 +231,7 @@ const LoginPage = () => {
       initial="hidden"
       animate="show"
       variants={pageStagger}
-      className="min-h-screen w-full relative overflow-hidden bg-[#0b0e14]"
+      className="min-h-screen w-full relative overflow-hidden bg-[#0c1527]"
     >
       {/* Content */}
       <div className="relative z-10 min-h-screen w-full flex items-center justify-center px-4">
@@ -332,7 +332,7 @@ const LoginPage = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@company.com"
                         className={[
-                          "w-full rounded-xl border px-10 py-3 outline-none transition",
+                          "w-full border px-10 py-3 outline-none transition",
                           "bg-white/3 border-[#3a3f4b]/70 text-white placeholder:text-white/30",
                           "focus:border-[#cfae5d]/70 focus:ring-2 focus:ring-[#cfae5d]/15",
                         ].join(" ")}
@@ -360,7 +360,7 @@ const LoginPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
                         className={[
-                          "w-full rounded-xl border px-10 py-3 pr-12 outline-none transition",
+                          "w-full border px-10 py-3 pr-12 outline-none transition",
                           "bg-white/3 border-[#3a3f4b]/70 text-white placeholder:text-white/30",
                           "focus:border-[#cfae5d]/70 focus:ring-2 focus:ring-[#cfae5d]/15",
                         ].join(" ")}
@@ -394,8 +394,8 @@ const LoginPage = () => {
                           : { y: 0, scale: 0.99, filter: "brightness(0.98)" }
                       }
                       className={[
-                        "w-full mt-10 cursor-pointer px-2 py-1.5 text-sm font-semibold transition max-w-[100px] mx-auto block",
-                        "border-[var(--color-blue)] border-[1.5px] text-white/70 hover:text-white hover:brightness-110 active:brightness-95",
+                        "w-full mt-10 cursor-pointer p-2 text-sm font-semibold transition max-w-[100px] mx-auto block",
+                        "bg-[#17233a] text-white/70 hover:text-white hover:brightness-110 active:brightness-95",
                         "disabled:opacity-70 disabled:cursor-not-allowed",
                       ].join(" ")}
                     >
