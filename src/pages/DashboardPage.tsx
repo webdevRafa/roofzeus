@@ -75,12 +75,8 @@ export default function DashboardPage() {
   return (
     <>
       <div>
-        <motion.div
-          className="mx-auto w-full py-6 sm:py-10 grid gap-6 xl:gap-7 2xl:gap-8 grid-cols-1 lg:grid-cols-12"
-          initial="initial"
-          animate="animate"
-        >
-          <div className="lg:col-span-12">
+        <motion.div className="w-full  " initial="initial" animate="animate">
+          <div className="w-full mx-auto max-w-[1000px]">
             <DashboardSummarySection
               jobs={jobs}
               materialProgressJobs={materialProgressJobs}

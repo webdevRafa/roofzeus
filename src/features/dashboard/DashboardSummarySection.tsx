@@ -46,34 +46,32 @@ function KpiCard({
   label,
   value,
   sub,
-  accent = "neutral",
 }: {
   label: string;
   value: number;
   sub?: string;
   accent?: "neutral" | "gold" | "sky" | "emerald";
 }) {
-  const accentClasses =
-    accent === "gold"
-      ? "text-[var(--kpi-value)]"
-      : accent === "sky"
-      ? "text-[var(--kpi-value)]"
-      : accent === "emerald"
-      ? "text-[var(--kpi-value)]"
-      : "text-[var(--kpi-value)]";
-
   const subClasses = "text-[rgb(var(--color-text-rgb)/0.62)]";
 
   return (
     <motion.div
       variants={fadeUp}
-      className=" bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] p-4 hover:shadow-md select-none  "
+      className={`bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] p-4 hover:shadow-md select-none w-full `}
     >
-      <div className="text-[14px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)]">
+      <div
+        className={`text-sm md:text-md text-center uppercase tracking-wide text-[var(--color-text)] `}
+      >
         {label}
       </div>
 
-      <div className={`mt-1 text-xl font-semibold ${accentClasses}`}>
+      <div
+        className={`text-center mt-1 text-xl font-semibold  ${
+          value === 0
+            ? "text-[var(--color-text)]/50"
+            : "text-[var(--color-text)]"
+        } `}
+      >
         <StatInt value={value} />
       </div>
 
@@ -96,7 +94,7 @@ export default function DashboardSummarySection({
     useDashboardSummaryMetrics(jobs, payouts);
 
   return (
-    <section className="mb-6 px-2">
+    <section className="mb-6 px-2 mt-10">
       <motion.div
         variants={stagger}
         initial="hidden"
@@ -107,7 +105,7 @@ export default function DashboardSummarySection({
          * columns on medium, and up to six on extra‑large screens.  Feel free
          * to tweak these breakpoints to better fit your design.
          */
-        className="grid grid-cols-2 gap-3 sm:grid-cols-2 max-w-4xl mx-auto"
+        className="grid grid-cols-2 md:flex md:flex-row md:justify-center gap-3 "
       >
         <KpiCard
           label="Jobs Pending Completion"
