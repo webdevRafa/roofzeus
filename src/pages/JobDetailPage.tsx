@@ -23,7 +23,6 @@ import {
 import {
   X,
   ChevronLeft,
-  Undo,
   ChevronRight,
   Camera,
   Image as ImageIcon,
@@ -32,6 +31,8 @@ import {
   AlertTriangle,
   Plus,
 } from "lucide-react";
+import { MdArrowBackIos } from "react-icons/md";
+
 import { getStorage, ref as storageRef, uploadBytes } from "firebase/storage";
 import { motion, type MotionProps } from "framer-motion";
 import CountUp from "react-countup";
@@ -1727,12 +1728,15 @@ export default function JobDetailPage({
                 <div className="xl:sticky xl:top-34 xl:self-start">
                   <div className="overflow-hidden  ">
                     <Link to="/jobs">
-                      <div className="flex gap-2 hover:bg-[var(--color-card-hover)] py-3 px-1 ">
-                        <Undo />
-                        <h1>Back to jobs</h1>
+                      <div className="flex items-center gap-2 hover:bg-[var(--color-card-hover)] py-3 px-1 ">
+                        <MdArrowBackIos />
+
+                        <h1 className="font-bebas uppercase text-2xl">
+                          Back to jobs
+                        </h1>
                       </div>
                     </Link>
-                    <nav className="flex flex-col p-2">
+                    <nav className="flex flex-col p-2 gap-1">
                       {sections.map((item) => {
                         const isActive = activeSection === item;
 
@@ -1742,15 +1746,15 @@ export default function JobDetailPage({
                             type="button"
                             onClick={() => setActiveSection(item)}
                             className={[
-                              "flex items-center cursor-pointer justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium transition",
+                              "flex items-center cursor-pointer justify-between  px-3 py-2.5 text-left text-sm font-medium transition",
                               isActive
-                                ? "bg-[var(--btn-bg)] text-[var(--btn-text)] shadow-sm"
+                                ? "bg-[var(--color-card)] text-[var(--btn-text)] shadow-sm"
                                 : "text-[var(--color-text)]/50 hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]",
                             ].join(" ")}
                           >
                             <span>{item}</span>
                             {isActive ? (
-                              <span className="h-2 w-2 rounded-full bg-current opacity-90" />
+                              <span className="h-2 w-2 rounded-full text-[var(--color-blue)] bg-current opacity-90" />
                             ) : null}
                           </button>
                         );
@@ -1764,7 +1768,7 @@ export default function JobDetailPage({
               <main className="min-h-0">
                 <div className="h-full min-h-0 overflow-y-auto   backdrop-blur-md">
                   <div className="border-b border-white/10 px-5 sm:px-6">
-                    <h3 className="my-1 text-2xl font-bebas uppercase font-semibold text-[var(--color-text)]">
+                    <h3 className="my-1 text-2xl font-poppins uppercase font-semibold text-[var(--color-text)]">
                       {activeSection}
                     </h3>
                   </div>

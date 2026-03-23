@@ -16,7 +16,7 @@ body {
   padding-right: 0.25rem;  /* tiny breathing room next to scrollbar */
 }
 .section-scroll-lg {
-  max-height: 40rem;       /* ~384px, tweak as you like */
+  max-height: 38rem;       /* ~384px, tweak as you like */
   overflow-y: auto;        /* enable vertical scrolling when content exceeds max-height */
   padding-right: 0.25rem;  /* tiny breathing room next to scrollbar */
 }
@@ -124,7 +124,7 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      --color-section: #0b0e14;
      --color-fixed-background: #0b0e14;
      --color-surface: #0c1527;          /* elevated canvas */
-     --color-card: #17233a;             /* primary card */
+     --color-card: #14223b;             /* primary card */
      --color-card-hover: #1b283f;
      --color-border: rgba(255,255,255,0.10);
      --color-blue: #0a90f0;
@@ -241,7 +241,7 @@ h1, h2, h3, p, button {
 .font-poppins {
   font-family: "poppins", sans-serif;
 }
-/* ---- Fix Chrome autofill blue/yellow tint ---- */
+/* ---- Fix Chrome autofill so it matches dark inputs ---- */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -251,20 +251,21 @@ textarea:-webkit-autofill:focus,
 select:-webkit-autofill,
 select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
-  /* match your Tailwind bg-neutral-100/60 vibe */
-  -webkit-box-shadow: 0 0 0px 1000px rgba(245, 245, 245, 0.6) inset;
-  box-shadow: 0 0 0px 1000px rgba(245, 245, 245, 0.6) inset;
+  -webkit-text-fill-color: #f5f6f8;
+  caret-color: #f5f6f8;
 
-  /* keep text color consistent */
-  -webkit-text-fill-color: var(--color-text);
+  /* match LoginPage dark field background */
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.03) inset;
+  box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.03) inset;
 
-  /* prevents the browser from animating back to its tint */
-  transition: background-color 9999s ease-out 0s;
+  border-color: rgba(58, 63, 75, 0.7);
+  transition: background-color 9999s ease-out 0s, color 9999s ease-out 0s;
 }
 
-/* Standard-ish selector (supported in some browsers) */
+/* Standard-ish selector */
 input:autofill,
 textarea:autofill,
 select:autofill {
-  box-shadow: 0 0 0px 1000px rgba(245, 245, 245, 0.6) inset;
+  box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.03) inset;
+  -webkit-text-fill-color: #f5f6f8;
 }

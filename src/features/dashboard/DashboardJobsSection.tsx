@@ -295,7 +295,7 @@ export function DashboardJobsSection({
           {...fadeUp(0)}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between  ">
-            <div className="w-full flex justify-between">
+            <div className="w-full flex gap-10">
               {/* Controls row */}
               <div className="flex gap-3  sm:items-center">
                 {/* Search toggle */}
@@ -349,6 +349,25 @@ export function DashboardJobsSection({
                   </span>
                 </button>
               </div>
+              {/* Right chips + primary action */}
+              <div className="flex flex-wrap items-end justify-start gap-2 text-sm md:text-md mb-3 md:mb-0">
+                {hasActiveDateFilter ? (
+                  <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40">
+                    Dates: {rangeLabel || "Custom range"}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                    Date: All time
+                  </span>
+                )}
+
+                <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
+                  Status:{" "}
+                  <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
+                    {statusFilter === "all" ? "All" : statusFilter}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
         </motion.header>
@@ -363,12 +382,12 @@ export function DashboardJobsSection({
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-background)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-card)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
                 {...fadeUp(0.02)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-2xl uppercase font-bebas font-semibold text-[var(--color-text)]">
+                    <h3 className="text-lg uppercase font-poppins font-semibold text-[var(--color-text)]">
                       Create new job
                     </h3>
                   </div>
@@ -384,7 +403,7 @@ export function DashboardJobsSection({
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 Main St, San Antonio, TX"
-                      className="w-full  bg-[var(--color-card)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40"
+                      className="w-full  bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40"
                     />
                   </div>
 
@@ -453,19 +472,19 @@ export function DashboardJobsSection({
 
                   {/* Schedule fields */}
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3 w-full">
-                    <div>
-                      <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                    <div className="w-full">
+                      <label className="mb-1 block text-[11px]  font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                         Schedule felt (optional)
                       </label>
                       <input
                         type="date"
                         value={newFeltDate}
                         onChange={(e) => setNewFeltDate(e.target.value)}
-                        className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
 
-                    <div>
+                    <div className="w-full">
                       <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                         Schedule shingles (optional)
                       </label>
@@ -473,11 +492,11 @@ export function DashboardJobsSection({
                         type="date"
                         value={newShinglesDate}
                         onChange={(e) => setNewShinglesDate(e.target.value)}
-                        className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="w-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
 
-                    <div className="sm:col-span-2">
+                    <div className="w-full">
                       <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                         Schedule punch (optional)
                       </label>
@@ -485,7 +504,7 @@ export function DashboardJobsSection({
                         type="date"
                         value={newPunchDate}
                         onChange={(e) => setNewPunchDate(e.target.value)}
-                        className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="w-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
                   </div>
@@ -537,26 +556,6 @@ export function DashboardJobsSection({
               {...fadeUp(0.06)}
             >
               <div className="flex flex-col  lg:flex-row lg:items-end lg:justify-between">
-                {/* Right chips + primary action */}
-                <div className="flex flex-wrap items-end justify-start gap-2 text-sm md:text-lg mb-3 md:mb-0">
-                  {hasActiveDateFilter ? (
-                    <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
-                      Date: {rangeLabel || "Custom range"}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
-                      Date: All time
-                    </span>
-                  )}
-
-                  <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
-                    Status:{" "}
-                    <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
-                      {statusFilter === "all" ? "All" : statusFilter}
-                    </span>
-                  </span>
-                </div>
-
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="flex items-end gap-2">
                     <div className="flex flex-col">
@@ -570,7 +569,7 @@ export function DashboardJobsSection({
                           setDatePreset("custom");
                           setStartDate(e.target.value);
                         }}
-                        className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
 
@@ -585,7 +584,7 @@ export function DashboardJobsSection({
                           setDatePreset("custom");
                           setEndDate(e.target.value);
                         }}
-                        className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
                   </div>
@@ -805,18 +804,24 @@ export function DashboardJobsSection({
                   >
                     <div className="relative overflow-auto section-scroll">
                       <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                        <thead className="sticky top-0 z-30 bg-[var(--color-background)] pb-4 backdrop-blur text-[11px] uppercase tracking-wide text-[var(--color-text)]">
+                        <thead className="sticky top-0 z-30 bg-[var(--color-background)] pb-4 backdrop-blur md:text-lg font-poppins uppercase tracking-wide text-[var(--color-text)]">
                           <tr>
-                            <th className="text-left px-4 py-3">Job</th>
-                            <th className="text-left px-4 py-3 whitespace-nowrap">
+                            <th className="text-left px-4 py-3 font-light">
+                              Job
+                            </th>
+                            <th className="text-left px-4 py-3 whitespace-nowrap font-light">
                               Status
                             </th>
-                            <th className="text-left px-4 py-3">Note</th>
-                            <th className="text-right px-4 py-3">Net</th>
-                            <th className="text-left px-4 py-3 whitespace-nowrap">
+                            <th className="text-left px-4 py-3 font-light">
+                              Note
+                            </th>
+                            <th className="text-right px-4 py-3 font-light">
+                              Net
+                            </th>
+                            <th className="text-left px-4 py-3 whitespace-nowrap font-light">
                               Last Updated
                             </th>
-                            <th className="text-right px-4 py-3 whitespace-nowrap">
+                            <th className="text-right px-4 py-3 whitespace-nowrap font-light">
                               Actions
                             </th>
                           </tr>
@@ -841,7 +846,7 @@ export function DashboardJobsSection({
                               >
                                 <td className="px-4 py-3">
                                   <div className="min-w-0">
-                                    <div className="truncate max-w-[320px] font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+                                    <div className="truncate max-w-[320px] font-semibold md:text-md lg:text-lg text-[rgb(var(--color-text-rgb)/0.92)]">
                                       <Link
                                         to={`/job/${job.id}`}
                                         className="hover:underline"
@@ -862,7 +867,7 @@ export function DashboardJobsSection({
                                 <td className="px-4 py-3 whitespace-nowrap">
                                   <span
                                     className={cx(
-                                      "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
+                                      "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase",
                                       statusClasses(job.status)
                                     )}
                                   >
@@ -982,20 +987,20 @@ export function DashboardJobsSection({
                 className="xl:col-span-3 min-w-0 w-full xl:justify-self-end"
               >
                 <div className="bg-var(--color-background)] p-4">
-                  <div className="text-sm md:text-lg uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
+                  <div className="text-sm md:text-lg uppercase tracking-wider text-[var(--color-text)]">
                     Total net
                   </div>
-                  <div className="mt-1 text-2xl font-semibold text-[var(--color-text)]">
+                  <div className="mt-1 text-2xl font-semibold text-[rgb(var(--pill-success-rgb))]">
                     <CountMoney cents={totalNet} />
                   </div>
-                  <div className="mt-1 text-[12px] text-[var(--color-accent-gold)]/70">
+                  <div className="mt-1 text-[12px] text-[var(--color-text)]/70">
                     Across {filteredJobs.length} job
                     {filteredJobs.length === 1 ? "" : "s"}
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="p-3 text-sm md:text-md">
-                      <div className=" uppercase tracking-wider text-[rgb(var(--color-text-rgb)/0.55)]">
+                      <div className=" uppercase tracking-wider text-[var(--color-text)]/70">
                         Showing
                       </div>
                       <div className="mt-1  font-semibold text-[var(--color-text)]">
@@ -1007,7 +1012,7 @@ export function DashboardJobsSection({
                     </div>
 
                     <div className="text-sm md:text-md p-3">
-                      <div className="uppercase tracking-wider text-[var(--color-text)]">
+                      <div className="uppercase tracking-wider text-[var(--color-text)]/70">
                         Filter
                       </div>
                       <div className="mt-1 text-xs font-semibold text-[var(--color-text)]">
