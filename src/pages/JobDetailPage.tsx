@@ -2612,13 +2612,87 @@ export default function JobDetailPage({
                     )}
 
                     {activeSection === "Materials" && (
-                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
-                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
-                          Materials
-                        </h4>
-                        <p className="mt-2 text-sm text-[var(--color-muted)]">
-                          Put your Materials content here.
-                        </p>
+                      <section className="">
+                        {/* Materials */}
+                        <MotionCard>
+                          <div className="flex items-center justify-start">
+                            <button
+                              type="button"
+                              onClick={() => setMaterialModalOpen(true)}
+                              className="inline-flex items-center gap-2 cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                              title="Add payout"
+                            >
+                              <Plus className="h-4 w-4" />
+                              <span className="font-poppins text-md uppercase">
+                                Add Materials
+                              </span>
+                            </button>
+                          </div>
+                          <div
+                            className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}
+                          >
+                            <ul className="rounded-lg mt-0">
+                              {(job?.expenses?.materials ?? []).map((m) => (
+                                <motion.li
+                                  key={m.id}
+                                  className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                                  variants={item}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm text-[var(--color-text)]">
+                                        {m.category === "coilNails" &&
+                                          "Coil Nails"}
+                                        {m.category === "tinCaps" && "Tin Caps"}
+                                        {m.category === "plasticJacks" &&
+                                          "Plastic Jacks"}
+                                        {m.category === "counterFlashing" &&
+                                          "Counter Flashing"}
+                                        {m.category === "jFlashing" &&
+                                          "J/L Flashing"}
+                                        {m.category === "rainDiverter" &&
+                                          "Rain Diverter"}
+                                        {m.category === "np1Seal" && "NP1 Seal"}
+                                      </span>
+                                      {m.vendor && (
+                                        <span className="ml-2 text-xs text-[var(--color-muted)]">
+                                          • {m.vendor}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-[var(--color-muted)]">
+                                      {m.quantity} × $
+                                      {(m.unitPriceCents / 100).toFixed(2)}
+                                      {m.createdAt
+                                        ? ` • ${fmtDate(m.createdAt)}`
+                                        : ""}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-3">
+                                    <CountMoney
+                                      cents={m.amountCents}
+                                      className="text-sm text-[var(--color-text)]"
+                                    />
+                                    <button
+                                      onClick={() => removeMaterial(m.id)}
+                                      className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                                      title="Delete"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </motion.li>
+                              ))}
+                              {(job?.expenses?.materials ?? []).length ===
+                                0 && (
+                                <li className="p-3 text-sm text-[var(--color-muted)]">
+                                  No materials added yet.
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        </MotionCard>
                       </section>
                     )}
 
@@ -2779,6 +2853,239 @@ export default function JobDetailPage({
                   </span>
                 ) : null}
               </div>
+            </ModalShell>
+            {/* Add Materials Modal */}
+            <ModalShell
+              open={materialModalOpen}
+              title="Add materials"
+              onClose={() => setMaterialModalOpen(false)}
+            >
+              <form
+                className="grid gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleAddMaterialsSubmit();
+                }}
+              >
+                {/* Scrollable list */}
+                <div className="section-scroll rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 p-3">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div>
+                      <div className="text-sm font-medium text-[var(--color-text)]">
+                        Material items
+                      </div>
+                      <div className="text-xs text-[var(--color-muted)]">
+                        Add one or more items, then submit once.
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={addLineToList}
+                      className={`${UI.btnSoft} h-8 px-3 inline-flex`}
+                      title="Add another material"
+                    >
+                      + Add item
+                    </button>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {materialDrafts.map((m, idx) => {
+                      const lineTotal = materialLineTotal(m);
+                      const canSubmitLine = materialLineCanSubmit(m);
+
+                      return (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Item {idx + 1}
+                              </div>
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Total:{" "}
+                                <span className="font-medium text-[var(--color-text)]">
+                                  ${lineTotal.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => removeLineFromList(idx)}
+                              className={`${UI.btnSoft} h-8 px-3 inline-flex`}
+                              title="Remove item"
+                            >
+                              Remove
+                            </button>
+                          </div>
+
+                          <div className="mt-3 grid gap-3">
+                            <div>
+                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                Category
+                              </label>
+                              <select
+                                value={m.category}
+                                onChange={(e) =>
+                                  updateLine(
+                                    idx,
+                                    "category",
+                                    e.target.value as MaterialCategory
+                                  )
+                                }
+                                className={UI.select}
+                              >
+                                <option value="coilNails">
+                                  Coil Nails (per box)
+                                </option>
+                                <option value="tinCaps">
+                                  Tin Caps (per box)
+                                </option>
+                                <option value="plasticJacks">
+                                  Plastic Jacks (per unit)
+                                </option>
+                                <option value="np1Seal">
+                                  NP1 Seal (per unit)
+                                </option>
+                                <option value="counterFlashing">
+                                  Flashing — Counter (per unit)
+                                </option>
+                                <option value="jFlashing">
+                                  Flashing — J/L (per unit)
+                                </option>
+                                <option value="rainDiverter">
+                                  Flashing — Rain Diverter (per unit)
+                                </option>
+                              </select>
+                            </div>
+
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <div>
+                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                  Unit price ($)
+                                </label>
+                                <input
+                                  value={m.unitPrice}
+                                  onChange={(e) =>
+                                    updateLine(idx, "unitPrice", e.target.value)
+                                  }
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className={UI.input}
+                                />
+                              </div>
+
+                              <div>
+                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                  Quantity
+                                </label>
+                                <input
+                                  value={m.quantity}
+                                  onChange={(e) =>
+                                    updateLine(idx, "quantity", e.target.value)
+                                  }
+                                  type="number"
+                                  min={0}
+                                  step="1"
+                                  placeholder="1"
+                                  className={UI.input}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              <div>
+                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                  Vendor (optional)
+                                </label>
+                                <input
+                                  value={m.vendor || ""}
+                                  onChange={(e) =>
+                                    updateLine(idx, "vendor", e.target.value)
+                                  }
+                                  placeholder="e.g., ABC Supply"
+                                  className={UI.input}
+                                />
+                              </div>
+
+                              <div className="flex items-end justify-between rounded-xl bg-[var(--color-surface)] px-3 py-2">
+                                <div className="text-xs text-[var(--color-muted)]">
+                                  Line status
+                                </div>
+                                <div
+                                  className={`text-xs font-medium ${
+                                    canSubmitLine
+                                      ? "text-emerald-700"
+                                      : "text-[var(--color-muted)]"
+                                  }`}
+                                >
+                                  {canSubmitLine
+                                    ? "Ready"
+                                    : "Missing price/qty"}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Footer summary + actions */}
+                <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setMaterialModalOpen(false)}
+                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
+
+                  <div className="flex items-center gap-2 ml-auto">
+                    <div className="text-xs text-[var(--color-muted)] mr-2">
+                      Total:{" "}
+                      <span className="font-medium text-[var(--color-text)]">
+                        ${materialsGrandTotal.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={clearLines}
+                      disabled={
+                        !materialDrafts.some(
+                          (d) => d.unitPrice || d.quantity || d.vendor
+                        )
+                      }
+                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                      title="Reset all items"
+                    >
+                      Clear
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={!anyMaterialValid}
+                      className={`${UI.btnPrimary} h-8 px-5 inline-flex ${
+                        !anyMaterialValid ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      Add materials
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-[var(--color-muted)]">
+                  Tip: you can add multiple items here and save once. The list
+                  area scrolls when it gets long.
+                </div>
+              </form>
             </ModalShell>
           </div>
 
@@ -3804,239 +4111,6 @@ export default function JobDetailPage({
                   >
                     Save
                   </button>
-                </div>
-              </form>
-            </ModalShell>
-            {/* Add Materials Modal */}
-            <ModalShell
-              open={materialModalOpen}
-              title="Add materials"
-              onClose={() => setMaterialModalOpen(false)}
-            >
-              <form
-                className="grid gap-3"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  await handleAddMaterialsSubmit();
-                }}
-              >
-                {/* Scrollable list */}
-                <div className="section-scroll rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 p-3">
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div>
-                      <div className="text-sm font-medium text-[var(--color-text)]">
-                        Material items
-                      </div>
-                      <div className="text-xs text-[var(--color-muted)]">
-                        Add one or more items, then submit once.
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={addLineToList}
-                      className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                      title="Add another material"
-                    >
-                      + Add item
-                    </button>
-                  </div>
-
-                  <div className="grid gap-3">
-                    {materialDrafts.map((m, idx) => {
-                      const lineTotal = materialLineTotal(m);
-                      const canSubmitLine = materialLineCanSubmit(m);
-
-                      return (
-                        <div
-                          key={idx}
-                          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="text-xs text-[var(--color-muted)]">
-                                Item {idx + 1}
-                              </div>
-                              <div className="text-xs text-[var(--color-muted)]">
-                                Total:{" "}
-                                <span className="font-medium text-[var(--color-text)]">
-                                  ${lineTotal.toFixed(2)}
-                                </span>
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => removeLineFromList(idx)}
-                              className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                              title="Remove item"
-                            >
-                              Remove
-                            </button>
-                          </div>
-
-                          <div className="mt-3 grid gap-3">
-                            <div>
-                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                Category
-                              </label>
-                              <select
-                                value={m.category}
-                                onChange={(e) =>
-                                  updateLine(
-                                    idx,
-                                    "category",
-                                    e.target.value as MaterialCategory
-                                  )
-                                }
-                                className={UI.select}
-                              >
-                                <option value="coilNails">
-                                  Coil Nails (per box)
-                                </option>
-                                <option value="tinCaps">
-                                  Tin Caps (per box)
-                                </option>
-                                <option value="plasticJacks">
-                                  Plastic Jacks (per unit)
-                                </option>
-                                <option value="np1Seal">
-                                  NP1 Seal (per unit)
-                                </option>
-                                <option value="counterFlashing">
-                                  Flashing — Counter (per unit)
-                                </option>
-                                <option value="jFlashing">
-                                  Flashing — J/L (per unit)
-                                </option>
-                                <option value="rainDiverter">
-                                  Flashing — Rain Diverter (per unit)
-                                </option>
-                              </select>
-                            </div>
-
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              <div>
-                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                  Unit price ($)
-                                </label>
-                                <input
-                                  value={m.unitPrice}
-                                  onChange={(e) =>
-                                    updateLine(idx, "unitPrice", e.target.value)
-                                  }
-                                  type="number"
-                                  min={0}
-                                  step="0.01"
-                                  placeholder="0.00"
-                                  className={UI.input}
-                                />
-                              </div>
-
-                              <div>
-                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                  Quantity
-                                </label>
-                                <input
-                                  value={m.quantity}
-                                  onChange={(e) =>
-                                    updateLine(idx, "quantity", e.target.value)
-                                  }
-                                  type="number"
-                                  min={0}
-                                  step="1"
-                                  placeholder="1"
-                                  className={UI.input}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              <div>
-                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                  Vendor (optional)
-                                </label>
-                                <input
-                                  value={m.vendor || ""}
-                                  onChange={(e) =>
-                                    updateLine(idx, "vendor", e.target.value)
-                                  }
-                                  placeholder="e.g., ABC Supply"
-                                  className={UI.input}
-                                />
-                              </div>
-
-                              <div className="flex items-end justify-between rounded-xl bg-[var(--color-surface)] px-3 py-2">
-                                <div className="text-xs text-[var(--color-muted)]">
-                                  Line status
-                                </div>
-                                <div
-                                  className={`text-xs font-medium ${
-                                    canSubmitLine
-                                      ? "text-emerald-700"
-                                      : "text-[var(--color-muted)]"
-                                  }`}
-                                >
-                                  {canSubmitLine
-                                    ? "Ready"
-                                    : "Missing price/qty"}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Footer summary + actions */}
-                <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setMaterialModalOpen(false)}
-                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                  >
-                    Cancel
-                  </button>
-
-                  <div className="flex items-center gap-2 ml-auto">
-                    <div className="text-xs text-[var(--color-muted)] mr-2">
-                      Total:{" "}
-                      <span className="font-medium text-[var(--color-text)]">
-                        ${materialsGrandTotal.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={clearLines}
-                      disabled={
-                        !materialDrafts.some(
-                          (d) => d.unitPrice || d.quantity || d.vendor
-                        )
-                      }
-                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                      title="Reset all items"
-                    >
-                      Clear
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={!anyMaterialValid}
-                      className={`${UI.btnPrimary} h-8 px-5 inline-flex ${
-                        !anyMaterialValid ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      Add materials
-                    </button>
-                  </div>
-                </div>
-
-                <div className="text-[11px] text-[var(--color-muted)]">
-                  Tip: you can add multiple items here and save once. The list
-                  area scrolls when it gets long.
                 </div>
               </form>
             </ModalShell>
