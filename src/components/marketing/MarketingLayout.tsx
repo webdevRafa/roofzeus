@@ -16,7 +16,7 @@ const fade: Variants = {
 
 export default function MarketingLayout() {
   return (
-    <div className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
+    <div className="min-h-screen  text-[#f5f6f8]">
       <MarketingNav />
 
       {/* Global marketing background treatment */}
@@ -32,7 +32,7 @@ export default function MarketingLayout() {
         </motion.div>
 
         {/* Footer */}
-        <footer className="relative  bg-[#0b0e14]/75 backdrop-blur pb-10">
+        <footer className="relative  bg-[#14223b] bg-gradient-to-b from-[#0c1527] to-[#14223b] backdrop-blur pb-10">
           <div className="relative mx-auto max-w-7xl px-6 py-5">
             {/* Bottom bar */}
             <div className="mt-10 flex flex-row items-center justify-between gap-3 border-t border-white/10 pt-5 text-[12px] text-white w-full">

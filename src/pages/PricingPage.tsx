@@ -90,7 +90,7 @@ export default function PricingPage() {
   const priceSub = billing === "monthly" ? "/ month" : "/ year";
 
   return (
-    <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
+    <main className="min-h-screen bg-[#0c1527] text-[#f5f6f8]">
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-[#3a3f4b]">
         <motion.div

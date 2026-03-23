@@ -27,7 +27,7 @@ export default function App() {
   }, []);
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
+      <div className="min-h-screen  ">
         <BrowserRouter>
           <ScrollToTop />
           {showApp ? <AppRouter /> : <MarketingRouter />}

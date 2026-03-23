@@ -168,7 +168,7 @@ export default function MarketingNav() {
       <header className="sticky top-0 z-50">
         {/* background + blur */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="h-full w-full bg-[#0b0e14]/70 backdrop-blur-xl" />
+          <div className="h-full w-full bg-[#0c1527] backdrop-blur-xl" />
         </div>
 
         {/* slightly tighter overall; avoid huge max width causing the nav to feel “floating” */}
@@ -307,7 +307,7 @@ export default function MarketingNav() {
               variants={drawerIn}
               className={cx(
                 "",
-                "border border-[#3a3f4b] bg-[#0b0e14]/90 backdrop-blur-xl",
+                "border border-[#3a3f4b] bg-[#0c1527] ",
                 "shadow-[0_30px_120px_rgba(0,0,0,0.65)]"
               )}
               role="dialog"
@@ -345,11 +345,11 @@ export default function MarketingNav() {
                       to={it.to}
                       className={({ isActive }) =>
                         cx(
-                          "rounded-xl px-3 py-3 text-sm font-semibold transition",
-                          "border border-white/10",
+                          " px-3 py-3 text-sm font-semibold transition",
+                          "border border-white/10 bg-[#14223b]",
                           isActive
-                            ? "bg-white/10 text-[#f5f6f8]"
-                            : "bg-white/5 text-white/75 hover:bg-white/10"
+                            ? "bg-[#14223b] text-[#f5f6f8]"
+                            : "bg-[#14223b] text-white/75 hover:bg-white/10"
                         )
                       }
                     >
@@ -370,8 +370,8 @@ export default function MarketingNav() {
                         <Link
                           to="/signup"
                           className={cx(
-                            "inline-flex items-center justify-center gap-2 w-[200px]",
-                            "rounded-xl border-[var(--color-blue)] border-1 text-white px-4 py-1",
+                            "inline-flex items-center justify-center  gap-2 w-[200px]",
+                            " text-white px-4 py-1",
                             "px-4 py-3 text-sm font-semibold text-white/85"
                           )}
                         >
@@ -386,7 +386,7 @@ export default function MarketingNav() {
                     to="/login"
                     className={cx(
                       "flex items-center justify-center gap-2",
-                      "rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 w-[200px]",
+                      " w-[200px]",
                       "px-4 py-3 text-sm font-semibold text-white/85",
                       "hover:border-[#cfae5d] transition"
                     )}
