@@ -34,7 +34,7 @@ import {
 import { MdArrowBackIos } from "react-icons/md";
 
 import { getStorage, ref as storageRef, uploadBytes } from "firebase/storage";
-import { AnimatePresence, motion, type MotionProps } from "framer-motion";
+import { motion, type MotionProps } from "framer-motion";
 import CountUp from "react-countup";
 import { Pencil } from "lucide-react";
 import InvoiceCreateModal from "../components/InvoiceCreateModal";
