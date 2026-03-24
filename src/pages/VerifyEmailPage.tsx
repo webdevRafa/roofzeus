@@ -10,6 +10,7 @@ import {
   confirmCustomEmailVerificationCallable,
 } from "../firebase/emailVerification";
 import { Mail, RefreshCcw } from "lucide-react";
+import roof from "../assets/roof-lightning.svg";
 
 // Match the motion + visual language you’re using in HomePage.tsx
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -309,16 +310,17 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0e14] text-[#f5f6f8] overflow-x-hidden">
+    <main className="min-h-screen bg-[#0c1527] text-[#f5f6f8] overflow-x-hidden">
       <motion.div
         variants={stagger}
         initial="hidden"
         animate="show"
-        className="relative max-w-7xl mx-auto px-6 pt-24 pb-16"
+        className="relative max-w-7xl mx-auto  px-6 pt-24 pb-16"
       >
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
+        <div className="grid lg:grid-cols-12 gap-8 items-center  ">
           {/* Left copy */}
           <motion.div variants={fadeUp} className="lg:col-span-6">
+            <img className="w-[300px]" src={roof} alt="" />
             <h1 className="mt-4 text-3xl md:text-4xl font-semibold tracking-tight text-white leading-[1.05]">
               Verify your email to unlock the dashboard.
             </h1>
@@ -328,7 +330,8 @@ export default function VerifyEmailPage() {
               <span className="text-white/90 font-semibold">
                 {email ?? "your email"}
               </span>
-              . Once you click it, this page will automatically continue.
+              . Once you click it, you will be prompted to sign in with your
+              credentials and then you will be routed to the dashboard.
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
@@ -338,7 +341,7 @@ export default function VerifyEmailPage() {
                 whileTap={{ scale: 0.98 }}
                 disabled={busy}
                 onClick={onRefreshStatus}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#3a3f4b] bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:border-[#cfae5d] hover:bg-white/10 transition disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2  px-5 py-2.5 text-sm font-semibold text-white/70 hover:text-white  transition disabled:opacity-60"
               >
                 <RefreshCcw className="h-4 w-4" />
                 I've Verified My Email
@@ -350,14 +353,14 @@ export default function VerifyEmailPage() {
                 whileTap={{ scale: 0.98 }}
                 disabled={busy}
                 onClick={onResend}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#cfae5d] px-5 py-2.5 text-sm font-semibold text-black hover:opacity-90 transition disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 cursor-pointer  bg-[#0a90f0]/30 hover:bg-[#0a90f0]/40 transition! duration-300 ease-in-out px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90  disabled:opacity-60"
               >
                 <Mail className="h-4 w-4" />
                 Resend email
               </motion.button>
             </div>
 
-            <div className="mt-6 text-[12px] text-white/55">
+            <div className="mt-10 text-[12px] text-white/55">
               Tip: check spam/junk. If you clicked the verification link on your
               phone, keep this tab open — it will redirect automatically after
               you login.
@@ -374,29 +377,29 @@ export default function VerifyEmailPage() {
             <div className="relative overflow-hidden rounded-2xl ">
               <div className="relative">
                 <div className="mt-5 grid gap-3">
-                  <div className="rounded-xl border  border-[#3a3f4b] bg-[#0b0e14]/35 p-4">
-                    <div className="text-[11px] uppercase tracking-wide text-white/50">
+                  <div className=" p-4">
+                    <div className="text-sm md:text-lg uppercase tracking-wide text-white">
                       Step 1
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-white/85">
+                    <div className="mt-1 text-sm md:text-lg font-semibold text-white/85">
                       Open the verification email
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-4">
-                    <div className="text-[11px] uppercase tracking-wide text-white/50">
+                  <div className="p-4">
+                    <div className="text-sm md:text-lg uppercase tracking-wide text-white">
                       Step 2
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-white/85">
+                    <div className="mt-1 text-sm md:text-lg font-semibold text-white/85">
                       Click the link
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/35 p-4">
-                    <div className="text-[11px] uppercase tracking-wide text-white/50">
+                  <div className=" p-4">
+                    <div className="text-sm md:text-lg uppercase tracking-wide text-white">
                       Step 3
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-white/85">
+                    <div className="mt-1 text-sm md:text-lg font-semibold text-white/85">
                       Sign in
                     </div>
                   </div>

@@ -83,7 +83,7 @@ function Field({
         type={type}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="w-full rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/55 px-3 py-2 text-sm text-[#f5f6f8] placeholder:text-white/35 outline-none focus:border-[#cfae5d]/45 focus:ring-2 focus:ring-[#cfae5d]/10"
+        className="w-full   bg-[#14223b] px-3 py-2 text-sm text-[#f5f6f8] placeholder:text-white/35 outline-none  focus:ring-2 focus:ring-[#0a90f0]/40"
       />
     </label>
   );
@@ -120,7 +120,7 @@ function PasswordField({
           type={show ? "text" : "password"}
           placeholder={placeholder}
           autoComplete="new-password"
-          className="w-full rounded-xl border border-[#3a3f4b] bg-[#0b0e14]/55 px-3 py-2 pr-10 text-sm text-[#f5f6f8] placeholder:text-white/35 outline-none focus:border-[#cfae5d]/45 focus:ring-2 focus:ring-[#cfae5d]/10"
+          className="w-full  bg-[#14223b] px-3 py-2 pr-10 text-sm text-[#f5f6f8] placeholder:text-white/35 outline-none focus:border-[#cfae5d]/45 focus:ring-2 focus:ring-[#0a90f0]/40"
         />
         <button
           type="button"
@@ -402,7 +402,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0e14] text-[#f5f6f8]">
+    <div className="min-h-screen bg-[#0c1527] text-[#f5f6f8]">
       <img className="w-[220px] mx-auto mt-20" src={logo} alt="" />
       <motion.h1
         variants={fadeUp}
@@ -428,7 +428,7 @@ export default function SignupPage() {
             {/* form */}
             <motion.div
               variants={cardIn}
-              className="md:col-span-3 rounded-3xl border border-[#3a3f4b] bg-[#0b0e14]/55 p-6 shadow-[0_30px_100px_rgba(0,0,0,0.55)]"
+              className="md:col-span-3   bg-[#0c1527] px-6 py-6 md:px-6 md:py-10 "
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -549,7 +549,7 @@ export default function SignupPage() {
                           <motion.div
                             initial={false}
                             animate={{ opacity: draft.password ? 1 : 0.95 }}
-                            className="mt-2 rounded-2xl border border-white/10  p-3"
+                            className="mt-6   p-3"
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-[11px] text-white/50">
@@ -683,8 +683,8 @@ export default function SignupPage() {
                           ) : null}
                         </div>
 
-                        <div className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-4">
-                          <div className="text-sm font-semibold text-white">
+                        <div className="sm:col-span-2  p-4">
+                          <div className="text-sm md:text-lg font-semibold text-white">
                             Review your workspace
                           </div>
 
@@ -742,7 +742,7 @@ export default function SignupPage() {
               </div>
 
               {error ? (
-                <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-100">
+                <div className="mt-4  border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-100 max-w-[400px]">
                   {error}
                 </div>
               ) : null}
@@ -761,7 +761,7 @@ export default function SignupPage() {
                     <button
                       type="button"
                       onClick={goBackStep}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#3a3f4b] bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer hover:bg-white/10"
+                      className="inline-flex items-center justify-center gap-2   px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer "
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Back
@@ -772,7 +772,7 @@ export default function SignupPage() {
                     <button
                       type="button"
                       onClick={goNextStep}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border-1 border-[var(--color-blue)] px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer hover:brightness-95"
+                      className="inline-flex items-center justify-center gap-2 bg-[#0a90f0]/30 hover:bg-[#0a90f0]/40 transition! duration-300 ease-in-out px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer hover:brightness-95"
                     >
                       Continue
                       <ArrowRight className="h-4 w-4" />
@@ -783,8 +783,8 @@ export default function SignupPage() {
                       onClick={onSubmit}
                       disabled={!canSubmit}
                       className={[
-                        "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold",
-                        "border-1 border-[var(--color-blue)] text-white/70 hover:text-white cursor-pointer ",
+                        "inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold",
+                        " bg-[#0a90f0]/30 hover:bg-[#0a90f0]/40 transition! duration-300 ease-in-out text-white/70 hover:text-white cursor-pointer ",
                         "disabled:opacity-50 disabled:cursor-not-allowed",
                       ].join(" ")}
                     >

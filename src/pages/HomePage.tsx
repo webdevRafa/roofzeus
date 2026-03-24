@@ -684,10 +684,10 @@ function StickyCtaBar({ show }: { show: boolean }) {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="md:hidden fixed left-0 right-0 top-16 z-[40] px-4"
         >
-          <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-[#0c1527] backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] p-3">
+          <div className="mx-auto max-w-7xl \ border border-white/10 bg-[#0c1527] backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.55)] p-3">
             <div className="flex items-center gap-3 w-full">
               <a
-                className="flex-1 inline-flex items-center justify-center   px-4 py-2.5 rounded-xl text-xs font-semibold text-white transition! bg-gradient-to-b from-[var(--color-surface)] to-[var(--color-card)] hover:bg-[#191f2c]   duration-300 ease-in-out"
+                className="flex-1 inline-flex items-center justify-center   px-4 py-2.5 text-xs font-semibold text-white transition! bg-[#14223b]   duration-300 ease-in-out"
                 href="https://app.roofzeus.com/signup"
               >
                 Try it free
