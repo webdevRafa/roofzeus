@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type MotionProps } from "framer-motion";
 import { SlidersHorizontal, Plus } from "lucide-react";
 import type { JobStatus } from "../types/types";
 import { useOrgJobsData } from "../hooks/useOrgJobsData";
 import { DashboardJobsSection } from "../features/dashboard/DashboardJobsSection";
-
+import { Search, Filter } from "lucide-react";
 // A helper type for Firestore timestamps. See useOrgJobsData.ts.
 type FsTimestampLike = { toDate: () => Date };
 
@@ -181,6 +181,15 @@ function SortMenu({
   );
 }
 
+// ---- Motion helpers ----
+const EASE = [0.16, 1, 0.3, 1] as const;
+
+const fadeUp = (delay = 0): MotionProps => ({
+  initial: { opacity: 0, y: 12, filter: "blur(6px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  transition: { duration: 0.5, ease: EASE, delay },
+});
+
 // Main JobsPage component. This page consolidates the job list, search and
 // filter controls, a sticky header with a new job button, and sorting logic.
 export default function JobsPage() {
@@ -307,30 +316,176 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] relative">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-16  md:top-18  flex items-center justify-between  bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-8xl mx-auto z-80">
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-2xl font-semibold text-[var(--color-text)] uppercase font-bebas">
-            Jobs
-          </h1>
-          <span className="ml-1 text-xs sm:text-sm text-[var(--color-muted)]">
-            {totalJobs}
-          </span>
+      <header className="sticky top-16  md:top-18   bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-8xl mx-auto z-80">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <h1 className="text-2xl font-semibold text-[var(--color-text)] uppercase font-bebas">
+              Jobs
+            </h1>
+            <span className="ml-1 text-xs sm:text-sm text-[var(--color-muted)]">
+              {totalJobs}
+            </span>
+          </div>
+          {/* large only date status */}
+
+          <div className="hidden xl:flex gap-2 md:gap-6 flex-row justify-start items-center mt-4 ">
+            {/* Search toggle */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSearch((v) => !v)}
+                className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-xs md:text-md font-semibold   transition  ${
+                  showSearch === true
+                    ? "text-[var(--color-primary)]"
+                    : "text-[var(--color-text)]"
+                }`}
+                title="Search addresses"
+                aria-label="Search addresses"
+              >
+                <Search size={18} className="mr-2" />
+                <span>Search</span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {showSearch && (
+                  <motion.div
+                    {...fadeUp(0.02)}
+                    className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 shadow-lg  bg-[var(--color-background)] backdrop-blur px-4 py-5  z-60 relative "
+                  >
+                    <input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search by address…"
+                      className="w-full  border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 "
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            {/* Date filter toggle */}
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-xs md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+                showFilters
+                  ? "text-[var(--color-primary)]"
+                  : "text-[var(--color-text)]"
+              }`}
+              title="Filter by last updated date"
+            >
+              <Filter size={16} className="mr-2" />
+              <span>
+                {hasActiveDateFilter ? "Edit date range" : "Date filters"}
+              </span>
+            </button>
+            {/* show what dates are being filtered, and status */}
+            <div className="flex flex-row justify-start gap-1 text-xs md:text-md mb-3 md:mb-0">
+              {hasActiveDateFilter ? (
+                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40">
+                  Dates: {rangeLabel || "Custom range"}
+                </span>
+              ) : (
+                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                  Date: All time
+                </span>
+              )}
+
+              <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
+                Status:{" "}
+                <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
+                  {statusFilter === "all" ? "All" : statusFilter}
+                </span>
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* New job button */}
+            <button
+              type="button"
+              onClick={() => setOpenForm(true)}
+              className="inline-flex items-center gap-2  px-3 py-2 text-sm md:text-md  font-poppins  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
+            >
+              <Plus className="h-4 w-4" />
+              New job
+            </button>
+            {/* Sort menu */}
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4 text-[var(--color-muted)]" />
+
+              <SortMenu value={sortOption} onChange={(v) => setSortOption(v)} />
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {/* New job button */}
+
+        {/* Cotnainer for the search, date filters, status */}
+        <div className="flex xl:hidden gap-2 md:gap-6 flex-row justify-start mt-4 ">
+          {/* Search toggle */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowSearch((v) => !v)}
+              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-xs md:text-md font-semibold   transition  ${
+                showSearch === true
+                  ? "text-[var(--color-primary)]"
+                  : "text-[var(--color-text)]"
+              }`}
+              title="Search addresses"
+              aria-label="Search addresses"
+            >
+              <Search size={18} className="mr-2" />
+              <span>Search</span>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {showSearch && (
+                <motion.div
+                  {...fadeUp(0.02)}
+                  className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 shadow-lg  bg-[var(--color-background)] backdrop-blur px-4 py-5  z-60 relative "
+                >
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by address…"
+                    className="w-full  border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 "
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          {/* Date filter toggle */}
           <button
             type="button"
-            onClick={() => setOpenForm(true)}
-            className="inline-flex items-center gap-2  px-3 py-2 text-sm md:text-md  font-poppins  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
+            onClick={() => setShowFilters((v) => !v)}
+            className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-xs md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+              showFilters
+                ? "text-[var(--color-primary)]"
+                : "text-[var(--color-text)]"
+            }`}
+            title="Filter by last updated date"
           >
-            <Plus className="h-4 w-4" />
-            New job
+            <Filter size={16} className="mr-2" />
+            <span>
+              {hasActiveDateFilter ? "Edit date range" : "Date filters"}
+            </span>
           </button>
-          {/* Sort menu */}
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-[var(--color-muted)]" />
+          {/* show what dates are being filtered, and status */}
+          <div className="flex flex-row justify-start gap-1 text-xs md:text-md mb-3 md:mb-0">
+            {hasActiveDateFilter ? (
+              <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40">
+                Dates: {rangeLabel || "Custom range"}
+              </span>
+            ) : (
+              <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                Date: All time
+              </span>
+            )}
 
-            <SortMenu value={sortOption} onChange={(v) => setSortOption(v)} />
+            <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
+              Status:{" "}
+              <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
+                {statusFilter === "all" ? "All" : statusFilter}
+              </span>
+            </span>
           </div>
         </div>
       </header>

@@ -1719,6 +1719,43 @@ export default function JobDetailPage({
   return (
     <>
       <div className="w-full relative">
+        {/* ===== Global Toast ===== */}
+        {toast && (
+          <div className="fixed max-w-[300px] right-20 top-20 z-100">
+            <div className="flex items-start gap-3  bg-[var(--color-card)] px-4 py-10 text-sm shadow-lg ">
+              <div className="mt-0.5">
+                {toast.status === "success" ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div
+                  className={
+                    "font-semibold " +
+                    (toast.status === "success"
+                      ? "text-emerald-700"
+                      : "text-red-600")
+                  }
+                >
+                  {toast.title}
+                </div>
+                <div className="mt-0.5 text-xs text-[var(--color-muted)]">
+                  {toast.message}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setToast(null)}
+                className="ml-2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                aria-label="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
         <motion.h1
           {...fadeUp(0)}
           className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight  bg-[var(--color-background)] text-center sticky top-18 z-40 py-1"
@@ -3368,44 +3405,6 @@ export default function JobDetailPage({
                 </div>
               </MotionCard>
             </div>
-
-            {/* ===== Global Toast ===== */}
-            {toast && (
-              <div className="fixed max-w-[300px] right-20 top-20 z-100">
-                <div className="flex items-start gap-3  bg-[var(--color-card)] px-4 py-10 text-sm shadow-lg ">
-                  <div className="mt-0.5">
-                    {toast.status === "success" ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                    ) : (
-                      <AlertTriangle className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div
-                      className={
-                        "font-semibold " +
-                        (toast.status === "success"
-                          ? "text-emerald-700"
-                          : "text-red-600")
-                      }
-                    >
-                      {toast.title}
-                    </div>
-                    <div className="mt-0.5 text-xs text-[var(--color-muted)]">
-                      {toast.message}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setToast(null)}
-                    className="ml-2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                    aria-label="Dismiss"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* ===== Photo Lightbox ===== */}
             {viewerOpen && photos.length > 0 && (
