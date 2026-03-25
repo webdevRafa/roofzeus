@@ -22,7 +22,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import BrandLogoModal from "../components/BrandLogoModal";
 
-import logo from "../assets/logo-white.svg";
+import logo from "../assets/rz-modern-white.svg";
 
 type AppNavItem = {
   to: string;
@@ -181,7 +181,7 @@ export default function AdminLayout() {
                   <img
                     src={logo}
                     alt="RoofZeus logo"
-                    className="w-[40px] brand-logo mr-6 lg:mr-20"
+                    className="w-[70px] brand-logo mr-6 lg:mr-20"
                   />
                 </button>
                 {/* MOBILE: org row */}
