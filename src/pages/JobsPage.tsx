@@ -93,7 +93,7 @@ function SortMenu({
         type="button"
         onClick={() => setOpen((s) => !s)}
         whileTap={{ scale: 0.98 }}
-        className="group inline-flex items-center gap-2   px-3 py-2 font-poppins  text-sm md:text-md font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
+        className="group inline-flex items-center gap-2   px-3 py-2   text-xs font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -316,7 +316,7 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] relative">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-16  md:top-18   bg-[var(--color-background))] backdrop-blur px-4 py-1.5 max-w-8xl mx-auto z-80">
+      <header className="sticky top-16  md:top-18   bg-[var(--color-background))] backdrop-blur px-4 pt-4 pb-2 max-w-8xl mx-auto z-80">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <h1 className="text-2xl font-semibold text-[var(--color-text)] uppercase font-bebas">
@@ -404,7 +404,7 @@ export default function JobsPage() {
             <button
               type="button"
               onClick={() => setOpenForm(true)}
-              className="inline-flex items-center gap-2  px-3 py-2 text-sm md:text-md  font-poppins  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
+              className="inline-flex items-center gap-2  px-3 py-2 text-xs    text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
             >
               <Plus className="h-4 w-4" />
               New job
@@ -471,7 +471,7 @@ export default function JobsPage() {
           </div>
         </div>
         {/* show what dates are being filtered, and status */}
-        <div className="xl:hidden flex flex-row justify-start h-full gap-1 text-sm md:text-md   md:mb-0">
+        <div className="xl:hidden flex flex-row justify-start h-full gap-4 text-sm md:text-md   md:mb-0">
           {hasActiveDateFilter ? (
             <span className="inline-flex items-center    text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40 px-3">
               Dates: {rangeLabel || "Custom range"}
