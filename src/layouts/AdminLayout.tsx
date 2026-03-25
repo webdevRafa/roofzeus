@@ -305,7 +305,7 @@ export default function AdminLayout() {
                 <button
                   onClick={handleLogout}
                   disabled={signingOut}
-                  className="inline-flex p-2 items-center justify-center rounded-xl bg-red-600/20 border-1 border-red-600/30 text-white  transition hover:bg-red-500/50 cursor-pointer disabled:opacity-60 mr-4 md:mr-0"
+                  className="inline-flex p-2 items-center justify-center  text-red-400  transition hover:bg-red-500/50 cursor-pointer disabled:opacity-60 mr-4 md:mr-0"
                   aria-label="Sign out"
                   title={signingOut ? "Signing out..." : "Sign out"}
                 >

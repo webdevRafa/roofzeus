@@ -10,10 +10,8 @@ export function ThemeToggleButton() {
       type="button"
       onClick={toggleTheme}
       className={[
-        "inline-flex items-center gap-2 rounded-xl p-2 text-sm font-semibold",
-        "ring-1 ring-[rgb(var(--color-border-rgb)/0.14)]",
-        "bg-[rgb(var(--color-surface-rgb)/0.45)] hover:bg-[rgb(var(--color-surface-rgb)/0.65)]",
-        "text-[rgb(var(--color-text-rgb)/0.90)]",
+        "inline-flex  items-center gap-2 rounded-xl p-2 text-sm font-semibold",
+        "text-[var(--color-text)] hover:text-[var(--color-blue)]",
         "backdrop-blur-md hover:shadow-md",
       ].join(" ")}
       aria-label="Toggle theme"

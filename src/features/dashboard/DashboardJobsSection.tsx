@@ -288,10 +288,10 @@ export function DashboardJobsSection({
 }: DashboardJobsSectionProps) {
   return (
     <>
-      <section className=" hover:shadow-md overflow-hidden  mt-5">
+      <section className=" hover:shadow-md overflow-hidden  mt-2 md:mt-5">
         {/* Header */}
         <motion.header
-          className="select-none border-b border-[var(--color-border)] px-4 sm:px-6 py-1.5 relative z-50"
+          className="select-none border-b border-[var(--color-border)]  sm:px-6 py-1.5 relative z-50"
           {...fadeUp(0)}
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between  ">
@@ -303,7 +303,7 @@ export function DashboardJobsSection({
                   <button
                     type="button"
                     onClick={() => setShowSearch((v) => !v)}
-                    className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-[10px] md:text-[12px] font-semibold   transition  ${
+                    className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-xs md:text-md font-semibold   transition  ${
                       showSearch === true
                         ? "text-[var(--color-primary)]"
                         : "text-[var(--color-text)]"
@@ -319,7 +319,7 @@ export function DashboardJobsSection({
                     {showSearch && (
                       <motion.div
                         {...fadeUp(0.02)}
-                        className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 shadow-lg  bg-[var(--color-background)] backdrop-blur px-4 py-5  z-60 relative "
+                        className="mt-0 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 shadow-lg  bg-[var(--color-background)] backdrop-blur px-4 py-5  z-60 relative "
                       >
                         <input
                           value={searchTerm}
@@ -336,7 +336,7 @@ export function DashboardJobsSection({
                 <button
                   type="button"
                   onClick={() => setShowFilters((v) => !v)}
-                  className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-[10px] md:text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+                  className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-xs md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
                     showFilters
                       ? "text-[var(--color-primary)]"
                       : "text-[var(--color-text)]"
@@ -350,7 +350,7 @@ export function DashboardJobsSection({
                 </button>
               </div>
               {/* Right chips + primary action */}
-              <div className="flex flex-wrap items-end justify-start gap-2 text-sm md:text-md mb-3 md:mb-0">
+              <div className="flex flex-row items-center justify-start gap-2 text-xs md:text-md mb-3 md:mb-0">
                 {hasActiveDateFilter ? (
                   <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40">
                     Dates: {rangeLabel || "Custom range"}

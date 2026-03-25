@@ -93,7 +93,7 @@ function SortMenu({
         type="button"
         onClick={() => setOpen((s) => !s)}
         whileTap={{ scale: 0.98 }}
-        className="group inline-flex items-center gap-2   px-3 py-2 font-poppins text-lg font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
+        className="group inline-flex items-center gap-2   px-3 py-2 font-poppins  text-sm md:text-md font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -321,7 +321,7 @@ export default function JobsPage() {
           <button
             type="button"
             onClick={() => setOpenForm(true)}
-            className="inline-flex items-center gap-2  px-3 py-2 text-lg  font-poppins  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
+            className="inline-flex items-center gap-2  px-3 py-2 text-sm md:text-md  font-poppins  text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
           >
             <Plus className="h-4 w-4" />
             New job
