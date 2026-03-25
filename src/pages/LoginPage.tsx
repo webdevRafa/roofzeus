@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import logo from "../assets/logo-white.svg";
+import logo from "../assets/rz-modern-white.svg";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 // Assumes you export `auth` from ./firebase/firebaseConfig
