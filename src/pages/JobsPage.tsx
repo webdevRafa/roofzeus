@@ -419,13 +419,13 @@ export default function JobsPage() {
         </div>
 
         {/*  mobile only search and date filters */}
-        <div className="xl:hidden flex gap-5 md:gap-6 flex-row  h-full ">
+        <div className="xl:hidden flex gap-5 md:gap-6 flex-row  h-full my-2 ">
           {/* Search toggle */}
           <div className="relative ">
             <button
               type="button"
               onClick={() => setShowSearch((v) => !v)}
-              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl   text-[10px] md:text-md font-semibold   transition  ${
+              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl   text-sm md:text-md font-semibold   transition  ${
                 showSearch === true
                   ? "text-[rgb(var(--pill-success-rgb))]"
                   : "text-[var(--color-text)]"
@@ -458,7 +458,7 @@ export default function JobsPage() {
             <button
               type="button"
               onClick={() => setShowFilters((v) => !v)}
-              className={`cursor-pointer hover:shadow-md inline-flex  items-end justify-center   text-[10px] md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+              className={`cursor-pointer hover:shadow-md inline-flex  items-end justify-center   text-sm md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
                 showFilters
                   ? "text-[rgb(var(--pill-success-rgb))]"
                   : "text-[var(--color-text)]"
@@ -469,25 +469,25 @@ export default function JobsPage() {
               <span>{hasActiveDateFilter ? "Edit dates" : "Date filters"}</span>
             </button>
           </div>
-          {/* show what dates are being filtered, and status */}
-          <div className="flex flex-row justify-start h-full gap-1 text-[10px] md:text-md   md:mb-0">
-            {hasActiveDateFilter ? (
-              <span className="inline-flex items-center    text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40 px-3">
-                Dates: {rangeLabel || "Custom range"}
-              </span>
-            ) : (
-              <span className="inline-flex items-center    text-[var(--color-text-rgb)]">
-                Date: All time
-              </span>
-            )}
-
-            <span className="inline-flex items-center   text-[var(--color-text-rgb)]">
-              Status:{" "}
-              <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
-                {statusFilter === "all" ? "All" : statusFilter}
-              </span>
+        </div>
+        {/* show what dates are being filtered, and status */}
+        <div className="xl:hidden flex flex-row justify-start h-full gap-1 text-sm md:text-md   md:mb-0">
+          {hasActiveDateFilter ? (
+            <span className="inline-flex items-center    text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40 px-3">
+              Dates: {rangeLabel || "Custom range"}
             </span>
-          </div>
+          ) : (
+            <span className="inline-flex items-center    text-[var(--color-text-rgb)]">
+              Date: All time
+            </span>
+          )}
+
+          <span className="inline-flex items-center   text-[var(--color-text-rgb)]">
+            Status:{" "}
+            <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
+              {statusFilter === "all" ? "All" : statusFilter}
+            </span>
+          </span>
         </div>
       </header>
 
