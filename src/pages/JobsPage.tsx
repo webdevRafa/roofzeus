@@ -327,22 +327,21 @@ export default function JobsPage() {
             </span>
           </div>
           {/* large only date status */}
-
-          <div className="hidden xl:flex gap-2 md:gap-6 flex-row justify-start items-center mt-4 ">
+          <div className="hidden xl:flex gap-2 md:gap-6 flex-row items-end h-full ">
             {/* Search toggle */}
-            <div className="relative">
+            <div className="relative ">
               <button
                 type="button"
                 onClick={() => setShowSearch((v) => !v)}
-                className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-xs md:text-md font-semibold   transition  ${
+                className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl   text-xs md:text-md font-semibold   transition  ${
                   showSearch === true
-                    ? "text-[var(--color-primary)]"
+                    ? "text-[rgb(var(--pill-success-rgb))]"
                     : "text-[var(--color-text)]"
                 }`}
                 title="Search addresses"
                 aria-label="Search addresses"
               >
-                <Search size={18} className="mr-2" />
+                <Search size={16} className="mr-2" />
                 <span>Search</span>
               </button>
 
@@ -363,29 +362,31 @@ export default function JobsPage() {
               </AnimatePresence>
             </div>
             {/* Date filter toggle */}
-            <button
-              type="button"
-              onClick={() => setShowFilters((v) => !v)}
-              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-xs md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
-                showFilters
-                  ? "text-[var(--color-primary)]"
-                  : "text-[var(--color-text)]"
-              }`}
-              title="Filter by last updated date"
-            >
-              <Filter size={16} className="mr-2" />
-              <span>
-                {hasActiveDateFilter ? "Edit date range" : "Date filters"}
-              </span>
-            </button>
+            <div className="">
+              <button
+                type="button"
+                onClick={() => setShowFilters((v) => !v)}
+                className={`cursor-pointer hover:shadow-md inline-flex  items-center justify-center   text-xs md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+                  showFilters
+                    ? "text-[rgb(var(--pill-success-rgb))]"
+                    : "text-[var(--color-text)]"
+                }`}
+                title="Filter by last updated date"
+              >
+                <Filter size={16} className="mr-2" />
+                <span>
+                  {hasActiveDateFilter ? "Edit date range" : "Date filters"}
+                </span>
+              </button>
+            </div>
             {/* show what dates are being filtered, and status */}
-            <div className="flex flex-row justify-start gap-1 text-xs md:text-md mb-3 md:mb-0">
+            <div className="flex flex-row justify-start gap-1 text-xs md:text-md  mb-3 md:mb-0">
               {hasActiveDateFilter ? (
-                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40">
+                <span className="inline-flex items-center    text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40 px-3">
                   Dates: {rangeLabel || "Custom range"}
                 </span>
               ) : (
-                <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+                <span className="inline-flex items-center    text-[var(--color-text-rgb)]">
                   Date: All time
                 </span>
               )}
@@ -417,22 +418,22 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* Cotnainer for the search, date filters, status */}
-        <div className="flex xl:hidden gap-2 md:gap-6 flex-row justify-start mt-4 ">
+        {/*  mobile only search and date filters */}
+        <div className="xl:hidden flex gap-5 md:gap-6 flex-row  h-full ">
           {/* Search toggle */}
-          <div className="relative">
+          <div className="relative ">
             <button
               type="button"
               onClick={() => setShowSearch((v) => !v)}
-              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl  px-3 py-2 text-xs md:text-md font-semibold   transition  ${
+              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl   text-[10px] md:text-md font-semibold   transition  ${
                 showSearch === true
-                  ? "text-[var(--color-primary)]"
+                  ? "text-[rgb(var(--pill-success-rgb))]"
                   : "text-[var(--color-text)]"
               }`}
               title="Search addresses"
               aria-label="Search addresses"
             >
-              <Search size={18} className="mr-2" />
+              <Search size={16} className="mr-2" />
               <span>Search</span>
             </button>
 
@@ -453,34 +454,34 @@ export default function JobsPage() {
             </AnimatePresence>
           </div>
           {/* Date filter toggle */}
-          <button
-            type="button"
-            onClick={() => setShowFilters((v) => !v)}
-            className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center   text-xs md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
-              showFilters
-                ? "text-[var(--color-primary)]"
-                : "text-[var(--color-text)]"
-            }`}
-            title="Filter by last updated date"
-          >
-            <Filter size={16} className="mr-2" />
-            <span>
-              {hasActiveDateFilter ? "Edit date range" : "Date filters"}
-            </span>
-          </button>
+          <div className="h-full">
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              className={`cursor-pointer hover:shadow-md inline-flex  items-end justify-center   text-[10px] md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+                showFilters
+                  ? "text-[rgb(var(--pill-success-rgb))]"
+                  : "text-[var(--color-text)]"
+              }`}
+              title="Filter by last updated date"
+            >
+              <Filter size={16} className="mr-2" />
+              <span>{hasActiveDateFilter ? "Edit dates" : "Date filters"}</span>
+            </button>
+          </div>
           {/* show what dates are being filtered, and status */}
-          <div className="flex flex-row justify-start gap-1 text-xs md:text-md mb-3 md:mb-0">
+          <div className="flex flex-row justify-start h-full gap-1 text-[10px] md:text-md   md:mb-0">
             {hasActiveDateFilter ? (
-              <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40">
+              <span className="inline-flex items-center    text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40 px-3">
                 Dates: {rangeLabel || "Custom range"}
               </span>
             ) : (
-              <span className="inline-flex items-center   px-3 py-2 text-[var(--color-text-rgb)]">
+              <span className="inline-flex items-center    text-[var(--color-text-rgb)]">
                 Date: All time
               </span>
             )}
 
-            <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
+            <span className="inline-flex items-center   text-[var(--color-text-rgb)]">
               Status:{" "}
               <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
                 {statusFilter === "all" ? "All" : statusFilter}
