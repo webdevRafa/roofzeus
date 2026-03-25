@@ -101,7 +101,7 @@ export default function PricingPage() {
         >
           <div className="mt-10 grid lg:grid-cols-12 gap-10 items-center">
             <motion.div variants={fadeUp} className="lg:col-span-6">
-              <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">
+              <h1 className="text-2xl md:text-4xl font-extrabold leading-tight font-poppins">
                 One Plan,
                 <span className="block">
                   <span className="text-[#cfae5d]">Everything</span> included.
@@ -121,11 +121,11 @@ export default function PricingPage() {
             {/* Pricing Card */}
             <motion.div
               variants={cardIn}
-              className={`lg:col-span-6 rounded-md border-none   p-6 `}
+              className={`lg:col-span-6 rounded-md border-none max-w-[450px]   p-6 `}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mt-1 text-md font-poppins">
+                  <div className="mt-1 text-md md:text-lg font-poppins">
                     Flate rate, full access.
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function PricingPage() {
 
               <Link
                 to="/signup"
-                className="group inline-flex items-center text-md justify-center gap-2 rounded-sm border-1 border-[var(--color-blue)] hover:bg-[var(--color-blue)] py-1 px-2  text-white hover:opacity-90 transition! duration-600 ease-in-out mt-5"
+                className="group inline-flex items-center text-md justify-center gap-2  border-1 border-[var(--color-blue)] hover:bg-[var(--color-blue)]/20 py-1 px-2  text-white hover:opacity-90 transition! duration-400 ease-in-out mt-5"
               >
                 Get started
               </Link>

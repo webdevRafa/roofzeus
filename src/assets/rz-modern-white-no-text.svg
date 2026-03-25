@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 276.75 91.57">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #cfae5d;
+      }
+    </style>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g id="right_triangle" data-name="right triangle">
+      <polygon class="cls-1" points="242.55 37.86 220.12 74.67 223.61 74.67 242.55 43.59 242.59 43.57 262.9 74.67 276.75 74.67 265.42 72.56 242.55 37.86"/>
+    </g>
+    <g id="left_triangle" data-name="left triangle">
+      <polygon class="cls-1" points="114.83 74.67 107.76 74.67 69.36 11.64 69.27 11.61 28.08 74.67 0 74.67 23.1 70.68 69.27 0 69.36 .03 114.83 74.67"/>
+    </g>
+    <g id="center_piece" data-name="center piece">
+      <polyline class="cls-1" points="218.48 74.66 214.38 74.66 163.94 74.66 183.3 37.57 241.48 37.56"/>
+      <path class="cls-1" d="M223.4,66.75l-4.92,7.9H116.65s-.96-1.55-.96-1.55L71.22,.11l82.31,13.81v11.19c0,.52,.12,1.01,.34,1.36l3.51,5.59,.29,.46V6.45l10.37,2.66,.03,7.17,27.24,4.4,9.11,14.93,16.97,27.84h0s2,3.29,2,3.29h0s0,.02,0,.02Z"/>
+    </g>
+    <polygon class="cls-2" points="162.1 68.13 168.29 66.9 142.79 91.57 157.34 67.18 151.8 67.95 180.06 40.95 162.1 68.13"/>
+  </g>
+</svg>

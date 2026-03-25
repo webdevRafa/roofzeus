@@ -14,7 +14,7 @@ import {
 import { signupContractorWithEmail } from "../firebase/signupContractor";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
-import logo from "../assets/logo-white.svg";
+import logo from "../assets/rz-modern-white.svg";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const stagger: Variants = {

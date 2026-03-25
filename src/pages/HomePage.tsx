@@ -10,7 +10,7 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useLayoutEffect } from "react";
 import CountUp from "react-countup";
-import logo from "../assets/logo-white.svg";
+import logo from "../assets/rz-modern-white.svg";
 import jobdetails from "../assets/jobdetails.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -1039,7 +1039,10 @@ export default function HomePage() {
               Keep schedules, photos, notes, and finances in one place
             </p>
           </motion.div>
-          <motion.div variants={stagger} className="grid md:grid-cols-2  gap-8">
+          <motion.div
+            variants={stagger}
+            className="grid md:grid-cols-2 max-w-[800px] mx-auto  gap-8"
+          >
             {[
               {
                 title: "Track everything about the job",
@@ -1061,9 +1064,9 @@ export default function HomePage() {
               <motion.div
                 key={f.title}
                 variants={cardIn}
-                className="bg-[#14223b] p-6 "
+                className="bg-[#14223b]/40 hover:bg-[#14223b] transition! duration-300 ease-in-out p-6 group "
               >
-                <h3 className="font-semibold text-xl mb-2 text-white text-center">
+                <h3 className="font-semibold text-xl mb-2 text-white group-hover:text-[#0a90f0]  text-center">
                   {f.title}
                 </h3>
                 <p className="text-sm text-white/70 leading-relaxed text-center">
