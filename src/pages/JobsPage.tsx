@@ -359,7 +359,7 @@ export default function JobsPage() {
         className="sticky top-16 md:top-18 bg-[var(--color-background)] backdrop-blur px-4 pt-4 pb-2 max-w-8xl mx-auto z-80"
         initial={false}
         animate={{
-          y: mobileHeaderVisible ? 0 : -220,
+          y: mobileHeaderVisible ? 0 : -200,
           opacity: mobileHeaderVisible ? 1 : 0.98,
         }}
         transition={{ duration: 0.24, ease: EASE }}
@@ -466,7 +466,7 @@ export default function JobsPage() {
         </div>
 
         {/* MOBILE ONLY: controls + floating search */}
-        <div className="xl:hidden relative my-2">
+        <div className="xl:hidden relative mt-5 mb-1">
           {/* top row */}
           <div className="flex items-center gap-5 md:gap-6">
             {/* Search toggle */}
