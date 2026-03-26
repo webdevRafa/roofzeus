@@ -238,14 +238,6 @@ function cx(...classes: Array<string | false | null | undefined>) {
 export function DashboardJobsSection({
   jobsOpen,
 
-  showFilters,
-  setDatePreset,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
-  applyPreset,
-  datePreset,
   employees,
   assignedEmployeeIds,
   setAssignedEmployeeIds,
@@ -455,103 +447,6 @@ export function DashboardJobsSection({
           )}
         </AnimatePresence>
 
-        {/* Date range filters */}
-        <AnimatePresence initial={false}>
-          {showFilters && (
-            <motion.section
-              id="date-filters"
-              className="bg-[var(--color-background)]  px-4 sm:px-6 py-4 relative z-40"
-              {...fadeUp(0.06)}
-            >
-              <div className="flex flex-col  lg:flex-row lg:items-end lg:justify-between">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                  <div className="flex items-end gap-2">
-                    <div className="flex flex-col">
-                      <label className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                        Start
-                      </label>
-                      <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => {
-                          setDatePreset("custom");
-                          setStartDate(e.target.value);
-                        }}
-                        className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
-                      />
-                    </div>
-
-                    <div className="flex flex-col">
-                      <label className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                        End
-                      </label>
-                      <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => {
-                          setDatePreset("custom");
-                          setEndDate(e.target.value);
-                        }}
-                        className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => applyPreset("last7")}
-                      className={` px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
-                        datePreset === "last7"
-                          ? " shadow-sm bg-[var(--color-card-hover)] text-[var(--color-text)]"
-                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                      }`}
-                    >
-                      Last 7 days
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => applyPreset("thisMonth")}
-                      className={` px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
-                        datePreset === "thisMonth"
-                          ? " bg-[var(--color-card-hover)] text-[var(--color-text)]"
-                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                      }`}
-                    >
-                      This month
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => applyPreset("ytd")}
-                      className={`  px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
-                        datePreset === "ytd"
-                          ? " bg-[var(--color-card)] text-[var(--color-text)]"
-                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                      }`}
-                    >
-                      Year to date
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDatePreset("custom");
-                        setStartDate("");
-                        setEndDate("");
-                      }}
-                      className=" border border-red-300/20 bg-red-300/10 hover:bg-red-300/15 px-3 py-2 text-xs font-semibold text-red-200 transition cursor-pointer hover:text-white"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
         {/* Content */}
         {jobsOpen && (
           <div className="px-4 sm:px-6 py-5">
@@ -583,86 +478,89 @@ export function DashboardJobsSection({
               <motion.div {...fadeUp(0.08)} className="xl:col-span-9 min-w-0">
                 <div className=" overflow-hidden">
                   {/* Mobile cards */}
-                  <div className="grid gap-2 p-2 md:hidden">
-                    {pagedJobs.map((job) => {
-                      const a = addr(job.address);
-                      const net = job.computed?.netProfitCents ?? 0;
+                  <div className="md:hidden overflow-hidden">
+                    {/* Scrollable mobile list */}
+                    <div className="grid gap-2 p-2 section-scroll pb-20">
+                      {pagedJobs.map((job) => {
+                        const a = addr(job.address);
+                        const net = job.computed?.netProfitCents ?? 0;
 
-                      return (
-                        <motion.div
-                          key={job.id}
-                          variants={item}
-                          initial="initial"
-                          animate="animate"
-                          whileHover={{
-                            y: -1,
-                            transition: { duration: 0.2, ease: EASE },
-                          }}
-                          className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.55)] transition px-3 py-3"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
-                                  {a.display || "—"}
+                        return (
+                          <motion.div
+                            key={job.id}
+                            variants={item}
+                            initial="initial"
+                            animate="animate"
+                            whileHover={{
+                              y: -1,
+                              transition: { duration: 0.2, ease: EASE },
+                            }}
+                            className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.55)] transition px-3 py-3"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+                                    {a.display || "—"}
+                                  </div>
+                                  <span
+                                    className={cx(
+                                      "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
+                                      statusClasses(job.status)
+                                    )}
+                                  >
+                                    {job.status}
+                                  </span>
                                 </div>
-                                <span
+
+                                <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] truncate">
+                                  {pipelineNote(job)}
+                                </div>
+                              </div>
+
+                              <div className="shrink-0 text-right">
+                                <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
+                                  Net
+                                </div>
+                                <div
                                   className={cx(
-                                    "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
-                                    statusClasses(job.status)
+                                    "text-sm font-semibold",
+                                    net >= 0
+                                      ? "text-[rgb(var(--pill-success-rgb))]"
+                                      : "text-[rgb(var(--pill-danger-rgb))]"
                                   )}
                                 >
-                                  {job.status}
-                                </span>
-                              </div>
-
-                              <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] truncate">
-                                {pipelineNote(job)}
+                                  <CountMoney cents={net} />
+                                </div>
                               </div>
                             </div>
 
-                            <div className="shrink-0 text-right">
+                            <div className="mt-2 flex items-center justify-between">
                               <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
-                                Net
+                                Updated {fmtDateTime(job.updatedAt)}
                               </div>
-                              <div
-                                className={cx(
-                                  "text-sm font-semibold",
-                                  net >= 0
-                                    ? "text-[rgb(var(--pill-success-rgb))]"
-                                    : "text-[rgb(var(--pill-danger-rgb))]"
-                                )}
+
+                              <Link
+                                to={`/job/${job.id}`}
+                                className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
                               >
-                                <CountMoney cents={net} />
-                              </div>
+                                View job
+                              </Link>
                             </div>
-                          </div>
+                          </motion.div>
+                        );
+                      })}
 
-                          <div className="mt-2 flex items-center justify-between">
-                            <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
-                              Updated {fmtDateTime(job.updatedAt)}
-                            </div>
+                      {pagedJobs.length === 0 && (
+                        <div className="px-4 py-6 text-center text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
+                          No jobs match the current filters.
+                        </div>
+                      )}
+                    </div>
 
-                            <Link
-                              to={`/job/${job.id}`}
-                              className="inline-flex items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
-                            >
-                              View job
-                            </Link>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-
-                    {pagedJobs.length === 0 && (
-                      <div className="px-4 py-6 text-center text-[12px] text-[rgb(var(--color-text-rgb)/0.55)]">
-                        No jobs match the current filters.
-                      </div>
-                    )}
-
-                    {/* Mobile pagination */}
+                    {/* Sticky mobile pagination footer */}
                     {filteredJobs.length > 0 && (
-                      <div className="mt-2 flex items-center justify-between text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                      <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-background)] px-4 py-3 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                         <span>
                           {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                           {Math.min(
@@ -683,9 +581,11 @@ export function DashboardJobsSection({
                           >
                             Prev
                           </button>
+
                           <span>
                             {jobsPage}/{jobsTotalPages}
                           </span>
+
                           <button
                             type="button"
                             disabled={jobsPage === jobsTotalPages}

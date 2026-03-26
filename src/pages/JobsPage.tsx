@@ -1,5 +1,11 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence, type MotionProps } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValueEvent,
+  useScroll,
+  type MotionProps,
+} from "framer-motion";
 import { SlidersHorizontal, Plus } from "lucide-react";
 import type { JobStatus } from "../types/types";
 import { useOrgJobsData } from "../hooks/useOrgJobsData";
@@ -237,6 +243,8 @@ export default function JobsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [jobsOpen, setJobsOpen] = useState(true);
 
+  const [mobileHeaderVisible, setMobileHeaderVisible] = useState(true);
+  const { scrollY } = useScroll();
   // Track the selected sort option. Default to 'recent'.
   const [sortOption, setSortOption] = useState<"recent" | "netDesc" | "netAsc">(
     "recent"
@@ -277,6 +285,37 @@ export default function JobsPage() {
     }
   }, [filteredJobs, sortOption]);
 
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    // only run mobile hide/show logic below xl
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 1280) {
+      setMobileHeaderVisible(true);
+      return;
+    }
+
+    const previous = scrollY.getPrevious() ?? 0;
+    const diff = latest - previous;
+
+    // keep header visible near the top
+    if (latest <= 24) {
+      setMobileHeaderVisible(true);
+      return;
+    }
+
+    // if search or filters are open, keep header visible
+    if (showSearch || showFilters) {
+      setMobileHeaderVisible(true);
+      return;
+    }
+
+    // small threshold prevents jitter
+    if (diff > 8) {
+      setMobileHeaderVisible(false); // scrolling down
+    } else if (diff < -8) {
+      setMobileHeaderVisible(true); // scrolling up
+    }
+  });
+
   // Compute pagination and total net profit based on the sorted jobs.
   const jobsTotalPagesCalc = Math.max(
     1,
@@ -316,7 +355,15 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)] relative">
       {/* Sticky header with page title, new job button, and sort controls */}
-      <header className="sticky top-16  md:top-18   bg-[var(--color-background))] backdrop-blur px-4 pt-4 pb-2 max-w-8xl mx-auto z-80">
+      <motion.header
+        className="sticky top-16 md:top-18 bg-[var(--color-background)] backdrop-blur px-4 pt-4 pb-2 max-w-8xl mx-auto z-80"
+        initial={false}
+        animate={{
+          y: mobileHeaderVisible ? 0 : -220,
+          opacity: mobileHeaderVisible ? 1 : 0.98,
+        }}
+        transition={{ duration: 0.24, ease: EASE }}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <h1 className="text-2xl font-semibold text-[var(--color-text)] uppercase font-bebas">
@@ -489,7 +536,103 @@ export default function JobsPage() {
             </span>
           </span>
         </div>
-      </header>
+        {/* Date range filters */}
+        <AnimatePresence initial={false}>
+          {showFilters && (
+            <motion.section
+              id="date-filters"
+              className="bg-[var(--color-background)]  px-4 sm:px-6 py-4 relative z-40"
+              {...fadeUp(0.06)}
+            >
+              <div className="flex flex-col  lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="flex items-end gap-2">
+                    <div className="flex flex-col">
+                      <label className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                        Start
+                      </label>
+                      <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => {
+                          setDatePreset("custom");
+                          setStartDate(e.target.value);
+                        }}
+                        className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                      />
+                    </div>
+
+                    <div className="flex flex-col">
+                      <label className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                        End
+                      </label>
+                      <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => {
+                          setDatePreset("custom");
+                          setEndDate(e.target.value);
+                        }}
+                        className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("last7")}
+                      className={` px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
+                        datePreset === "last7"
+                          ? " shadow-sm bg-[var(--color-card-hover)] text-[var(--color-text)]"
+                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                      }`}
+                    >
+                      Last 7 days
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("thisMonth")}
+                      className={` px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
+                        datePreset === "thisMonth"
+                          ? " bg-[var(--color-card-hover)] text-[var(--color-text)]"
+                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                      }`}
+                    >
+                      This month
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => applyPreset("ytd")}
+                      className={`  px-3 py-2 text-xs font-semibold transition hover:text-[var(--color-text)] cursor-pointer ${
+                        datePreset === "ytd"
+                          ? " bg-[var(--color-card)] text-[var(--color-text)]"
+                          : " bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                      }`}
+                    >
+                      Year to date
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDatePreset("custom");
+                        setStartDate("");
+                        setEndDate("");
+                      }}
+                      className=" border border-red-300/20 bg-red-300/10 hover:bg-red-300/15 px-3 py-2 text-xs font-semibold text-red-200 transition cursor-pointer hover:text-white"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+      </motion.header>
 
       {/* Main content area with the job list and filters */}
       <main className="mx-auto max-w-8xl space-y-6 px-4 ">

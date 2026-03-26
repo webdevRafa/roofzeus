@@ -11,7 +11,7 @@ body {
 
 
 .section-scroll {
-  max-height: 28rem;       /* ~384px, tweak as you like */
+  max-height: 30rem;       /* ~384px, tweak as you like */
   overflow-y: auto;        /* enable vertical scrolling when content exceeds max-height */
   padding-right: 0.25rem;  /* tiny breathing room next to scrollbar */
 }
