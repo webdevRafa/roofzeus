@@ -8,14 +8,96 @@ import {
   Users,
   FileText,
   LogOut,
-  Menu,
   BarChart3,
-  X,
   BriefcaseBusiness,
   Wallet,
   ChevronDown,
 } from "lucide-react";
 
+/**
+ * A small animated hamburger icon.  When `open` is true the three bars
+ * gracefully morph into an ×.  We rely on inline styles for the
+ * transitions because browser support for CSS transforms on SVG
+ * elements can vary across build pipelines (Tailwind’s `transition-*`
+ * utilities don’t always apply to inline SVG paths/rects).  The
+ * `transform-origin` of each bar is set to its center so that
+ * rotations occur around the middle of the line, and both the
+ * translation and rotation animate together over 300ms.  The middle
+ * bar simply fades out.  Because we use plain `<rect>` elements and
+ * avoid dynamic class names, the animation runs reliably across
+ * environments without requiring any additional libraries.
+ */
+function HamburgerIcon({
+  open,
+  className = "",
+}: {
+  open: boolean;
+  className?: string;
+}) {
+  const transition = "260ms cubic-bezier(0.16, 1, 0.3, 1)";
+
+  const barStyle: React.CSSProperties = {
+    transformBox: "fill-box",
+    transformOrigin: "center",
+    transition: `transform ${transition}, opacity ${transition}`,
+  };
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={className}
+      fill="none"
+    >
+      {/* top */}
+      <rect
+        x="4.5"
+        y="6.75"
+        width="15"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+        style={{
+          ...barStyle,
+          transform: open
+            ? "translateY(4.9px) rotate(45deg)"
+            : "translateY(0px) rotate(0deg)",
+        }}
+      />
+
+      {/* middle */}
+      <rect
+        x="4.5"
+        y="11.25"
+        width="15"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+        style={{
+          ...barStyle,
+          opacity: open ? 0 : 1,
+          transform: open ? "scaleX(0.7)" : "scaleX(1)",
+        }}
+      />
+
+      {/* bottom */}
+      <rect
+        x="4.5"
+        y="15.75"
+        width="15"
+        height="1.5"
+        rx="0.75"
+        fill="currentColor"
+        style={{
+          ...barStyle,
+          transform: open
+            ? "translateY(-4.9px) rotate(-45deg)"
+            : "translateY(0px) rotate(0deg)",
+        }}
+      />
+    </svg>
+  );
+}
 import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 import { useOrg } from "../contexts/OrgContext";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -316,20 +398,18 @@ export default function AdminLayout() {
                   type="button"
                   className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.85)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] md:hidden"
                   onClick={() => setMobileOpen((v) => !v)}
-                  aria-label="Menu"
+                  aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                  aria-expanded={mobileOpen}
+                  aria-controls="mobile-admin-nav"
                 >
-                  {mobileOpen ? (
-                    <X className="h-4 w-4" />
-                  ) : (
-                    <Menu className="h-4 w-4" />
-                  )}
+                  <HamburgerIcon open={mobileOpen} className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
             {/* MOBILE nav panel */}
             {mobileOpen && (
-              <div className="pb-3 md:hidden">
+              <div id="mobile-admin-nav" className="pb-3 md:hidden">
                 <div className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-background)]  backdrop-blur">
                   {!membershipLoading && memberships.length > 1 && (
                     <div className="mb-2 px-2 pt-1">
