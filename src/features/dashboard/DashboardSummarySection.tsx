@@ -57,7 +57,7 @@ function KpiCard({
   return (
     <motion.div
       variants={fadeUp}
-      className={`bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] p-4 hover:shadow-md select-none w-full `}
+      className={` p-4 hover:shadow-md select-none w-full `}
     >
       <div
         className={`text-sm md:text-md text-center uppercase tracking-wide text-[var(--color-text)] `}

@@ -402,7 +402,7 @@ export default function JobsPage() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Search by address…"
-                      className="w-full  border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 "
+                      className="w-full  border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none ring-1 ring-[var(--color-text)]/70"
                     />
                   </motion.div>
                 )}
@@ -465,47 +465,38 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/*  mobile only search and date filters */}
-        <div className="xl:hidden flex gap-5 md:gap-6 flex-row  h-full my-2 ">
-          {/* Search toggle */}
-          <div className="relative ">
+        {/* MOBILE ONLY: controls + floating search */}
+        <div className="xl:hidden relative my-2">
+          {/* top row */}
+          <div className="flex items-center gap-5 md:gap-6">
+            {/* Search toggle */}
             <button
               type="button"
-              onClick={() => setShowSearch((v) => !v)}
-              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl   text-sm md:text-md font-semibold   transition  ${
-                showSearch === true
+              onClick={() => {
+                setShowSearch((v) => !v);
+                setShowFilters(false);
+              }}
+              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl text-sm md:text-md font-semibold transition ${
+                showSearch
                   ? "text-[rgb(var(--pill-success-rgb))]"
                   : "text-[var(--color-text)]"
               }`}
               title="Search addresses"
               aria-label="Search addresses"
+              aria-expanded={showSearch}
             >
               <Search size={16} className="mr-2" />
               <span>Search</span>
             </button>
 
-            <AnimatePresence initial={false}>
-              {showSearch && (
-                <motion.div
-                  {...fadeUp(0.02)}
-                  className="mt-2 sm:absolute sm:left-0 sm:mt-2 w-full sm:w-96 shadow-lg  bg-[var(--color-background)] backdrop-blur px-4 py-5  z-60 relative "
-                >
-                  <input
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search by address…"
-                    className="w-full  border border-[rgb(var(--color-border-rgb)/0.05)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 "
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          {/* Date filter toggle */}
-          <div className="h-full">
+            {/* Date filter toggle */}
             <button
               type="button"
-              onClick={() => setShowFilters((v) => !v)}
-              className={`cursor-pointer hover:shadow-md inline-flex  items-end justify-center   text-sm md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
+              onClick={() => {
+                setShowFilters((v) => !v);
+                setShowSearch(false);
+              }}
+              className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center text-sm md:text-md font-semibold transition ${
                 showFilters
                   ? "text-[rgb(var(--pill-success-rgb))]"
                   : "text-[var(--color-text)]"
@@ -516,25 +507,46 @@ export default function JobsPage() {
               <span>{hasActiveDateFilter ? "Edit dates" : "Date filters"}</span>
             </button>
           </div>
-        </div>
-        {/* show what dates are being filtered, and status */}
-        <div className="xl:hidden flex flex-row justify-start h-full gap-4 text-sm md:text-md   md:mb-0">
-          {hasActiveDateFilter ? (
-            <span className="inline-flex items-center    text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40 px-3">
-              Dates: {rangeLabel || "Custom range"}
-            </span>
-          ) : (
-            <span className="inline-flex items-center    text-[var(--color-text-rgb)]">
-              Date: All time
-            </span>
-          )}
 
-          <span className="inline-flex items-center   text-[var(--color-text-rgb)]">
-            Status:{" "}
-            <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
-              {statusFilter === "all" ? "All" : statusFilter}
+          {/* floating mobile search panel */}
+          <AnimatePresence initial={false}>
+            {showSearch && (
+              <motion.div
+                {...fadeUp(0.02)}
+                className="absolute left-0 right-0 top-[calc(100%+10px)] z-[90]"
+              >
+                <div className="ring-1 ring-white/70 bg-[var(--color-background)] backdrop-blur-xl shadow-[0_18px_45px_rgba(0,0,0,0.35)] ">
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by address..."
+                    autoFocus
+                    className="w-full  border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-surface-rgb)/0.6)] px-3 py-2.5 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[rgb(var(--pill-success-rgb)/0.35)]"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* status row stays in normal layout */}
+          <div className="mt-3 flex flex-row justify-start gap-4 text-sm md:text-md">
+            {hasActiveDateFilter ? (
+              <span className="inline-flex items-center text-[var(--color-text-rgb)] bg-[var(--color-card)] border border-[var(--color-blue)]/40 px-3">
+                Dates: {rangeLabel || "Custom range"}
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[var(--color-text-rgb)]">
+                Date: All time
+              </span>
+            )}
+
+            <span className="inline-flex items-center text-[var(--color-text-rgb)]">
+              Status:{" "}
+              <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
+                {statusFilter === "all" ? "All" : statusFilter}
+              </span>
             </span>
-          </span>
+          </div>
         </div>
         {/* Date range filters */}
         <AnimatePresence initial={false}>
