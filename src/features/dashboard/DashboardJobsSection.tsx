@@ -1,5 +1,5 @@
 // src/pages/dashboard/DashboardJobsSection.tsx
-import type { Dispatch, SetStateAction } from "react";
+import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import type { Job, JobStatus, Employee } from "../../types/types";
 import { Link } from "react-router-dom";
 import {
@@ -269,6 +269,20 @@ export function DashboardJobsSection({
 
   totalNet,
 }: DashboardJobsSectionProps) {
+  // Local state for the employee search term.
+  const [employeeSearch, setEmployeeSearch] = useState("");
+
+  // Memoized list of employees filtered by name or role.
+  const filteredEmployeesList = useMemo(() => {
+    const term = employeeSearch.trim().toLowerCase();
+    if (!term) return employees;
+    return employees.filter((emp) => {
+      const name = emp.name?.toLowerCase() ?? "";
+      const role = (emp.role ?? "").toLowerCase();
+      return name.includes(term) || role.includes(term);
+    });
+  }, [employees, employeeSearch]);
+
   return (
     <>
       <section className=" hover:shadow-md overflow-hidden  mt-5">
@@ -303,11 +317,10 @@ export function DashboardJobsSection({
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 Main St, San Antonio, TX"
-                      className="w-full  bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40"
+                      className="w-full  bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none ring-[var(--color-blue)]/40 ring-2 focus:ring-[var(--color-blue)]"
                     />
                   </div>
 
-                  {/* Assign workers */}
                   <div>
                     <div className="text-sm font-semibold text-[var(--color-text)]">
                       Assign workers{" "}
@@ -316,18 +329,28 @@ export function DashboardJobsSection({
                       </span>
                     </div>
 
-                    <div className="mt-2 max-h-40 overflow-auto  bg-[var(--color-card)] p-2 outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40">
-                      {employees.length === 0 ? (
+                    {/* Search box for filtering employees */}
+                    <input
+                      value={employeeSearch}
+                      onChange={(e) => setEmployeeSearch(e.target.value)}
+                      placeholder="Search workers…"
+                      className="mt-2 w-full bg-[var(--color-card-hover)] px-3 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)] outline-none ring-[var(--color-blue)]/40 ring-2 focus:ring-[var(--color-blue)]"
+                    />
+
+                    <div className="mt-2 max-h-40 overflow-auto bg-[var(--color-card)] p-2 outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40">
+                      {filteredEmployeesList.length === 0 ? (
                         <div className="text-sm text-[rgb(var(--color-text-rgb)/0.62)]">
-                          No active members found.
+                          {employees.length === 0
+                            ? "No active members found."
+                            : "No matching workers."}
                         </div>
                       ) : (
-                        employees.map((emp) => {
+                        filteredEmployeesList.map((emp) => {
                           const checked = assignedEmployeeIds.includes(emp.id);
                           return (
                             <label
                               key={emp.id}
-                              className="flex cursor-pointer items-center justify-between gap-3  px-2 py-2 "
+                              className="flex cursor-pointer items-center justify-between gap-3 px-2 py-2"
                             >
                               <div className="min-w-0">
                                 <div className="truncate text-sm font-medium text-[rgb(var(--color-text-rgb)/0.90)]">
@@ -337,7 +360,6 @@ export function DashboardJobsSection({
                                   {emp.role ?? "crew"}
                                 </div>
                               </div>
-
                               <input
                                 type="checkbox"
                                 checked={checked}
@@ -355,6 +377,30 @@ export function DashboardJobsSection({
                         })
                       )}
                     </div>
+
+                    {/* Show Select All / Clear All when there are many employees */}
+                    {filteredEmployeesList.length >= 7 && (
+                      <div className="mt-1 flex justify-end gap-2 text-xs text-[rgb(var(--color-text-rgb)/0.62)]">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAssignedEmployeeIds(
+                              filteredEmployeesList.map((emp) => emp.id)
+                            )
+                          }
+                          className="underline hover:opacity-80"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAssignedEmployeeIds([])}
+                          className="underline hover:opacity-80"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    )}
 
                     {assignedEmployeeIds.length > 0 && (
                       <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.62)]">
