@@ -478,8 +478,8 @@ export default function JobsPage() {
               }}
               className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl text-sm md:text-md font-semibold transition ${
                 showSearch
-                  ? "text-[rgb(var(--pill-success-rgb))]"
-                  : "text-[var(--color-text)]"
+                  ? "text-[var(--color-text)]"
+                  : "text-[var(--color-text)]/60"
               }`}
               title="Search addresses"
               aria-label="Search addresses"
@@ -498,8 +498,8 @@ export default function JobsPage() {
               }}
               className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center text-sm md:text-md font-semibold transition ${
                 showFilters
-                  ? "text-[rgb(var(--pill-success-rgb))]"
-                  : "text-[var(--color-text)]"
+                  ? "text-[var(--color-text)]"
+                  : "text-[var(--color-text)]/60"
               }`}
               title="Filter by last updated date"
             >
@@ -515,13 +515,13 @@ export default function JobsPage() {
                 {...fadeUp(0.02)}
                 className="absolute left-0 right-0 top-[calc(100%+10px)] z-[90]"
               >
-                <div className="ring-1 ring-white/70 bg-[var(--color-background)] backdrop-blur-xl shadow-[0_18px_45px_rgba(0,0,0,0.35)] ">
+                <div className="ring-1 ring-white/70 bg-[var(--color-background)] backdrop-blur-xl  ">
                   <input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by address..."
                     autoFocus
-                    className="w-full  border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-surface-rgb)/0.6)] px-3 py-2.5 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[rgb(var(--pill-success-rgb)/0.35)]"
+                    className="w-full ring-1 ring-white/40 focus:ring-white  border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-surface-rgb)/0.6)] px-3 py-2.5 text-sm text-[var(--color-text)]/70"
                   />
                 </div>
               </motion.div>

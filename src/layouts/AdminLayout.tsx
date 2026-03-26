@@ -330,7 +330,7 @@ export default function AdminLayout() {
             {/* MOBILE nav panel */}
             {mobileOpen && (
               <div className="pb-3 md:hidden">
-                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.72)] p-2 backdrop-blur">
+                <div className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-background)]  backdrop-blur">
                   {!membershipLoading && memberships.length > 1 && (
                     <div className="mb-2 px-2 pt-1">
                       <label className="mb-1 block text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
