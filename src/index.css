@@ -8,7 +8,34 @@ body {
   color: var(--color-text);
 }
 
+/* Scrollbar-only version for smaller scroll areas that should keep their own max-height */
+.section-scroll-workers {
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
 
+/* WebKit */
+.section-scroll-workers::-webkit-scrollbar {
+  width: 6px;
+}
+
+.section-scroll-workers::-webkit-scrollbar-thumb {
+  background-color: rgba(245, 246, 248, 0.18);
+  border-radius: 999px;
+}
+
+.section-scroll-workers::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Theme-aware thumb color */
+html[data-theme="light"] .section-scroll-workers::-webkit-scrollbar-thumb {
+  background-color: rgba(15, 23, 42, 0.18);
+}
+
+html[data-theme="dark"] .section-scroll-workers::-webkit-scrollbar-thumb {
+  background-color: rgba(245, 246, 248, 0.18);
+}
 
 .section-scroll {
   max-height: 30rem;       /* ~384px, tweak as you like */
