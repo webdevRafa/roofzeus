@@ -241,6 +241,10 @@ h1, h2, h3, p, button {
 .font-poppins {
   font-family: "poppins", sans-serif;
 }
+.font-orbitron {
+  font-family: "orbitron", sans-serif;
+}
+
 /* ---- Fix Chrome autofill so it matches dark inputs ---- */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

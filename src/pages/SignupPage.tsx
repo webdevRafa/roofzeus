@@ -408,11 +408,15 @@ export default function SignupPage() {
         variants={fadeUp}
         initial="hidden"
         animate="show"
-        className="text-white/90 text-center mx-auto block max-w-[540px] mt-10 text-md px-3"
+        className="text-white/90 text-center mx-auto block max-w-[540px] my-10 text-md px-4 text-sm md:text-md"
       >
-        No card is required to get started. Try it free for 30 days. To start
-        using ROOFZEUS, please fill out the form below to create your account.
+        <span className="font-orbitron uppercase text-white">
+          ROOF ZEUS &nbsp;
+        </span>
+        allows you to easily manage jobs, track where your money goes and create
+        professional documents.
       </motion.h1>
+
       <div className="relative mx-auto w-full py-10 px-4">
         <motion.div variants={stagger} initial="hidden" animate="show">
           {/* header */}
@@ -432,6 +436,15 @@ export default function SignupPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
+                  <motion.h2
+                    variants={fadeUp}
+                    initial="hidden"
+                    animate="show"
+                    className="text-white/90  mx-auto block max-w-[540px] mb-5 text-xs md:text-md"
+                  >
+                    To start using ROOFZEUS, please fill out the form below to
+                    create your account and start your 30 day trial.
+                  </motion.h2>
                   <div className="text-lg font-semibold">
                     Create your account
                   </div>

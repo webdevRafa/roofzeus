@@ -257,9 +257,8 @@ const LoginPage = () => {
                   </motion.div>
                   <motion.div variants={item} className="text-center">
                     <div className="mt-2 text-white/60 text-sm leading-relaxed max-w-md">
-                      Sign in to manage jobs, track profit, schedule crews, and
-                      generate pay stubs—everything your roofing operation
-                      needs, in one place.
+                      manage jobs, track your money, and generate professional
+                      documents.
                     </div>
 
                     <motion.div
@@ -401,9 +400,15 @@ const LoginPage = () => {
                     >
                       {submitting ? "Signing in…" : "Sign in"}
                     </motion.button>
-                    <div className="mt-6 flex items-center gap-3 text-xs text-white/30">
+                    <div className="mt-10 flex items-center gap-3 text-xs text-white/30">
                       <div className="flex-1 h-px bg-white/30"></div>
-                      <span className="text-white/30">New to RoofZeus?</span>
+                      <span className="text-white/30">
+                        New to{" "}
+                        <span className="font-orbitron uppercase text-white/70">
+                          Roof Zeus
+                        </span>
+                        &nbsp;?
+                      </span>
                       <div className="flex-1 h-px bg-white/10"></div>
                     </div>
 
@@ -412,7 +417,7 @@ const LoginPage = () => {
                         to="/signup"
                         className="font-medium text-[#cfae5d] hover:text-[#e6c979]"
                       >
-                        Create your account
+                        create your account
                       </Link>
                     </div>
                   </motion.div>

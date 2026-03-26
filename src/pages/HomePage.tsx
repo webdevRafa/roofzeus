@@ -942,9 +942,10 @@ export default function HomePage() {
               </motion.div>
               <motion.h1
                 variants={fadeUp}
-                className="text-2xl   font-poppins mt-5 leading-[1.05] tracking-tight text-white"
+                className="text-lg   font-poppins mt-5 leading-[1.05] tracking-tight text-white/90 max-w-[450px]"
               >
-                The best software for roofing contractors.
+                easily manage jobs, track where your money goes and create
+                professional documents.
               </motion.h1>
               <motion.div
                 ref={heroCtaRef}
