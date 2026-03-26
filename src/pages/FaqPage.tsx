@@ -44,7 +44,11 @@ function FaqItem({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className=" mb-4 bg-[#14223b] overflow-hidden group py-3">
+    <div
+      className={` mb-4  overflow-hidden group py-3 ${
+        open ? "bg-[#14223b]" : "bg-[#14223b]/50"
+      }`}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
