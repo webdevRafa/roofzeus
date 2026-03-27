@@ -509,8 +509,8 @@ export function DashboardJobsSection({
                       className={cx(
                         "whitespace-nowrap cursor-pointer   px-3 py-1 text-xs md:text-md font-semibold uppercase tracking-wide transition hover:shadow-md",
                         active
-                          ? " text-[var(--color-text)] bg-[var(--color-card)]/20 border-1 border-[var(--color-blue)]/20"
-                          : " text-[var(--color-text)]/70 hover:text-[var(--color-text)]"
+                          ? " text-[var(--color-text)] "
+                          : " text-[var(--color-text)]/40 hover:text-[var(--color-text)]"
                       )}
                     >
                       {f}
@@ -658,7 +658,7 @@ export function DashboardJobsSection({
                   >
                     <div className="relative overflow-auto section-scroll">
                       <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                        <thead className="sticky top-0 z-30 bg-[var(--color-background)] pb-4 backdrop-blur md:text-lg font-poppins uppercase tracking-wide text-[var(--color-text)]">
+                        <thead className="sticky top-0 z-30 bg-[var(--color-background)] pb-4 backdrop-blur md:text-[12px] lg:text-[15px] font-poppins uppercase tracking-wide text-[var(--color-text)]">
                           <tr>
                             <th className="text-left px-4 py-3 font-light">
                               Job
@@ -700,7 +700,7 @@ export function DashboardJobsSection({
                               >
                                 <td className="px-4 py-3">
                                   <div className="min-w-0">
-                                    <div className="truncate max-w-[320px] font-semibold md:text-md lg:text-lg text-[rgb(var(--color-text-rgb)/0.92)]">
+                                    <div className="truncate max-w-[320px] font-semibold md:text-[12px] lg:text-[15px] text-[rgb(var(--color-text-rgb)/0.92)]">
                                       <Link
                                         to={`/job/${job.id}`}
                                         className="hover:underline"
