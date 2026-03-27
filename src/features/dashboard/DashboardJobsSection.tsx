@@ -416,11 +416,14 @@ export function DashboardJobsSection({
                     )}
                   </div>
 
+                  <h3 className="text-xs md:text-md font-semibold uppercase tracking-wide text-[var(--color-text)] mb-3">
+                    Scheduling (optional)
+                  </h3>
                   {/* Schedule fields */}
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3 w-full">
                     <div className="w-full">
                       <label className="mb-1 block text-[11px]  font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                        Schedule felt (optional)
+                        Felt
                       </label>
                       <input
                         type="date"
@@ -432,7 +435,7 @@ export function DashboardJobsSection({
 
                     <div className="w-full">
                       <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                        Schedule shingles (optional)
+                        Shingles
                       </label>
                       <input
                         type="date"
@@ -444,7 +447,7 @@ export function DashboardJobsSection({
 
                     <div className="w-full">
                       <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                        Schedule punch (optional)
+                        Punch
                       </label>
                       <input
                         type="date"

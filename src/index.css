@@ -150,9 +150,9 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      --color-primary-text: #0c1527;
      --color-section: #0b0e14;
      --color-fixed-background: #0b0e14;
-     --color-surface: #0c1527;          /* elevated canvas */
-     --color-card: #14223b;             /* primary card */
-     --color-card-hover: #1b2e4f;
+     --color-surface: #0c1527;          
+     --color-card: #162842;            
+     --color-card-hover: #1f3557;
      --color-border: rgba(255,255,255,0.10);
      --color-blue: #0a90f0;
      --color-cta: #0a90f0;
