@@ -296,7 +296,7 @@ export function DashboardJobsSection({
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-background)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-card)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
                 {...fadeUp(0.02)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -317,7 +317,7 @@ export function DashboardJobsSection({
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 Main St, San Antonio, TX"
-                      className="w-full  bg-[var(--color-card)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none ring-[var(--color-blue)]/20 ring-2 focus:ring-[var(--color-blue)]"
+                      className="w-full  bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[var(--color-text)] "
                     />
                   </div>
 
@@ -334,10 +334,10 @@ export function DashboardJobsSection({
                       value={employeeSearch}
                       onChange={(e) => setEmployeeSearch(e.target.value)}
                       placeholder="Search workers…"
-                      className="mt-2 w-full bg-[var(--color-card-hover)]/30 px-3 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)] outline-none ring-[var(--color-blue)]/10 ring-2 focus:ring-[var(--color-blue)]"
+                      className="mt-2 w-full  px-3 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)] focus:ring-1 ring-[var(--color-text)]/10 focus:ring-[var(--color-text)]/20 "
                     />
 
-                    <div className="section-scroll-workers mt-2 max-h-40 bg-[var(--color-card)]/40 p-2 outline-none focus:ring-2 focus:ring-[var(--color-blue)]/40">
+                    <div className="section-scroll-workers mt-2 max-h-40  p-2 ">
                       {filteredEmployeesList.length === 0 ? (
                         <div className="text-sm text-[rgb(var(--color-text-rgb)/0.62)]">
                           {employees.length === 0
