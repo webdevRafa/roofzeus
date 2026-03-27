@@ -19,6 +19,7 @@ export type FirestoreTime = Timestamp | Date | FieldValue | null;
 export type Address = {
   /** Full display line, e.g. "123 Main St, San Antonio, TX 78205" */
   fullLine: string;
+  line1?: string;
   street?: string;
   unit?: string;
   city?: string;

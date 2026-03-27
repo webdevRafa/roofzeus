@@ -62,32 +62,50 @@ function pickString(obj: Record<string, unknown>, keys: string[]): string {
 }
 
 function addr(a: Job["address"] | null | undefined) {
-  if (typeof a === "string")
-    return { display: a, line1: a, city: "", state: "", zip: "" };
+  if (typeof a === "string") {
+    return {
+      display: a,
+      line1: a,
+      city: "",
+      state: "",
+      zip: "",
+      cityStateZip: "",
+    };
+  }
+
   const obj: Record<string, unknown> =
     (a as unknown as Record<string, unknown>) ?? {};
-  const line1 = pickString(obj, [
-    "fullLine",
-    "line1",
-    "street",
-    "address1",
-    "address",
-    "full",
-    "formatted",
-    "text",
-    "label",
-    "line",
-    "street1",
-  ]);
+
+  const line1 =
+    pickString(obj, [
+      "line1",
+      "street",
+      "address1",
+      "address",
+      "line",
+      "street1",
+    ]) || pickString(obj, ["fullLine", "full", "formatted", "text", "label"]);
+
   const city = pickString(obj, ["city", "town"]);
   const state = pickString(obj, ["state", "region", "province"]);
   const zip = pickString(obj, ["zip", "postalCode", "postcode", "zipCode"]);
+
+  const cityStateZip = [city, state].filter(Boolean).join(", ");
+  const cityStateZipWithPostal = [cityStateZip, zip].filter(Boolean).join(" ");
+
   const display =
     pickString(obj, ["fullLine", "full", "formatted", "label", "text"]) ||
-    line1;
-  return { display, line1, city, state, zip };
-}
+    [line1, cityStateZipWithPostal].filter(Boolean).join(", ");
 
+  return {
+    display,
+    line1,
+    city,
+    state,
+    zip,
+    cityStateZip: cityStateZipWithPostal,
+  };
+}
 // ---- Motion helpers ----
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -194,6 +212,12 @@ export interface DashboardJobsSectionProps {
   setOpenForm: Dispatch<SetStateAction<boolean>>;
   address: string;
   setAddress: Dispatch<SetStateAction<string>>;
+  city: string;
+  setCity: Dispatch<SetStateAction<string>>;
+  state: string;
+  setState: Dispatch<SetStateAction<string>>;
+  zip: string;
+  setZip: Dispatch<SetStateAction<string>>;
   createJob: () => Promise<void>;
   loading: boolean;
   error: string | null;
@@ -252,10 +276,17 @@ export function DashboardJobsSection({
   setNewShinglesDate,
   newPunchDate,
   setNewPunchDate,
+
   openForm,
   setOpenForm,
   address,
   setAddress,
+  city,
+  setCity,
+  state,
+  setState,
+  zip,
+  setZip,
   createJob,
   loading,
   error,
@@ -317,15 +348,53 @@ export function DashboardJobsSection({
                 <div className="mt-6 space-y-7">
                   {/* Address */}
                   <div>
-                    <label className="mb-3 block text-xs md:text-md font-semibold uppercase tracking-wide text-[var(--color-text)]">
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                       Job address <span className="text-red-300">*</span>
                     </label>
                     <input
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="123 Main St, San Antonio, TX"
-                      className="w-full  bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[var(--color-text)] "
+                      placeholder="123 Main St"
+                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                     />
+
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div>
+                        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                          City
+                        </label>
+                        <input
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="San Antonio"
+                          className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                          State
+                        </label>
+                        <input
+                          value={state}
+                          onChange={(e) => setState(e.target.value)}
+                          placeholder="TX"
+                          className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                          ZIP
+                        </label>
+                        <input
+                          value={zip}
+                          onChange={(e) => setZip(e.target.value)}
+                          placeholder="78205"
+                          className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -485,6 +554,9 @@ export function DashboardJobsSection({
                     onClick={() => {
                       setOpenForm(false);
                       setAddress("");
+                      setCity("");
+                      setState("");
+                      setZip("");
                       setAssignedEmployeeIds([]);
                       setNewFeltDate("");
                       setNewShinglesDate("");
@@ -565,9 +637,17 @@ export function DashboardJobsSection({
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
-                                    {a.display || "—"}
+                                  <div className="min-w-0">
+                                    <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+                                      {a.line1 || a.display || "—"}
+                                    </div>
+                                    {a.cityStateZip && (
+                                      <div className="mt-0.5 text-[11px] text-[rgb(var(--color-text-rgb)/0.55)] truncate">
+                                        {a.cityStateZip}
+                                      </div>
+                                    )}
                                   </div>
+
                                   <span
                                     className={cx(
                                       "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase",
@@ -719,19 +799,18 @@ export function DashboardJobsSection({
                               >
                                 <td className="px-4 py-3">
                                   <div className="min-w-0">
-                                    <div className="truncate max-w-[320px] font-semibold md:text-[12px] lg:text-[15px] text-[rgb(var(--color-text-rgb)/0.92)]">
+                                    <div className="max-w-[320px] font-semibold md:text-[12px] lg:text-[15px] text-[rgb(var(--color-text-rgb)/0.92)] leading-snug">
                                       <Link
                                         to={`/job/${job.id}`}
-                                        className="hover:underline"
+                                        className="hover:underline block truncate"
                                       >
-                                        {a.display || "—"}
+                                        {a.line1 || a.display || "—"}
                                       </Link>
                                     </div>
-                                    {(a.city || a.state || a.zip) && (
-                                      <div className="text-sm md:text-xl text-[var(--color-text)]">
-                                        {[a.city, a.state, a.zip]
-                                          .filter(Boolean)
-                                          .join(", ")}
+
+                                    {a.cityStateZip && (
+                                      <div className="mt-1 text-[11px] md:text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] truncate max-w-[320px]">
+                                        {a.cityStateZip}
                                       </div>
                                     )}
                                   </div>

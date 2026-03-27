@@ -221,6 +221,12 @@ export default function JobsPage() {
     setOpenForm,
     address,
     setAddress,
+    city,
+    setCity,
+    state,
+    setState,
+    zip,
+    setZip,
     newFeltDate,
     setNewFeltDate,
     newShinglesDate,
@@ -689,6 +695,12 @@ export default function JobsPage() {
           setOpenForm={setOpenForm}
           address={address}
           setAddress={setAddress}
+          city={city}
+          setCity={setCity}
+          state={state}
+          setState={setState}
+          zip={zip}
+          setZip={setZip}
           createJob={createJob}
           loading={loading}
           error={error}

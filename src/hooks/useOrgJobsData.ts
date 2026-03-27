@@ -16,7 +16,7 @@ import { db } from "../firebase/firebaseConfig";
 import { useOrg } from "../contexts/OrgContext";
 import type { Employee, Job, JobStatus } from "../types/types";
 import { jobConverter } from "../types/types";
-import { makeAddress, recomputeJob } from "../utils/calc";
+import { recomputeJob } from "../utils/calc";
 
 export type DatePreset = "custom" | "last7" | "thisMonth" | "ytd";
 export type StatusFilter = "all" | JobStatus;
@@ -125,6 +125,9 @@ export function useOrgJobsData() {
 
   const [openForm, setOpenForm] = useState(false);
   const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zip, setZip] = useState("");
   const [newFeltDate, setNewFeltDate] = useState("");
   const [newShinglesDate, setNewShinglesDate] = useState("");
   const [newPunchDate, setNewPunchDate] = useState("");
@@ -355,11 +358,35 @@ export function useOrgJobsData() {
 
       const newRef = doc(collection(db, "organizations", orgId, "jobs"));
 
+      const trimmedAddress = address.trim();
+      const trimmedCity = city.trim();
+      const trimmedState = state.trim();
+      const trimmedZip = zip.trim();
+
+      const fullLineParts = [
+        trimmedAddress,
+        [trimmedCity, trimmedState].filter(Boolean).join(", "),
+        trimmedZip,
+      ].filter(Boolean);
+
+      const jobAddress: Job["address"] = {
+        fullLine: fullLineParts.join(", "),
+        line1: trimmedAddress,
+        ...(trimmedCity ? { city: trimmedCity } : {}),
+        ...(trimmedState ? { state: trimmedState } : {}),
+        ...(trimmedZip
+          ? {
+              zip: trimmedZip,
+              postalCode: trimmedZip,
+            }
+          : {}),
+      };
+
       let job: Job = {
         id: newRef.id,
         orgId,
         status: "pending",
-        address: makeAddress(address),
+        address: jobAddress,
         assignedEmployeeIds,
         earnings: {
           totalEarningsCents: 0,
@@ -400,6 +427,9 @@ export function useOrgJobsData() {
       const createdJobId = newRef.id;
 
       setAddress("");
+      setCity("");
+      setState("");
+      setZip("");
       setAssignedEmployeeIds([]);
       setOpenForm(false);
       setNewFeltDate("");
@@ -477,6 +507,12 @@ export function useOrgJobsData() {
     setOpenForm,
     address,
     setAddress,
+    city,
+    setCity,
+    state,
+    setState,
+    zip,
+    setZip,
     newFeltDate,
     setNewFeltDate,
     newShinglesDate,
