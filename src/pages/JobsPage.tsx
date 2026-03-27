@@ -150,15 +150,14 @@ function SortMenu({
                     className="w-full px-3 py-2 text-left transition cursor-pointer"
                     role="menuitem"
                   >
-                    <div className="flex items-center justify-between gap-3 hover:shadow-md">
-                      <div className="min-w-0">
+                    <div className="flex items-center group justify-between gap-3 hover:shadow-md">
+                      <div className="min-w-0 ">
                         <div
-                          className="text-xs px-2 py-1 "
-                          style={{
-                            color: selected
-                              ? "text-[var(--color-surface)]"
-                              : "text-[var(--color-surface)] opacity-20",
-                          }}
+                          className={`text-xs px-2 py-1  group-hover:text-[var(--color-text)] ${
+                            selected
+                              ? "text-[var(--color-text)]"
+                              : "text-[var(--color-text)]/70"
+                          }`}
                         >
                           {opt.label}
                         </div>
@@ -382,8 +381,8 @@ export default function JobsPage() {
                 onClick={() => setShowSearch((v) => !v)}
                 className={`cursor-pointer hover:shadow-md inline-flex items-center justify-center rounded-xl   text-xs md:text-md font-semibold   transition  ${
                   showSearch === true
-                    ? "text-[rgb(var(--pill-success-rgb))]"
-                    : "text-[var(--color-text)]"
+                    ? "text-[var(--color-text)]"
+                    : "text-[var(--color-text)]/70"
                 }`}
                 title="Search addresses"
                 aria-label="Search addresses"
@@ -415,8 +414,8 @@ export default function JobsPage() {
                 onClick={() => setShowFilters((v) => !v)}
                 className={`cursor-pointer hover:shadow-md inline-flex  items-center justify-center   text-xs md:text-md font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition ${
                   showFilters
-                    ? "text-[rgb(var(--pill-success-rgb))]"
-                    : "text-[var(--color-text)]"
+                    ? "text-[var(--color-text)]"
+                    : "text-[var(--color-text)]/70"
                 }`}
                 title="Filter by last updated date"
               >
@@ -427,21 +426,23 @@ export default function JobsPage() {
               </button>
             </div>
             {/* show what dates are being filtered, and status */}
-            <div className="flex flex-row justify-start gap-1 text-xs md:text-md  mb-3 md:mb-0">
+            <div className="flex flex-row justify-start gap-1 text-xs md:text-md mb-3 md:mb-0">
               {hasActiveDateFilter ? (
-                <span className="inline-flex items-center    text-[var(--color-text-rgb)] bg-[var(--color-card)] border-1 border-[var(--color-blue)]/40 px-3">
-                  Dates: {rangeLabel || "Custom range"}
+                <span className="inline-flex items-center    text-[var(--color-text)] bg-[var(--color-card)]/60 border-1 border-[var(--color-blue)]/20 px-3">
+                  Viewing: {rangeLabel || "Custom range"}
                 </span>
               ) : (
                 <span className="inline-flex items-center    text-[var(--color-text-rgb)]">
-                  Date: All time
+                  Viewing: All time
                 </span>
               )}
 
               <span className="inline-flex items-center  px-3 py-2 text-[var(--color-text-rgb)]">
-                Status:{" "}
+                {hasActiveDateFilter && <span>with&nbsp;</span>} Status:{" "}
                 <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
-                  {statusFilter === "all" ? "All" : statusFilter}
+                  {statusFilter === "all" && "All"}
+                  {statusFilter === "pending" && "Pending"}
+                  {statusFilter === "completed" && "Completed"}
                 </span>
               </span>
             </div>
@@ -529,21 +530,27 @@ export default function JobsPage() {
           </AnimatePresence>
 
           {/* status row stays in normal layout */}
-          <div className="mt-3 flex flex-row justify-start gap-4 text-sm md:text-md">
+          <div
+            className={`mt-3 flex flex-row justify-start text-sm md:text-md ${
+              hasActiveDateFilter ? "gap-1" : "gap-5"
+            }`}
+          >
             {hasActiveDateFilter ? (
-              <span className="inline-flex items-center text-[var(--color-text-rgb)] bg-[var(--color-card)] border border-[var(--color-blue)]/40 px-3">
-                Dates: {rangeLabel || "Custom range"}
+              <span className="inline-flex items-center text-[var(--color-text-rgb)] bg-[var(--color-card)]/30 border border-[var(--color-blue)]/40 px-3 py-1">
+                Viewing: {rangeLabel || "Custom range"}
               </span>
             ) : (
               <span className="inline-flex items-center text-[var(--color-text-rgb)]">
-                Date: All time
+                Viewing: All time
               </span>
             )}
 
             <span className="inline-flex items-center text-[var(--color-text-rgb)]">
-              Status:{" "}
+              {hasActiveDateFilter && <span>with&nbsp;</span>} Status:{" "}
               <span className="ml-1 font-semibold text-[var(--color-text-rgb)]">
-                {statusFilter === "all" ? "All" : statusFilter}
+                {statusFilter === "all" && "All"}
+                {statusFilter === "pending" && "Pending"}
+                {statusFilter === "completed" && "Completed"}
               </span>
             </span>
           </div>
@@ -634,7 +641,7 @@ export default function JobsPage() {
                         setStartDate("");
                         setEndDate("");
                       }}
-                      className=" border border-red-300/20 bg-red-300/10 hover:bg-red-300/15 px-3 py-2 text-xs font-semibold text-red-200 transition cursor-pointer hover:text-white"
+                      className=" border border-red-300/20 bg-red-300/5 hover:bg-red-300/15 px-3 py-2 text-xs font-semibold text-red-200 transition cursor-pointer hover:text-white"
                     >
                       Clear
                     </button>

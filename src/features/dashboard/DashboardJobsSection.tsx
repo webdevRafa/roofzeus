@@ -507,9 +507,9 @@ export function DashboardJobsSection({
                       type="button"
                       onClick={() => setStatusFilter(f)}
                       className={cx(
-                        "whitespace-nowrap cursor-pointer   px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition hover:shadow-md",
+                        "whitespace-nowrap cursor-pointer   px-3 py-1 text-xs md:text-md font-semibold uppercase tracking-wide transition hover:shadow-md",
                         active
-                          ? " text-[var(--color-text)]"
+                          ? " text-[var(--color-text)] bg-[var(--color-card)]/20 border-1 border-[var(--color-blue)]/20"
                           : " text-[var(--color-text)]/70 hover:text-[var(--color-text)]"
                       )}
                     >
@@ -566,7 +566,7 @@ export function DashboardJobsSection({
 
                               <div className="shrink-0 text-right">
                                 <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
-                                  Net
+                                  Profit
                                 </div>
                                 <div
                                   className={cx(
@@ -670,7 +670,7 @@ export function DashboardJobsSection({
                               Note
                             </th>
                             <th className="text-right px-4 py-3 font-light">
-                              Net
+                              Profit
                             </th>
                             <th className="text-left px-4 py-3 whitespace-nowrap font-light">
                               Last Updated
@@ -840,9 +840,9 @@ export function DashboardJobsSection({
                 {...fadeUp(0.12)}
                 className="xl:col-span-3 min-w-0 w-full xl:justify-self-end"
               >
-                <div className="bg-var(--color-background)] p-4">
+                <div className=" p-4">
                   <div className="text-sm md:text-lg uppercase tracking-wider text-[var(--color-text)]">
-                    Total net
+                    Total Profit
                   </div>
                   <div className="mt-1 text-2xl font-semibold text-[rgb(var(--pill-success-rgb))]">
                     <CountMoney cents={totalNet} />
@@ -855,12 +855,12 @@ export function DashboardJobsSection({
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="p-3 text-sm md:text-md">
                       <div className=" uppercase tracking-wider text-[var(--color-text)]/70">
-                        Showing
+                        Viewing
                       </div>
                       <div className="mt-1  font-semibold text-[var(--color-text)]">
                         {pagedJobs.length}
                       </div>
-                      <div className="mt-1 text-[var(--color-text)] text-xs">
+                      <div className="mt-1 text-[var(--color-text)]/70 text-xs">
                         On this page
                       </div>
                     </div>
@@ -870,7 +870,9 @@ export function DashboardJobsSection({
                         Filter
                       </div>
                       <div className="mt-1 text-xs font-semibold text-[var(--color-text)]">
-                        {statusFilter === "all" ? "All" : statusFilter}
+                        {statusFilter === "all" && "All"}
+                        {statusFilter === "pending" && "Pending"}
+                        {statusFilter === "completed" && "Completed"}
                       </div>
                     </div>
                   </div>
