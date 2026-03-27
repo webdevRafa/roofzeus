@@ -283,6 +283,13 @@ export function DashboardJobsSection({
     });
   }, [employees, employeeSearch]);
 
+  const assignedEmployees = employees.filter((e) =>
+    assignedEmployeeIds.includes(e.id)
+  );
+
+  const visible = assignedEmployees.slice(0, 2);
+  const remaining = assignedEmployees.length - visible.length;
+
   return (
     <>
       <section className=" hover:shadow-md overflow-hidden  mt-5">
@@ -290,13 +297,13 @@ export function DashboardJobsSection({
         <AnimatePresence>
           {openForm && (
             <motion.div
-              className="fixed inset-0 z-90 flex items-center justify-center bg-black/20 backdrop-blur-xs px-4"
+              className="fixed inset-x-0 bottom-0 top-[72px] z-[120] flex justify-center overflow-y-auto bg-black/35 backdrop-blur-xs px-3 pt-3 pb-4 sm:top-[76px] sm:px-4 sm:pt-6 sm:pb-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-full max-w-2xl  border border-[var(--color-border)] bg-[var(--color-card)] backdrop-blur p-5 lg:py-15 lg:px-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+                className="w-full max-w-2xl self-start sm:self-start max-h-[calc(100dvh-72px-1rem)] sm:max-h-[calc(100dvh-76px-3rem)] overflow-y-auto [overscroll-behavior:contain] rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] backdrop-blur p-4 sm:p-5 lg:px-5 lg:py-8 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
                 {...fadeUp(0.02)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -403,8 +410,17 @@ export function DashboardJobsSection({
                     )}
 
                     {assignedEmployeeIds.length > 0 && (
-                      <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.62)]">
-                        Assigned: {assignedEmployeeIds.length}
+                      <div className="mt-5 mb-2 text-xs text-[rgb(var(--color-text-rgb)/0.62)]">
+                        <div className="text-xs md:text-[13px] text-[var(--color-text)]">
+                          {assignedEmployees.length === 0 ? (
+                            "No workers assigned"
+                          ) : (
+                            <>
+                              {visible.map((e) => e.name).join(", ")}
+                              {remaining > 0 && ` +${remaining}`}
+                            </>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => setAssignedEmployeeIds([])}
