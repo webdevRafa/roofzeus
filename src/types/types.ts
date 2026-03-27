@@ -24,6 +24,7 @@ export type Address = {
   city?: string;
   state?: string;
   postalCode?: string;
+  zip?: string;
   country?: string; // "US"
   geo?: { lat: number; lng: number };
 };
