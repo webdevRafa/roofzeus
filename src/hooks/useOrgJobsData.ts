@@ -124,6 +124,7 @@ export function useOrgJobsData() {
   const JOBS_PER_PAGE = 20;
 
   const [openForm, setOpenForm] = useState(false);
+  const [orgDefaultState, setOrgDefaultState] = useState("");
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -143,6 +144,27 @@ export function useOrgJobsData() {
 
     const unsub = onSnapshot(q, (snap) => {
       setJobs(snap.docs.map((d) => d.data()));
+    });
+
+    return () => unsub();
+  }, [orgId]);
+
+  useEffect(() => {
+    if (!orgId) {
+      setOrgDefaultState("");
+      return;
+    }
+
+    const orgRef = doc(db, "organizations", orgId);
+
+    const unsub = onSnapshot(orgRef, (snap) => {
+      const data = snap.data() as { defaultState?: string | null } | undefined;
+      const nextDefaultState = (data?.defaultState ?? "").trim().toUpperCase();
+
+      setOrgDefaultState(nextDefaultState);
+
+      // Only auto-fill if the form state is still empty.
+      setState((current) => (current.trim() ? current : nextDefaultState));
     });
 
     return () => unsub();
@@ -324,7 +346,11 @@ export function useOrgJobsData() {
   useEffect(() => {
     setJobsPage(1);
   }, [statusFilter, startDate, endDate, datePreset, searchTerm, jobs.length]);
+  useEffect(() => {
+    if (!openForm) return;
 
+    setState((current) => (current.trim() ? current : orgDefaultState));
+  }, [openForm, orgDefaultState]);
   const totalNet = useMemo(
     () =>
       filteredJobs.reduce(
@@ -428,7 +454,7 @@ export function useOrgJobsData() {
 
       setAddress("");
       setCity("");
-      setState("");
+      setState(orgDefaultState);
       setZip("");
       setAssignedEmployeeIds([]);
       setOpenForm(false);

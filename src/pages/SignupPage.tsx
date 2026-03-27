@@ -147,6 +147,59 @@ function formatPhone(value: string) {
 function phoneDigits(value: string) {
   return value.replace(/\D/g, "");
 }
+const STATE_OPTIONS = [
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" },
+  { value: "CA", label: "California" },
+  { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" },
+  { value: "DE", label: "Delaware" },
+  { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" },
+] as const;
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 14, filter: "blur(6px)" },
   show: {
@@ -225,6 +278,7 @@ export default function SignupPage() {
     companyName: "",
     companyLegalName: "",
     companyPhone: "",
+    companyState: "",
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -267,6 +321,11 @@ export default function SignupPage() {
     [draft.companyName]
   );
 
+  const companyStateOk = useMemo(
+    () => draft.companyState.trim().length === 2,
+    [draft.companyState]
+  );
+
   // ✅ Require strong password + match
   const pwOk = useMemo(() => score === 4, [score]);
 
@@ -285,6 +344,7 @@ export default function SignupPage() {
       emailOk &&
       nameOk &&
       orgOk &&
+      companyStateOk &&
       pwOk &&
       userPhoneOk &&
       companyPhoneOk &&
@@ -295,6 +355,7 @@ export default function SignupPage() {
     emailOk,
     nameOk,
     orgOk,
+    companyStateOk,
     pwOk,
     userPhoneOk,
     companyPhoneOk,
@@ -309,10 +370,9 @@ export default function SignupPage() {
     [pwOk, draft.password, draft.confirmPassword]
   );
   const step3Ok = useMemo(
-    () => orgOk && companyPhoneOk,
-    [orgOk, companyPhoneOk]
+    () => orgOk && companyPhoneOk && companyStateOk,
+    [orgOk, companyPhoneOk, companyStateOk]
   );
-
   const progressPercent = useMemo(() => (step / 4) * 100, [step]);
 
   const currentStepMeta = SIGNUP_STEPS[step - 1];
@@ -342,6 +402,8 @@ export default function SignupPage() {
     if (step === 3 && !step3Ok) {
       if (!orgOk) {
         setError("Please enter your company name.");
+      } else if (!companyStateOk) {
+        setError("Please select your primary company state.");
       } else if (!companyPhoneOk) {
         setError("Please enter a valid 10-digit company phone number.");
       }
@@ -391,6 +453,7 @@ export default function SignupPage() {
         companyName: draft.companyName,
         companyLegalName: draft.companyLegalName,
         companyPhone: draft.companyPhone,
+        companyState: draft.companyState,
       });
 
       navigate("/verify-email", { replace: true });
@@ -650,6 +713,31 @@ export default function SignupPage() {
                         />
 
                         <div>
+                          <label className="block">
+                            <div className="mb-1 flex items-center justify-between">
+                              <div className="text-[12px] text-white/70">
+                                Primary company state
+                              </div>
+                            </div>
+
+                            <select
+                              value={draft.companyState}
+                              onChange={(e) =>
+                                set("companyState", e.target.value)
+                              }
+                              className="w-full bg-[#14223b] px-3 py-2 text-sm text-[#f5f6f8] outline-none focus:ring-2 focus:ring-[#0a90f0]/40"
+                            >
+                              <option value="">Select state</option>
+                              {STATE_OPTIONS.map((s) => (
+                                <option key={s.value} value={s.value}>
+                                  {s.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+
+                        <div>
                           <Field
                             label="Company phone (optional)"
                             value={draft.companyPhone}
@@ -737,6 +825,14 @@ export default function SignupPage() {
                               <div className="text-white/45">Your phone</div>
                               <div className="mt-1 text-white/85">
                                 {draft.userPhone || "Not provided"}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-white/45">
+                                Primary company state
+                              </div>
+                              <div className="mt-1 text-white/85">
+                                {draft.companyState || "—"}
                               </div>
                             </div>
 

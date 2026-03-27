@@ -193,9 +193,11 @@ export type Org = {
   address?: Address | null;
   logoUrl?: string | null;
 
+  /** Default state used to preselect job address state for this org */
+  defaultState?: string | null;
 
-   ownerUserId?: ID;
-   createdByUserId?: ID;
+  ownerUserId?: ID;
+  createdByUserId?: ID;
 
   createdAt?: FirestoreTime;
   updatedAt?: FirestoreTime;

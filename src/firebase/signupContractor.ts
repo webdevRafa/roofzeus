@@ -31,6 +31,7 @@ export type ContractorSignupInput = {
   companyName: string;
   companyLegalName?: string;
   companyPhone?: string;
+  companyState: string;
 };
 
 function cleanPhone(p?: string): string | null {
@@ -62,12 +63,15 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
   const fullName = input.fullName.trim();
   const companyName = input.companyName.trim();
   const companyLegalName = (input.companyLegalName ?? "").trim() || companyName;
+  const companyState = input.companyState.trim().toUpperCase();
 
   if (fullName.length < 2) throw new Error("Please enter your full name.");
   if (!email.includes("@")) throw new Error("Please enter a valid email.");
   if ((input.password ?? "").trim().length < 6)
     throw new Error("Password must be at least 6 characters.");
   if (companyName.length < 2) throw new Error("Please enter a company name.");
+  if (companyState.length !== 2)
+    throw new Error("Please select your primary company state.");
 
   try {
     // 1) Auth user
@@ -95,6 +99,7 @@ export async function signupContractorWithEmail(input: ContractorSignupInput) {
       legalName: companyLegalName,
       phone: cleanPhone(input.companyPhone),
       email,
+      defaultState: companyState,
 
       // Ownership fields you described
       ownerUserId: uid,

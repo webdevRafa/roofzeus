@@ -242,7 +242,7 @@ function pipelineNote(job: Job): string {
 
   if (job.status === "paid") return "Paid • stub created";
   if (job.status === "invoiced") return "Invoice sent • awaiting payment";
-  if (punchSch) return `Punch scheduled • ${fmtDateOnly(punchSch)}`;
+  if (punchSch) return `Punch scheduled  ${fmtDateOnly(punchSch)}`;
 
   // Production stage
   if (shinglesDone) return "Shingles completed • ready for punch";
@@ -407,7 +407,7 @@ export function DashboardJobsSection({
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 Main St"
-                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                      className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                     />
 
                     <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -419,28 +419,46 @@ export function DashboardJobsSection({
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
                           placeholder="San Antonio"
-                          className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                          className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                         />
                       </div>
-
                       <div>
-                        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                          State
+                        <label className="block">
+                          <div className="mb-1 flex items-center justify-between">
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                              State
+                            </div>
+                          </div>
+
+                          <div className="relative">
+                            <select
+                              value={state}
+                              onChange={(e) => setState(e.target.value)}
+                              className="w-full appearance-none  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 pr-10 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[#0a90f0]/40 cursor-pointer"
+                            >
+                              <option value="">Select state</option>
+
+                              {STATE_OPTIONS.map((s) => (
+                                <option key={s.value} value={s.value}>
+                                  {s.label}
+                                </option>
+                              ))}
+                            </select>
+
+                            <svg
+                              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/65"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
                         </label>
-
-                        <select
-                          value={state}
-                          onChange={(e) => setState(e.target.value)}
-                          className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 cursor-pointer"
-                        >
-                          <option value="">Select state</option>
-
-                          {STATE_OPTIONS.map((s) => (
-                            <option key={s.value} value={s.value}>
-                              {s.label}
-                            </option>
-                          ))}
-                        </select>
                       </div>
 
                       <div>
@@ -455,7 +473,7 @@ export function DashboardJobsSection({
                           inputMode="numeric"
                           maxLength={10}
                           placeholder="78205"
-                          className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                          className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                         />
                       </div>
                     </div>
@@ -619,7 +637,6 @@ export function DashboardJobsSection({
                       setOpenForm(false);
                       setAddress("");
                       setCity("");
-                      setState("");
                       setZip("");
                       setAssignedEmployeeIds([]);
                       setNewFeltDate("");
@@ -722,7 +739,7 @@ export function DashboardJobsSection({
                                   </span>
                                 </div>
 
-                                <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] truncate">
+                                <div className="mt-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] truncate">
                                   {pipelineNote(job)}
                                 </div>
                               </div>
