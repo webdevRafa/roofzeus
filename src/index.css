@@ -155,9 +155,13 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      --color-card-hover: #1f3557;
      --color-border: rgba(255,255,255,0.10);
      --color-blue: #0a90f0;
+     --color-blue-hover: #1899f5;
      --color-cta: #0a90f0;
       --color-mark-done: #104902;
       --color-done: #064e3b;
+      --status-complete: #5ee9b5;
+      --text-status-complete: #5ee9b5;
+     --bg-status-complete: ;
      /* Text */
      --color-text: #eef2f7;
      --color-muted: rgba(238,242,247,0.70);
@@ -165,7 +169,7 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      /* Accents (keep your brand feel) */
      --color-primary: #cfae5d;          /* “gold” accent used across UI */
      --color-pending: #f3dd5f;
-     --bg-pending: #101d35;
+     --bg-label: #101d35;
      --color-danger: #ef4444;
      --color-success: #22c55e;
    
@@ -201,7 +205,7 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      --color-background: #f8fbfd;
      --color-fixed-background: #0b0e14;
      --color-primary-text: #ffffff;
-     --bg-pending: #feffbf;
+     --bg-label: #101d35;
      --color-surface: #f6f9fc;
      --color-card: #ffffff;
      --color-card-hover: #f3f4f6;
@@ -214,7 +218,10 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      /* Text */
      --color-text: #0f172a;
      --color-muted: rgba(15,23,42,0.65);
-   
+     --text-status-complete: #ffffff;
+     --bg-status-complete: #379b76;
+     --text-mark-done: #ffffff;
+     --bg-mark-done: #379b76; 
      /* Accents */
      --color-primary: #9a7b2e;          /* slightly deeper gold for contrast on white */
      --color-danger: #dc2626;

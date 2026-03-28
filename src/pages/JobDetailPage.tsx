@@ -34,7 +34,7 @@ import {
 import { MdArrowBackIos } from "react-icons/md";
 
 import { getStorage, ref as storageRef, uploadBytes } from "firebase/storage";
-import { motion, type MotionProps } from "framer-motion";
+import { motion, AnimatePresence, type MotionProps } from "framer-motion";
 import CountUp from "react-countup";
 import { Pencil } from "lucide-react";
 import InvoiceCreateModal from "../components/InvoiceCreateModal";
@@ -64,6 +64,25 @@ const fadeUp = (delay = 0): Partial<MotionProps> => ({
   animate: { opacity: 1, y: 0, filter: "blur(0px)" },
   transition: { duration: 0.42, ease: EASE, delay },
 });
+
+const toastAnim: MotionProps = {
+  initial: { opacity: 0, y: -20, scale: 0.96, filter: "blur(6px)" },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.35, ease: EASE },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    scale: 0.98,
+    filter: "blur(4px)",
+    transition: { duration: 0.2, ease: EASE },
+  },
+};
+
 const item: MotionProps["variants"] = {
   initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
@@ -188,6 +207,17 @@ function toYMD(x: unknown): string {
   const d = new Date(ms);
   return d.toISOString().slice(0, 10);
 }
+
+function fmtLongDate(x: unknown): string {
+  const ms = toMillis(x);
+  if (ms == null) return "—";
+  return new Date(ms).toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 type MaterialDraft = {
   category: MaterialCategory;
   unitPrice: string; // dollars typed in input
@@ -1720,45 +1750,53 @@ export default function JobDetailPage({
     <>
       <div className="w-full relative">
         {/* ===== Global Toast ===== */}
-        {toast && (
-          <div className="fixed max-w-[300px] right-20 top-20 z-100">
-            <div className="flex items-start gap-3  bg-[var(--color-card)] px-4 py-10 text-sm shadow-lg ">
-              <div className="mt-0.5">
-                {toast.status === "success" ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                ) : (
-                  <AlertTriangle className="h-5 w-5 text-red-500" />
-                )}
-              </div>
-              <div className="flex-1">
-                <div
-                  className={
-                    "font-semibold " +
-                    (toast.status === "success"
-                      ? "text-emerald-700"
-                      : "text-red-600")
-                  }
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              {...toastAnim}
+              className="fixed max-w-[300px] right-6 top-6 lg:top-20 lg:right-20 z-[100]"
+            >
+              <div className="flex items-start gap-3 bg-[var(--color-card)] px-4 py-4 text-sm shadow-xl border border-[var(--color-border)] rounded-xl backdrop-blur">
+                <div className="mt-0.5">
+                  {toast.status === "success" ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  ) : (
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <div
+                    className={
+                      "font-semibold " +
+                      (toast.status === "success"
+                        ? "text-emerald-400"
+                        : "text-red-400")
+                    }
+                  >
+                    {toast.title}
+                  </div>
+
+                  <div className="mt-0.5 text-xs text-[var(--color-muted)]">
+                    {toast.message}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setToast(null)}
+                  className="ml-2 rounded-full p-1 text-gray-400 hover:bg-white/10 hover:text-white transition"
+                  aria-label="Dismiss"
                 >
-                  {toast.title}
-                </div>
-                <div className="mt-0.5 text-xs text-[var(--color-muted)]">
-                  {toast.message}
-                </div>
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setToast(null)}
-                className="ml-2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                aria-label="Dismiss"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         <motion.h1
           {...fadeUp(0)}
-          className="mt-2 text-2xl sm:text-3xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight  bg-[var(--color-background)] text-center sticky top-18 z-40 py-1"
+          className="mt-10 text-2xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight bg-[var(--color-background)] text-center sticky top-18 z-40 py-1 pointer-events-none"
         >
           {job.address?.fullLine}
         </motion.h1>
@@ -1921,44 +1959,46 @@ export default function JobDetailPage({
 
                   <div className="">
                     {activeSection === "Schedule" && (
-                      <section className="rounded-2xl  p-5">
+                      <section className="relative z-10 rounded-2xl p-5">
                         {/* Scheduling controls */}
-                        <div className="w-full  rounded-2xl  p-3 sm:p-4">
+                        <div className="w-full  rounded-2xl  p-3 sm:p-4 ">
                           <div className="grid gap-5 md:grid-cols-3">
                             {/* DRY IN */}
                             <motion.div
                               {...scheduleCardMotion(0.06)}
-                              className="  bg-[var(--color-card)] p-6 shadow-sm "
+                              className="   p-6 shadow-sm "
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
-                                    Dry in
+                              <div className="flex items-start justify-between gap-3 ">
+                                <div className="min-w-0 ">
+                                  <div className="flex gap-1 items-center">
+                                    <div className="text-lg font-semibold uppercase tracking-wide text-[var(--color-text)] text-center">
+                                      Dry in
+                                    </div>
+                                    {feltCompletedMs ? (
+                                      <span className="inline-flex items-center gap-1  px-2 py-0.5 text-sm font-semibold text-[var(--text-status-complete)] bg-[var(--bg-status-complete)]">
+                                        <CheckCircle2 size={14} />
+                                        Done
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1   px-2 py-1 text-sm font-semibold text-[var(--color-pending)] ">
+                                        <Clock size={14} />
+                                        Pending
+                                      </span>
+                                    )}
                                   </div>
+
                                   <div className="mt-1 text-sm md:text-lg text-[var(--color-text)]/80">
                                     {feltCompletedMs
-                                      ? `Completed ${new Date(
+                                      ? `Completed ${fmtLongDate(
                                           feltCompletedMs
-                                        ).toLocaleDateString()}`
+                                        )}`
                                       : feltScheduledMs
-                                      ? `Scheduled ${new Date(
+                                      ? `Scheduled for ${fmtLongDate(
                                           feltScheduledMs
-                                        ).toLocaleDateString()}`
+                                        )}`
                                       : "Not scheduled"}
                                   </div>
                                 </div>
-
-                                {feltCompletedMs ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full  bg-[var(--color-done)] px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
-                                    <CheckCircle2 size={14} />
-                                    Done
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1   px-2 py-1 text-sm font-semibold text-[var(--color-pending)] bg-[var(--bg-pending)]">
-                                    <Clock size={14} />
-                                    Pending
-                                  </span>
-                                )}
                               </div>
 
                               <div className="mt-7 flex flex-wrap items-center gap-2">
@@ -1977,10 +2017,10 @@ export default function JobDetailPage({
                                         setFeltScheduleEditing(true);
                                       }}
                                       className={
-                                        "px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        "px-2.5 py-1 text-xs lg:text-md font-medium transition  " +
                                         (jobIsLocked
                                           ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)]/70 hover:bg-[var(--color-card-hover)] ring-white/10")
                                       }
                                     >
                                       {feltScheduledMs
@@ -1996,10 +2036,10 @@ export default function JobDetailPage({
                                         setConfirmFeltDoneOpen(true);
                                       }}
                                       className={
-                                        "px-2.5 py-1 text-xs font-semibold cursor-pointer transition " +
+                                        "px-2.5 py-1 text-xs lg:text-md font-semibold cursor-pointer transition ring-1 ring-white/10 hover:bg-[var(--color-card-hover)] " +
                                         (jobIsLocked
                                           ? "text-[var(--color-text)] cursor-not-allowed "
-                                          : "bg-[var(--color-done)]  text-[var(--color-text)]")
+                                          : "  text-[var(--color-text)]")
                                       }
                                     >
                                       Mark done
@@ -2014,7 +2054,7 @@ export default function JobDetailPage({
                                       void reopenFelt();
                                     }}
                                     className={
-                                      "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                      "px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
                                       (jobIsLocked
                                         ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
                                         : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
@@ -2030,37 +2070,39 @@ export default function JobDetailPage({
                             {/* Shingles */}
                             <motion.div
                               {...scheduleCardMotion(0.14)}
-                              className="bg-[var(--color-card)] p-6 shadow-sm "
+                              className="p-6 shadow-sm "
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
-                                    Shingles
+                                  <div className="flex gap-1 items-center">
+                                    <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
+                                      Shingles
+                                    </div>
+                                    {shinglesCompletedMs ? (
+                                      <span className="inline-flex items-center gap-1  px-2 py-0.5 text-sm font-semibold text-[var(--text-status-complete)] bg-[var(--bg-status-complete)]">
+                                        <CheckCircle2 size={14} />
+                                        Done
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1   px-2 py-1 text-sm font-semibold text-[var(--color-pending)] ">
+                                        <Clock size={14} />
+                                        Pending
+                                      </span>
+                                    )}
                                   </div>
+
                                   <div className="mt-1 text-sm md:text-lg text-[var(--color-text)]/80">
                                     {shinglesCompletedMs
-                                      ? `Completed ${new Date(
+                                      ? `Completed ${fmtLongDate(
                                           shinglesCompletedMs
-                                        ).toLocaleDateString()}`
+                                        )}`
                                       : shinglesScheduledMs
-                                      ? `Scheduled ${new Date(
+                                      ? `Scheduled for ${fmtLongDate(
                                           shinglesScheduledMs
-                                        ).toLocaleDateString()}`
+                                        )}`
                                       : "Not scheduled"}
                                   </div>
                                 </div>
-
-                                {shinglesCompletedMs ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-done)] px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
-                                    <CheckCircle2 size={14} />
-                                    Done
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1  px-2 py-0.5 text-sm font-semibold text-[var(--color-pending)] bg-[var(--bg-pending)]">
-                                    <Clock size={14} />
-                                    Pending
-                                  </span>
-                                )}
                               </div>
 
                               <div className="mt-7 flex flex-wrap items-center gap-2">
@@ -2361,8 +2403,9 @@ export default function JobDetailPage({
                             </div>
                           ) : (
                             <div className="w-full sm:w-auto">
-                              <button
-                                type="button"
+                              <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => {
                                   setSqft(String(job.pricing?.sqft ?? ""));
                                   setRate(
@@ -2374,7 +2417,22 @@ export default function JobDetailPage({
 
                                   setEditingPricing(true);
                                 }}
-                                className="group w-full sm:min-w-[360px]   px-4 py-3 md:py-10 text-left transition "
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    setSqft(String(job.pricing?.sqft ?? ""));
+                                    setRate(
+                                      (job.pricing?.ratePerSqFt as 31 | 35) ??
+                                        31
+                                    );
+
+                                    // ✅ NEW: prefill flashing inputs from saved job data
+                                    prefillFlashingInputs();
+
+                                    setEditingPricing(true);
+                                  }
+                                }}
+                                className="group w-full sm:min-w-[360px] rounded-2xl bg-[var(--color-surface)]/35 shadow-md ring-1 ring-white/10 px-4 py-3 text-left transition hover:bg-[var(--color-card-hover)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                                 title="Edit pricing"
                               >
                                 <div className="flex items-end justify-between gap-3">
@@ -2436,7 +2494,7 @@ export default function JobDetailPage({
                                     </span>
                                   </div>
                                 </div>
-                              </button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -3124,6 +3182,366 @@ export default function JobDetailPage({
                 </div>
               </form>
             </ModalShell>
+
+            {/* ===== Schedule Felt Modal ===== */}
+            {feltScheduleEditing && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Schedule DRY IN
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setFeltScheduleEditing(false)}
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
+                    DRY IN date
+                  </label>
+                  <input
+                    type="date"
+                    value={feltScheduleDate}
+                    onChange={(e) => setFeltScheduleDate(e.target.value)}
+                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFeltScheduleEditing(false)}
+                      className=" border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void saveFeltSchedule()}
+                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Schedule Shingles Modal ===== */}
+            {shinglesScheduleEditing && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Schedule shingles
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setShinglesScheduleEditing(false)}
+                      className="rounded-full cursor-pointer p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
+                    Shingles date
+                  </label>
+                  <input
+                    type="date"
+                    value={shinglesScheduleDate}
+                    onChange={(e) => setShinglesScheduleDate(e.target.value)}
+                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShinglesScheduleEditing(false)}
+                      className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void saveShinglesSchedule()}
+                      className="bg-[var(--color-done)] cursor-pointer px-3 py-1.5 text-xs font-semibold text-white"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Schedule Punch Modal ===== */}
+            {schedulePunchOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Schedule punch
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setSchedulePunchOpen(false)}
+                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
+                    Punch date
+                  </label>
+                  <input
+                    type="date"
+                    value={schedulePunchDate}
+                    onChange={(e) => setSchedulePunchDate(e.target.value)}
+                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSchedulePunchOpen(false)}
+                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!job || !schedulePunchDate) return;
+
+                        const [year, month, day] = schedulePunchDate
+                          .split("-")
+                          .map((x) => Number(x));
+                        const scheduledDate = new Date(year, month - 1, day);
+
+                        const wasScheduledBefore = !!job.punchScheduledFor;
+
+                        await saveJob({
+                          ...job,
+                          punchScheduledFor: Timestamp.fromDate(scheduledDate),
+                        });
+
+                        setSchedulePunchOpen(false);
+
+                        const label = scheduledDate.toLocaleDateString();
+                        setToast({
+                          status: "success",
+                          title: wasScheduledBefore
+                            ? "Punch rescheduled"
+                            : "Punch scheduled",
+                          message: `Punch is now set for ${label}.`,
+                        });
+                      }}
+                      className="rounded-sm cursor-pointer bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* ===== Confirm Mark as Punched Modal ===== */}
+            {confirmPunchedOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Confirm job completion
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmPunchedOpen(false)}
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    Are you sure this house has been fully punched and the job
+                    is complete? This will mark the job as{" "}
+                    <span className="font-semibold">completed</span>.
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmPunchedOpen(false)}
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmMarkPunched}
+                      className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                    >
+                      Yes, mark job{" "}
+                      <strong className="font-semibold">COMPLETE</strong>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {confirmUndoPunchOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Undo punch?
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmUndoPunchOpen(false)}
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    This will reopen the job and remove the punch completion
+                    timestamp. You’ll be able to reschedule punch again.
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmUndoPunchOpen(false)}
+                      className="border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmUndoPunch}
+                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
+                    >
+                      Yes, undo punch
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Confirm Felt Completed Modal ===== */}
+            {confirmFeltDoneOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
+                <div className="w-full max-w-sm  bg-[var(--color-card)] p-4 lg:py-10 px-4 relative">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmFeltDoneOpen(false)}
+                    className="rounded-full p-2 text-gray-500 hover:bg-gray-100 absolute top-0 right-0"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm lg:text-lg font-semibold text-[var(--color-text)] shadow-sm p-0.5">
+                      Mark <strong className="font-semibold">DRY IN</strong> as
+                      completed?
+                    </h2>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    Are you sure the felt work for this job is fully completed?
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmFeltDoneOpen(false)}
+                      className=" cursor-pointer  px-3 py-1.5 text-xs text-[var(--color-text)]/60 hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await markFeltCompleted();
+                        setConfirmFeltDoneOpen(false);
+                        setToast({
+                          status: "success",
+                          title: "DRY IN marked complete",
+                          message:
+                            "DRY IN has been marked as completed for this job.",
+                        });
+                      }}
+                      className="  px-3 py-1.5 text-xs   text-[var(--color-text)]/85 hover:text-[var(--color-text)] font-bold! hover:bg-[var(--color-card-hover)]  cursor-pointer"
+                    >
+                      Complete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Confirm Shingles Completed Modal ===== */}
+            {confirmShinglesDoneOpen && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                      Mark <strong className="font-semibold">SHINGLES</strong>{" "}
+                      as completed?
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmShinglesDoneOpen(false)}
+                      className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
+                      aria-label="Close"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-[var(--color-muted)]">
+                    Are you sure the shingles work for this job is fully
+                    completed?
+                  </p>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmShinglesDoneOpen(false)}
+                      className=" cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await markShinglesCompleted();
+                        setConfirmShinglesDoneOpen(false);
+                        setToast({
+                          status: "success",
+                          title: "Shingles marked complete",
+                          message:
+                            "Shingles have been marked as completed for this job.",
+                        });
+                      }}
+                      className="bg-[var(--color-mark-done)] px-3 py-1.5 text-xs font-semibold text-white  cursor-pointer"
+                    >
+                      Yes, mark{" "}
+                      <strong className="font-semibold">SHINGLES</strong> done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <motion.div
@@ -3482,101 +3900,6 @@ export default function JobDetailPage({
               </div>
             )}
 
-            {/* ===== Schedule Felt Modal ===== */}
-            {feltScheduleEditing && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Schedule DRY IN
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setFeltScheduleEditing(false)}
-                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
-                    DRY IN date
-                  </label>
-                  <input
-                    type="date"
-                    value={feltScheduleDate}
-                    onChange={(e) => setFeltScheduleDate(e.target.value)}
-                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  />
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setFeltScheduleEditing(false)}
-                      className=" border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void saveFeltSchedule()}
-                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ===== Schedule Shingles Modal ===== */}
-            {shinglesScheduleEditing && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Schedule shingles
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setShinglesScheduleEditing(false)}
-                      className="rounded-full cursor-pointer p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
-                    Shingles date
-                  </label>
-                  <input
-                    type="date"
-                    value={shinglesScheduleDate}
-                    onChange={(e) => setShinglesScheduleDate(e.target.value)}
-                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  />
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShinglesScheduleEditing(false)}
-                      className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void saveShinglesSchedule()}
-                      className="bg-[var(--color-done)] cursor-pointer px-3 py-1.5 text-xs font-semibold text-white"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
             {/* ===== Flashing Pay Modal ===== */}
             {flashingModalOpen && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
@@ -3672,271 +3995,6 @@ export default function JobDetailPage({
                       {(job.earnings?.flashingPay?.amountCents ?? 0) > 0
                         ? "Update"
                         : "Add"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ===== Schedule Punch Modal ===== */}
-            {schedulePunchOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Schedule punch
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setSchedulePunchOpen(false)}
-                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <label className="mb-2 block text-xs text-[var(--color-muted)]">
-                    Punch date
-                  </label>
-                  <input
-                    type="date"
-                    value={schedulePunchDate}
-                    onChange={(e) => setSchedulePunchDate(e.target.value)}
-                    className="w-full rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  />
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSchedulePunchOpen(false)}
-                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!job || !schedulePunchDate) return;
-
-                        const [year, month, day] = schedulePunchDate
-                          .split("-")
-                          .map((x) => Number(x));
-                        const scheduledDate = new Date(year, month - 1, day);
-
-                        const wasScheduledBefore = !!job.punchScheduledFor;
-
-                        await saveJob({
-                          ...job,
-                          punchScheduledFor: Timestamp.fromDate(scheduledDate),
-                        });
-
-                        setSchedulePunchOpen(false);
-
-                        const label = scheduledDate.toLocaleDateString();
-                        setToast({
-                          status: "success",
-                          title: wasScheduledBefore
-                            ? "Punch rescheduled"
-                            : "Punch scheduled",
-                          message: `Punch is now set for ${label}.`,
-                        });
-                      }}
-                      className="rounded-sm cursor-pointer bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            {/* ===== Confirm Mark as Punched Modal ===== */}
-            {confirmPunchedOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Confirm job completion
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmPunchedOpen(false)}
-                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-[var(--color-muted)]">
-                    Are you sure this house has been fully punched and the job
-                    is complete? This will mark the job as{" "}
-                    <span className="font-semibold">completed</span>.
-                  </p>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setConfirmPunchedOpen(false)}
-                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={confirmMarkPunched}
-                      className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
-                    >
-                      Yes, mark job{" "}
-                      <strong className="font-semibold">COMPLETE</strong>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            {confirmUndoPunchOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Undo punch?
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmUndoPunchOpen(false)}
-                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-[var(--color-muted)]">
-                    This will reopen the job and remove the punch completion
-                    timestamp. You’ll be able to reschedule punch again.
-                  </p>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setConfirmUndoPunchOpen(false)}
-                      className="border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)] cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={confirmUndoPunch}
-                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
-                    >
-                      Yes, undo punch
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ===== Confirm Felt Completed Modal ===== */}
-            {confirmFeltDoneOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
-                <div className="w-full max-w-sm  bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20 ">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Mark <strong className="font-semibold">DRY IN</strong> as
-                      completed?
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmFeltDoneOpen(false)}
-                      className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-[var(--color-muted)]">
-                    Are you sure the felt work for this job is fully completed?
-                  </p>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setConfirmFeltDoneOpen(false)}
-                      className=" cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await markFeltCompleted();
-                        setConfirmFeltDoneOpen(false);
-                        setToast({
-                          status: "success",
-                          title: "DRY IN marked complete",
-                          message:
-                            "DRY IN has been marked as completed for this job.",
-                        });
-                      }}
-                      className=" bg-[var(--color-mark-done)] px-3 py-1.5 text-xs font-semibold text-white  cursor-pointer"
-                    >
-                      Yes, mark{" "}
-                      <strong className="font-semibold">DRY IN</strong> done
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ===== Confirm Shingles Completed Modal ===== */}
-            {confirmShinglesDoneOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Mark <strong className="font-semibold">SHINGLES</strong>{" "}
-                      as completed?
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmShinglesDoneOpen(false)}
-                      className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <p className="text-sm text-[var(--color-muted)]">
-                    Are you sure the shingles work for this job is fully
-                    completed?
-                  </p>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setConfirmShinglesDoneOpen(false)}
-                      className=" cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await markShinglesCompleted();
-                        setConfirmShinglesDoneOpen(false);
-                        setToast({
-                          status: "success",
-                          title: "Shingles marked complete",
-                          message:
-                            "Shingles have been marked as completed for this job.",
-                        });
-                      }}
-                      className="bg-[var(--color-mark-done)] px-3 py-1.5 text-xs font-semibold text-white  cursor-pointer"
-                    >
-                      Yes, mark{" "}
-                      <strong className="font-semibold">SHINGLES</strong> done
                     </button>
                   </div>
                 </div>
