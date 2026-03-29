@@ -1271,7 +1271,7 @@ export default function JobDetailPage({
     setToast({
       status: "success",
       title: wasScheduledBefore ? "DRY IN rescheduled" : "DRY IN scheduled",
-      message: `DRY IN is now set for ${scheduledDate.toLocaleDateString()}.`,
+      message: `DRY IN is now set for ${fmtLongDate(scheduledDate)}.`,
     });
   }
 
@@ -1293,7 +1293,7 @@ export default function JobDetailPage({
     setToast({
       status: "success",
       title: wasScheduledBefore ? "Shingles rescheduled" : "Shingles scheduled",
-      message: `Shingles are now set for ${scheduledDate.toLocaleDateString()}.`,
+      message: `Shingles are now set for ${fmtLongDate(scheduledDate)}.`,
     });
   }
 
@@ -1308,26 +1308,31 @@ export default function JobDetailPage({
     if (!job) return;
     if (jobIsLocked) return;
 
-    const patch: Job = {
+    // 1) Stable local UI update (no deleteField sentinels)
+    const optimisticJob: Job = {
       ...job,
-      feltCompletedAt: deleteField() as any,
-
-      // reopening dry-in invalidates shingles + punch path
-      shinglesCompletedAt: deleteField() as any,
-      punchScheduledFor: deleteField() as any,
-      punchedAt: deleteField() as any,
-
-      // Optional: if you ever allow reopening after job completion:
-      // status: job.status === "completed" ? "active" : job.status,
+      feltCompletedAt: null as any,
+      shinglesCompletedAt: null as any,
+      punchedAt: null as any,
     };
 
-    await saveJob(patch);
+    // 2) Persist actual field deletes to Firestore
+    const persistJob: Job = {
+      ...job,
+      feltCompletedAt: deleteField() as any,
+      shinglesCompletedAt: deleteField() as any,
+      punchedAt: deleteField() as any,
+    };
+
+    setJob(recomputeJob({ ...optimisticJob, updatedAt: Timestamp.now() }));
+
+    await saveJob(persistJob);
 
     setToast({
       status: "success",
       title: "Dry-in reopened",
       message:
-        "Dry-in has been reopened. Shingles and punch were cleared to keep the timeline consistent.",
+        "Dry-in has been reopened. Downstream completion states were cleared, but the punch scheduled date was kept.",
     });
   }
 
@@ -1335,28 +1340,31 @@ export default function JobDetailPage({
     if (!job) return;
     if (jobIsLocked) return;
 
-    const patch: Job = {
+    // 1) Stable local UI update (no deleteField sentinels)
+    const optimisticJob: Job = {
       ...job,
-      shinglesCompletedAt: deleteField() as any,
-
-      // reopening shingles invalidates punch path
-      punchScheduledFor: deleteField() as any,
-      punchedAt: deleteField() as any,
-
-      // Optional: if you ever allow reopening after job completion:
-      // status: job.status === "completed" ? "active" : job.status,
+      shinglesCompletedAt: null as any,
+      punchedAt: null as any,
     };
 
-    await saveJob(patch);
+    // 2) Persist actual field deletes to Firestore
+    const persistJob: Job = {
+      ...job,
+      shinglesCompletedAt: deleteField() as any,
+      punchedAt: deleteField() as any,
+    };
+
+    setJob(recomputeJob({ ...optimisticJob, updatedAt: Timestamp.now() }));
+
+    await saveJob(persistJob);
 
     setToast({
       status: "success",
       title: "Shingles reopened",
       message:
-        "Shingles has been reopened. Punch scheduling was cleared to keep the timeline consistent.",
+        "Shingles has been reopened. Punch completion was cleared, but the scheduled punch date was kept.",
     });
   }
-
   async function markShinglesCompleted() {
     if (!job) return;
     await saveJob({
@@ -1692,12 +1700,11 @@ export default function JobDetailPage({
   const last = job.updatedAt ?? job.createdAt ?? null;
   const lastStr = fmtDate(last);
   const punchScheduledMs = toMillis(job.punchScheduledFor ?? null);
-  const punchScheduledLabel = punchScheduledMs
-    ? new Date(punchScheduledMs).toLocaleDateString()
-    : null;
+  const punchScheduledLabel =
+    punchScheduledMs != null ? fmtLongDate(punchScheduledMs) : null;
 
-  const punchedAtLabel =
-    job.punchedAt != null ? fmtDate(job.punchedAt as unknown) : null;
+  const punchedAtMs = toMillis(job.punchedAt ?? null);
+  const punchedAtLabel = punchedAtMs != null ? fmtDate(job.punchedAt) : null;
 
   const feltScheduledMs = toMillis((job as any).feltScheduledFor ?? null);
   const feltCompletedMs = toMillis((job as any).feltCompletedAt ?? null);
@@ -1713,9 +1720,21 @@ export default function JobDetailPage({
     job.status === "closed" ||
     job.status === "archived";
 
+  const hasFeltScheduledOrCompleted =
+    feltScheduledMs != null || feltCompletedMs != null;
+
+  const hasShinglesScheduledOrCompleted =
+    shinglesScheduledMs != null || shinglesCompletedMs != null;
+
   const canSchedulePunch =
     !job.punchedAt &&
-    job.status !== "completed" &&
+    !jobIsLocked &&
+    hasFeltScheduledOrCompleted &&
+    hasShinglesScheduledOrCompleted;
+
+  const canMarkPunchDone =
+    !job.punchedAt &&
+    !jobIsLocked &&
     feltCompletedMs != null &&
     shinglesCompletedMs != null;
 
@@ -1756,7 +1775,7 @@ export default function JobDetailPage({
               {...toastAnim}
               className="fixed max-w-[300px] right-6 top-6 lg:top-20 lg:right-20 z-[100]"
             >
-              <div className="flex items-start gap-3 bg-[var(--color-card)] px-4 py-4 text-sm shadow-xl border border-[var(--color-border)] rounded-xl backdrop-blur">
+              <div className="flex items-start gap-3 bg-[var(--color-card)] px-4 py-4 text-sm shadow-xl border border-[var(--color-border)] backdrop-blur">
                 <div className="mt-0.5">
                   {toast.status === "success" ? (
                     <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -1796,7 +1815,7 @@ export default function JobDetailPage({
         </AnimatePresence>
         <motion.h1
           {...fadeUp(0)}
-          className="mt-10 text-2xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight bg-[var(--color-background)] text-center sticky top-18 z-40 py-1 pointer-events-none"
+          className="mt-10 text-sm md:text-lg font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight bg-[var(--color-background)] text-center sticky top-18 z-40 pt-5 pb-1 pointer-events-none"
         >
           {job.address?.fullLine}
         </motion.h1>
@@ -1874,7 +1893,7 @@ export default function JobDetailPage({
                   <Link to="/jobs">
                     <div className="flex items-center gap-2 px-1 py-2 transition hover:bg-[var(--color-card-hover)]">
                       <MdArrowBackIos className="text-sm" />
-                      <h1 className="font-bebas uppercase text-xl leading-none">
+                      <h1 className="font-poppins text-[13px] leading-none">
                         Back to jobs
                       </h1>
                     </div>
@@ -1915,9 +1934,7 @@ export default function JobDetailPage({
                       <div className="flex items-center gap-2 hover:bg-[var(--color-card-hover)] py-3 px-1 ">
                         <MdArrowBackIos />
 
-                        <h1 className="font-bebas uppercase text-2xl">
-                          Back to jobs
-                        </h1>
+                        <h1 className="font-poppins  text-sm">Back to jobs</h1>
                       </div>
                     </Link>
                     <nav className="flex flex-col p-2 gap-1">
@@ -1952,7 +1969,7 @@ export default function JobDetailPage({
               <main className="min-h-0">
                 <div className="h-full min-h-0 overflow-y-auto   backdrop-blur-md">
                   <div className="border-b border-white/10 px-5 sm:px-6">
-                    <h3 className="my-1 text-2xl font-poppins uppercase font-semibold text-[var(--color-text)]">
+                    <h3 className="my-1 text-2xl font-poppins  font-semibold text-[var(--color-text)]">
                       {activeSection}
                     </h3>
                   </div>
@@ -2070,12 +2087,12 @@ export default function JobDetailPage({
                             {/* Shingles */}
                             <motion.div
                               {...scheduleCardMotion(0.14)}
-                              className="p-6 shadow-sm "
+                              className="   p-6 shadow-sm "
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
+                              <div className="flex items-start justify-between gap-3 ">
+                                <div className="min-w-0 ">
                                   <div className="flex gap-1 items-center">
-                                    <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
+                                    <div className="text-lg font-semibold uppercase tracking-wide text-[var(--color-text)] text-center">
                                       Shingles
                                     </div>
                                     {shinglesCompletedMs ? (
@@ -2123,10 +2140,10 @@ export default function JobDetailPage({
                                         setShinglesScheduleEditing(true);
                                       }}
                                       className={
-                                        "px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        "px-2.5 py-1 text-xs lg:text-md font-medium transition  " +
                                         (jobIsLocked
                                           ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
+                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)]/70 hover:bg-[var(--color-card-hover)] ring-white/10")
                                       }
                                     >
                                       {shinglesScheduledMs
@@ -2147,10 +2164,10 @@ export default function JobDetailPage({
                                         setConfirmShinglesDoneOpen(true);
                                       }}
                                       className={
-                                        "px-2.5 py-1 text-xs font-semibold cursor-pointer transition " +
+                                        "px-2.5 py-1 text-xs lg:text-md font-semibold  transition ring-1 ring-white/10  " +
                                         (!canMarkShinglesDone
-                                          ? "text-[var(--color-text)] cursor-not-allowed ring-1   ring-white/10 hover:bg-[var(--color-card-hover)] "
-                                          : "bg-[var(--color-done)] border-[var(--color-mark-done)] text-[var(--color-text)]")
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed "
+                                          : "text-[var(--color-text)] hover:bg-[var(--color-card-hover)] cursor-pointer")
                                       }
                                     >
                                       Mark done
@@ -2165,7 +2182,7 @@ export default function JobDetailPage({
                                       void reopenShingles();
                                     }}
                                     className={
-                                      "rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
+                                      "px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
                                       (jobIsLocked
                                         ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
                                         : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10")
@@ -2193,37 +2210,40 @@ export default function JobDetailPage({
                             {/* Punch */}
                             <motion.div
                               {...scheduleCardMotion(0.22)}
-                              className="bg-[var(--color-card)] p-6 shadow-sm "
+                              className="p-6 shadow-sm"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="text-sm md:text-lg font-semibold uppercase tracking-wide text-[var(--color-text)]">
-                                    Punch
+                                  <div className="flex gap-1 items-center">
+                                    <div className="text-lg font-semibold uppercase tracking-wide text-[var(--color-text)] text-center">
+                                      Punch
+                                    </div>
+
+                                    {punchedAtMs != null ? (
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-sm font-semibold text-[var(--text-status-complete)] bg-[var(--bg-status-complete)]">
+                                        <CheckCircle2 size={14} />
+                                        Done
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 px-2 py-1 text-sm font-semibold text-[var(--color-pending)]">
+                                        <Clock size={14} />
+                                        Pending
+                                      </span>
+                                    )}
                                   </div>
+
                                   <div className="mt-1 text-sm md:text-lg text-[var(--color-text)]/80">
-                                    {punchedAtLabel
+                                    {punchedAtMs != null
                                       ? `Punched on ${punchedAtLabel}`
                                       : punchScheduledLabel
-                                      ? `Scheduled ${punchScheduledLabel}`
+                                      ? `Scheduled for ${punchScheduledLabel}`
                                       : "Not scheduled"}
                                   </div>
                                 </div>
-
-                                {punchedAtLabel ? (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-done)] px-2 py-0.5 text-[10px] font-semibold text-emerald-100 ring-1 ring-emerald-500/30">
-                                    <CheckCircle2 size={14} />
-                                    Done
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1   px-2 py-1 text-sm font-semibold text-[var(--color-pending)] bg-[var(--bg-pending)]">
-                                    <Clock size={14} />
-                                    Pending
-                                  </span>
-                                )}
                               </div>
 
                               <div className="mt-7 flex flex-wrap items-center gap-2">
-                                {punchedAtLabel ? (
+                                {punchedAtMs != null ? (
                                   <button
                                     type="button"
                                     disabled={
@@ -2234,7 +2254,7 @@ export default function JobDetailPage({
                                       setConfirmUndoPunchOpen(true)
                                     }
                                     className={
-                                      "px-2.5 py-1 text-[11px] font-semibold transition ring-1 cursor-pointer " +
+                                      "px-2.5 py-1 text-[11px] font-semibold transition ring-1 " +
                                       (job.status === "closed" ||
                                       job.status === "archived"
                                         ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
@@ -2242,13 +2262,20 @@ export default function JobDetailPage({
                                     }
                                     title="Undo punch completion and reopen this job"
                                   >
-                                    Undo punch
+                                    Reopen
                                   </button>
                                 ) : (
                                   <>
                                     <button
                                       type="button"
                                       disabled={!canSchedulePunch}
+                                      title={
+                                        !hasFeltScheduledOrCompleted
+                                          ? "Schedule DRY IN first."
+                                          : !hasShinglesScheduledOrCompleted
+                                          ? "Schedule shingles first."
+                                          : undefined
+                                      }
                                       onClick={() => {
                                         if (!canSchedulePunch) return;
                                         setSchedulePunchOpen(true);
@@ -2258,10 +2285,10 @@ export default function JobDetailPage({
                                         setSchedulePunchDate(toYMD(base));
                                       }}
                                       className={
-                                        "px-2.5 py-1 text-[11px] font-medium transition ring-1 " +
+                                        "px-2.5 py-1 text-xs lg:text-md font-medium transition ring-1 " +
                                         (!canSchedulePunch
-                                          ? "bg-white/10 text-white/40 cursor-not-allowed opacity-60 ring-white/10"
-                                          : "bg-[var(--color-surface)]/40 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] ring-white/10 cursor-pointer")
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
+                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)]/70 hover:bg-[var(--color-card-hover)] ring-white/10")
                                       }
                                     >
                                       {job.punchScheduledFor
@@ -2269,17 +2296,29 @@ export default function JobDetailPage({
                                         : "Schedule"}
                                     </button>
 
-                                    {canSchedulePunch && (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setConfirmPunchedOpen(true)
-                                        }
-                                        className=" bg-[var(--color-done)] text-[var(--color-text)] px-2.5 py-1 text-xs font-semibold cursor-pointer   transition "
-                                      >
-                                        Mark punched
-                                      </button>
-                                    )}
+                                    <button
+                                      type="button"
+                                      disabled={!canMarkPunchDone}
+                                      title={
+                                        !feltCompletedMs
+                                          ? "Complete DRY IN first."
+                                          : !shinglesCompletedMs
+                                          ? "Complete shingles first."
+                                          : undefined
+                                      }
+                                      onClick={() => {
+                                        if (!canMarkPunchDone) return;
+                                        setConfirmPunchedOpen(true);
+                                      }}
+                                      className={
+                                        "px-2.5 py-1 text-xs lg:text-md font-semibold transition ring-1 ring-white/10 " +
+                                        (!canMarkPunchDone
+                                          ? "bg-white/10 text-white/40 cursor-not-allowed"
+                                          : "cursor-pointer hover:bg-[var(--color-card-hover)] text-[var(--color-text)]")
+                                      }
+                                    >
+                                      Mark done
+                                    </button>
                                   </>
                                 )}
                               </div>
@@ -2380,7 +2419,7 @@ export default function JobDetailPage({
                                     void saveJob(updated);
                                     setEditingPricing(false);
                                   }}
-                                  className="ml-2  bg-[var(--color-done)] cursor-pointer transition duration-300 ease-in-out px-3 py-1 text-[var(--color-text)]"
+                                  className="ml-2  bg-[var(--status-complete)] cursor-pointer transition duration-300 ease-in-out px-3 py-1 text-[var(--color-background)]"
                                 >
                                   Apply
                                 </button>
@@ -3215,14 +3254,14 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setFeltScheduleEditing(false)}
-                      className=" border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="  px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={() => void saveFeltSchedule()}
-                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
+                      className=" border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Apply
                     </button>
@@ -3234,7 +3273,7 @@ export default function JobDetailPage({
             {/* ===== Schedule Shingles Modal ===== */}
             {shinglesScheduleEditing && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
                       Schedule shingles
@@ -3242,7 +3281,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setShinglesScheduleEditing(false)}
-                      className="rounded-full cursor-pointer p-1 text-gray-500 hover:bg-gray-100"
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
                       aria-label="Close"
                     >
                       <X className="h-4 w-4" />
@@ -3263,14 +3302,14 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setShinglesScheduleEditing(false)}
-                      className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={() => void saveShinglesSchedule()}
-                      className="bg-[var(--color-done)] cursor-pointer px-3 py-1.5 text-xs font-semibold text-white"
+                      className="border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Apply
                     </button>
@@ -3282,15 +3321,15 @@ export default function JobDetailPage({
             {/* ===== Schedule Punch Modal ===== */}
             {schedulePunchOpen && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Schedule punch
+                      Schedule PUNCH
                     </h2>
                     <button
                       type="button"
                       onClick={() => setSchedulePunchOpen(false)}
-                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
+                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
                       aria-label="Close"
                     >
                       <X className="h-4 w-4" />
@@ -3311,7 +3350,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setSchedulePunchOpen(false)}
-                      className="rounded-sm cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
@@ -3334,7 +3373,7 @@ export default function JobDetailPage({
 
                         setSchedulePunchOpen(false);
 
-                        const label = scheduledDate.toLocaleDateString();
+                        const label = fmtLongDate(scheduledDate);
                         setToast({
                           status: "success",
                           title: wasScheduledBefore
@@ -3343,9 +3382,9 @@ export default function JobDetailPage({
                           message: `Punch is now set for ${label}.`,
                         });
                       }}
-                      className="rounded-sm cursor-pointer bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--btn-hover-bg)]"
+                      className="border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
                     >
-                      Save
+                      Apply
                     </button>
                   </div>
                 </div>
@@ -3353,20 +3392,22 @@ export default function JobDetailPage({
             )}
             {/* ===== Confirm Mark as Punched Modal ===== */}
             {confirmPunchedOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmPunchedOpen(false)}
+                    className="rounded-full p-2 text-gray-500 hover:bg-gray-100 absolute top-0 right-0"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
                   <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Confirm job completion
+                    <h2 className="text-sm lg:text-lg font-semibold text-[var(--color-text)] p-0.5">
+                      Mark <strong className="font-semibold">PUNCH</strong> as
+                      completed?
                     </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmPunchedOpen(false)}
-                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
                   </div>
 
                   <p className="text-sm text-[var(--color-muted)]">
@@ -3379,37 +3420,39 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setConfirmPunchedOpen(false)}
-                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="cursor-pointer px-3 py-1.5 text-xs text-[var(--color-text)]/60 hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={confirmMarkPunched}
-                      className="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-600"
+                      className="px-3 py-1.5 text-xs text-[var(--color-text)]/85 hover:text-[var(--color-text)] font-bold! hover:bg-[var(--color-card-hover)] cursor-pointer"
                     >
-                      Yes, mark job{" "}
-                      <strong className="font-semibold">COMPLETE</strong>
+                      Complete
                     </button>
                   </div>
                 </div>
               </div>
             )}
+
             {confirmUndoPunchOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmUndoPunchOpen(false)}
+                    className="rounded-full p-2 text-gray-500 hover:bg-gray-100 absolute top-0 right-0"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
                   <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Undo punch?
+                    <h2 className="text-sm lg:text-lg font-semibold text-[var(--color-text)] p-0.5">
+                      Undo <strong className="font-semibold">PUNCH</strong>{" "}
+                      completion?
                     </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmUndoPunchOpen(false)}
-                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
                   </div>
 
                   <p className="text-sm text-[var(--color-muted)]">
@@ -3421,16 +3464,16 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setConfirmUndoPunchOpen(false)}
-                      className="border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)] cursor-pointer"
+                      className="cursor-pointer px-3 py-1.5 text-xs text-[var(--color-text)]/60 hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
                     <button
                       type="button"
                       onClick={confirmUndoPunch}
-                      className="bg-[var(--color-done)] px-3 py-1.5 text-xs font-semibold text-white cursor-pointer"
+                      className="px-3 py-1.5 text-xs text-[var(--color-text)]/85 hover:text-[var(--color-text)] font-bold! hover:bg-[var(--color-card-hover)] cursor-pointer"
                     >
-                      Yes, undo punch
+                      Undo punch
                     </button>
                   </div>
                 </div>
@@ -3440,7 +3483,7 @@ export default function JobDetailPage({
             {/* ===== Confirm Felt Completed Modal ===== */}
             {confirmFeltDoneOpen && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
-                <div className="w-full max-w-sm  bg-[var(--color-card)] p-4 lg:py-10 px-4 relative">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
                   <button
                     type="button"
                     onClick={() => setConfirmFeltDoneOpen(false)}
@@ -3450,7 +3493,7 @@ export default function JobDetailPage({
                     <X className="h-4 w-4" />
                   </button>
                   <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm lg:text-lg font-semibold text-[var(--color-text)] shadow-sm p-0.5">
+                    <h2 className="text-sm lg:text-lg font-semibold text-[var(--color-text)]  p-0.5">
                       Mark <strong className="font-semibold">DRY IN</strong> as
                       completed?
                     </h2>
@@ -3492,20 +3535,21 @@ export default function JobDetailPage({
             {/* ===== Confirm Shingles Completed Modal ===== */}
             {confirmShinglesDoneOpen && (
               <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-xs p-4">
-                <div className="w-full max-w-sm bg-[var(--color-card)] px-4 md:px-8 py-4 md:py-10 lg:py-20">
+                <div className="w-full max-w-sm bg-[var(--color-card)] p-4 md:py-6 lg:py-10 md:px-8">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmShinglesDoneOpen(false)}
+                    className="rounded-full p-2 text-gray-500 hover:bg-gray-100 absolute top-0 right-0"
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
                   <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                    <h2 className="text-sm lg:text-lg font-semibold text-[var(--color-text)] p-0.5">
                       Mark <strong className="font-semibold">SHINGLES</strong>{" "}
                       as completed?
                     </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmShinglesDoneOpen(false)}
-                      className="rounded-md p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
                   </div>
 
                   <p className="text-sm text-[var(--color-muted)]">
@@ -3517,7 +3561,7 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={() => setConfirmShinglesDoneOpen(false)}
-                      className=" cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      className="cursor-pointer px-3 py-1.5 text-xs text-[var(--color-text)]/60 hover:bg-[var(--color-card-hover)]"
                     >
                       Cancel
                     </button>
@@ -3533,10 +3577,9 @@ export default function JobDetailPage({
                             "Shingles have been marked as completed for this job.",
                         });
                       }}
-                      className="bg-[var(--color-mark-done)] px-3 py-1.5 text-xs font-semibold text-white  cursor-pointer"
+                      className="px-3 py-1.5 text-xs text-[var(--color-text)]/85 hover:text-[var(--color-text)] font-bold! hover:bg-[var(--color-card-hover)] cursor-pointer"
                     >
-                      Yes, mark{" "}
-                      <strong className="font-semibold">SHINGLES</strong> done
+                      Complete
                     </button>
                   </div>
                 </div>
