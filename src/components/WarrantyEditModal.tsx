@@ -32,22 +32,31 @@ function fromDateInputValue(v: string): Date | null {
 
 const UI = {
   input:
-    "w-full rounded-md border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]",
-  label: "text-xs text-[var(--color-muted)]",
+    "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none shadow-sm transition focus:ring-2 focus:ring-[var(--color-accent)]",
+  select:
+    "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[var(--color-text)] outline-none shadow-sm transition focus:ring-2 focus:ring-[var(--color-accent)]",
+  option: "bg-[var(--color-card)] text-[var(--color-text)]",
+  textarea:
+    "w-full rounded-md border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none shadow-sm transition focus:ring-2 focus:ring-[var(--color-accent)] resize-none",
+  label: "mb-1 block text-xs text-[var(--color-muted)]",
   btnPrimary:
-    "inline-flex items-center justify-center gap-2 rounded-md bg-cyan-800 hover:bg-cyan-700 transition px-3 py-2 text-xs font-semibold text-white shadow-sm",
+    "inline-flex items-center justify-center gap-2 rounded-md bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] transition px-3 py-2 text-xs font-semibold text-[var(--btn-text)] shadow-sm disabled:opacity-60 disabled:cursor-not-allowed",
   btnGhost:
-    "inline-flex items-center justify-center gap-2 rounded-md border border-[var(--color-border)] bg-white hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)]",
+    "inline-flex items-center justify-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-card-hover)] hover:bg-[var(--color-surface)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)]",
+  iconBtn:
+    "rounded-md p-2 text-[var(--color-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)] transition",
 };
 
 export default function WarrantyEditModal({
   open,
   onClose,
+  onOpenReport,
   job,
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
+  onOpenReport?: () => void;
   job: Job;
   onSave: (nextWarranty: WarrantyDraft) => Promise<void>;
 }) {
@@ -81,7 +90,6 @@ export default function WarrantyEditModal({
   const [draft, setDraft] = useState<WarrantyDraft>(existing);
   const [saving, setSaving] = useState(false);
 
-  // refresh when opened or job changes
   useEffect(() => {
     if (!open) return;
     setDraft(existing);
@@ -103,11 +111,18 @@ export default function WarrantyEditModal({
     Boolean(draft.adjuster?.name?.trim()) ||
     Boolean(draft.thirdPartyAdmin?.name?.trim());
 
-  async function handleSave() {
+  async function handleSave(openReport = false) {
     setSaving(true);
     try {
       await onSave(draft);
+
       onClose();
+
+      if (openReport && onOpenReport) {
+        setTimeout(() => {
+          onOpenReport();
+        }, 0);
+      }
     } finally {
       setSaving(false);
     }
@@ -115,7 +130,6 @@ export default function WarrantyEditModal({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 print:hidden">
-      {/* backdrop */}
       <button
         type="button"
         className="absolute inset-0"
@@ -123,22 +137,23 @@ export default function WarrantyEditModal({
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/10">
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl">
         {/* top bar */}
-        <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
           <div>
             <div className="text-sm font-semibold text-[var(--color-text)]">
               Warranty
             </div>
             <div className="text-xs text-[var(--color-muted)]">
-              Store warranty / 3rd-party details + warranty notes for this job.
+              Manage warranty details and prepare the printable packet for this
+              job.
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+            className={UI.iconBtn}
             aria-label="Close"
             title="Close"
           >
@@ -146,21 +161,20 @@ export default function WarrantyEditModal({
           </button>
         </div>
 
-        {/* content (scrollable) */}
+        {/* content */}
         <div className="max-h-[calc(100vh-10rem)] overflow-y-auto p-4">
           {!hasAnything ? (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-black/10 bg-neutral-50 p-3 text-sm text-[var(--color-muted)]">
-              <AlertCircle className="h-4 w-4" />
+            <div className="mb-4 flex items-center gap-2  p-2 text-sm text-[var(--color-muted)]">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               No warranty data saved yet.
             </div>
           ) : null}
 
-          {/* quick selects */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <div className={UI.label}>Type</div>
+              <label className={UI.label}>Type</label>
               <select
-                className={UI.input}
+                className={UI.select}
                 value={draft.kind ?? "none"}
                 onChange={(e) =>
                   setDraft((d) => ({
@@ -169,18 +183,28 @@ export default function WarrantyEditModal({
                   }))
                 }
               >
-                <option value="none">None</option>
-                <option value="workmanship">Workmanship</option>
-                <option value="manufacturer">Manufacturer</option>
-                <option value="thirdParty">3rd party</option>
-                <option value="insurance">Insurance</option>
+                <option className={UI.option} value="none">
+                  None
+                </option>
+                <option className={UI.option} value="workmanship">
+                  Workmanship
+                </option>
+                <option className={UI.option} value="manufacturer">
+                  Manufacturer
+                </option>
+                <option className={UI.option} value="thirdParty">
+                  3rd party
+                </option>
+                <option className={UI.option} value="insurance">
+                  Insurance
+                </option>
               </select>
             </div>
 
             <div>
-              <div className={UI.label}>Status</div>
+              <label className={UI.label}>Status</label>
               <select
-                className={UI.input}
+                className={UI.select}
                 value={draft.status ?? "draft"}
                 onChange={(e) =>
                   setDraft((d) => ({
@@ -189,19 +213,35 @@ export default function WarrantyEditModal({
                   }))
                 }
               >
-                <option value="notStarted">Not started</option>
-                <option value="draft">Draft</option>
-                <option value="submitted">Submitted</option>
-                <option value="registered">Registered</option>
-                <option value="active">Active</option>
-                <option value="claimOpened">Claim opened</option>
-                <option value="closed">Closed</option>
-                <option value="expired">Expired</option>
+                <option className={UI.option} value="notStarted">
+                  Not started
+                </option>
+                <option className={UI.option} value="draft">
+                  Draft
+                </option>
+                <option className={UI.option} value="submitted">
+                  Submitted
+                </option>
+                <option className={UI.option} value="registered">
+                  Registered
+                </option>
+                <option className={UI.option} value="active">
+                  Active
+                </option>
+                <option className={UI.option} value="claimOpened">
+                  Claim opened
+                </option>
+                <option className={UI.option} value="closed">
+                  Closed
+                </option>
+                <option className={UI.option} value="expired">
+                  Expired
+                </option>
               </select>
             </div>
 
             <div>
-              <div className={UI.label}>Manufacturer</div>
+              <label className={UI.label}>Manufacturer</label>
               <input
                 className={UI.input}
                 value={draft.manufacturer ?? ""}
@@ -213,7 +253,7 @@ export default function WarrantyEditModal({
             </div>
 
             <div>
-              <div className={UI.label}>Program</div>
+              <label className={UI.label}>Program</label>
               <input
                 className={UI.input}
                 value={draft.programName ?? ""}
@@ -225,7 +265,7 @@ export default function WarrantyEditModal({
             </div>
 
             <div>
-              <div className={UI.label}>Coverage (years)</div>
+              <label className={UI.label}>Coverage (years)</label>
               <input
                 className={UI.input}
                 value={
@@ -246,7 +286,7 @@ export default function WarrantyEditModal({
             </div>
 
             <div>
-              <div className={UI.label}>Portal URL</div>
+              <label className={UI.label}>Portal URL</label>
               <input
                 className={UI.input}
                 value={draft.portalUrl ?? ""}
@@ -258,7 +298,7 @@ export default function WarrantyEditModal({
             </div>
 
             <div>
-              <div className={UI.label}>Registration ID</div>
+              <label className={UI.label}>Registration ID</label>
               <input
                 className={UI.input}
                 value={draft.registrationId ?? ""}
@@ -269,7 +309,7 @@ export default function WarrantyEditModal({
             </div>
 
             <div>
-              <div className={UI.label}>Claim ID</div>
+              <label className={UI.label}>Claim ID</label>
               <input
                 className={UI.input}
                 value={draft.claimId ?? ""}
@@ -280,7 +320,7 @@ export default function WarrantyEditModal({
             </div>
 
             <div>
-              <div className={UI.label}>Install date</div>
+              <label className={UI.label}>Install date</label>
               <input
                 type="date"
                 className={UI.input}
@@ -295,7 +335,7 @@ export default function WarrantyEditModal({
             </div>
 
             <div>
-              <div className={UI.label}>Expires</div>
+              <label className={UI.label}>Expires</label>
               <input
                 type="date"
                 className={UI.input}
@@ -326,7 +366,7 @@ export default function WarrantyEditModal({
             </div>
 
             <textarea
-              className={`${UI.input} mt-2 min-h-[120px] whitespace-pre-wrap`}
+              className={`${UI.textarea} mt-2 min-h-[120px] whitespace-pre-wrap`}
               value={draft.notes ?? ""}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, notes: e.target.value }))
@@ -335,21 +375,35 @@ export default function WarrantyEditModal({
             />
             <div className="mt-2 text-xs text-[var(--color-muted)]">
               These notes show on the{" "}
-              <span className="font-semibold">External</span> report tab (no job
-              financials).
+              <span className="font-semibold text-[var(--color-text)]">
+                External
+              </span>{" "}
+              report tab (no job financials).
             </div>
           </div>
         </div>
 
         {/* footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-black/10 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--color-border)] px-4 py-3">
           <button type="button" className={UI.btnGhost} onClick={onClose}>
             Cancel
           </button>
+
+          <button
+            type="button"
+            className={UI.btnGhost}
+            onClick={() => void handleSave(true)}
+            disabled={saving}
+            title="Save warranty data and open the report"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving…" : "Save & open report"}
+          </button>
+
           <button
             type="button"
             className={UI.btnPrimary}
-            onClick={handleSave}
+            onClick={() => void handleSave(false)}
             disabled={saving}
             title="Save warranty data"
           >

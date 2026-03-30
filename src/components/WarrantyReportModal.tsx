@@ -74,21 +74,56 @@ function isValidHttpUrl(url: string) {
   }
 }
 
+const UI = {
+  modal:
+    "relative flex w-full max-w-4xl min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl max-h-[min(92vh,900px)] print:max-h-none print:overflow-visible print:max-w-none print:rounded-none print:shadow-none print:border-0",
+  topBar:
+    "flex flex-col gap-3 border-b border-[var(--color-border)] px-4 py-3 print:hidden sm:flex-row sm:items-center sm:justify-between",
+  iconBadge:
+    "inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[rgb(var(--pill-success-rgb)/0.28)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]",
+  muted: "text-[var(--color-muted)]",
+  title: "text-sm font-semibold text-[var(--color-text)]",
+  subtitle: "text-xs text-[var(--color-muted)]",
+  sectionTitle: "text-sm font-semibold text-[var(--color-text)]",
+  panel:
+    "rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] p-3",
+  panelLg:
+    "rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] p-4",
+  softBox:
+    "rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2",
+  actionBtn:
+    "inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface)] transition",
+  primaryBtn:
+    "inline-flex items-center gap-2 rounded-lg bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--btn-text)] hover:bg-[var(--btn-hover-bg)] transition",
+  iconBtn:
+    "rounded-md p-2 text-[var(--color-muted)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)] transition",
+  toggleWrap:
+    "inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-card-hover)] p-1",
+  toggleActive:
+    "rounded-md bg-[var(--btn-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--btn-text)] transition",
+  toggleInactive:
+    "rounded-md px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-surface)]",
+  pillNeutral:
+    "inline-flex rounded-full border border-[var(--color-border)] bg-[var(--color-card-hover)] px-2 py-1 text-xs font-semibold text-[var(--color-text)]",
+  linkBtn:
+    "print:hidden inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-2 py-1 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-surface)] transition",
+};
+
 function pillForWarrantyStatus(status?: WarrantyMeta["status"]) {
   switch (status) {
     case "registered":
     case "active":
-      return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
+      return "border-[rgb(var(--pill-success-rgb)/0.28)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]";
     case "submitted":
     case "claimOpened":
-      return "bg-yellow-50 text-yellow-800 ring-1 ring-yellow-200";
+      return "border-[rgb(var(--pill-warning-rgb)/0.28)] bg-[rgb(var(--pill-warning-rgb)/0.12)] text-[rgb(var(--pill-warning-rgb))]";
     case "expired":
     case "closed":
-      return "bg-gray-100 text-gray-700 ring-1 ring-black/10";
+      return "border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.68)]";
     case "draft":
     case "notStarted":
     default:
-      return "bg-neutral-100 text-neutral-700 ring-1 ring-black/10";
+      return "border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.68)]";
   }
 }
 
@@ -146,7 +181,7 @@ function ContactBlock({
   if (!hasAny) return null;
 
   return (
-    <div className="rounded-xl border border-black/10 bg-white p-3">
+    <div className={UI.panel}>
       <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
         {title}
       </div>
@@ -154,21 +189,21 @@ function ContactBlock({
       <div className="mt-2 space-y-1 text-sm text-[var(--color-text)]">
         {name ? (
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-black/50" />
+            <User className="h-4 w-4 text-[var(--color-muted)]" />
             <span className="break-words">{name}</span>
           </div>
         ) : null}
 
         {phone ? (
           <div className="flex items-center gap-2">
-            <Phone className="h-4 w-4 text-black/50" />
+            <Phone className="h-4 w-4 text-[var(--color-muted)]" />
             <span className="break-words">{phone}</span>
           </div>
         ) : null}
 
         {email ? (
           <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-black/50" />
+            <Mail className="h-4 w-4 text-[var(--color-muted)]" />
             <span className="break-words">{email}</span>
           </div>
         ) : null}
@@ -203,11 +238,11 @@ export default function WarrantyReportModal({
     [job.updatedAt]
   );
 
-  const warranty = job.warranty; // ✅ now uses your real type
+  const warranty = job.warranty;
 
   const hasWarrantyData = useMemo(() => {
     if (!warranty) return false;
-    // Treat kind "none" as effectively empty unless other fields exist
+
     const hasMeaningful =
       (warranty.kind && warranty.kind !== "none") ||
       Boolean(
@@ -245,7 +280,6 @@ export default function WarrantyReportModal({
 
   return createPortal(
     <div className="paystub-print fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 print:bg-transparent print:p-0">
-      {/* Backdrop (click to close, hidden on print) */}
       <button
         type="button"
         className="absolute inset-0 print:hidden"
@@ -253,35 +287,28 @@ export default function WarrantyReportModal({
         onClick={onClose}
       />
 
-      {/* The only thing visible during print */}
-      <div className="paystub-print-inner relative flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/10 max-h-[calc(100vh-2rem)] print:max-h-none print:overflow-visible print:max-w-none print:rounded-none print:shadow-none print:ring-0">
-        {/* Top bar (hidden on print) */}
-        <div className="flex flex-col gap-3 border-b border-black/10 px-4 py-3 print:hidden sm:flex-row sm:items-center sm:justify-between">
+      <div className={UI.modal}>
+        {/* Top bar */}
+        <div className={UI.topBar}>
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200">
+            <span className={UI.iconBadge}>
               <ShieldCheck className="h-5 w-5" />
             </span>
             <div>
-              <div className="text-sm font-semibold text-[var(--color-text)]">
-                Warranty / 3rd party packet
-              </div>
-              <div className="text-xs text-[var(--color-muted)]">
+              <div className={UI.title}>Warranty / 3rd party packet</div>
+              <div className={UI.subtitle}>
                 Choose internal or external, then print / save PDF
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Mode toggle */}
-            <div className="inline-flex rounded-lg border border-black/10 bg-white p-1">
+            <div className={UI.toggleWrap}>
               <button
                 type="button"
                 onClick={() => setMode("internal")}
                 className={
-                  "rounded-md px-3 py-1.5 text-xs font-semibold transition " +
-                  (mode === "internal"
-                    ? "bg-cyan-800 text-white"
-                    : "text-[var(--color-text)] hover:bg-black/5")
+                  mode === "internal" ? UI.toggleActive : UI.toggleInactive
                 }
                 title="Internal packet (includes financials)"
               >
@@ -291,10 +318,7 @@ export default function WarrantyReportModal({
                 type="button"
                 onClick={() => setMode("external")}
                 className={
-                  "rounded-md px-3 py-1.5 text-xs font-semibold transition " +
-                  (mode === "external"
-                    ? "bg-cyan-800 text-white"
-                    : "text-[var(--color-text)] hover:bg-black/5")
+                  mode === "external" ? UI.toggleActive : UI.toggleInactive
                 }
                 title="External packet (no financials)"
               >
@@ -305,7 +329,7 @@ export default function WarrantyReportModal({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-2 rounded-lg bg-cyan-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-cyan-700 transition"
+              className={UI.primaryBtn}
             >
               <Printer className="h-4 w-4" />
               Print / Save PDF
@@ -314,7 +338,7 @@ export default function WarrantyReportModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
+              className={UI.iconBtn}
               aria-label="Close"
             >
               <X className="h-4 w-4" />
@@ -322,8 +346,8 @@ export default function WarrantyReportModal({
           </div>
         </div>
 
-        {/* PRINT CONTENT */}
-        <div className="p-5 print:p-6 overflow-y-auto print:overflow-visible">
+        {/* Content */}
+        <div className="min-h-0 flex-1 overflow-y-auto  p-5 print:overflow-visible print:max-h-none print:p-6">
           {/* Title */}
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -367,14 +391,12 @@ export default function WarrantyReportModal({
             </div>
           </div>
 
-          <div className="my-5 h-px w-full bg-black/10" />
+          <div className="my-5 h-px w-full bg-[var(--color-border)]" />
 
-          {/* MODE HEADER SECTION */}
           {mode === "internal" ? (
             <>
-              {/* Internal: Financial snapshot */}
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-black/10 bg-white p-3">
+                <div className={UI.panel}>
                   <div className="text-xs text-[var(--color-muted)]">
                     Earnings
                   </div>
@@ -383,7 +405,7 @@ export default function WarrantyReportModal({
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-black/10 bg-white p-3">
+                <div className={UI.panel}>
                   <div className="text-xs text-[var(--color-muted)]">
                     Expenses
                   </div>
@@ -392,9 +414,7 @@ export default function WarrantyReportModal({
                   </div>
                 </div>
 
-                <div
-                  className={"rounded-xl border border-black/10 p-3 bg-white"}
-                >
+                <div className={UI.panel}>
                   <div className="text-xs text-[var(--color-muted)]">
                     Profit
                   </div>
@@ -404,17 +424,14 @@ export default function WarrantyReportModal({
                 </div>
               </div>
 
-              {/* Internal: Warranty snapshot (nice to have, stays clean) */}
               <div className="mt-4">
-                <div className="rounded-xl border border-black/10 bg-white p-4">
+                <div className={UI.panelLg}>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
-                      Warranty snapshot
-                    </div>
+                    <div className={UI.sectionTitle}>Warranty snapshot</div>
                     {warranty?.status ? (
                       <span
                         className={
-                          "inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold " +
+                          "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold " +
                           pillForWarrantyStatus(warranty.status)
                         }
                       >
@@ -479,10 +496,9 @@ export default function WarrantyReportModal({
             </>
           ) : (
             <>
-              {/* External: Warranty / 3rd-party details (no financials) */}
-              <div className="rounded-xl border border-black/10 bg-white p-4">
+              <div className={UI.panelLg}>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-sm font-semibold text-[var(--color-text)]">
+                  <div className={UI.sectionTitle}>
                     Warranty / 3rd-party details
                   </div>
 
@@ -490,7 +506,7 @@ export default function WarrantyReportModal({
                     {warranty?.status ? (
                       <span
                         className={
-                          "inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold " +
+                          "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold " +
                           pillForWarrantyStatus(warranty.status)
                         }
                       >
@@ -500,7 +516,7 @@ export default function WarrantyReportModal({
                     ) : null}
 
                     {warranty?.kind ? (
-                      <span className="inline-flex rounded-full bg-neutral-100 px-2 py-1 text-xs font-semibold text-neutral-700 ring-1 ring-black/10">
+                      <span className={UI.pillNeutral}>
                         {labelForWarrantyKind(warranty.kind)}
                       </span>
                     ) : null}
@@ -509,8 +525,7 @@ export default function WarrantyReportModal({
 
                 {hasWarrantyData ? (
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {/* Program */}
-                    <div className="rounded-xl border border-black/10 bg-white p-3">
+                    <div className={UI.panel}>
                       <div className="text-xs text-[var(--color-muted)]">
                         Manufacturer / Program
                       </div>
@@ -529,8 +544,7 @@ export default function WarrantyReportModal({
                       ) : null}
                     </div>
 
-                    {/* Dates */}
-                    <div className="rounded-xl border border-black/10 bg-white p-3">
+                    <div className={UI.panel}>
                       <div className="text-xs text-[var(--color-muted)]">
                         Dates
                       </div>
@@ -562,8 +576,7 @@ export default function WarrantyReportModal({
                       </div>
                     </div>
 
-                    {/* Registration */}
-                    <div className="rounded-xl border border-black/10 bg-white p-3">
+                    <div className={UI.panel}>
                       <div className="text-xs text-[var(--color-muted)]">
                         Registration
                       </div>
@@ -573,7 +586,7 @@ export default function WarrantyReportModal({
                             Submitted
                           </span>
                           <span className="font-medium">
-                            {fmtMaybeShortDate(warranty?.submittedAt)}
+                            {fmtMaybeShortDate((warranty as any)?.submittedAt)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
@@ -581,7 +594,7 @@ export default function WarrantyReportModal({
                             Registered
                           </span>
                           <span className="font-medium">
-                            {fmtMaybeShortDate(warranty?.registeredAt)}
+                            {fmtMaybeShortDate((warranty as any)?.registeredAt)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
@@ -593,8 +606,7 @@ export default function WarrantyReportModal({
                       </div>
                     </div>
 
-                    {/* Claim */}
-                    <div className="rounded-xl border border-black/10 bg-white p-3">
+                    <div className={UI.panel}>
                       <div className="text-xs text-[var(--color-muted)]">
                         Claim
                       </div>
@@ -628,7 +640,9 @@ export default function WarrantyReportModal({
                             Opened
                           </span>
                           <span className="font-medium">
-                            {fmtMaybeShortDate(warranty?.claimOpenedAt)}
+                            {fmtMaybeShortDate(
+                              (warranty as any)?.claimOpenedAt
+                            )}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-3">
@@ -636,14 +650,15 @@ export default function WarrantyReportModal({
                             Closed
                           </span>
                           <span className="font-medium">
-                            {fmtMaybeShortDate(warranty?.claimClosedAt)}
+                            {fmtMaybeShortDate(
+                              (warranty as any)?.claimClosedAt
+                            )}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Portal */}
-                    <div className="rounded-xl border border-black/10 bg-white p-3 sm:col-span-2">
+                    <div className={`${UI.panel} sm:col-span-2`}>
                       <div className="text-xs text-[var(--color-muted)]">
                         Portal / submission link
                       </div>
@@ -659,7 +674,7 @@ export default function WarrantyReportModal({
                             href={warranty.portalUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="print:hidden inline-flex items-center gap-1 rounded-lg border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-[var(--color-text)] hover:bg-black/5"
+                            className={UI.linkBtn}
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
                             Open
@@ -667,17 +682,16 @@ export default function WarrantyReportModal({
                         ) : null}
                       </div>
 
-                      {warranty?.submittedBy?.name ? (
+                      {(warranty as any)?.submittedBy?.name ? (
                         <div className="mt-1 text-xs text-[var(--color-muted)]">
                           Submitted by:{" "}
                           <span className="font-medium text-[var(--color-text)]">
-                            {warranty.submittedBy.name}
+                            {(warranty as any).submittedBy.name}
                           </span>
                         </div>
                       ) : null}
                     </div>
 
-                    {/* People */}
                     <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
                       <ContactBlock
                         title="Homeowner"
@@ -699,14 +713,13 @@ export default function WarrantyReportModal({
                       />
                     </div>
 
-                    {/* Insurance metadata */}
                     {warranty?.insuranceCarrier || warranty?.policyNumber ? (
-                      <div className="rounded-xl border border-black/10 bg-white p-3 sm:col-span-2">
+                      <div className={`${UI.panel} sm:col-span-2`}>
                         <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                           Insurance
                         </div>
 
-                        <div className="mt-2 grid gap-2 sm:grid-cols-2 text-sm">
+                        <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
                           <div>
                             <div className="text-xs text-[var(--color-muted)]">
                               Carrier
@@ -728,10 +741,9 @@ export default function WarrantyReportModal({
                       </div>
                     ) : null}
 
-                    {/* Attachments */}
                     {warranty?.attachments &&
                     warranty.attachments.length > 0 ? (
-                      <div className="rounded-xl border border-black/10 bg-white p-3 sm:col-span-2">
+                      <div className={`${UI.panel} sm:col-span-2`}>
                         <div className="flex items-center justify-between gap-3">
                           <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                             Attachments
@@ -751,11 +763,11 @@ export default function WarrantyReportModal({
                             return (
                               <div
                                 key={a.id}
-                                className="flex items-start justify-between gap-3 rounded-lg border border-black/10 bg-white px-3 py-2"
+                                className="flex items-start justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2"
                               >
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <FileText className="h-4 w-4 text-black/50" />
+                                    <FileText className="h-4 w-4 text-[var(--color-muted)]" />
                                     <div className="text-sm font-semibold text-[var(--color-text)] break-words">
                                       {label}
                                     </div>
@@ -780,7 +792,7 @@ export default function WarrantyReportModal({
                                     href={a.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="print:hidden inline-flex shrink-0 items-center gap-1 rounded-lg border border-black/10 bg-white px-2 py-1 text-xs font-semibold text-[var(--color-text)] hover:bg-black/5"
+                                    className={UI.linkBtn}
                                   >
                                     <ExternalLink className="h-3.5 w-3.5" />
                                     Open
@@ -806,9 +818,7 @@ export default function WarrantyReportModal({
           {/* Notes */}
           {mode === "internal" ? (
             <div className="mt-6">
-              <div className="text-sm font-semibold text-[var(--color-text)]">
-                Notes
-              </div>
+              <div className={UI.sectionTitle}>Notes</div>
               <div className="mt-2 space-y-2">
                 {(job.notes ?? []).length === 0 ? (
                   <div className="text-sm text-[var(--color-muted)]">
@@ -816,11 +826,8 @@ export default function WarrantyReportModal({
                   </div>
                 ) : (
                   (job.notes ?? []).map((n) => (
-                    <div
-                      key={n.id}
-                      className="rounded-xl border border-black/10 bg-white p-3"
-                    >
-                      <div className="text-sm text-[var(--color-text)] whitespace-pre-wrap break-words">
+                    <div key={n.id} className={UI.panel}>
+                      <div className="whitespace-pre-wrap break-words text-sm text-[var(--color-text)]">
                         {n.text || ""}
                       </div>
                       {n.createdAt ? (
@@ -835,13 +842,11 @@ export default function WarrantyReportModal({
             </div>
           ) : (
             <div className="mt-6">
-              <div className="text-sm font-semibold text-[var(--color-text)]">
-                Warranty notes
-              </div>
+              <div className={UI.sectionTitle}>Warranty notes</div>
               <div className="mt-2">
                 {warranty?.notes ? (
-                  <div className="rounded-xl border border-black/10 bg-white p-3">
-                    <div className="text-sm text-[var(--color-text)] whitespace-pre-wrap break-words">
+                  <div className={UI.panel}>
+                    <div className="whitespace-pre-wrap break-words text-sm text-[var(--color-text)]">
                       {warranty.notes}
                     </div>
                   </div>
@@ -856,23 +861,21 @@ export default function WarrantyReportModal({
 
           {/* Photos */}
           <div className="mt-6">
-            <div className="text-sm font-semibold text-[var(--color-text)]">
-              Photos
-            </div>
+            <div className={UI.sectionTitle}>Photos</div>
 
             {photos.length === 0 ? (
               <div className="mt-2 text-sm text-[var(--color-muted)]">
                 No photos.
               </div>
             ) : (
-              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 print:grid-cols-3">
+              <div className="mt-3 grid grid-cols-2 gap-3 print:grid-cols-3 sm:grid-cols-3">
                 {photos.slice(0, 12).map((p) => {
                   const src = safePhotoUrl(p);
                   if (!src) return null;
                   return (
                     <div
                       key={p.id}
-                      className="overflow-hidden rounded-xl border border-black/10 bg-white"
+                      className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)]"
                     >
                       <img
                         src={src}
@@ -895,7 +898,6 @@ export default function WarrantyReportModal({
             ) : null}
           </div>
 
-          {/* Footer */}
           <div className="mt-8 text-xs text-[var(--color-muted)]">
             {mode === "internal"
               ? "Internal packet (includes financial snapshot) for tracking warranty / third-party impact."

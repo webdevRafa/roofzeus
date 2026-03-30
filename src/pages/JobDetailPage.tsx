@@ -1845,18 +1845,9 @@ export default function JobDetailPage({
                         type="button"
                         onClick={() => setWarrantyEditOpen(true)}
                         className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                        title="Edit warranty details and notes"
+                        title="Manage warranty details and create the report packet"
                       >
-                        Warranty
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setWarrantyModalOpen(true)}
-                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                        title="Create printable report"
-                      >
-                        Create report
+                        Warranty packet
                       </button>
 
                       <div className="inline-flex items-center gap-2   px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ">
@@ -4535,6 +4526,7 @@ export default function JobDetailPage({
             <WarrantyEditModal
               open={warrantyEditOpen}
               onClose={() => setWarrantyEditOpen(false)}
+              onOpenReport={() => setWarrantyModalOpen(true)}
               job={job}
               onSave={saveWarranty}
             />
