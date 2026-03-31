@@ -942,9 +942,9 @@ export default function HomePage() {
               </motion.div>
               <motion.h1
                 variants={fadeUp}
-                className="text-lg   font-poppins mt-5 leading-[1.05] tracking-tight text-white/90 max-w-[450px]"
+                className="text-2xl   font-poppins mt-5 leading-[1.05] tracking-widest text-white/90 max-w-[500px]"
               >
-                easily manage jobs, track where your money goes and create
+                Manage jobs.<br></br> Track your money.<br></br> Create
                 professional documents.
               </motion.h1>
               <motion.div

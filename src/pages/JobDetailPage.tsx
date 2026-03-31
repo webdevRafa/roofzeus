@@ -1815,7 +1815,7 @@ export default function JobDetailPage({
         </AnimatePresence>
         <motion.h1
           {...fadeUp(0)}
-          className="mt-10 text-sm md:text-lg font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight bg-[var(--color-background)] text-center sticky top-18 z-40 pt-5 pb-1 pointer-events-none"
+          className="mt-10 text-sm md:text-lg lg:text-xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight bg-[var(--color-background)] text-center sticky top-18 z-40 pt-5 pb-1 pointer-events-none"
         >
           {job.address?.fullLine}
         </motion.h1>
@@ -2542,14 +2542,14 @@ export default function JobDetailPage({
 
                             <motion.div {...scheduleCardMotion(0.14)}>
                               <Stat
-                                label="Materials"
+                                label="Materials Cost"
                                 cents={totals.materials}
                               />
                             </motion.div>
 
                             <motion.div {...scheduleCardMotion(0.2)}>
                               <Stat
-                                label="All Expenses"
+                                label="Total Expenses"
                                 cents={totals.expenses}
                               />
                             </motion.div>
@@ -4548,14 +4548,11 @@ export default function JobDetailPage({
 // Stat pills
 function Stat({ label, cents }: { label: string; cents: number }) {
   return (
-    <motion.div
-      className="shadow-md bg-[var(--color-card)] p-5 lg:p-8"
-      variants={item}
-    >
-      <div className="text-sm md:text-lg text-[var(--color-muted)]">
+    <motion.div className="shadow-md  p-5 lg:p-8" variants={item}>
+      <div className="text-sm md:text-lg lg:text-xl text-[var(--color-text)]">
         {label}
       </div>
-      <div className="text-lg font-semibold text-[var(--color-text)]">
+      <div className="text-lg lg:text-2xl font-semibold text-[var(--color-text)]">
         <CountMoney cents={cents} />
       </div>
     </motion.div>
