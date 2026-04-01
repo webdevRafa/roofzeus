@@ -40,6 +40,7 @@ import { Pencil } from "lucide-react";
 import InvoiceCreateModal from "../components/InvoiceCreateModal";
 import WarrantyReportModal from "../components/WarrantyReportModal";
 import WarrantyEditModal from "../components/WarrantyEditModal";
+import JobReportModal from "../components/JobReportModal";
 import { db } from "../firebase/firebaseConfig";
 import type {
   Job,
@@ -279,6 +280,7 @@ export default function JobDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [warrantyModalOpen, setWarrantyModalOpen] = useState(false);
+  const [jobReportOpen, setJobReportOpen] = useState(false);
   const [warrantyEditOpen, setWarrantyEditOpen] = useState(false);
   const [payoutDocs, setPayoutDocs] = useState<PayoutDoc[]>([]);
 
@@ -1845,9 +1847,18 @@ export default function JobDetailPage({
                         type="button"
                         onClick={() => setWarrantyEditOpen(true)}
                         className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                        title="Manage warranty details and create the report packet"
+                        title="Manage warranty details for this job"
                       >
-                        Warranty packet
+                        Warranty
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setJobReportOpen(true)}
+                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                        title="Open internal job report with financials"
+                      >
+                        Job report
                       </button>
 
                       <div className="inline-flex items-center gap-2   px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ">
@@ -4509,7 +4520,7 @@ export default function JobDetailPage({
               </form>
             </ModalShell>
 
-            {/* Warranty Modal */}
+            {/* Warranty packet preview */}
             {warrantyModalOpen && job && (
               <WarrantyReportModal
                 open={warrantyModalOpen}
@@ -4523,6 +4534,22 @@ export default function JobDetailPage({
                 }}
               />
             )}
+
+            {/* Internal job report */}
+            {jobReportOpen && job && (
+              <JobReportModal
+                open={jobReportOpen}
+                onClose={() => setJobReportOpen(false)}
+                job={job}
+                photos={photos}
+                totals={{
+                  earnings: totals.earnings,
+                  expenses: totals.expenses,
+                  net: totals.net,
+                }}
+              />
+            )}
+
             <WarrantyEditModal
               open={warrantyEditOpen}
               onClose={() => setWarrantyEditOpen(false)}

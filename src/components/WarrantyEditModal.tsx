@@ -181,8 +181,8 @@ export default function WarrantyEditModal({
               </div>
 
               <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.56)]">
-                Manage warranty details and prepare the printable packet for
-                this job.
+                Manage warranty details and preview the homeowner-facing packet
+                for this job.
               </div>
             </div>
 
@@ -413,8 +413,7 @@ export default function WarrantyEditModal({
                     Warranty notes
                   </div>
                   <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.52)]">
-                    These notes appear on the external packet and exclude job
-                    financials.
+                    These notes appear on the warranty packet preview.
                   </div>
                 </div>
 
@@ -433,7 +432,7 @@ export default function WarrantyEditModal({
                 onChange={(e) =>
                   setDraft((d) => ({ ...d, notes: e.target.value }))
                 }
-                placeholder="Write the warranty summary you want included in the External report…"
+                placeholder="Write the warranty summary you want included in the warranty packet…"
               />
             </div>
           </div>
@@ -449,10 +448,10 @@ export default function WarrantyEditModal({
               className={UI.btnGhost}
               onClick={() => void handleSave(true)}
               disabled={saving}
-              title="Save warranty data and open the report"
+              title="Save warranty data and preview the warranty packet"
             >
               <Save className="h-4 w-4" />
-              {saving ? "Saving…" : "Save & open report"}
+              {saving ? "Saving…" : "Save & preview packet"}
             </button>
 
             <button
@@ -463,7 +462,7 @@ export default function WarrantyEditModal({
               title="Save warranty data"
             >
               <Save className="h-4 w-4" />
-              {saving ? "Saving…" : "Save warranty"}
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         </div>

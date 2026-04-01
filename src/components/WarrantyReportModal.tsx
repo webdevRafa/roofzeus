@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   Printer,
@@ -22,17 +22,6 @@ type JobPhoto = {
   url?: string;
   caption?: string;
 };
-
-type ReportMode = "internal" | "external";
-
-function fmtCents(cents: number) {
-  const dollars = (cents ?? 0) / 100;
-  return dollars.toLocaleString(undefined, {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  });
-}
 
 type FsTimestampLike = { toDate: () => Date };
 function isFsTimestamp(x: unknown): x is FsTimestampLike {
@@ -106,32 +95,17 @@ const UI = {
     "border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-4 py-4",
   softPanel:
     "border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.12)] px-3 py-3",
-  statPanel:
-    "border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4",
 
   btnPrimary:
     "inline-flex items-center justify-center gap-2 border border-[rgb(var(--color-primary-rgb)/0.42)] bg-[rgb(var(--color-primary-rgb)/0.14)] px-3 py-2 text-xs font-semibold tracking-wide text-[rgb(var(--color-text-rgb)/0.96)] transition " +
     "hover:bg-[rgb(var(--color-primary-rgb)/0.22)] hover:border-[rgb(var(--color-primary-rgb)/0.56)] " +
     "shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]",
 
-  btnGhost:
-    "inline-flex items-center justify-center gap-2 border border-[rgb(var(--color-border-rgb)/0.32)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-2 text-xs font-semibold tracking-wide text-[rgb(var(--color-text-rgb)/0.84)] transition " +
-    "hover:bg-[rgb(var(--color-background-rgb)/0.28)] hover:border-[rgb(var(--color-border-rgb)/0.5)]",
-
   iconBtn:
     "border border-transparent p-2 text-[rgb(var(--color-text-rgb)/0.58)] transition hover:border-[rgb(var(--color-border-rgb)/0.3)] hover:bg-[rgb(var(--color-background-rgb)/0.24)] hover:text-[rgb(var(--color-text-rgb)/0.9)]",
 
-  toggleWrap:
-    "inline-flex items-center border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.16)] p-1",
-  toggleActive:
-    "inline-flex items-center justify-center border border-[rgb(var(--color-primary-rgb)/0.40)] bg-[rgb(var(--color-primary-rgb)/0.14)] px-3 py-2 text-xs font-semibold tracking-wide text-[rgb(var(--color-text-rgb)/0.96)]",
-  toggleInactive:
-    "inline-flex items-center justify-center px-3 py-2 text-xs font-semibold tracking-wide text-[rgb(var(--color-text-rgb)/0.66)] transition hover:bg-[rgb(var(--color-background-rgb)/0.22)] hover:text-[rgb(var(--color-text-rgb)/0.92)]",
-
   statusPillBase:
     "inline-flex items-center gap-1 border px-2 py-1 text-xs font-semibold",
-  neutralPill:
-    "inline-flex border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-1 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)]",
 
   linkBtn:
     "inline-flex items-center gap-1 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-1 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.88)] transition hover:bg-[rgb(var(--color-background-rgb)/0.28)]",
@@ -243,7 +217,6 @@ export default function WarrantyReportModal({
   onClose,
   job,
   photos,
-  totals,
 }: {
   open: boolean;
   onClose: () => void;
@@ -251,8 +224,6 @@ export default function WarrantyReportModal({
   photos: JobPhoto[];
   totals: { earnings: number; expenses: number; net: number };
 }) {
-  const [mode, setMode] = useState<ReportMode>("internal");
-
   const address = formatAddress(job);
 
   const createdLabel = useMemo(
@@ -302,10 +273,12 @@ export default function WarrantyReportModal({
     return Boolean(hasMeaningful);
   }, [warranty]);
 
+  const packetPhotos = useMemo(() => photos.slice(0, 8), [photos]);
+
   if (!open) return null;
 
   return createPortal(
-    <div className="paystub-print fixed inset-0 z-[140] overflow-y-auto bg-black/55 p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:bg-transparent print:p-0">
+    <div className="fixed inset-0 z-[140] overflow-y-auto bg-black/55 p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:static print:inset-auto print:block print:overflow-visible print:bg-white print:p-0">
       <button
         type="button"
         className="fixed inset-0 z-0 print:hidden"
@@ -313,8 +286,8 @@ export default function WarrantyReportModal({
         onClick={onClose}
       />
 
-      <div className="relative z-10 flex min-h-full items-start justify-center">
-        <div className="relative flex w-full max-w-5xl min-h-0 flex-col overflow-hidden border border-[rgb(var(--color-border-rgb)/0.34)] bg-[var(--color-card)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-72px-24px)] sm:max-h-[calc(100dvh-72px-32px)] print:max-h-none print:shadow-none print:border-0 print:max-w-none print:bg-white">
+      <div className="relative z-10 flex min-h-full items-start justify-center print:block print:min-h-0">
+        <div className="relative flex w-full max-w-5xl min-h-0 flex-col overflow-hidden border border-[rgb(var(--color-border-rgb)/0.34)] bg-[var(--color-card)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-72px-24px)] sm:max-h-[calc(100dvh-72px-32px)] print:block print:min-h-0 print:overflow-visible print:max-h-none print:shadow-none print:border-0 print:max-w-none print:bg-white">
           {/* top bar */}
           <div className="border-b border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4 print:hidden sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -322,41 +295,11 @@ export default function WarrantyReportModal({
                 <div className={UI.title}>Warranty packet</div>
                 <div className={UI.address}>{address}</div>
                 <div className={UI.subtitle}>
-                  Review internal or external output, then print or save PDF.
+                  Homeowner-facing warranty and 3rd-party documentation.
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                <div
-                  className={UI.toggleWrap}
-                  role="tablist"
-                  aria-label="Warranty packet mode"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setMode("internal")}
-                    aria-pressed={mode === "internal"}
-                    className={
-                      mode === "internal" ? UI.toggleActive : UI.toggleInactive
-                    }
-                    title="Internal packet (includes financials)"
-                  >
-                    Internal
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setMode("external")}
-                    aria-pressed={mode === "external"}
-                    className={
-                      mode === "external" ? UI.toggleActive : UI.toggleInactive
-                    }
-                    title="External packet (no financials)"
-                  >
-                    External
-                  </button>
-                </div>
-
                 <button
                   type="button"
                   onClick={() => window.print()}
@@ -381,8 +324,7 @@ export default function WarrantyReportModal({
           </div>
 
           {/* content */}
-          <div className="modal-scroll min-h-0 flex-1 overflow-y-auto bg-[linear-gradient(to_bottom,rgba(255,255,255,0.01),rgba(255,255,255,0))] p-5 print:overflow-visible print:max-h-none print:bg-white print:p-6">
-            {/* report header */}
+          <div className="min-h-0 flex-1 overflow-y-auto p-5 print:block print:min-h-0 print:h-auto print:overflow-visible print:max-h-none print:bg-white print:p-6">
             <div className={UI.panel}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
@@ -395,14 +337,6 @@ export default function WarrantyReportModal({
                       Job ID:{" "}
                       <span className="font-medium text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
                         {job.id}
-                      </span>
-                    </div>
-                    <div>
-                      Packet type:{" "}
-                      <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
-                        {mode === "internal"
-                          ? "Internal (financials included)"
-                          : "External (no financials)"}
                       </span>
                     </div>
                   </div>
@@ -431,540 +365,343 @@ export default function WarrantyReportModal({
               </div>
             </div>
 
-            {mode === "internal" ? (
-              <>
-                {/* internal stats */}
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                  <div className={UI.statPanel}>
-                    <div className={UI.sectionLabel}>Earnings</div>
-                    <div className="text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                      {fmtCents(totals.earnings)}
-                    </div>
-                  </div>
-
-                  <div className={UI.statPanel}>
-                    <div className={UI.sectionLabel}>Expenses</div>
-                    <div className="text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                      {fmtCents(totals.expenses)}
-                    </div>
-                  </div>
-
-                  <div className={UI.statPanel}>
-                    <div className={UI.sectionLabel}>Profit</div>
-                    <div className="text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                      {fmtCents(totals.net)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* warranty snapshot */}
-                <div className="mt-5">
-                  <div className={UI.panel}>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <div className={UI.sectionTitle}>Warranty snapshot</div>
-                        <div className={UI.muted}>
-                          Internal review with financial context.
-                        </div>
-                      </div>
-
-                      {warranty?.status ? (
-                        <span
-                          className={`${
-                            UI.statusPillBase
-                          } ${pillForWarrantyStatus(warranty.status)}`}
-                        >
-                          <BadgeCheck className="h-3.5 w-3.5" />
-                          {warranty.status}
-                        </span>
-                      ) : (
-                        <span className={UI.muted}>
-                          {hasWarrantyData ? "—" : "No warranty data"}
-                        </span>
-                      )}
-                    </div>
-
-                    {hasWarrantyData ? (
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>Type</div>
-                          <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                            {labelForWarrantyKind(warranty?.kind)}
-                          </div>
-                        </div>
-
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>
-                            Manufacturer / Program
-                          </div>
-                          <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
-                            {[warranty?.manufacturer, warranty?.programName]
-                              .filter(Boolean)
-                              .join(" — ") || "—"}
-                          </div>
-                        </div>
-
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>Install date</div>
-                          <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                            {fmtMaybeShortDate(warranty?.installDate)}
-                          </div>
-                        </div>
-
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>Expires</div>
-                          <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                            {fmtMaybeShortDate(warranty?.expiresAt)}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-3 flex items-center gap-2 text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
-                        <AlertCircle className="h-4 w-4" />
-                        No warranty metadata saved yet.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* external details */}
-                <div className="mt-5">
-                  <div className={UI.panel}>
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <div className={UI.sectionTitle}>
-                          Warranty / 3rd-party details
-                        </div>
-                        <div className={UI.muted}>
-                          External-facing documentation without financials.
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        {warranty?.status ? (
-                          <span
-                            className={`${
-                              UI.statusPillBase
-                            } ${pillForWarrantyStatus(warranty.status)}`}
-                          >
-                            <BadgeCheck className="h-3.5 w-3.5" />
-                            {warranty.status}
-                          </span>
-                        ) : null}
-
-                        {warranty?.kind ? (
-                          <span className={UI.neutralPill}>
-                            {labelForWarrantyKind(warranty.kind)}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    {hasWarrantyData ? (
-                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>
-                            Manufacturer / Program
-                          </div>
-                          <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
-                            {[warranty?.manufacturer, warranty?.programName]
-                              .filter(Boolean)
-                              .join(" — ") || "—"}
-                          </div>
-                          {typeof warranty?.coverageYears === "number" ? (
-                            <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
-                              Coverage:{" "}
-                              <span className="font-medium text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
-                                {warranty.coverageYears} yrs
-                              </span>
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>Dates</div>
-                          <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Install
-                              </span>
-                              <span className="font-medium">
-                                {fmtMaybeShortDate(warranty?.installDate)}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Repair
-                              </span>
-                              <span className="font-medium">
-                                {fmtMaybeShortDate(warranty?.repairDate)}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Expires
-                              </span>
-                              <span className="font-medium">
-                                {fmtMaybeShortDate(warranty?.expiresAt)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>Registration</div>
-                          <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Submitted
-                              </span>
-                              <span className="font-medium">
-                                {fmtMaybeShortDate(
-                                  (warranty as any)?.submittedAt
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Registered
-                              </span>
-                              <span className="font-medium">
-                                {fmtMaybeShortDate(
-                                  (warranty as any)?.registeredAt
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                ID
-                              </span>
-                              <span className="font-medium break-words">
-                                {warranty?.registrationId || "—"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className={UI.softPanel}>
-                          <div className={UI.sectionLabel}>Claim</div>
-                          <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Claim ID
-                              </span>
-                              <span className="font-medium break-words">
-                                {warranty?.claimId || "—"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Claim #
-                              </span>
-                              <span className="font-medium break-words">
-                                {warranty?.claimNumber || "—"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Status
-                              </span>
-                              <span className="font-medium">
-                                {warranty?.claimStatus || "—"}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Opened
-                              </span>
-                              <span className="font-medium">
-                                {fmtMaybeShortDate(
-                                  (warranty as any)?.claimOpenedAt
-                                )}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
-                                Closed
-                              </span>
-                              <span className="font-medium">
-                                {fmtMaybeShortDate(
-                                  (warranty as any)?.claimClosedAt
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className={`${UI.softPanel} sm:col-span-2`}>
-                          <div className={UI.sectionLabel}>
-                            Portal / submission link
-                          </div>
-
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
-                              {warranty?.portalUrl || "—"}
-                            </div>
-
-                            {warranty?.portalUrl &&
-                            isValidHttpUrl(warranty.portalUrl) ? (
-                              <a
-                                href={warranty.portalUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={`${UI.linkBtn} print:hidden`}
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                                Open
-                              </a>
-                            ) : null}
-                          </div>
-
-                          {(warranty as any)?.submittedBy?.name ? (
-                            <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
-                              Submitted by:{" "}
-                              <span className="font-medium text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
-                                {(warranty as any).submittedBy.name}
-                              </span>
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
-                          <ContactBlock
-                            title="Homeowner"
-                            name={warranty?.homeowner?.name}
-                            phone={warranty?.homeowner?.phone}
-                            email={warranty?.homeowner?.email}
-                          />
-                          <ContactBlock
-                            title="Adjuster"
-                            name={warranty?.adjuster?.name}
-                            phone={warranty?.adjuster?.phone}
-                            email={warranty?.adjuster?.email}
-                          />
-                          <ContactBlock
-                            title="3rd party admin"
-                            name={warranty?.thirdPartyAdmin?.name}
-                            phone={warranty?.thirdPartyAdmin?.phone}
-                            email={warranty?.thirdPartyAdmin?.email}
-                          />
-                        </div>
-
-                        {warranty?.insuranceCarrier ||
-                        warranty?.policyNumber ? (
-                          <div className={`${UI.softPanel} sm:col-span-2`}>
-                            <div className={UI.sectionLabel}>Insurance</div>
-
-                            <div className="grid gap-3 text-sm sm:grid-cols-2">
-                              <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-text-rgb)/0.58)]">
-                                  Carrier
-                                </div>
-                                <div className="mt-1 font-medium text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
-                                  {warranty?.insuranceCarrier || "—"}
-                                </div>
-                              </div>
-
-                              <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-text-rgb)/0.58)]">
-                                  Policy #
-                                </div>
-                                <div className="mt-1 font-medium text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
-                                  {warranty?.policyNumber || "—"}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {warranty?.attachments &&
-                        warranty.attachments.length > 0 ? (
-                          <div className={`${UI.softPanel} sm:col-span-2`}>
-                            <div className="flex items-center justify-between gap-3">
-                              <div className={UI.sectionLabel}>Attachments</div>
-                              <div className="text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
-                                {warranty.attachments.length} file(s)
-                              </div>
-                            </div>
-
-                            <div className="mt-2 space-y-2">
-                              {warranty.attachments.map((a) => {
-                                const label =
-                                  a.label ||
-                                  kindLabelForAttachmentKind(a.kind) ||
-                                  "Attachment";
-
-                                return (
-                                  <div
-                                    key={a.id}
-                                    className="flex items-start justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-3"
-                                  >
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        <FileText className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.52)]" />
-                                        <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
-                                          {label}
-                                        </div>
-                                      </div>
-
-                                      <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.56)] break-words">
-                                        {a.kind
-                                          ? kindLabelForAttachmentKind(a.kind)
-                                          : "Attachment"}
-                                        {a.createdAt
-                                          ? ` • ${fmtMaybeDate(a.createdAt)}`
-                                          : ""}
-                                      </div>
-
-                                      <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.56)] break-words">
-                                        {a.url}
-                                      </div>
-                                    </div>
-
-                                    {isValidHttpUrl(a.url) ? (
-                                      <a
-                                        href={a.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className={`${UI.linkBtn} print:hidden`}
-                                      >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                        Open
-                                      </a>
-                                    ) : null}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <div className="mt-3 flex items-center gap-2 text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
-                        <AlertCircle className="h-4 w-4" />
-                        No warranty metadata saved yet.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* notes */}
             <div className="mt-5">
               <div className={UI.panel}>
-                <div className={UI.sectionTitle}>
-                  {mode === "internal" ? "Notes" : "Warranty notes"}
-                </div>
-                <div className={UI.muted}>
-                  {mode === "internal"
-                    ? "Job notes included for internal review."
-                    : "Warranty-specific notes for external documentation."}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className={UI.sectionTitle}>
+                      Warranty / 3rd-party details
+                    </div>
+                    <div className={UI.muted}>
+                      Printable packet without internal financials.
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {warranty?.status ? (
+                      <span
+                        className={`${
+                          UI.statusPillBase
+                        } ${pillForWarrantyStatus(warranty.status)}`}
+                      >
+                        <BadgeCheck className="h-3.5 w-3.5" />
+                        {warranty.status}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
-                <div className="mt-3 space-y-2">
-                  {mode === "internal" ? (
-                    (job.notes ?? []).length === 0 ? (
-                      <div className="text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
-                        No notes.
-                      </div>
-                    ) : (
-                      (job.notes ?? []).map((n) => (
-                        <div key={n.id} className={UI.softPanel}>
-                          <div className="whitespace-pre-wrap break-words text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                            {n.text || ""}
-                          </div>
-                          {n.createdAt ? (
-                            <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
-                              {fmtMaybeDate(n.createdAt)}
-                            </div>
-                          ) : null}
-                        </div>
-                      ))
-                    )
-                  ) : warranty?.notes ? (
+                {hasWarrantyData ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     <div className={UI.softPanel}>
-                      <div className="whitespace-pre-wrap break-words text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                        {warranty.notes}
+                      <div className={UI.sectionLabel}>Type</div>
+                      <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                        {labelForWarrantyKind(warranty?.kind)}
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
-                      No warranty notes.
+
+                    <div className={UI.softPanel}>
+                      <div className={UI.sectionLabel}>
+                        Manufacturer / Program
+                      </div>
+                      <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
+                        {[warranty?.manufacturer, warranty?.programName]
+                          .filter(Boolean)
+                          .join(" — ") || "—"}
+                      </div>
+                      {typeof warranty?.coverageYears === "number" ? (
+                        <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
+                          Coverage:{" "}
+                          <span className="font-medium text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
+                            {warranty.coverageYears} yrs
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
-                  )}
-                </div>
+
+                    <div className={UI.softPanel}>
+                      <div className={UI.sectionLabel}>Dates</div>
+                      <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Install
+                          </span>
+                          <span className="font-medium">
+                            {fmtMaybeShortDate(warranty?.installDate)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Repair
+                          </span>
+                          <span className="font-medium">
+                            {fmtMaybeShortDate(warranty?.repairDate)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Expires
+                          </span>
+                          <span className="font-medium">
+                            {fmtMaybeShortDate(warranty?.expiresAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={UI.softPanel}>
+                      <div className={UI.sectionLabel}>Registration</div>
+                      <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Submitted
+                          </span>
+                          <span className="font-medium">
+                            {fmtMaybeShortDate((warranty as any)?.submittedAt)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Registered
+                          </span>
+                          <span className="font-medium">
+                            {fmtMaybeShortDate((warranty as any)?.registeredAt)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            ID
+                          </span>
+                          <span className="font-medium break-words">
+                            {warranty?.registrationId || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={UI.softPanel}>
+                      <div className={UI.sectionLabel}>Claim</div>
+                      <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Claim ID
+                          </span>
+                          <span className="font-medium break-words">
+                            {warranty?.claimId || "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Claim #
+                          </span>
+                          <span className="font-medium break-words">
+                            {warranty?.claimNumber || "—"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[rgb(var(--color-text-rgb)/0.56)]">
+                            Status
+                          </span>
+                          <span className="font-medium">
+                            {warranty?.claimStatus || "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`${UI.softPanel} sm:col-span-2`}>
+                      <div className={UI.sectionLabel}>
+                        Portal / submission link
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
+                          {warranty?.portalUrl || "—"}
+                        </div>
+
+                        {warranty?.portalUrl &&
+                        isValidHttpUrl(warranty.portalUrl) ? (
+                          <a
+                            href={warranty.portalUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`${UI.linkBtn} print:hidden`}
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Open
+                          </a>
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
+                      <ContactBlock
+                        title="Homeowner"
+                        name={warranty?.homeowner?.name}
+                        phone={warranty?.homeowner?.phone}
+                        email={warranty?.homeowner?.email}
+                      />
+                      <ContactBlock
+                        title="Adjuster"
+                        name={warranty?.adjuster?.name}
+                        phone={warranty?.adjuster?.phone}
+                        email={warranty?.adjuster?.email}
+                      />
+                      <ContactBlock
+                        title="3rd party admin"
+                        name={warranty?.thirdPartyAdmin?.name}
+                        phone={warranty?.thirdPartyAdmin?.phone}
+                        email={warranty?.thirdPartyAdmin?.email}
+                      />
+                    </div>
+
+                    {warranty?.insuranceCarrier || warranty?.policyNumber ? (
+                      <div className={`${UI.softPanel} sm:col-span-2`}>
+                        <div className={UI.sectionLabel}>Insurance</div>
+
+                        <div className="grid gap-3 text-sm sm:grid-cols-2">
+                          <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-text-rgb)/0.58)]">
+                              Carrier
+                            </div>
+                            <div className="mt-1 font-medium text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
+                              {warranty?.insuranceCarrier || "—"}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-text-rgb)/0.58)]">
+                              Policy #
+                            </div>
+                            <div className="mt-1 font-medium text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
+                              {warranty?.policyNumber || "—"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {warranty?.notes ? (
+                      <div className={`${UI.softPanel} sm:col-span-2`}>
+                        <div className={UI.sectionLabel}>Warranty notes</div>
+                        <div className="text-sm leading-6 text-[rgb(var(--color-text-rgb)/0.9)] whitespace-pre-wrap print:text-black">
+                          {warranty.notes}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {warranty?.attachments &&
+                    warranty.attachments.length > 0 ? (
+                      <div className={`${UI.softPanel} sm:col-span-2`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className={UI.sectionLabel}>Attachments</div>
+                          <div className="text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
+                            {warranty.attachments.length} file(s)
+                          </div>
+                        </div>
+
+                        <div className="mt-2 space-y-2">
+                          {warranty.attachments.map((a) => {
+                            const label =
+                              a.label ||
+                              kindLabelForAttachmentKind(a.kind) ||
+                              "Attachment";
+
+                            return (
+                              <div
+                                key={a.id}
+                                className="flex items-start justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-3"
+                              >
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.52)]" />
+                                    <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] break-words print:text-black">
+                                      {label}
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.56)] break-words">
+                                    {a.kind
+                                      ? kindLabelForAttachmentKind(a.kind)
+                                      : "Attachment"}
+                                    {a.createdAt
+                                      ? ` • ${fmtMaybeDate(a.createdAt)}`
+                                      : ""}
+                                  </div>
+
+                                  <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.56)] break-words">
+                                    {a.url}
+                                  </div>
+                                </div>
+
+                                {isValidHttpUrl(a.url) ? (
+                                  <a
+                                    href={a.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={`${UI.linkBtn} print:hidden`}
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                    Open
+                                  </a>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
+                    <AlertCircle className="h-4 w-4" />
+                    No warranty metadata saved yet.
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* photos */}
+            {/* supporting photos */}
             <div className="mt-5">
               <div className={UI.panel}>
-                <div className={UI.sectionTitle}>Photos</div>
-                <div className={UI.muted}>
-                  Supporting job photos included in the packet.
-                </div>
+                <div className={UI.sectionTitle}>Supporting photos</div>
 
-                {photos.length === 0 ? (
-                  <div className="mt-3 text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
-                    No photos.
-                  </div>
-                ) : (
-                  <div className="mt-3 grid grid-cols-2 gap-3 print:grid-cols-3 sm:grid-cols-3">
-                    {photos.slice(0, 12).map((p) => {
+                {packetPhotos.length ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {packetPhotos.map((p) => {
                       const src = safePhotoUrl(p);
-                      if (!src) return null;
-
                       return (
                         <div
                           key={p.id}
-                          className="overflow-hidden border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)]"
+                          className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] p-2"
                         >
-                          <img
-                            src={src}
-                            alt={p.caption || "Job photo"}
-                            className="h-36 w-full object-cover print:h-32"
-                          />
-                          <div className="px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
-                            {p.caption || "—"}
+                          {src ? (
+                            <img
+                              src={src}
+                              alt={p.caption || "Job photo"}
+                              className="h-32 w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-32 w-full items-center justify-center bg-[rgb(var(--color-background-rgb)/0.18)] text-[rgb(var(--color-text-rgb)/0.42)]">
+                              No image
+                            </div>
+                          )}
+
+                          <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.72)] print:text-black">
+                            {p.caption || "No caption"}
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                )}
-
-                {photos.length > 12 ? (
-                  <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
-                    Showing 12 of {photos.length} photos.
+                ) : (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
+                    <AlertCircle className="h-4 w-4" />
+                    No photos uploaded yet.
                   </div>
-                ) : null}
+                )}
               </div>
             </div>
-
-            <div className="mt-5 text-xs text-[rgb(var(--color-text-rgb)/0.56)] print:text-gray-700">
-              {mode === "internal"
-                ? "Internal packet includes financial snapshot for warranty / third-party tracking."
-                : "External packet excludes financial data for manufacturer, builder, or insurance documentation."}
-            </div>
-          </div>
-
-          {/* footer */}
-          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.16)] px-5 py-4 print:hidden">
-            <button type="button" className={UI.btnGhost} onClick={onClose}>
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className={UI.btnPrimary}
-            >
-              <Printer className="h-4 w-4" />
-              Print / Save PDF
-            </button>
           </div>
         </div>
       </div>
