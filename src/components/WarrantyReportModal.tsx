@@ -222,7 +222,6 @@ function WarrantyReportDocument({
   packetPhotos,
 }: {
   job: Job;
-  photos: JobPhoto[];
   address: string;
   createdLabel: string;
   updatedLabel: string;
@@ -728,7 +727,6 @@ export default function WarrantyReportModal({
             <div className="min-h-0 flex-1 overflow-y-auto">
               <WarrantyReportDocument
                 job={job}
-                photos={photos}
                 address={address}
                 createdLabel={createdLabel}
                 updatedLabel={updatedLabel}
@@ -741,11 +739,10 @@ export default function WarrantyReportModal({
         </div>
       </div>
 
-      {/* Print-only document */}
-      <div className="hidden print:block print:bg-white">
+      {/* Print document: keep mounted, but off-screen during normal view */}
+      <div className="fixed left-[-100000px] top-0 w-[1024px] overflow-visible bg-white text-black print:static print:left-auto print:top-auto print:w-auto print:overflow-visible">
         <WarrantyReportDocument
           job={job}
-          photos={photos}
           address={address}
           createdLabel={createdLabel}
           updatedLabel={updatedLabel}
