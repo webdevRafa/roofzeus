@@ -106,31 +106,46 @@ html[data-theme="dark"] .modal-scroll::-webkit-scrollbar-thumb {
 @media print {
   body {
     margin: 0;
+    background: #ffffff !important;
   }
 
-  /* Hide everything under <body> except the paystub modal */
-  body > *:not(.paystub-print) {
+  /* Hide everything under <body> except active print modals */
+  body > *:not(.paystub-print):not(.job-report-print):not(.warranty-report-print) {
     display: none !important;
   }
 
-  /* Make the modal behave like a normal single-page document */
-  .paystub-print {
+  /* Make printable modals behave like normal printable documents */
+  .paystub-print,
+  .job-report-print,
+  .warranty-report-print {
     position: static !important;
     inset: auto !important;
+    left: auto !important;
+    top: auto !important;
     background: #ffffff !important;
     padding: 0 !important;
     display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
-  .paystub-print-inner {
+  .paystub-print-inner,
+  .job-report-print-inner,
+  .warranty-report-print-inner {
     box-shadow: none !important;
     border-radius: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
 }
-
-
 /* =========================
    THEME TOKENS (RoofZeus)
    Default: DARK

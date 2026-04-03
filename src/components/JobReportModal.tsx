@@ -140,7 +140,7 @@ export default function JobReportModal({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[145] overflow-y-auto bg-black/55 p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:bg-transparent print:p-0">
+    <div className="job-report-print fixed inset-0 z-[145] overflow-y-auto bg-black/55 p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:bg-transparent print:p-0">
       <button
         type="button"
         className="fixed inset-0 z-0 print:hidden"
@@ -149,7 +149,7 @@ export default function JobReportModal({
       />
 
       <div className="relative z-10 flex min-h-full items-start justify-center">
-        <div className="relative flex w-full max-w-5xl min-h-0 flex-col overflow-hidden border border-[rgb(var(--color-border-rgb)/0.34)] bg-[var(--color-card)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-72px-24px)] sm:max-h-[calc(100dvh-72px-32px)] print:max-h-none print:shadow-none print:border-0 print:max-w-none print:bg-white">
+        <div className="job-report-print-inner relative flex w-full max-w-5xl min-h-0 flex-col overflow-hidden border border-[rgb(var(--color-border-rgb)/0.34)] bg-[var(--color-card)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-72px-24px)] sm:max-h-[calc(100dvh-72px-32px)] print:max-h-none print:shadow-none print:border-0 print:max-w-none print:bg-white">
           {/* top bar */}
           <div className="border-b border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4 print:hidden sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

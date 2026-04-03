@@ -740,16 +740,18 @@ export default function WarrantyReportModal({
       </div>
 
       {/* Print document: keep mounted, but off-screen during normal view */}
-      <div className="fixed left-[-100000px] top-0 w-[1024px] overflow-visible bg-white text-black print:static print:left-auto print:top-auto print:w-auto print:overflow-visible">
-        <WarrantyReportDocument
-          job={job}
-          address={address}
-          createdLabel={createdLabel}
-          updatedLabel={updatedLabel}
-          warranty={warranty}
-          hasWarrantyData={hasWarrantyData}
-          packetPhotos={packetPhotos}
-        />
+      <div className="warranty-report-print fixed left-[-100000px] top-0 w-[1024px] overflow-visible bg-white text-black print:static print:left-auto print:top-auto print:w-auto print:overflow-visible">
+        <div className="warranty-report-print-inner bg-white text-black">
+          <WarrantyReportDocument
+            job={job}
+            address={address}
+            createdLabel={createdLabel}
+            updatedLabel={updatedLabel}
+            warranty={warranty}
+            hasWarrantyData={hasWarrantyData}
+            packetPhotos={packetPhotos}
+          />
+        </div>
       </div>
     </Fragment>,
     document.body
