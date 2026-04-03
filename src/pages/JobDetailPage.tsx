@@ -282,6 +282,8 @@ export default function JobDetailPage({
   const [warrantyModalOpen, setWarrantyModalOpen] = useState(false);
   const [jobReportOpen, setJobReportOpen] = useState(false);
   const [warrantyEditOpen, setWarrantyEditOpen] = useState(false);
+  const [summaryNotesOpen, setSummaryNotesOpen] = useState(false);
+  const [summaryNotesDraft, setSummaryNotesDraft] = useState("");
   const [payoutDocs, setPayoutDocs] = useState<PayoutDoc[]>([]);
 
   const [photos, setPhotos] = useState<JobPhoto[]>([]);
@@ -888,6 +890,9 @@ export default function JobDetailPage({
   }, [sqft, rate, job?.earnings?.flashingPay?.amountCents]);
 
   const [noteText, setNoteText] = useState("");
+  useEffect(() => {
+    setSummaryNotesDraft(job?.summaryNotes ?? "");
+  }, [job?.summaryNotes]);
 
   // --- NEW: Photo upload (file + optional caption) ---
   const [uploading, setUploading] = useState(false);
@@ -1504,6 +1509,21 @@ export default function JobDetailPage({
     setNoteText("");
     noteRef.current?.focus();
   }
+  async function saveSummaryNotes() {
+    if (!job) return;
+
+    await saveJob({
+      ...job,
+      summaryNotes: summaryNotesDraft.trim(),
+    });
+
+    setSummaryNotesOpen(false);
+    setToast({
+      status: "success",
+      title: "Summary notes saved",
+      message: "Summary notes were updated successfully.",
+    });
+  }
 
   async function handleAddPayoutSubmit() {
     if (!payoutCanSubmit) return; // ✅ don’t close modal, don’t toast
@@ -1850,6 +1870,15 @@ export default function JobDetailPage({
                         title="Manage warranty details for this job"
                       >
                         Warranty
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSummaryNotesOpen(true)}
+                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                        title="Edit summary notes used in the job report"
+                      >
+                        Summary notes
                       </button>
 
                       <button
@@ -2857,6 +2886,90 @@ export default function JobDetailPage({
                 </div>
               </main>
             </div>
+            {/* Summary Notes Modal */}
+            <ModalShell
+              open={summaryNotesOpen}
+              title="Edit summary notes"
+              onClose={() => {
+                setSummaryNotesDraft(job?.summaryNotes ?? "");
+                setSummaryNotesOpen(false);
+              }}
+            >
+              <form
+                className="grid gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await saveSummaryNotes();
+                }}
+              >
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
+                      Summary notes
+                    </div>
+                    <div className="text-xs text-[var(--color-muted)]">
+                      These appear in the printed job report and should stay
+                      concise and useful.
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
+                    {summaryNotesDraft.length}/1200
+                  </div>
+                </div>
+
+                <textarea
+                  value={summaryNotesDraft}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setSummaryNotesDraft(
+                      next.length > 1200 ? next.slice(0, 1200) : next
+                    );
+                  }}
+                  placeholder="Add a concise summary of this job for reporting and bookkeeping..."
+                  rows={8}
+                  className={`${
+                    (UI as any).textarea ?? UI.input
+                  } min-h-[220px]`}
+                />
+
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSummaryNotesDraft(job?.summaryNotes ?? "");
+                      setSummaryNotesOpen(false);
+                    }}
+                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
+
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => setSummaryNotesDraft("")}
+                      disabled={!summaryNotesDraft.trim()}
+                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                    >
+                      Clear
+                    </button>
+
+                    <button
+                      type="submit"
+                      className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
+                    >
+                      Save summary
+                    </button>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-[var(--color-muted)]">
+                  Tip: Use this for the clean narrative version of the job. Keep
+                  raw running updates in regular Notes.
+                </div>
+              </form>
+            </ModalShell>
             {/* Add Payout Modal */}
             <ModalShell
               open={payoutModalOpen}

@@ -55,11 +55,6 @@ function fmtMaybeDate(v: unknown) {
   return d ? d.toLocaleString() : "—";
 }
 
-function fmtMaybeShortDate(v: unknown) {
-  const d = toDateObj(v);
-  return d ? d.toLocaleDateString() : "—";
-}
-
 function formatAddress(job: Job) {
   if (typeof job.address === "string") return job.address;
   return (
@@ -88,17 +83,18 @@ const UI = {
   subtitle: "mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.56)]",
 
   sectionLabel:
-    "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-text-rgb)/0.58)]",
+    "mb-1 block text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]",
   sectionTitle:
-    "text-sm font-semibold tracking-[0.01em] text-[rgb(var(--color-text-rgb)/0.96)]",
-  muted: "text-[12px] text-[rgb(var(--color-text-rgb)/0.52)]",
+    "text-[18px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black",
+  muted:
+    "text-[13px] text-[rgb(var(--color-text-rgb)/0.60)] print:text-[#4b5563]",
 
   panel:
-    "border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-4 py-4",
+    "border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-background-rgb)/0.12)] px-5 py-5 print:border-[#d1d5db] print:bg-white",
   softPanel:
-    "border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.12)] px-3 py-3",
+    "border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.08)] px-4 py-4 print:border-[#e5e7eb] print:bg-white",
   statPanel:
-    "border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4",
+    "border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.08)] px-5 py-4 print:border-[#d1d5db] print:bg-white",
 
   btnPrimary:
     "inline-flex items-center justify-center gap-2 border border-[rgb(var(--color-primary-rgb)/0.42)] bg-[rgb(var(--color-primary-rgb)/0.14)] px-3 py-2 text-xs font-semibold tracking-wide text-[rgb(var(--color-text-rgb)/0.96)] transition " +
@@ -127,9 +123,7 @@ function JobReportDocument({
 }) {
   const payouts = job.expenses?.payouts ?? [];
   const materials = job.expenses?.materials ?? [];
-  const notes = job.notes ?? [];
   const summaryNotes = job.summaryNotes?.trim() ?? "";
-  const warranty = job.warranty;
   const recentPhotos = photos.slice(0, 8);
 
   return (
@@ -154,19 +148,19 @@ function JobReportDocument({
 
                 <div className="min-w-0">
                   {orgBranding?.legalName || orgBranding?.name ? (
-                    <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#6b7280]">
+                    <div className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.64)] print:text-[#6b7280]">
                       {orgBranding.legalName || orgBranding.name}
                     </div>
                   ) : null}
 
-                  <h1 className="mt-1 text-[28px] font-semibold tracking-[-0.02em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                  <h1 className="mt-2 text-[22px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                     Job Report
                   </h1>
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-2 text-left text-[12px] text-[rgb(var(--color-text-rgb)/0.68)] print:min-w-[250px] print:text-[#374151] sm:text-right">
+            <div className="grid gap-1.5 text-left text-[12px] leading-5 text-[rgb(var(--color-text-rgb)/0.70)] print:min-w-[250px] print:text-[#374151] sm:text-right">
               <div>
                 <span className="font-semibold print:text-black">Created:</span>{" "}
                 {createdLabel}
@@ -175,53 +169,50 @@ function JobReportDocument({
                 <span className="font-semibold print:text-black">Updated:</span>{" "}
                 {updatedLabel}
               </div>
-              <div>
-                <span className="font-semibold print:text-black">
-                  Punch scheduled:
-                </span>{" "}
-                {fmtMaybeShortDate(job.punchScheduledFor)}
-              </div>
             </div>
           </div>
 
-          <div className="pt-4">
-            <div className="text-[22px] font-semibold leading-tight text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+          <div className="pt-5">
+            <div className="text-[24px] font-semibold leading-[1.2] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {address}
             </div>
-            <div className="mt-2 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-              Reference ID:{" "}
-              <span className="font-medium text-[rgb(var(--color-text-rgb)/0.92)] print:text-black">
-                {job.id}
-              </span>
-            </div>
-            <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-              Status:{" "}
-              <span className="font-medium text-[rgb(var(--color-text-rgb)/0.92)] print:text-black">
-                {job.status || "—"}
-              </span>
+
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-black  ">
+              <div>
+                Job ID:{" "}
+                <span className="font-medium text-[rgb(var(--color-text-rgb)/0.92)] print:text-black">
+                  {job.id}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Financials */}
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <div className={UI.statPanel}>
-            <div className={UI.sectionLabel}>Earnings</div>
-            <div className="text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+            <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+              Earnings
+            </div>
+            <div className="mt-2 text-[20px] font-semibold leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.earnings)}
             </div>
           </div>
 
           <div className={UI.statPanel}>
-            <div className={UI.sectionLabel}>Expenses</div>
-            <div className="text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+            <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+              Expenses
+            </div>
+            <div className="mt-2 text-[20px] font-semibold leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.expenses)}
             </div>
           </div>
 
           <div className={UI.statPanel}>
-            <div className={UI.sectionLabel}>Profit</div>
-            <div className="text-lg font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+            <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+              Profit
+            </div>
+            <div className="mt-2 text-[20px] font-semibold leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.net)}
             </div>
           </div>
@@ -231,30 +222,38 @@ function JobReportDocument({
         <div className="mt-5">
           <div className={UI.panel}>
             <div className="flex items-center gap-2">
-              <BadgeDollarSign className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.58)]" />
-              <div className={UI.sectionTitle}>Pricing Snapshot</div>
+              <BadgeDollarSign className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#6b7280]" />
+              <div className={UI.sectionTitle}>Pricing</div>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className={UI.softPanel}>
-                <div className={UI.sectionLabel}>Sq ft</div>
-                <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                  {job.pricing?.sqft?.toLocaleString() ?? "—"}
+                <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+                  Roof Size
+                </div>
+                <div className="mt-2 text-[22px] font-semibold text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                  {job.pricing?.sqft?.toLocaleString() ?? "—"}{" "}
+                  <span className="text-sm">SQ</span>
                 </div>
               </div>
 
               <div className={UI.softPanel}>
-                <div className={UI.sectionLabel}>Rate / sq</div>
-                <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+                  Rate
+                </div>
+                <div className="mt-2 text-[22px] font-semibold text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                   {typeof job.pricing?.ratePerSqFt === "number"
                     ? `$${job.pricing.ratePerSqFt}`
-                    : "—"}
+                    : "—"}{" "}
+                  <span className="text-sm">/ SQ</span>
                 </div>
               </div>
 
               <div className={UI.softPanel}>
-                <div className={UI.sectionLabel}>Fee</div>
-                <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+                  Additional Fee
+                </div>
+                <div className="mt-2 text-[22px] font-semibold text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                   {typeof job.pricing?.feeCents === "number"
                     ? fmtCents(job.pricing.feeCents)
                     : "—"}
@@ -269,7 +268,7 @@ function JobReportDocument({
           <div className={UI.panel}>
             <div className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.58)]" />
-              <div className={UI.sectionTitle}>Payout Summary</div>
+              <div className={UI.sectionTitle}>Payouts</div>
             </div>
 
             <div className="mt-3 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
@@ -287,7 +286,7 @@ function JobReportDocument({
                       <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
                         {p.payeeNickname || "Unnamed payee"}
                       </div>
-                      <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
+                      <div className="mt-0.5 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
                         {p.category || "—"}
                         {typeof p.sqft === "number" &&
                         typeof p.ratePerSqFt === "number"
@@ -313,7 +312,7 @@ function JobReportDocument({
           <div className={UI.panel}>
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.58)]" />
-              <div className={UI.sectionTitle}>Materials Summary</div>
+              <div className={UI.sectionTitle}>Materials</div>
             </div>
 
             <div className="mt-3 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
@@ -332,7 +331,7 @@ function JobReportDocument({
                       <div className="text-sm font-medium capitalize text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
                         {m.category}
                       </div>
-                      <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
+                      <div className="mt-0.5 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
                         {m.quantity} × {fmtCents(m.unitPriceCents)}
                         {m.vendor ? ` • ${m.vendor}` : ""}
                       </div>
@@ -353,75 +352,12 @@ function JobReportDocument({
           </div>
         </div>
 
-        {/* Notes */}
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
-          <div className={UI.panel}>
-            <div className={UI.sectionTitle}>Summary Notes</div>
-            <div className="mt-2 text-sm leading-6 text-[rgb(var(--color-text-rgb)/0.86)] whitespace-pre-wrap print:text-black">
-              {summaryNotes || "No summary notes."}
-            </div>
-          </div>
-
-          <div className={UI.panel}>
-            <div className={UI.sectionTitle}>Latest Notes</div>
-            <div className="mt-3 space-y-2">
-              {notes.length ? (
-                notes.slice(0, 6).map((n) => (
-                  <div
-                    key={n.id}
-                    className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-3"
-                  >
-                    <div className="text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
-                      {fmtMaybeDate(n.createdAt)}
-                    </div>
-                    <div className="mt-1 text-sm leading-6 text-[rgb(var(--color-text-rgb)/0.9)] whitespace-pre-wrap print:text-black">
-                      {n.text}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-[rgb(var(--color-text-rgb)/0.56)]">
-                  <AlertCircle className="h-4 w-4" />
-                  No notes added yet.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Warranty snapshot */}
+        {/* Summary Notes */}
         <div className="mt-5">
           <div className={UI.panel}>
-            <div className={UI.sectionTitle}>Warranty Snapshot</div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className={UI.softPanel}>
-                <div className={UI.sectionLabel}>Type</div>
-                <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                  {warranty?.kind || "—"}
-                </div>
-              </div>
-
-              <div className={UI.softPanel}>
-                <div className={UI.sectionLabel}>Status</div>
-                <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                  {warranty?.status || "—"}
-                </div>
-              </div>
-
-              <div className={UI.softPanel}>
-                <div className={UI.sectionLabel}>Manufacturer</div>
-                <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                  {warranty?.manufacturer || "—"}
-                </div>
-              </div>
-
-              <div className={UI.softPanel}>
-                <div className={UI.sectionLabel}>Program</div>
-                <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                  {warranty?.programName || "—"}
-                </div>
-              </div>
+            <div className={UI.sectionTitle}>Summary Notes</div>
+            <div className="mt-3 text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.88)] print:text-black">
+              {summaryNotes || "No summary notes."}
             </div>
           </div>
         </div>
@@ -562,9 +498,10 @@ export default function JobReportModal({
                     : "Job report"}
                 </div>
                 <div className={UI.address}>{address}</div>
-                <div className={UI.subtitle}>
-                  Internal job summary with financials, activity context, and
-                  warranty snapshot.
+
+                <div className="mt-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.52)]">
+                  Tip: Disable "Headers and footers" in print settings for a
+                  cleaner report.
                 </div>
               </div>
 
