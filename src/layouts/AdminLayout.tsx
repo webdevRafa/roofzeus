@@ -102,7 +102,6 @@ import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 import { useOrg } from "../contexts/OrgContext";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import BrandLogoModal from "../components/BrandLogoModal";
 
 import logo from "../assets/rz-modern-white.svg";
 
@@ -182,7 +181,6 @@ export default function AdminLayout() {
   const [signingOut, setSigningOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
-  const [brandModalOpen, setBrandModalOpen] = useState(false);
   const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
 
   const orgMenuRef = useRef<HTMLDivElement>(null);
@@ -344,7 +342,7 @@ export default function AdminLayout() {
                           <button
                             onClick={() => {
                               setOrgMenuOpen(false);
-                              setBrandModalOpen(true);
+                              navigate("/organization-settings");
                             }}
                             className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[rgb(var(--color-text-rgb)/0.88)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
                           >
@@ -457,7 +455,7 @@ export default function AdminLayout() {
                     <button
                       onClick={() => {
                         setMobileOpen(false);
-                        setBrandModalOpen(true);
+                        navigate("/organization-settings");
                       }}
                       className="block w-full rounded-xl px-3 py-2 text-left text-sm text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-text-rgb)/0.04)]"
                     >
@@ -474,14 +472,6 @@ export default function AdminLayout() {
       <main className="mx-auto w-full max-w-[1700px] px-3 sm:px-4 lg:px-6 py-6 sm:py-8">
         <Outlet />
       </main>
-
-      {brandModalOpen && activeOrgId && (
-        <BrandLogoModal
-          orgId={activeOrgId}
-          currentLogoUrl={orgLogoUrl ?? undefined}
-          onClose={() => setBrandModalOpen(false)}
-        />
-      )}
     </div>
   );
 }

@@ -182,6 +182,15 @@ export type PayoutDoc = {
   /** Owning organization for this payout.  Optional for backward compatibility. */
   orgId: ID;
 };
+
+export type OrgMaterialOption = {
+  id: ID;
+  label: string;          // "Synthetic Underlayment"
+  unitLabel?: string;     // "roll", "bundle", "tube", etc.
+  isActive?: boolean;
+  sortOrder?: number;
+};
+
 export type Org = {
   id: ID;
   name: string;
@@ -195,6 +204,12 @@ export type Org = {
 
   /** Default state used to preselect job address state for this org */
   defaultState?: string | null;
+
+  /** Fixed additional fee automatically available to jobs/reports */
+  defaultJobFeeCents?: number;
+
+  /** Common material options available when adding job material expenses */
+  commonMaterials?: OrgMaterialOption[];
 
   ownerUserId?: ID;
   createdByUserId?: ID;

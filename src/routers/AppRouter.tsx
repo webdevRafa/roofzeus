@@ -8,7 +8,7 @@ import InvoiceViewer from "../pages/InvoiceViewer";
 import SignupPage from "../pages/SignupPage";
 import PipelinePage from "../pages/PipelinePage";
 import RoleGuard from "../components/RoleGuard";
-
+import OrganizationSettingsPage from "../pages/OrganizationSettingsPage";
 import AdminShell from "../layouts/AdminShell";
 import CrewLayout from "../layouts/CrewLayout";
 
@@ -53,6 +53,10 @@ export default function AppRouter() {
         <Route path="/invoices/:id" element={<InvoiceViewer />} />
         <Route path="/payouts" element={<PayoutsPage />} />
         <Route path="/pipeline" element={<PipelinePage />} />
+        <Route
+          path="/organization-settings"
+          element={<OrganizationSettingsPage />}
+        />
       </Route>
 
       {/* ✅ Crew routes */}
