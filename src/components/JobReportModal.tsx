@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  Printer,
-  X,
-  AlertCircle,
-  FileText,
-  BadgeDollarSign,
-  ClipboardList,
-  Image as ImageIcon,
-} from "lucide-react";
+import { Printer, X, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useOrg } from "../contexts/OrgContext";
@@ -85,16 +77,15 @@ const UI = {
   sectionLabel:
     "mb-1 block text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]",
   sectionTitle:
-    "text-[18px]  tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black",
+    "text-[18px] uppercase  tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black",
   muted:
     "text-[13px] text-[rgb(var(--color-text-rgb)/0.60)] print:text-[#4b5563]",
 
-  panel:
-    "border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-background-rgb)/0.12)] px-5 py-5 print:border-[#d1d5db] print:bg-white",
+  panel: " px-5 py-5 print:border-[#d1d5db] print:bg-white",
   softPanel:
     "border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.08)] px-4 py-4 print:border-[#e5e7eb] print:bg-white",
   statPanel:
-    "border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.08)] px-5 py-4 print:border-[#d1d5db] print:bg-white",
+    " bg-[rgb(var(--color-background-rgb)/0.08)] px-5 py-4 print:border-[#d1d5db] print:bg-white",
 
   btnPrimary:
     "inline-flex items-center justify-center gap-2 border border-[rgb(var(--color-primary-rgb)/0.42)] bg-[rgb(var(--color-primary-rgb)/0.14)] px-3 py-2 text-xs font-semibold tracking-wide text-[rgb(var(--color-text-rgb)/0.96)] transition " +
@@ -128,7 +119,7 @@ function JobReportDocument({
 
   return (
     <div className="bg-[var(--color-card)] print:bg-white print:text-black">
-      <div className="p-5 print:px-8 print:py-7">
+      <div className="p-5 print:px-8 print:py-2">
         {/* Header */}
         <div className={UI.panel}>
           <div className="flex flex-col gap-5 border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#d1d5db] sm:flex-row sm:items-start sm:justify-between">
@@ -201,44 +192,39 @@ function JobReportDocument({
         </div>
 
         {/* Financials */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-3">
           <div className={UI.statPanel}>
-            <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+            <div className="text-sm md:text-md  uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
               Earnings
             </div>
-            <div className="mt-2 text-[20px]  leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="mt-2 text-[17px] leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.earnings)}
             </div>
           </div>
 
           <div className={UI.statPanel}>
-            <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+            <div className="text-sm md:text-md  uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
               Expenses
             </div>
-            <div className="mt-2 text-[20px]  leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="mt-2 text-[17px] leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.expenses)}
             </div>
           </div>
 
           <div className={UI.statPanel}>
-            <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
+            <div className="text-sm md:text-md  uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
               Profit
             </div>
-            <div className="mt-2 text-[20px]  leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="mt-2 text-[17px] leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.net)}
             </div>
           </div>
         </div>
 
         {/* Pricing */}
-        <div className="mt-5">
+        <div className="">
           <div className={UI.panel}>
-            <div className="flex items-center gap-2">
-              <BadgeDollarSign className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#6b7280]" />
-              <div className={UI.sectionTitle}>Pricing</div>
-            </div>
-
-            <div className="mt-4 grid gap-0 border-t border-[rgb(var(--color-border-rgb)/0.18)] print:border-[#e5e7eb] sm:grid-cols-3">
+            <div className="grid gap-0 border-t border-[rgb(var(--color-border-rgb)/0.18)] print:border-[#e5e7eb] sm:grid-cols-3">
               <div className="py-4 sm:pr-4 sm:border-r border-[rgb(var(--color-border-rgb)/0.14)] print:border-[#e5e7eb]">
                 <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
                   Roof Size
@@ -276,14 +262,13 @@ function JobReportDocument({
         </div>
 
         {/* Payouts + Materials */}
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-2 w-full">
           <div className={UI.panel}>
             <div className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.58)]" />
               <div className={UI.sectionTitle}>Payouts</div>
             </div>
 
-            <div className="mt-3 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
+            <div className="mt-0 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
               {payouts.length} payout{payouts.length === 1 ? "" : "s"}
             </div>
 
@@ -292,10 +277,10 @@ function JobReportDocument({
                 payouts.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-3"
+                    className="flex items-center justify-between gap-3 bg-[rgb(var(--color-background-rgb)/0.08)] px-3 py-3"
                   >
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                      <div className="text-sm  text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
                         {p.payeeNickname || "Unnamed payee"}
                       </div>
                       <div className="mt-0.5 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
@@ -307,7 +292,7 @@ function JobReportDocument({
                       </div>
                     </div>
 
-                    <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                    <div className="text-sm  text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
                       {fmtCents(p.amountCents)}
                     </div>
                   </div>
@@ -323,11 +308,10 @@ function JobReportDocument({
 
           <div className={UI.panel}>
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.58)]" />
               <div className={UI.sectionTitle}>Materials</div>
             </div>
 
-            <div className="mt-3 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
+            <div className="text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
               {materials.length} material item
               {materials.length === 1 ? "" : "s"}
             </div>
@@ -337,7 +321,7 @@ function JobReportDocument({
                 materials.map((m) => (
                   <div
                     key={m.id}
-                    className="flex items-center justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-3"
+                    className="flex items-center justify-between gap-3 bg-[rgb(var(--color-background-rgb)/0.08)] px-3 py-3"
                   >
                     <div className="min-w-0">
                       <div className="text-sm font-medium capitalize text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
