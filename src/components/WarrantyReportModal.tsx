@@ -788,7 +788,7 @@ export default function WarrantyReportModal({
             </div>
 
             {/* screen content */}
-            <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="report-scroll min-h-0 flex-1 overflow-y-auto">
               <WarrantyReportDocument
                 job={job}
                 address={address}

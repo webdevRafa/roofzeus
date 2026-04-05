@@ -371,7 +371,7 @@ export default function JobsPage() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-2xl font-semibold text-[var(--color-text)] uppercase font-bebas">
+            <h1 className="text-xs md:text-md lg:text-lg font-semibold text-[var(--color-text)] uppercase font-poppins">
               Jobs
             </h1>
             <span className="ml-1 text-xs sm:text-sm text-[var(--color-muted)]">

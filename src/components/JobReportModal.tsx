@@ -85,7 +85,7 @@ const UI = {
   sectionLabel:
     "mb-1 block text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]",
   sectionTitle:
-    "text-[18px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black",
+    "text-[18px]  tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black",
   muted:
     "text-[13px] text-[rgb(var(--color-text-rgb)/0.60)] print:text-[#4b5563]",
 
@@ -153,7 +153,7 @@ function JobReportDocument({
                     </div>
                   ) : null}
 
-                  <h1 className="mt-2 text-[22px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                  <h1 className="mt-2 text-md font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                     Job Report
                   </h1>
                 </div>
@@ -173,14 +173,26 @@ function JobReportDocument({
           </div>
 
           <div className="pt-5">
-            <div className="text-[24px] font-semibold leading-[1.2] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="text-[17px]  leading-[1.2] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {address}
+            </div>
+            <div className="flex gap-2 mt-2">
+              <div className="text-[14px]  text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                {job.pricing?.sqft?.toLocaleString() ?? "—"}{" "}
+                <span className="text-sm">SQ</span> @
+              </div>
+              <div className="text-[14px] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                {typeof job.pricing?.ratePerSqFt === "number"
+                  ? `$${job.pricing.ratePerSqFt}`
+                  : "—"}
+                <span className="text-sm">/ SQ</span>
+              </div>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-black  ">
               <div>
                 Job ID:{" "}
-                <span className="font-medium text-[rgb(var(--color-text-rgb)/0.92)] print:text-black">
+                <span className=" text-[rgb(var(--color-text-rgb)/0.92)] print:text-black">
                   {job.id}
                 </span>
               </div>
@@ -194,7 +206,7 @@ function JobReportDocument({
             <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
               Earnings
             </div>
-            <div className="mt-2 text-[20px] font-semibold leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="mt-2 text-[20px]  leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.earnings)}
             </div>
           </div>
@@ -203,7 +215,7 @@ function JobReportDocument({
             <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
               Expenses
             </div>
-            <div className="mt-2 text-[20px] font-semibold leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="mt-2 text-[20px]  leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.expenses)}
             </div>
           </div>
@@ -212,7 +224,7 @@ function JobReportDocument({
             <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
               Profit
             </div>
-            <div className="mt-2 text-[20px] font-semibold leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="mt-2 text-[20px]  leading-none text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {fmtCents(totals.net)}
             </div>
           </div>
@@ -226,22 +238,22 @@ function JobReportDocument({
               <div className={UI.sectionTitle}>Pricing</div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className={UI.softPanel}>
+            <div className="mt-4 grid gap-0 border-t border-[rgb(var(--color-border-rgb)/0.18)] print:border-[#e5e7eb] sm:grid-cols-3">
+              <div className="py-4 sm:pr-4 sm:border-r border-[rgb(var(--color-border-rgb)/0.14)] print:border-[#e5e7eb]">
                 <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
                   Roof Size
                 </div>
-                <div className="mt-2 text-[22px] font-semibold text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                <div className="mt-2 text-[20px]  text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                   {job.pricing?.sqft?.toLocaleString() ?? "—"}{" "}
                   <span className="text-sm">SQ</span>
                 </div>
               </div>
 
-              <div className={UI.softPanel}>
+              <div className="py-4 sm:px-4 sm:border-r border-[rgb(var(--color-border-rgb)/0.14)] print:border-[#e5e7eb]">
                 <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
                   Rate
                 </div>
-                <div className="mt-2 text-[22px] font-semibold text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                <div className="mt-2 text-[20px]  text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                   {typeof job.pricing?.ratePerSqFt === "number"
                     ? `$${job.pricing.ratePerSqFt}`
                     : "—"}{" "}
@@ -249,11 +261,11 @@ function JobReportDocument({
                 </div>
               </div>
 
-              <div className={UI.softPanel}>
+              <div className="py-4 sm:pl-4">
                 <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.68)] print:text-[#6b7280]">
                   Additional Fee
                 </div>
-                <div className="mt-2 text-[22px] font-semibold text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                <div className="mt-2 text-[20px]  text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                   {typeof job.pricing?.feeCents === "number"
                     ? fmtCents(job.pricing.feeCents)
                     : "—"}
@@ -275,9 +287,9 @@ function JobReportDocument({
               {payouts.length} payout{payouts.length === 1 ? "" : "s"}
             </div>
 
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 report-section-scroll space-y-2 print:space-y-2">
               {payouts.length ? (
-                payouts.slice(0, 8).map((p) => (
+                payouts.map((p) => (
                   <div
                     key={p.id}
                     className="flex items-center justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-3"
@@ -320,9 +332,9 @@ function JobReportDocument({
               {materials.length === 1 ? "" : "s"}
             </div>
 
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 report-section-scroll space-y-2 print:space-y-2">
               {materials.length ? (
-                materials.slice(0, 8).map((m) => (
+                materials.map((m) => (
                   <div
                     key={m.id}
                     className="flex items-center justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-3"
@@ -356,8 +368,10 @@ function JobReportDocument({
         <div className="mt-5">
           <div className={UI.panel}>
             <div className={UI.sectionTitle}>Summary Notes</div>
-            <div className="mt-3 text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.88)] print:text-black">
-              {summaryNotes || "No summary notes."}
+            <div className="mt-3 report-section-scroll">
+              <div className="text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.88)] print:text-black">
+                {summaryNotes || "No summary notes."}
+              </div>
             </div>
           </div>
         </div>
@@ -530,7 +544,7 @@ export default function JobReportModal({
           </div>
 
           {/* content */}
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="report-scroll min-h-0 flex-1 overflow-y-auto">
             <JobReportDocument
               job={job}
               address={address}
