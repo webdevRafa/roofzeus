@@ -71,7 +71,7 @@ const UI = {
   title:
     "text-[15px] font-semibold tracking-[0.02em] text-[rgb(var(--color-text-rgb)/0.98)]",
   address:
-    "mt-1 truncate text-[13px] font-medium text-[rgb(var(--color-text-rgb)/0.82)]",
+    "mt-1 truncate text-[13px] md:text-[20px] font-medium text-[rgb(var(--color-text-rgb)/0.82)]",
   subtitle: "mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.56)]",
 
   sectionLabel:
@@ -284,7 +284,11 @@ function JobReportDocument({
                         {p.payeeNickname || "Unnamed payee"}
                       </div>
                       <div className="mt-0.5 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        {p.category || "—"}
+                        {p.category === "felt" ? (
+                          <span>Dry In</span>
+                        ) : (
+                          <span>Shingles</span>
+                        )}
                         {typeof p.sqft === "number" &&
                         typeof p.ratePerSqFt === "number"
                           ? ` • ${p.sqft} sq @ $${p.ratePerSqFt}/sq`
@@ -488,13 +492,6 @@ export default function JobReportModal({
           <div className="border-b border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4 print:hidden sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1">
-                <div className={UI.title}>
-                  {orgBranding?.legalName || orgBranding?.name
-                    ? `${
-                        orgBranding.legalName || orgBranding.name
-                      } • Job report`
-                    : "Job report"}
-                </div>
                 <div className={UI.address}>{address}</div>
 
                 <div className="mt-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.52)]">
