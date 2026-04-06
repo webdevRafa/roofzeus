@@ -272,7 +272,7 @@ function JobReportDocument({
               {payouts.length} payout{payouts.length === 1 ? "" : "s"}
             </div>
 
-            <div className="mt-3 report-section-scroll space-y-2 print:space-y-2">
+            <div className="mt-3 report-section-scroll space-y-2 print:space-y-1">
               {payouts.length ? (
                 payouts.map((p) => (
                   <div
@@ -320,7 +320,7 @@ function JobReportDocument({
               {materials.length === 1 ? "" : "s"}
             </div>
 
-            <div className="mt-3 report-section-scroll space-y-2 print:space-y-2">
+            <div className="mt-3 report-section-scroll space-y-2 print:space-y-1">
               {materials.length ? (
                 materials.map((m) => (
                   <div

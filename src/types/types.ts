@@ -185,12 +185,13 @@ export type PayoutDoc = {
 
 export type OrgMaterialOption = {
   id: ID;
-  label: string;          // "Synthetic Underlayment"
-  unitLabel?: string;     // "roll", "bundle", "tube", etc.
+  key?: MaterialCategory | string;
+  name: string;
+  unit?: string;
   isActive?: boolean;
+  isPreset?: boolean;
   sortOrder?: number;
 };
-
 export type Org = {
   id: ID;
   name: string;
