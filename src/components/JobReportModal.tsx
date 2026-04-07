@@ -4,7 +4,7 @@ import { Printer, X, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useOrg } from "../contexts/OrgContext";
-import type { Job, Org } from "../types/types";
+import type { Job, Org, MaterialCategory } from "../types/types";
 
 type JobPhoto = {
   id: string;
@@ -15,7 +15,10 @@ type JobPhoto = {
   url?: string;
   caption?: string;
 };
-type OrgBranding = Pick<Org, "name" | "legalName" | "logoUrl">;
+type OrgBranding = Pick<
+  Org,
+  "name" | "legalName" | "logoUrl" | "commonMaterials"
+>;
 
 function fmtCents(cents: number) {
   const dollars = (cents ?? 0) / 100;
@@ -65,6 +68,40 @@ function formatAddress(job: Job) {
 
 function safePhotoUrl(p: JobPhoto) {
   return p.thumbUrl || p.fullUrl || p.url || "";
+}
+
+const PRESET_MATERIAL_LABELS: Record<MaterialCategory, string> = {
+  coilNails: "Coil Nails",
+  tinCaps: "Tin Caps",
+  np1Seal: "NP1 Seal",
+  plasticJacks: "Plastic Jacks",
+  counterFlashing: "Counter Flashing",
+  jFlashing: "J / L Flashing",
+  rainDiverter: "Rain Diverter",
+};
+
+function humanizeMaterialKey(value: string): string {
+  return value
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\bNp1\b/i, "NP1")
+    .replace(/\bJl\b/i, "J / L")
+    .trim();
+}
+function getMaterialDisplayName(
+  category: string,
+  orgBranding: OrgBranding | null
+): string {
+  const fromOrg = orgBranding?.commonMaterials
+    ?.find((row) => row.key === category)
+    ?.name?.trim();
+
+  if (fromOrg) return fromOrg;
+
+  if (category in PRESET_MATERIAL_LABELS) {
+    return PRESET_MATERIAL_LABELS[category as MaterialCategory];
+  }
+
+  return humanizeMaterialKey(category);
 }
 
 const UI = {
@@ -328,8 +365,8 @@ function JobReportDocument({
                     className="flex items-center justify-between gap-3 bg-[rgb(var(--color-background-rgb)/0.08)] px-3 py-3"
                   >
                     <div className="min-w-0">
-                      <div className="text-sm font-medium capitalize text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
-                        {m.category}
+                      <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                        {getMaterialDisplayName(m.category, orgBranding)}
                       </div>
                       <div className="mt-0.5 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
                         {m.quantity} × {fmtCents(m.unitPriceCents)}
@@ -465,6 +502,7 @@ export default function JobReportModal({
           name: data.name ?? "",
           legalName: data.legalName ?? "",
           logoUrl: data.logoUrl ?? null,
+          commonMaterials: data.commonMaterials ?? [],
         });
       },
       () => {

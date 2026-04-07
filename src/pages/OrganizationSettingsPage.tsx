@@ -37,6 +37,17 @@ function makeCustomMaterialRow(): OrgMaterialOption {
     sortOrder: 0,
   };
 }
+function makeMaterialKey(value: string): string {
+  const cleaned = value
+    .trim()
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+(.)/g, (_, chr: string) => chr.toUpperCase())
+    .replace(/[^a-zA-Z0-9]/g, "");
+
+  return cleaned || `customMaterial${Date.now()}`;
+}
+
 const UNIT_OPTIONS = [
   "box",
   "bundle",
@@ -227,7 +238,9 @@ export default function OrganizationSettingsPage() {
           const key =
             typeof row.key === "string" && row.key.trim().length > 0
               ? row.key.trim()
-              : null;
+              : row.isPreset
+              ? null
+              : makeMaterialKey(row.name);
 
           return {
             id: row.id || crypto.randomUUID(),

@@ -51,6 +51,8 @@ import type {
   MaterialCategory,
   Employee,
   PayoutDoc,
+  Org,
+  OrgMaterialOption,
 } from "../types/types";
 import { jobConverter } from "../types/types";
 import { toCents } from "../utils/money";
@@ -220,9 +222,9 @@ function fmtLongDate(x: unknown): string {
 }
 
 type MaterialDraft = {
-  category: MaterialCategory;
-  unitPrice: string; // dollars typed in input
-  quantity: string; // quantity typed in input
+  category: MaterialCategory | string;
+  unitPrice: string;
+  quantity: string;
   vendor?: string;
 };
 
@@ -232,6 +234,50 @@ const blankMaterial = (): MaterialDraft => ({
   quantity: "",
   vendor: "",
 });
+
+const PRESET_MATERIAL_OPTIONS: Array<{
+  key: MaterialCategory;
+  name: string;
+  unit: string;
+}> = [
+  { key: "coilNails", name: "Coil Nails", unit: "box" },
+  { key: "tinCaps", name: "Tin Caps", unit: "box" },
+  { key: "np1Seal", name: "NP1 Seal", unit: "tube" },
+  { key: "plasticJacks", name: "Plastic Jacks", unit: "each" },
+  { key: "counterFlashing", name: "Counter Flashing", unit: "piece" },
+  { key: "jFlashing", name: "J / L Flashing", unit: "piece" },
+  { key: "rainDiverter", name: "Rain Diverter", unit: "piece" },
+];
+
+function humanizeMaterialKey(value: string): string {
+  return value
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\bNp1\b/i, "NP1")
+    .replace(/\bJl\b/i, "J / L")
+    .trim();
+}
+
+function formatMaterialUnit(unit?: string | null) {
+  if (!unit) return "";
+  return unit.trim().toLowerCase();
+}
+
+function resolveOrgMaterialKey(row: OrgMaterialOption): string {
+  if (typeof row.key === "string" && row.key.trim().length > 0) {
+    return row.key.trim();
+  }
+
+  const fromName = row.name?.trim();
+  if (fromName) {
+    return fromName
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+(.)/g, (_, chr: string) => chr.toUpperCase())
+      .replace(/[^a-zA-Z0-9]/g, "");
+  }
+
+  return row.id;
+}
 
 function materialLineTotal(d: MaterialDraft) {
   const unit = Number(d.unitPrice) || 0;
@@ -288,6 +334,8 @@ export default function JobDetailPage({
 
   const [photos, setPhotos] = useState<JobPhoto[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [orgMaterials, setOrgMaterials] = useState<OrgMaterialOption[]>([]);
+
   const [schedulePunchOpen, setSchedulePunchOpen] = useState(false);
   const [schedulePunchDate, setSchedulePunchDate] = useState<string>("");
   const [confirmPunchedOpen, setConfirmPunchedOpen] = useState(false);
@@ -343,9 +391,7 @@ export default function JobDetailPage({
   const [flashingUnitPrice, setFlashingUnitPrice] = useState("0"); // dollars per unit
   const [flashingModalOpen, setFlashingModalOpen] = useState(false);
 
-  const [materialDrafts, setMaterialDrafts] = useState<MaterialDraft[]>([
-    blankMaterial(),
-  ]);
+  const [materialDrafts, setMaterialDrafts] = useState<MaterialDraft[]>([]);
 
   const anyMaterialValid = useMemo(
     () => materialDrafts.some(materialLineCanSubmit),
@@ -428,6 +474,52 @@ export default function JobDetailPage({
     [employees]
   );
 
+  const materialOptions = useMemo(() => {
+    const presetMap = new Map(
+      PRESET_MATERIAL_OPTIONS.map((row) => [row.key, row])
+    );
+
+    const presetRows = PRESET_MATERIAL_OPTIONS.map((preset) => {
+      const orgOverride = orgMaterials.find((row) => row.key === preset.key);
+
+      return {
+        key: preset.key,
+        name: orgOverride?.name?.trim() || preset.name,
+        unit: orgOverride?.unit?.trim() || preset.unit,
+        isPreset: true,
+      };
+    });
+
+    const customRows = orgMaterials
+      .map((row) => {
+        const resolvedKey = resolveOrgMaterialKey(row);
+
+        return {
+          key: resolvedKey,
+          name: row.name?.trim() || humanizeMaterialKey(resolvedKey),
+          unit: row.unit?.trim() || "",
+          isPreset: false,
+        };
+      })
+      .filter((row) => !presetMap.has(row.key as MaterialCategory));
+
+    return [...presetRows, ...customRows];
+  }, [orgMaterials]);
+
+  const materialOptionsByKey = useMemo(() => {
+    return new Map(materialOptions.map((row) => [row.key, row]));
+  }, [materialOptions]);
+
+  function getMaterialDisplayName(category: string) {
+    return (
+      materialOptionsByKey.get(category)?.name || humanizeMaterialKey(category)
+    );
+  }
+
+  function getMaterialDisplayUnit(category: string) {
+    return formatMaterialUnit(materialOptionsByKey.get(category)?.unit);
+  }
+
   const UI = {
     input:
       "h-10 w-full min-w-0  border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 text-sm text-[var(--color-text)] outline-none " +
@@ -497,13 +589,11 @@ export default function JobDetailPage({
   }
 
   function removeLineFromList(idx: number) {
-    setMaterialDrafts((s) =>
-      s.length === 1 ? [blankMaterial()] : s.filter((_, i) => i !== idx)
-    );
+    setMaterialDrafts((s) => s.filter((_, i) => i !== idx));
   }
 
   function clearLines() {
-    setMaterialDrafts([blankMaterial()]);
+    setMaterialDrafts([]);
   }
 
   async function saveFlashingPay() {
@@ -845,10 +935,61 @@ export default function JobDetailPage({
   }, [resolvedJobId, orgId, orgLoading]);
 
   useEffect(() => {
+    if (!orgId) {
+      setOrgMaterials([]);
+      return;
+    }
+
+    const ref = doc(db, "organizations", orgId);
+
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        if (!snap.exists()) {
+          setOrgMaterials([]);
+          return;
+        }
+
+        const data = snap.data() as Partial<Org>;
+        const rows = Array.isArray(data.commonMaterials)
+          ? [...data.commonMaterials]
+              .filter((row) => row?.isActive !== false)
+              .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          : [];
+
+        setOrgMaterials(rows);
+      },
+      () => setOrgMaterials([])
+    );
+
+    return () => unsub();
+  }, [orgId]);
+
+  useEffect(() => {
     if (materialModalOpen) {
-      setMaterialDrafts([blankMaterial()]);
+      setMaterialDrafts([]);
+      prevMaterialDraftCountRef.current = 0;
     }
   }, [materialModalOpen]);
+
+  useEffect(() => {
+    const prevCount = prevMaterialDraftCountRef.current;
+
+    if (
+      materialModalOpen &&
+      materialDrafts.length > prevCount &&
+      materialListRef.current
+    ) {
+      window.requestAnimationFrame(() => {
+        materialListRef.current?.scrollTo({
+          top: materialListRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      });
+    }
+
+    prevMaterialDraftCountRef.current = materialDrafts.length;
+  }, [materialDrafts, materialModalOpen]);
 
   // Keyboard handlers (ESC / Left / Right)
   useEffect(() => {
@@ -948,6 +1089,8 @@ export default function JobDetailPage({
   const noteRef = useRef<HTMLTextAreaElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const materialListRef = useRef<HTMLDivElement | null>(null);
+  const prevMaterialDraftCountRef = useRef(0);
 
   // Keep separate inputs per tab (name, sqft, rate)
   type PayoutInput = {
@@ -1568,7 +1711,7 @@ export default function JobDetailPage({
     });
 
     setMaterialModalOpen(false);
-    setMaterialDrafts([blankMaterial()]);
+    setMaterialDrafts([]);
 
     setToast({
       status: "success",
@@ -3110,71 +3253,83 @@ export default function JobDetailPage({
               onClose={() => setMaterialModalOpen(false)}
             >
               <form
-                className="grid gap-3"
+                className="grid gap-4"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   await handleAddMaterialsSubmit();
                 }}
               >
-                {/* Scrollable list */}
-                <div className="section-scroll rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 p-3">
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div>
+                <button
+                  type="button"
+                  onClick={addLineToList}
+                  className={`${UI.btnSoft} h-8 px-3 inline-flex`}
+                  title="Add another material"
+                >
+                  + Add item
+                </button>
+
+                <div
+                  ref={materialListRef}
+                  className="section-scroll max-h-[52vh] space-y-3 pr-1"
+                >
+                  {materialDrafts.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.18)] px-4 py-8 text-center">
                       <div className="text-sm font-medium text-[var(--color-text)]">
-                        Material items
+                        No material items yet
                       </div>
-                      <div className="text-xs text-[var(--color-muted)]">
-                        Add one or more items, then submit once.
+                      <div className="mt-1 text-xs text-[var(--color-muted)]">
+                        Click{" "}
+                        <span className="font-medium text-[var(--color-text)]">
+                          Add item
+                        </span>{" "}
+                        to start your first material entry.
                       </div>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={addLineToList}
-                      className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                      title="Add another material"
-                    >
-                      + Add item
-                    </button>
-                  </div>
-
-                  <div className="grid gap-3">
-                    {materialDrafts.map((m, idx) => {
+                  ) : (
+                    materialDrafts.map((m, idx) => {
                       const lineTotal = materialLineTotal(m);
-                      const canSubmitLine = materialLineCanSubmit(m);
+                      const selectedUnit = getMaterialDisplayUnit(m.category);
 
                       return (
                         <div
                           key={idx}
-                          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3"
+                          className="rounded-2xl border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.30)] p-4"
                         >
-                          <div className="flex items-start justify-between gap-2">
+                          <div className="mb-3 flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <div className="text-xs text-[var(--color-muted)]">
+                              <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
                                 Item {idx + 1}
                               </div>
-                              <div className="text-xs text-[var(--color-muted)]">
-                                Total:{" "}
-                                <span className="font-medium text-[var(--color-text)]">
-                                  ${lineTotal.toFixed(2)}
-                                </span>
+                              <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
+                                {getMaterialDisplayName(m.category)}
                               </div>
                             </div>
 
-                            <button
-                              type="button"
-                              onClick={() => removeLineFromList(idx)}
-                              className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                              title="Remove item"
-                            >
-                              Remove
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <div className="text-right">
+                                <div className="text-[11px] text-[var(--color-muted)]">
+                                  Line total
+                                </div>
+                                <div className="text-sm font-semibold text-[var(--color-text)]">
+                                  ${lineTotal.toFixed(2)}
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => removeLineFromList(idx)}
+                                className={`${UI.btnSoft} h-8 px-3 inline-flex`}
+                                title="Remove item"
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </div>
 
-                          <div className="mt-3 grid gap-3">
-                            <div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="sm:col-span-2">
                               <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                Category
+                                Material
                               </label>
                               <select
                                 value={m.category}
@@ -3182,112 +3337,83 @@ export default function JobDetailPage({
                                   updateLine(
                                     idx,
                                     "category",
-                                    e.target.value as MaterialCategory
+                                    e.target.value as MaterialCategory | string
                                   )
                                 }
                                 className={UI.select}
                               >
-                                <option value="coilNails">
-                                  Coil Nails (per box)
-                                </option>
-                                <option value="tinCaps">
-                                  Tin Caps (per box)
-                                </option>
-                                <option value="plasticJacks">
-                                  Plastic Jacks (per unit)
-                                </option>
-                                <option value="np1Seal">
-                                  NP1 Seal (per unit)
-                                </option>
-                                <option value="counterFlashing">
-                                  Flashing — Counter (per unit)
-                                </option>
-                                <option value="jFlashing">
-                                  Flashing — J/L (per unit)
-                                </option>
-                                <option value="rainDiverter">
-                                  Flashing — Rain Diverter (per unit)
-                                </option>
+                                {materialOptions.map((option) => {
+                                  const unitLabel = formatMaterialUnit(
+                                    option.unit
+                                  );
+                                  return (
+                                    <option key={option.key} value={option.key}>
+                                      {option.name}
+                                      {unitLabel ? ` (${unitLabel})` : ""}
+                                    </option>
+                                  );
+                                })}
                               </select>
                             </div>
 
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              <div>
-                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                  Unit price ($)
-                                </label>
-                                <input
-                                  value={m.unitPrice}
-                                  onChange={(e) =>
-                                    updateLine(idx, "unitPrice", e.target.value)
-                                  }
-                                  type="number"
-                                  min={0}
-                                  step="0.01"
-                                  placeholder="0.00"
-                                  className={UI.input}
-                                />
-                              </div>
-
-                              <div>
-                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                  Quantity
-                                </label>
-                                <input
-                                  value={m.quantity}
-                                  onChange={(e) =>
-                                    updateLine(idx, "quantity", e.target.value)
-                                  }
-                                  type="number"
-                                  min={0}
-                                  step="1"
-                                  placeholder="1"
-                                  className={UI.input}
-                                />
-                              </div>
+                            <div>
+                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                Unit price{" "}
+                                {selectedUnit
+                                  ? `($ per ${selectedUnit})`
+                                  : "($)"}
+                              </label>
+                              <input
+                                value={m.unitPrice}
+                                onChange={(e) =>
+                                  updateLine(idx, "unitPrice", e.target.value)
+                                }
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                placeholder="0.00"
+                                className={UI.input}
+                              />
                             </div>
 
-                            <div className="grid gap-2 sm:grid-cols-2">
-                              <div>
-                                <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                  Vendor (optional)
-                                </label>
-                                <input
-                                  value={m.vendor || ""}
-                                  onChange={(e) =>
-                                    updateLine(idx, "vendor", e.target.value)
-                                  }
-                                  placeholder="e.g., ABC Supply"
-                                  className={UI.input}
-                                />
-                              </div>
+                            <div>
+                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                Quantity
+                              </label>
+                              <input
+                                value={m.quantity}
+                                onChange={(e) =>
+                                  updateLine(idx, "quantity", e.target.value)
+                                }
+                                type="number"
+                                min={0}
+                                step="1"
+                                placeholder="1"
+                                className={UI.input}
+                              />
+                            </div>
 
-                              <div className="flex items-end justify-between rounded-xl bg-[var(--color-surface)] px-3 py-2">
-                                <div className="text-xs text-[var(--color-muted)]">
-                                  Line status
-                                </div>
-                                <div
-                                  className={`text-xs font-medium ${
-                                    canSubmitLine
-                                      ? "text-emerald-700"
-                                      : "text-[var(--color-muted)]"
-                                  }`}
-                                >
-                                  {canSubmitLine
-                                    ? "Ready"
-                                    : "Missing price/qty"}
-                                </div>
-                              </div>
+                            <div className="sm:col-span-2">
+                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                                Vendor
+                              </label>
+                              <input
+                                value={m.vendor || ""}
+                                onChange={(e) =>
+                                  updateLine(idx, "vendor", e.target.value)
+                                }
+                                placeholder="Optional"
+                                className={UI.input}
+                              />
                             </div>
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
+                    })
+                  )}
                 </div>
 
-                {/* Footer summary + actions */}
-                <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                <div className="flex items-center justify-between gap-3 flex-wrap border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-3">
                   <button
                     type="button"
                     onClick={() => setMaterialModalOpen(false)}
@@ -3296,10 +3422,10 @@ export default function JobDetailPage({
                     Cancel
                   </button>
 
-                  <div className="flex items-center gap-2 ml-auto">
-                    <div className="text-xs text-[var(--color-muted)] mr-2">
-                      Total:{" "}
-                      <span className="font-medium text-[var(--color-text)]">
+                  <div className="ml-auto flex items-center gap-2">
+                    <div className="mr-2 text-xs text-[var(--color-muted)]">
+                      Total{" "}
+                      <span className="font-semibold text-[var(--color-text)]">
                         ${materialsGrandTotal.toFixed(2)}
                       </span>
                     </div>
@@ -3307,13 +3433,8 @@ export default function JobDetailPage({
                     <button
                       type="button"
                       onClick={clearLines}
-                      disabled={
-                        !materialDrafts.some(
-                          (d) => d.unitPrice || d.quantity || d.vendor
-                        )
-                      }
+                      disabled={materialDrafts.length === 0}
                       className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                      title="Reset all items"
                     >
                       Clear
                     </button>
@@ -3331,8 +3452,8 @@ export default function JobDetailPage({
                 </div>
 
                 <div className="text-[11px] text-[var(--color-muted)]">
-                  Tip: you can add multiple items here and save once. The list
-                  area scrolls when it gets long.
+                  Active organization materials appear here automatically,
+                  including your custom items.
                 </div>
               </form>
             </ModalShell>
@@ -3806,14 +3927,7 @@ export default function JobDetailPage({
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-[var(--color-text)]">
-                              {m.category === "coilNails" && "Coil Nails"}
-                              {m.category === "tinCaps" && "Tin Caps"}
-                              {m.category === "plasticJacks" && "Plastic Jacks"}
-                              {m.category === "counterFlashing" &&
-                                "Counter Flashing"}
-                              {m.category === "jFlashing" && "J/L Flashing"}
-                              {m.category === "rainDiverter" && "Rain Diverter"}
-                              {m.category === "np1Seal" && "NP1 Seal"}
+                              {getMaterialDisplayName(m.category)}
                             </span>
                             {m.vendor && (
                               <span className="ml-2 text-xs text-[var(--color-muted)]">

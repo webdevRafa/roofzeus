@@ -444,11 +444,11 @@ export type MaterialPayItem = {
 
 export type MaterialExpense = {
   id: ID;
-  category: MaterialCategory;
+  category: MaterialCategory | string;
   unitPriceCents: number;
-  quantity: number; 
-  name?: string;  // e.g., "Shingles - Landmark Moire Black"
-  vendor?: string; // e.g., "ABC Supply"
+  quantity: number;
+  name?: string;
+  vendor?: string;
   createdAt?: FirestoreTime;
   amountCents: MoneyCents;
   purchasedAt?: FSDate;
@@ -457,6 +457,7 @@ export type MaterialExpense = {
   /** Owning organization for this material expense. Optional for backward compatibility. */
   orgId?: ID;
 };
+
 export type JobPricing = {
   sqft: number;                 // >= 0
   ratePerSqFt: 31 | 35;         // your two allowed rates
