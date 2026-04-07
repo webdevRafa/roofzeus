@@ -30,9 +30,11 @@ function centsToDollars(value?: number | null): string {
 function makeCustomMaterialRow(): OrgMaterialOption {
   return {
     id: crypto.randomUUID(),
+    key: "",
     name: "",
     unit: "",
     isActive: true,
+    isArchived: false,
     isPreset: false,
     sortOrder: 0,
   };
@@ -172,6 +174,7 @@ export default function OrganizationSettingsPage() {
           name: existing?.name?.trim() || preset.name,
           unit: existing?.unit?.trim() || preset.unit,
           isActive: existing?.isActive ?? true,
+          isArchived: false,
           isPreset: true,
           sortOrder: existing?.sortOrder ?? idx,
         };
@@ -183,6 +186,7 @@ export default function OrganizationSettingsPage() {
       .map((row, idx) => ({
         ...row,
         isPreset: false,
+        isArchived: row.isArchived === true,
         sortOrder: presetRows.length + idx,
       }));
 
@@ -193,8 +197,12 @@ export default function OrganizationSettingsPage() {
 
     return {
       rows,
+      activeRows: rows.filter((row) => row.isArchived !== true),
+      archivedRows: rows.filter(
+        (row) => !row.isPreset && row.isArchived === true
+      ),
       allRowsForSave: rows,
-      customCount: customRows.length,
+      customCount: customRows.filter((row) => row.isArchived !== true).length,
     };
   }, [commonMaterials]);
 
@@ -213,12 +221,17 @@ export default function OrganizationSettingsPage() {
       },
     ]);
   }
-
   function removeMaterialRow(id: string) {
     setCommonMaterials((rows) =>
-      rows
-        .filter((row) => row.id !== id)
-        .map((row, idx) => ({ ...row, sortOrder: idx }))
+      rows.map((row) =>
+        row.id === id
+          ? {
+              ...row,
+              isActive: false,
+              isArchived: true,
+            }
+          : row
+      )
     );
   }
   function resetSettings() {
@@ -235,19 +248,26 @@ export default function OrganizationSettingsPage() {
     try {
       const cleanedMaterials = mergedMaterials.allRowsForSave
         .map((row, idx) => {
-          const key =
+          const existingKey =
             typeof row.key === "string" && row.key.trim().length > 0
               ? row.key.trim()
-              : row.isPreset
+              : null;
+
+          const nextKey =
+            existingKey ??
+            (row.isPreset
               ? null
-              : makeMaterialKey(row.name);
+              : row.name.trim()
+              ? makeMaterialKey(row.name)
+              : null);
 
           return {
             id: row.id || crypto.randomUUID(),
-            ...(key ? { key } : {}),
+            ...(nextKey ? { key: nextKey } : {}),
             name: row.name.trim(),
             unit: (row.unit ?? "").trim(),
-            isActive: row.isActive !== false,
+            isActive: row.isArchived === true ? false : row.isActive !== false,
+            isArchived: row.isArchived === true,
             isPreset: row.isPreset === true,
             sortOrder: idx,
           };
@@ -513,7 +533,7 @@ export default function OrganizationSettingsPage() {
             </div>
 
             <div className="space-y-2">
-              {mergedMaterials.rows.map((row) => (
+              {mergedMaterials.activeRows.map((row) => (
                 <div
                   key={row.id}
                   className={`${UI.row} md:grid-cols-[minmax(0,1.2fr)_170px_92px_44px]`}
@@ -601,6 +621,49 @@ export default function OrganizationSettingsPage() {
                   )}
                 </div>
               ))}
+
+              {mergedMaterials.archivedRows.length > 0 && (
+                <div className="mt-4">
+                  <div className="mb-2 text-xs font-medium uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
+                    Archived custom materials
+                  </div>
+
+                  <div className="space-y-2">
+                    {mergedMaterials.archivedRows.map((row) => (
+                      <div
+                        key={row.id}
+                        className="grid items-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.10)] bg-[rgb(var(--color-surface-rgb)/0.20)] px-3 py-2 opacity-70 sm:grid-cols-[minmax(0,1fr)_140px_auto]"
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate text-sm text-[var(--color-text)]">
+                            {row.name || "Untitled material"}
+                          </div>
+                          <div className="text-xs text-[rgb(var(--color-text-rgb)/0.52)]">
+                            Archived • hidden from new job material entry
+                          </div>
+                        </div>
+
+                        <div className="text-sm text-[rgb(var(--color-text-rgb)/0.68)]">
+                          {row.unit || "—"}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateMaterialRow(row.id, {
+                              isArchived: false,
+                              isActive: true,
+                            })
+                          }
+                          className="inline-flex h-9 items-center justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.42)] px-3 text-sm text-[var(--color-text)] hover:bg-[rgb(var(--color-surface-rgb)/0.56)] transition"
+                        >
+                          Restore
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

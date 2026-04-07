@@ -189,6 +189,7 @@ export type OrgMaterialOption = {
   name: string;
   unit?: string;
   isActive?: boolean;
+  isArchived?: boolean;
   isPreset?: boolean;
   sortOrder?: number;
 };
@@ -446,6 +447,10 @@ export type MaterialExpense = {
   id: ID;
   category: MaterialCategory | string;
   unitPriceCents: number;
+  materialId?: string;
+  materialKey?: string;
+  labelSnapshot?: string;
+  unitSnapshot?: string;
   quantity: number;
   name?: string;
   vendor?: string;

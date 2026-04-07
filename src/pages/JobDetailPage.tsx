@@ -510,14 +510,28 @@ export default function JobDetailPage({
     return new Map(materialOptions.map((row) => [row.key, row]));
   }, [materialOptions]);
 
-  function getMaterialDisplayName(category: string) {
+  function getMaterialOptionName(category: string) {
     return (
       materialOptionsByKey.get(category)?.name || humanizeMaterialKey(category)
     );
   }
 
-  function getMaterialDisplayUnit(category: string) {
+  function getMaterialOptionUnit(category: string) {
     return formatMaterialUnit(materialOptionsByKey.get(category)?.unit);
+  }
+
+  function getMaterialDisplayName(material: MaterialExpense) {
+    const snapshot = material.labelSnapshot?.trim();
+    if (snapshot) return snapshot;
+
+    return getMaterialOptionName(material.category);
+  }
+
+  function getMaterialDisplayUnit(material: MaterialExpense) {
+    const snapshot = material.unitSnapshot?.trim();
+    if (snapshot) return formatMaterialUnit(snapshot);
+
+    return getMaterialOptionUnit(material.category);
   }
 
   const UI = {
@@ -1168,7 +1182,9 @@ export default function JobDetailPage({
         id: `material:${m.id}`,
         kind: "material",
         at,
-        title: `Material added • ${m.category}`,
+        title: `Material added • ${
+          m.labelSnapshot?.trim() || humanizeMaterialKey(m.category)
+        }`,
         detail: `$${(m.amountCents / 100).toFixed(2)} • qty ${m.quantity}`,
       });
     }
@@ -1690,9 +1706,20 @@ export default function JobDetailPage({
       const unitCents = toCents(Number(m.unitPrice) || 0);
       const vendor = (m.vendor || "").trim();
 
+      const orgMatch = materialOptionsByKey.get(m.category);
+      const resolvedLabel =
+        orgMatch?.name?.trim() || humanizeMaterialKey(m.category);
+      const resolvedUnit = orgMatch?.unit?.trim() || "";
+
       return {
         id: crypto.randomUUID(),
+        materialId: orgMaterials.find(
+          (row) => resolveOrgMaterialKey(row) === m.category
+        )?.id,
+        materialKey: m.category,
         category: m.category,
+        labelSnapshot: resolvedLabel,
+        unitSnapshot: resolvedUnit,
         unitPriceCents: unitCents,
         quantity: qty,
         amountCents: unitCents * qty,
@@ -2099,7 +2126,7 @@ export default function JobDetailPage({
                 </div>
               </motion.div>
             </div>
-            <div className="grid min-h-0 grid-cols-1 gap-6 xl:h-[calc(100dvh-140px)] xl:grid-cols-[260px_minmax(0,1fr)]">
+            <div className="grid min-h-0 grid-cols-1 gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
               {/* LEFT PANEL */}
               <aside className="hidden lg:block min-h-0">
                 <div className="xl:sticky xl:top-34 xl:self-start">
@@ -2141,7 +2168,7 @@ export default function JobDetailPage({
 
               {/* RIGHT PANEL */}
               <main className="min-h-0">
-                <div className="h-full min-h-0 overflow-y-auto   backdrop-blur-md">
+                <div className="backdrop-blur-md">
                   <div className="border-b border-white/10 px-5 sm:px-6">
                     <h3 className="my-1 text-2xl font-poppins  font-semibold text-[var(--color-text)]">
                       {activeSection}
@@ -2936,9 +2963,7 @@ export default function JobDetailPage({
                               </span>
                             </button>
                           </div>
-                          <div
-                            className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}
-                          >
+                          <div className="mt-3">
                             <ul className="rounded-lg mt-0">
                               {(job?.expenses?.materials ?? []).map((m) => (
                                 <motion.li
@@ -2949,7 +2974,7 @@ export default function JobDetailPage({
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-2">
                                       <span className="text-sm text-[var(--color-text)]">
-                                        {getMaterialDisplayName(m.category)}
+                                        {getMaterialDisplayName(m)}
                                       </span>
 
                                       {m.vendor && (
@@ -2962,10 +2987,8 @@ export default function JobDetailPage({
                                     <div className="text-xs text-[var(--color-muted)]">
                                       {m.quantity} × $
                                       {(m.unitPriceCents / 100).toFixed(2)}
-                                      {getMaterialDisplayUnit(m.category)
-                                        ? ` / ${getMaterialDisplayUnit(
-                                            m.category
-                                          )}`
+                                      {getMaterialDisplayUnit(m)
+                                        ? ` / ${getMaterialDisplayUnit(m)}`
                                         : ""}
                                       {m.createdAt
                                         ? ` • ${fmtDate(m.createdAt)}`
@@ -3284,7 +3307,7 @@ export default function JobDetailPage({
                   ) : (
                     materialDrafts.map((m, idx) => {
                       const lineTotal = materialLineTotal(m);
-                      const selectedUnit = getMaterialDisplayUnit(m.category);
+                      const selectedUnit = getMaterialOptionUnit(m.category);
 
                       return (
                         <div
@@ -3297,7 +3320,7 @@ export default function JobDetailPage({
                                 Item {idx + 1}
                               </div>
                               <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
-                                {getMaterialDisplayName(m.category)}
+                                {getMaterialOptionName(m.category)}
                               </div>
                             </div>
 
@@ -3923,7 +3946,7 @@ export default function JobDetailPage({
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-[var(--color-text)]">
-                              {getMaterialDisplayName(m.category)}
+                              {getMaterialDisplayName(m)}
                             </span>
                             {m.vendor && (
                               <span className="ml-2 text-xs text-[var(--color-muted)]">
@@ -3934,8 +3957,8 @@ export default function JobDetailPage({
                           <div className="text-xs text-[var(--color-muted)]">
                             {m.quantity} × $
                             {(m.unitPriceCents / 100).toFixed(2)}
-                            {getMaterialDisplayUnit(m.category)
-                              ? ` / ${getMaterialDisplayUnit(m.category)}`
+                            {getMaterialDisplayUnit(m)
+                              ? ` / ${getMaterialDisplayUnit(m)}`
                               : ""}
                             {m.createdAt ? ` • ${fmtDate(m.createdAt)}` : ""}
                           </div>
