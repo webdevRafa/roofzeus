@@ -2949,28 +2949,24 @@ export default function JobDetailPage({
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-2">
                                       <span className="text-sm text-[var(--color-text)]">
-                                        {m.category === "coilNails" &&
-                                          "Coil Nails"}
-                                        {m.category === "tinCaps" && "Tin Caps"}
-                                        {m.category === "plasticJacks" &&
-                                          "Plastic Jacks"}
-                                        {m.category === "counterFlashing" &&
-                                          "Counter Flashing"}
-                                        {m.category === "jFlashing" &&
-                                          "J/L Flashing"}
-                                        {m.category === "rainDiverter" &&
-                                          "Rain Diverter"}
-                                        {m.category === "np1Seal" && "NP1 Seal"}
+                                        {getMaterialDisplayName(m.category)}
                                       </span>
+
                                       {m.vendor && (
                                         <span className="ml-2 text-xs text-[var(--color-muted)]">
                                           • {m.vendor}
                                         </span>
                                       )}
                                     </div>
+
                                     <div className="text-xs text-[var(--color-muted)]">
                                       {m.quantity} × $
                                       {(m.unitPriceCents / 100).toFixed(2)}
+                                      {getMaterialDisplayUnit(m.category)
+                                        ? ` / ${getMaterialDisplayUnit(
+                                            m.category
+                                          )}`
+                                        : ""}
                                       {m.createdAt
                                         ? ` • ${fmtDate(m.createdAt)}`
                                         : ""}
@@ -3938,6 +3934,9 @@ export default function JobDetailPage({
                           <div className="text-xs text-[var(--color-muted)]">
                             {m.quantity} × $
                             {(m.unitPriceCents / 100).toFixed(2)}
+                            {getMaterialDisplayUnit(m.category)
+                              ? ` / ${getMaterialDisplayUnit(m.category)}`
+                              : ""}
                             {m.createdAt ? ` • ${fmtDate(m.createdAt)}` : ""}
                           </div>
                         </div>

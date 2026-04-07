@@ -87,6 +87,13 @@ function humanizeMaterialKey(value: string): string {
     .replace(/\bJl\b/i, "J / L")
     .trim();
 }
+
+function capitalizeFirstLetter(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
 function getMaterialDisplayName(
   category: string,
   orgBranding: OrgBranding | null
@@ -95,13 +102,13 @@ function getMaterialDisplayName(
     ?.find((row) => row.key === category)
     ?.name?.trim();
 
-  if (fromOrg) return fromOrg;
+  if (fromOrg) return capitalizeFirstLetter(fromOrg);
 
   if (category in PRESET_MATERIAL_LABELS) {
     return PRESET_MATERIAL_LABELS[category as MaterialCategory];
   }
 
-  return humanizeMaterialKey(category);
+  return capitalizeFirstLetter(humanizeMaterialKey(category));
 }
 
 const UI = {
@@ -131,6 +138,14 @@ const UI = {
 
   iconBtn:
     "border border-transparent p-2 text-[rgb(var(--color-text-rgb)/0.58)] transition hover:border-[rgb(var(--color-border-rgb)/0.3)] hover:bg-[rgb(var(--color-background-rgb)/0.24)] hover:text-[rgb(var(--color-text-rgb)/0.9)]",
+  materialRow:
+    "flex items-start justify-between gap-3 bg-[rgb(var(--color-background-rgb)/0.08)] px-3 py-3 print:px-2.5 print:py-2",
+  materialName:
+    "text-sm font-medium leading-[1.2] text-[rgb(var(--color-text-rgb)/0.94)] print:text-[12px] print:font-semibold print:leading-[1.15] print:text-black",
+  materialMeta:
+    "mt-0.5 text-[12px] leading-[1.25] text-[rgb(var(--color-text-rgb)/0.62)] print:mt-[2px] print:text-[10px] print:leading-[1.15] print:text-[#4b5563]",
+  materialAmount:
+    "text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] print:text-[12px] print:leading-none print:text-black",
 };
 function JobReportDocument({
   job,
@@ -299,7 +314,7 @@ function JobReportDocument({
         </div>
 
         {/* Payouts + Materials */}
-        <div className="grid gap-5 lg:grid-cols-2 w-full">
+        <div className="grid w-full gap-5 lg:grid-cols-2 print:grid-cols-1">
           <div className={UI.panel}>
             <div className="flex items-center gap-2">
               <div className={UI.sectionTitle}>Payouts</div>
@@ -357,24 +372,26 @@ function JobReportDocument({
               {materials.length === 1 ? "" : "s"}
             </div>
 
-            <div className="mt-3 report-section-scroll space-y-2 print:space-y-1">
+            <div className="mt-3 report-section-scroll space-y-2 print:space-y-0.5">
               {materials.length ? (
                 materials.map((m) => (
-                  <div
-                    key={m.id}
-                    className="flex items-center justify-between gap-3 bg-[rgb(var(--color-background-rgb)/0.08)] px-3 py-3"
-                  >
+                  <div key={m.id} className={UI.materialRow}>
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                      <div className={UI.materialName}>
                         {getMaterialDisplayName(m.category, orgBranding)}
+                        {m.vendor && (
+                          <span className="ml-1 text-[11px] font-normal text-[rgb(var(--color-text-rgb)/0.55)] print:text-[10px] print:text-[#6b7280]">
+                            • {m.vendor}
+                          </span>
+                        )}
                       </div>
-                      <div className="mt-0.5 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
+
+                      <div className={UI.materialMeta}>
                         {m.quantity} × {fmtCents(m.unitPriceCents)}
-                        {m.vendor ? ` • ${m.vendor}` : ""}
                       </div>
                     </div>
 
-                    <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+                    <div className={UI.materialAmount}>
                       {fmtCents(m.amountCents)}
                     </div>
                   </div>
