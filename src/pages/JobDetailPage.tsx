@@ -3024,24 +3024,139 @@ export default function JobDetailPage({
                     )}
 
                     {activeSection === "Notes" && (
-                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
-                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
-                          Notes
-                        </h4>
-                        <p className="mt-2 text-sm text-[var(--color-muted)]">
-                          Put your Notes content here.
-                        </p>
+                      <section className="">
+                        <MotionCard delay={0.2}>
+                          <div className="flex items-center justify-start">
+                            <button
+                              type="button"
+                              onClick={() => setNoteModalOpen(true)}
+                              className="inline-flex items-center gap-2 cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                              title="Add note"
+                            >
+                              <Plus className="h-4 w-4" />
+                              <span className="font-poppins text-md uppercase">
+                                Add Note
+                              </span>
+                            </button>
+                          </div>
+
+                          <div
+                            className={`mt-1 section-scroll lg:section-scroll-lg max-w-[700px] pr-1`}
+                          >
+                            <ul>
+                              {(job?.notes ?? [])
+                                .slice()
+                                .reverse()
+                                .map((n) => (
+                                  <motion.li
+                                    key={n.id}
+                                    className="mb-2 flex items-start gap-3 rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                                    variants={item}
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <p className="mr-3 whitespace-pre-wrap break-all text-sm text-[var(--color-text)]">
+                                        {n.text}
+                                      </p>
+                                      <div className="mt-1 text-xs text-[var(--color-muted)]">
+                                        {n.createdAt
+                                          ? fmtDate(n.createdAt)
+                                          : ""}
+                                      </div>
+                                    </div>
+
+                                    <button
+                                      onClick={() => removeNote(n.id)}
+                                      className="shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                                      title="Delete"
+                                    >
+                                      Delete
+                                    </button>
+                                  </motion.li>
+                                ))}
+
+                              {(job?.notes ?? []).length === 0 && (
+                                <li className="p-3 text-sm text-[var(--color-muted)]">
+                                  No notes yet.
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        </MotionCard>
                       </section>
                     )}
 
                     {activeSection === "Photos" && (
-                      <section className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/30 p-5">
-                        <h4 className="text-lg font-semibold text-[var(--color-text)]">
-                          Photos
-                        </h4>
-                        <p className="mt-2 text-sm text-[var(--color-muted)]">
-                          Put your Photos content here.
-                        </p>
+                      <section className="">
+                        <MotionCard delay={0.25}>
+                          <div className="flex items-center justify-start">
+                            <button
+                              type="button"
+                              onClick={() => setPhotoModalOpen(true)}
+                              className="inline-flex items-center gap-2 cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                              title="Add photo"
+                            >
+                              <Plus className="h-4 w-4" />
+                              <span className="font-poppins text-md uppercase">
+                                Add Photo
+                              </span>
+                            </button>
+                          </div>
+
+                          <div
+                            className={`${LIST_MAX_H} mt-1 section-scroll lg:section-scroll-lg max-w-[700px] overflow-y-auto pr-1`}
+                          >
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                              {photos.map((p, i) => (
+                                <motion.div
+                                  key={p.id}
+                                  className="group relative"
+                                  variants={item}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => openViewer(i)}
+                                    className="block w-full focus:outline-none"
+                                    aria-label="Open photo"
+                                    title="Open"
+                                  >
+                                    <img
+                                      src={
+                                        p.thumbUrl ??
+                                        p.previewUrl ??
+                                        p.fullUrl ??
+                                        p.url ??
+                                        ""
+                                      }
+                                      alt={p.caption || ""}
+                                      className="h-32 w-full rounded-lg object-cover"
+                                      loading="lazy"
+                                    />
+                                  </button>
+
+                                  <button
+                                    onClick={() => deletePhoto(p.id)}
+                                    className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100"
+                                    title="Delete"
+                                  >
+                                    Delete
+                                  </button>
+
+                                  {p.caption && (
+                                    <div className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/50 p-1 text-center text-[10px] text-white">
+                                      {p.caption}
+                                    </div>
+                                  )}
+                                </motion.div>
+                              ))}
+
+                              {photos.length === 0 && (
+                                <div className="p-3 text-sm text-[var(--color-muted)]">
+                                  No photos yet.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </MotionCard>
                       </section>
                     )}
                   </div>
@@ -3476,6 +3591,308 @@ export default function JobDetailPage({
                 </div>
               </form>
             </ModalShell>
+            {/* Add Notes Modal */}
+            <ModalShell
+              open={noteModalOpen}
+              title="Add note"
+              onClose={() => setNoteModalOpen(false)}
+            >
+              <form
+                className="grid gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleAddNoteSubmit();
+                }}
+              >
+                {/* Label + helper */}
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
+                      Note
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
+                    {noteText?.length ?? 0}/600
+                  </div>
+                </div>
+
+                {/* Textarea "writing surface" */}
+                <textarea
+                  ref={noteRef}
+                  value={noteText}
+                  onChange={(e) => {
+                    // simple max length guard (optional)
+                    const next = e.target.value;
+                    setNoteText(next.length > 600 ? next.slice(0, 600) : next);
+                  }}
+                  placeholder="Type your note…"
+                  rows={7}
+                  className={`${
+                    (UI as any).textarea ?? UI.input
+                  } min-h-[180px]`}
+                />
+
+                {/* Footer actions (mobile-friendly) */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNoteText("");
+                      setNoteModalOpen(false);
+                    }}
+                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
+
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => setNoteText("")}
+                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                      disabled={!noteText.trim()}
+                      title="Clear note"
+                    >
+                      Clear
+                    </button>
+
+                    <button
+                      type="submit"
+                      className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
+                      disabled={!noteText.trim()}
+                    >
+                      Add note
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </ModalShell>
+            {/* Add Photos Modal */}
+            <ModalShell
+              open={photoModalOpen}
+              title="Upload photo"
+              onClose={() => {
+                setPhotoModalOpen(false);
+                setPhotoFile(null);
+                setPhotoCaption("");
+              }}
+            >
+              <form
+                className="grid gap-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleUploadPhotoSubmit();
+                }}
+              >
+                {/* CAMERA ONLY input */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setPhotoFile(file);
+                  }}
+                  className="sr-only"
+                />
+
+                {/* GALLERY ONLY input */}
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setPhotoFile(file);
+                  }}
+                  className="sr-only"
+                />
+
+                {/* Picker / Dropzone card */}
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 shadow-sm">
+                  <div className="flex flex-col gap-3 p-4 sm:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-[var(--color-text)]">
+                          Photo
+                        </div>
+                        <div className="text-xs text-[var(--color-muted)]">
+                          Take a picture on-site or choose one from your
+                          gallery.
+                        </div>
+                      </div>
+
+                      {photoFile && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPhotoFile(null);
+                            setPhotoCaption("");
+                          }}
+                          className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                          title="Remove selected photo"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Empty vs Selected state */}
+                    {!previewUrl ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
+                              <Camera className="h-5 w-5 text-[var(--color-primary)]" />
+                            </span>
+                            <div>
+                              <div className="text-sm font-semibold text-[var(--color-text)]">
+                                Use camera
+                              </div>
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Best for job-site photos
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => galleryInputRef.current?.click()}
+                          className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
+                              <ImageIcon className="h-5 w-5 text-[var(--color-primary)]" />
+                            </span>
+                            <div>
+                              <div className="text-sm font-semibold text-[var(--color-text)]">
+                                Choose from gallery
+                              </div>
+                              <div className="text-xs text-[var(--color-muted)]">
+                                Select an existing photo
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:items-start">
+                        <img
+                          src={previewUrl}
+                          alt="Selected preview"
+                          className="h-36 w-full rounded-xl object-cover ring-1 ring-white/10 sm:h-28"
+                        />
+
+                        <div className="min-w-0">
+                          <div className="text-xs font-medium text-[var(--color-muted)]">
+                            Selected
+                          </div>
+
+                          <div className="mt-1 flex items-center justify-between gap-2">
+                            <div className="min-w-0 text-sm font-semibold text-[var(--color-text)] truncate">
+                              {photoFile?.name ?? "Photo selected"}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => galleryInputRef.current?.click()}
+                              className="shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                              title="Pick a different file"
+                            >
+                              Change
+                            </button>
+                          </div>
+
+                          <div className="mt-1 text-xs text-[var(--color-muted)]">
+                            Add a caption below if needed (optional).
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Caption */}
+                <div className="space-y-2">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--color-text)]">
+                        Caption
+                      </div>
+                      <div className="text-xs text-[var(--color-muted)]">
+                        Optional — helps identify what the photo shows.
+                      </div>
+                    </div>
+                    <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
+                      {photoCaption?.length ?? 0}/200
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={photoCaption}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setPhotoCaption(
+                        next.length > 200 ? next.slice(0, 200) : next
+                      );
+                    }}
+                    placeholder="e.g., ‘Rear valley before install’, ‘Warranty shingle batch label’, ‘Deck damage’…"
+                    rows={4}
+                    className={`${UI.input} min-h-[110px] resize-none py-3 leading-6`}
+                  />
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhotoModalOpen(false);
+                      setPhotoFile(null);
+                      setPhotoCaption("");
+                    }}
+                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
+
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoFile(null);
+                        setPhotoCaption("");
+                      }}
+                      disabled={!photoFile && !photoCaption}
+                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
+                      title="Reset form"
+                    >
+                      Clear
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={uploading || !photoFile}
+                      className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
+                    >
+                      {uploading ? "Uploading…" : "Upload photo"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Micro helper */}
+                <div className="text-[11px] text-[var(--color-muted)]">
+                  Tip: photos get attached to this job and can be used in
+                  warranty packets later.
+                </div>
+              </form>
+            </ModalShell>
 
             {/* ===== Schedule Felt Modal ===== */}
             {feltScheduleEditing && (
@@ -3849,275 +4266,6 @@ export default function JobDetailPage({
           >
             {/* Quick edit / add panel */}
 
-            {/* GRID CONTAINER FOR 4 SECTIONS */}
-            <div className="mt-8 grid grid-cols-1 max-w-full gap-6 lg:grid-cols-2">
-              {/* Payouts */}
-              <MotionCard
-                title="Payouts"
-                delay={0.1}
-                right={
-                  <button
-                    type="button"
-                    onClick={() => setPayoutModalOpen(true)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                    title="Add payout"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                }
-              >
-                {/* Existing list */}
-                <div className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}>
-                  <ul className="rounded-lg bg-[var(--color-surface)]/30">
-                    {(job?.expenses?.payouts ?? []).map((p) => (
-                      <motion.li
-                        key={p.id}
-                        className="mb-2 flex items-center justify-between  transition"
-                        variants={item}
-                      >
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span className="text-sm font-semibold text-[var(--color-text)]">
-                            {p.payeeNickname}
-                          </span>
-                          {typeof p.sqft === "number" &&
-                            typeof p.ratePerSqFt === "number" && (
-                              <div className="text-[11px] text-[var(--color-muted)]">
-                                {p.sqft.toLocaleString()} sq @ ${p.ratePerSqFt}
-                                /sq.ft
-                              </div>
-                            )}
-                          {p.category && (
-                            <span className="rounded-full bg-black/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[var(--color-text)]">
-                              {p.category}
-                            </span>
-                          )}
-                          <span className="ml-2 text-xs text-[var(--color-muted)]">
-                            {p.paidAt ? fmtDate(p.paidAt) : ""}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <CountMoney
-                            cents={p.amountCents}
-                            className="text-sm text-[var(--color-text)]"
-                          />
-                          <button
-                            onClick={() => removePayout(p.id)}
-                            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
-                            title="Delete"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </motion.li>
-                    ))}
-                    {(job?.expenses?.payouts ?? []).length === 0 && (
-                      <li className="p-3 text-sm text-[var(--color-muted)]">
-                        No payouts yet.
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              </MotionCard>
-
-              {/* Materials */}
-              <MotionCard
-                title="Materials"
-                delay={0.15}
-                right={
-                  <button
-                    type="button"
-                    onClick={() => setMaterialModalOpen(true)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                    title="Add payout"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                }
-              >
-                <div className={`mt-3 ${LIST_MAX_H} overflow-y-auto pr-1`}>
-                  <ul className="rounded-lg mt-0">
-                    {(job?.expenses?.materials ?? []).map((m) => (
-                      <motion.li
-                        key={m.id}
-                        className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
-                        variants={item}
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-[var(--color-text)]">
-                              {getMaterialDisplayName(m)}
-                            </span>
-                            {m.vendor && (
-                              <span className="ml-2 text-xs text-[var(--color-muted)]">
-                                • {m.vendor}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-[var(--color-muted)]">
-                            {m.quantity} × $
-                            {(m.unitPriceCents / 100).toFixed(2)}
-                            {getMaterialDisplayUnit(m)
-                              ? ` / ${getMaterialDisplayUnit(m)}`
-                              : ""}
-                            {m.createdAt ? ` • ${fmtDate(m.createdAt)}` : ""}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <CountMoney
-                            cents={m.amountCents}
-                            className="text-sm text-[var(--color-text)]"
-                          />
-                          <button
-                            onClick={() => removeMaterial(m.id)}
-                            className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
-                            title="Delete"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </motion.li>
-                    ))}
-                    {(job?.expenses?.materials ?? []).length === 0 && (
-                      <li className="p-3 text-sm text-[var(--color-muted)]">
-                        No materials added yet.
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              </MotionCard>
-
-              {/* Notes */}
-              <MotionCard
-                title="Notes"
-                delay={0.2}
-                right={
-                  <button
-                    type="button"
-                    onClick={() => setNoteModalOpen(true)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                    title="Add payout"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                }
-              >
-                {/* TAB CONTENT */}
-
-                <>
-                  {/* Job notes list */}
-                  <div
-                    className={`mt-3 ${LIST_MAX_H} overflow-y-auto overflow-x-hidden pr-1`}
-                  >
-                    <ul>
-                      {(job?.notes ?? [])
-                        .slice()
-                        .reverse()
-                        .map((n) => (
-                          <motion.li
-                            key={n.id}
-                            className="mb-2 flex items-start gap-3 rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
-                            variants={item}
-                          >
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm text-[var(--color-text)] whitespace-pre-wrap break-words break-all mr-3">
-                                {n.text}
-                              </p>
-                              <div className="mt-1 text-xs text-[var(--color-muted)]">
-                                {n.createdAt ? fmtDate(n.createdAt) : ""}
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => removeNote(n.id)}
-                              className="shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
-                              title="Delete"
-                            >
-                              Delete
-                            </button>
-                          </motion.li>
-                        ))}
-
-                      {(job?.notes ?? []).length === 0 && (
-                        <li className="p-3 text-sm text-[var(--color-muted)]">
-                          No notes yet.
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                </>
-              </MotionCard>
-
-              {/* Photos — fixed: full-width card inside the parent grid */}
-              <MotionCard
-                title="Photos"
-                delay={0.25}
-                right={
-                  <button
-                    type="button"
-                    onClick={() => setPhotoModalOpen(true)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/35 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
-                    title="Add payout"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                }
-              >
-                {/* Thumbnails grid */}
-                <div className={`${LIST_MAX_H} overflow-y-auto pr-1`}>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {photos.map((p, i) => (
-                      <motion.div
-                        key={p.id}
-                        className="group relative"
-                        variants={item}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => openViewer(i)}
-                          className="block w-full focus:outline-none"
-                          aria-label="Open photo"
-                          title="Open"
-                        >
-                          <img
-                            src={
-                              p.thumbUrl ??
-                              p.previewUrl ??
-                              p.fullUrl ??
-                              p.url ??
-                              ""
-                            }
-                            alt={p.caption || ""}
-                            className="h-32 w-full rounded-lg object-cover"
-                            loading="lazy"
-                          />
-                        </button>
-
-                        <button
-                          onClick={() => deletePhoto(p.id)}
-                          className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
-                          title="Delete"
-                        >
-                          Delete
-                        </button>
-
-                        {p.caption && (
-                          <div className="absolute inset-x-0 bottom-0 rounded-b-lg bg-black/50 p-1 text-center text-[10px] text-white">
-                            {p.caption}
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
-                    {photos.length === 0 && (
-                      <div className="p-3 text-sm text-[var(--color-muted)]">
-                        No photos yet.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </MotionCard>
-            </div>
-
             {/* ===== Photo Lightbox ===== */}
             {viewerOpen && photos.length > 0 && (
               <div
@@ -4466,309 +4614,6 @@ export default function JobDetailPage({
               </form>
             </ModalShell>
 
-            {/* Add Notes Modal */}
-            <ModalShell
-              open={noteModalOpen}
-              title="Add note"
-              onClose={() => setNoteModalOpen(false)}
-            >
-              <form
-                className="grid gap-3"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  await handleAddNoteSubmit();
-                }}
-              >
-                {/* Label + helper */}
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
-                      Note
-                    </div>
-                  </div>
-
-                  <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
-                    {noteText?.length ?? 0}/600
-                  </div>
-                </div>
-
-                {/* Textarea "writing surface" */}
-                <textarea
-                  ref={noteRef}
-                  value={noteText}
-                  onChange={(e) => {
-                    // simple max length guard (optional)
-                    const next = e.target.value;
-                    setNoteText(next.length > 600 ? next.slice(0, 600) : next);
-                  }}
-                  placeholder="Type your note…"
-                  rows={7}
-                  className={`${
-                    (UI as any).textarea ?? UI.input
-                  } min-h-[180px]`}
-                />
-
-                {/* Footer actions (mobile-friendly) */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNoteText("");
-                      setNoteModalOpen(false);
-                    }}
-                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                  >
-                    Cancel
-                  </button>
-
-                  <div className="flex items-center gap-2 ml-auto">
-                    <button
-                      type="button"
-                      onClick={() => setNoteText("")}
-                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                      disabled={!noteText.trim()}
-                      title="Clear note"
-                    >
-                      Clear
-                    </button>
-
-                    <button
-                      type="submit"
-                      className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
-                      disabled={!noteText.trim()}
-                    >
-                      Add note
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </ModalShell>
-            {/* Add Photos Modal */}
-            <ModalShell
-              open={photoModalOpen}
-              title="Upload photo"
-              onClose={() => {
-                setPhotoModalOpen(false);
-                setPhotoFile(null);
-                setPhotoCaption("");
-              }}
-            >
-              <form
-                className="grid gap-4"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  await handleUploadPhotoSubmit();
-                }}
-              >
-                {/* CAMERA ONLY input */}
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setPhotoFile(file);
-                  }}
-                  className="sr-only"
-                />
-
-                {/* GALLERY ONLY input */}
-                <input
-                  ref={galleryInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setPhotoFile(file);
-                  }}
-                  className="sr-only"
-                />
-
-                {/* Picker / Dropzone card */}
-                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 shadow-sm">
-                  <div className="flex flex-col gap-3 p-4 sm:p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-[var(--color-text)]">
-                          Photo
-                        </div>
-                        <div className="text-xs text-[var(--color-muted)]">
-                          Take a picture on-site or choose one from your
-                          gallery.
-                        </div>
-                      </div>
-
-                      {photoFile && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPhotoFile(null);
-                            setPhotoCaption("");
-                          }}
-                          className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                          title="Remove selected photo"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Empty vs Selected state */}
-                    {!previewUrl ? (
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <button
-                          type="button"
-                          onClick={() => cameraInputRef.current?.click()}
-                          className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
-                              <Camera className="h-5 w-5 text-[var(--color-primary)]" />
-                            </span>
-                            <div>
-                              <div className="text-sm font-semibold text-[var(--color-text)]">
-                                Use camera
-                              </div>
-                              <div className="text-xs text-[var(--color-muted)]">
-                                Best for job-site photos
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => galleryInputRef.current?.click()}
-                          className="group relative flex min-h-[110px] items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)]/35 p-4 text-left transition hover:bg-[var(--color-card-hover)]"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/5">
-                              <ImageIcon className="h-5 w-5 text-[var(--color-primary)]" />
-                            </span>
-                            <div>
-                              <div className="text-sm font-semibold text-[var(--color-text)]">
-                                Choose from gallery
-                              </div>
-                              <div className="text-xs text-[var(--color-muted)]">
-                                Select an existing photo
-                              </div>
-                            </div>
-                          </div>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:items-start">
-                        <img
-                          src={previewUrl}
-                          alt="Selected preview"
-                          className="h-36 w-full rounded-xl object-cover ring-1 ring-white/10 sm:h-28"
-                        />
-
-                        <div className="min-w-0">
-                          <div className="text-xs font-medium text-[var(--color-muted)]">
-                            Selected
-                          </div>
-
-                          <div className="mt-1 flex items-center justify-between gap-2">
-                            <div className="min-w-0 text-sm font-semibold text-[var(--color-text)] truncate">
-                              {photoFile?.name ?? "Photo selected"}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => galleryInputRef.current?.click()}
-                              className="shrink-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                              title="Pick a different file"
-                            >
-                              Change
-                            </button>
-                          </div>
-
-                          <div className="mt-1 text-xs text-[var(--color-muted)]">
-                            Add a caption below if needed (optional).
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Caption */}
-                <div className="space-y-2">
-                  <div className="flex items-end justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold text-[var(--color-text)]">
-                        Caption
-                      </div>
-                      <div className="text-xs text-[var(--color-muted)]">
-                        Optional — helps identify what the photo shows.
-                      </div>
-                    </div>
-                    <div className="text-[11px] text-[var(--color-muted)] tabular-nums">
-                      {photoCaption?.length ?? 0}/200
-                    </div>
-                  </div>
-
-                  <textarea
-                    value={photoCaption}
-                    onChange={(e) => {
-                      const next = e.target.value;
-                      setPhotoCaption(
-                        next.length > 200 ? next.slice(0, 200) : next
-                      );
-                    }}
-                    placeholder="e.g., ‘Rear valley before install’, ‘Warranty shingle batch label’, ‘Deck damage’…"
-                    rows={4}
-                    className={`${UI.input} min-h-[110px] resize-none py-3 leading-6`}
-                  />
-                </div>
-
-                {/* Footer actions */}
-                <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPhotoModalOpen(false);
-                      setPhotoFile(null);
-                      setPhotoCaption("");
-                    }}
-                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                  >
-                    Cancel
-                  </button>
-
-                  <div className="flex items-center gap-2 ml-auto">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPhotoFile(null);
-                        setPhotoCaption("");
-                      }}
-                      disabled={!photoFile && !photoCaption}
-                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                      title="Reset form"
-                    >
-                      Clear
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={uploading || !photoFile}
-                      className={`${UI.btnPrimary} h-8 px-5 inline-flex`}
-                    >
-                      {uploading ? "Uploading…" : "Upload photo"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Micro helper */}
-                <div className="text-[11px] text-[var(--color-muted)]">
-                  Tip: photos get attached to this job and can be used in
-                  warranty packets later.
-                </div>
-              </form>
-            </ModalShell>
-
             {/* Warranty packet preview */}
             {warrantyModalOpen && job && (
               <WarrantyReportModal
@@ -4851,15 +4696,19 @@ function MotionCard({
       className="w-full max-w-full justify-self-stretch   backdrop-blur-md  transition duration-300 ease-out"
       {...fadeUp(delay)}
     >
-      <div className="flex items-center justify-between px-4 sm:px-5 pt-4 gap-3">
-        <h2 className="text-lg font-semibold tracking-tight text-[var(--color-text)]">
-          {title}
-        </h2>
+      {(title || right) && (
+        <>
+          <div className="flex items-center justify-between px-4 sm:px-5 pt-4 gap-3">
+            <h2 className="text-lg font-semibold tracking-tight text-[var(--color-text)]">
+              {title}
+            </h2>
 
-        {right ? <div className="shrink-0">{right}</div> : null}
-      </div>
+            {right ? <div className="shrink-0">{right}</div> : null}
+          </div>
 
-      <div className="mt-3 h-px w-full bg-black/5" />
+          <div className="mt-3 h-px w-full bg-black/5" />
+        </>
+      )}
 
       <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-3">
         {children}
