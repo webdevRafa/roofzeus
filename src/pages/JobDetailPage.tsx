@@ -262,6 +262,30 @@ function formatMaterialUnit(unit?: string | null) {
   if (!unit) return "";
   return unit.trim().toLowerCase();
 }
+function formatMaterialQuantityLabel(quantity: number, unit?: string | null) {
+  const qty = Number(quantity) || 0;
+  const normalizedUnit = formatMaterialUnit(unit);
+
+  if (!normalizedUnit) return `Qty ${qty}`;
+
+  if (normalizedUnit === "each") {
+    return qty === 1 ? "1 each" : `${qty} each`;
+  }
+
+  if (normalizedUnit === "box") {
+    return qty === 1 ? "1 box" : `${qty} boxes`;
+  }
+
+  if (normalizedUnit === "piece") {
+    return qty === 1 ? "1 piece" : `${qty} pieces`;
+  }
+
+  if (normalizedUnit === "tube") {
+    return qty === 1 ? "1 tube" : `${qty} tubes`;
+  }
+
+  return qty === 1 ? `1 ${normalizedUnit}` : `${qty} ${normalizedUnit}s`;
+}
 
 function resolveOrgMaterialKey(row: OrgMaterialOption): string {
   if (typeof row.key === "string" && row.key.trim().length > 0) {
@@ -1179,14 +1203,34 @@ export default function JobDetailPage({
       const at = toDateSafe(m.createdAt) ?? null;
       if (!at) continue;
 
+      const materialName = getMaterialDisplayName(m);
+      const materialUnit = getMaterialDisplayUnit(m);
+      const vendor = m.vendor?.trim();
+
+      const totalLabel = `Total: $${(m.amountCents / 100).toFixed(2)}`;
+      const unitPriceLabel = `$${(m.unitPriceCents / 100).toFixed(2)}`;
+
+      const quantityLabel = formatMaterialQuantityLabel(
+        m.quantity,
+        materialUnit
+      );
+
+      const breakdownLabel = materialUnit
+        ? `${quantityLabel} × ${unitPriceLabel} each`
+        : `${quantityLabel} × ${unitPriceLabel}`;
+
       items.push({
         id: `material:${m.id}`,
         kind: "material",
         at,
-        title: `Material added • ${
-          m.labelSnapshot?.trim() || humanizeMaterialKey(m.category)
-        }`,
-        detail: `$${(m.amountCents / 100).toFixed(2)} • qty ${m.quantity}`,
+        title: `Material added - ${materialName}`,
+        detail: [
+          vendor ? `Vendor: ${vendor}` : null,
+          totalLabel,
+          breakdownLabel,
+        ]
+          .filter(Boolean)
+          .join("\n"),
       });
     }
 
