@@ -2,6 +2,7 @@
 // NOTE: This page uses framer-motion and react-countup.
 // Install:  npm i framer-motion react-countup lucide-react
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { Link, useParams, useNavigate } from "react-router-dom";
 import {
@@ -4257,410 +4258,450 @@ export default function JobDetailPage({
                 </div>
               </div>
             )}
-          </div>
+            <motion.div
+              key={resolvedJobId}
+              className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
+              {...fadeUp(0)}
+            >
+              {/* Quick edit / add panel */}
 
-          <motion.div
-            key={resolvedJobId}
-            className="mx-auto w-full  overflow-x-hidden  py-8  md:px-10"
-            {...fadeUp(0)}
-          >
-            {/* Quick edit / add panel */}
+              {/* ===== Photo Lightbox ===== */}
+              {typeof document !== "undefined" &&
+                viewerOpen &&
+                photos.length > 0 &&
+                createPortal(
+                  <div
+                    className="lightbox-scroll fixed inset-0 z-[1000] bg-[var(--color-background)]/40 backdrop-blur-md"
+                    aria-modal="true"
+                    role="dialog"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) closeViewer();
+                    }}
+                  >
+                    <div className="min-h-screen w-full px-4 py-6 sm:px-6 sm:py-8">
+                      {/* Close button */}
+                      <button
+                        type="button"
+                        onClick={closeViewer}
+                        className="absolute right-4 top-4 z-20 rounded-full bg-black/45 p-2 text-white transition hover:bg-black/65"
+                        aria-label="Close viewer"
+                        title="Close"
+                      >
+                        <X className="h-6 w-6" />
+                      </button>
 
-            {/* ===== Photo Lightbox ===== */}
-            {viewerOpen && photos.length > 0 && (
-              <div
-                className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-sm flex items-center justify-center"
-                aria-modal="true"
-                role="dialog"
-                onClick={(e) => {
-                  // close on backdrop click only (not when clicking the image or buttons)
-                  if (e.target === e.currentTarget) closeViewer();
-                }}
-              >
-                {/* Close button */}
-                <button
-                  onClick={closeViewer}
-                  className="absolute right-4 top-4 rounded-full p-2 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
-                  aria-label="Close viewer"
-                  title="Close"
-                >
-                  <X className="h-6 w-6" />
-                </button>
+                      {/* Centered stage */}
+                      <div
+                        className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[1400px] items-center justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {(() => {
+                          const p = photos[viewerIndex];
+                          const src =
+                            p.fullUrl ??
+                            p.previewUrl ??
+                            p.url ??
+                            p.thumbUrl ??
+                            "";
 
-                {/* Prev / Next controls */}
-                {photos.length > 1 && (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        prevPhoto();
-                      }}
-                      className="absolute left-4 md:left-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
-                      aria-label="Previous photo"
-                      title="Previous"
-                    >
-                      <ChevronLeft className="h-7 w-7" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        nextPhoto();
-                      }}
-                      className="absolute right-4 md:right-6 rounded-full p-3 bg-[var(--color-surface)]/35/10 hover:bg-[var(--color-surface)]/35/20 text-white"
-                      aria-label="Next photo"
-                      title="Next"
-                    >
-                      <ChevronRight className="h-7 w-7" />
-                    </button>
-                  </>
+                          return (
+                            <div className="relative w-full">
+                              {/* Prev / Next controls */}
+                              {photos.length > 1 && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      prevPhoto();
+                                    }}
+                                    className="group absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full
+                      bg-[rgb(var(--color-card-rgb)/0.08)] backdrop-blur-md
+                      border border-[rgb(var(--color-border-rgb)/0.08)]
+                      p-3 shadow-[0_8px_30px_rgba(0,0,0,0.25)]
+                      transition-all! duration-350
+                      hover:scale-110 hover:bg-[rgb(var(--color-card-rgb)/0.75)]
+                      active:scale-95
+                      sm:left-2 lg:left-4"
+                                    aria-label="Previous photo"
+                                    title="Previous photo"
+                                  >
+                                    <ChevronLeft className="h-7 w-7 text-[var(--color-text)] opacity-80 transition group-hover:opacity-100" />
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      nextPhoto();
+                                    }}
+                                    className="group absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full
+                      bg-[rgb(var(--color-card-rgb)/0.08)] backdrop-blur-md
+                      border border-[rgb(var(--color-border-rgb)/0.08)]
+                      p-3 shadow-[0_8px_30px_rgba(0,0,0,0.25)]
+                      transition-all! duration-350
+                      hover:scale-110 hover:bg-[rgb(var(--color-card-rgb)/0.75)]
+                      active:scale-95
+                      sm:right-2 lg:right-4"
+                                    aria-label="Next photo"
+                                    title="Next photo"
+                                  >
+                                    <ChevronRight className="h-7 w-7 text-[var(--color-text)] opacity-80 transition group-hover:opacity-100" />
+                                  </button>
+                                </>
+                              )}
+
+                              {/* Image + caption */}
+                              <figure className="mx-auto flex w-full flex-col items-center px-12 sm:px-16 lg:px-20">
+                                <img
+                                  src={src}
+                                  alt={p.caption || ""}
+                                  className="max-h-[82vh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
+                                />
+
+                                {p.caption && (
+                                  <figcaption className="mt-3 text-center text-sm text-white/90">
+                                    {p.caption}
+                                  </figcaption>
+                                )}
+
+                                <div className="mt-1 text-xs text-white/60">
+                                  {viewerIndex + 1} / {photos.length}
+                                </div>
+                              </figure>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
                 )}
 
-                {/* Image + caption */}
-                <div className="mx-4 md:mx-12 max-w-[min(96vw,1200px)]">
-                  {(() => {
-                    const p = photos[viewerIndex];
-                    const src = (p as any)?.fullUrl ?? p.url; // graceful if you later add fullUrl in CF
-                    return (
-                      <figure className="flex flex-col items-center">
-                        <img
-                          src={src}
-                          alt={p.caption || ""}
-                          className="max-h-[80vh] w-auto rounded-xl shadow-2xl object-contain"
+              {/* ===== Flashing Pay Modal ===== */}
+              {flashingModalOpen && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                  <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                        Flashing (C/J/L) Pay
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => setFlashingModalOpen(false)}
+                        className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
+                        aria-label="Close"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="text-xs text-[var(--color-muted)] mb-3">
+                      Optional add-on that increases total job pay.
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                          Units
+                        </label>
+                        <input
+                          value={flashingUnits}
+                          onChange={(e) => setFlashingUnits(e.target.value)}
+                          type="number"
+                          min={0}
+                          step="1"
+                          className={UI.input}
+                          placeholder="1"
                         />
-                        {p.caption && (
-                          <figcaption className="mt-3 text-sm text-white/90 text-center">
-                            {p.caption}
-                          </figcaption>
-                        )}
-                        <div className="mt-1 text-xs text-white/60">
-                          {viewerIndex + 1} / {photos.length}
-                        </div>
-                      </figure>
-                    );
-                  })()}
-                </div>
-              </div>
-            )}
+                      </div>
 
-            {/* ===== Flashing Pay Modal ===== */}
-            {flashingModalOpen && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-md bg-[var(--color-surface)]/35 p-4 md:py-6 md:px-8 shadow-xl">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Flashing (C/J/L) Pay
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setFlashingModalOpen(false)}
-                      className="rounded-sm p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  <div className="text-xs text-[var(--color-muted)] mb-3">
-                    Optional add-on that increases total job pay.
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                        Units
-                      </label>
-                      <input
-                        value={flashingUnits}
-                        onChange={(e) => setFlashingUnits(e.target.value)}
-                        type="number"
-                        min={0}
-                        step="1"
-                        className={UI.input}
-                        placeholder="1"
-                      />
+                      <div>
+                        <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                          $ / unit
+                        </label>
+                        <input
+                          value={flashingUnitPrice}
+                          onChange={(e) => setFlashingUnitPrice(e.target.value)}
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          className={UI.input}
+                          placeholder="10.00"
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                        $ / unit
-                      </label>
-                      <input
-                        value={flashingUnitPrice}
-                        onChange={(e) => setFlashingUnitPrice(e.target.value)}
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        className={UI.input}
-                        placeholder="10.00"
-                      />
+                    <div className="mt-2 text-xs text-[var(--color-muted)]">
+                      Preview: +{" "}
+                      <CountMoney cents={flashingAmountCentsPreview} />
                     </div>
-                  </div>
 
-                  <div className="mt-2 text-xs text-[var(--color-muted)]">
-                    Preview: + <CountMoney cents={flashingAmountCentsPreview} />
-                  </div>
+                    <div className="mt-4 flex justify-end gap-2">
+                      {(job.earnings?.flashingPay?.amountCents ?? 0) > 0 && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            await clearFlashingPay();
+                            setFlashingModalOpen(false);
+                          }}
+                          className={UI.btnSoft}
+                        >
+                          Remove
+                        </button>
+                      )}
 
-                  <div className="mt-4 flex justify-end gap-2">
-                    {(job.earnings?.flashingPay?.amountCents ?? 0) > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setFlashingModalOpen(false)}
+                        className={UI.btnSoft}
+                      >
+                        Cancel
+                      </button>
+
                       <button
                         type="button"
                         onClick={async () => {
-                          await clearFlashingPay();
+                          await saveFlashingPay();
                           setFlashingModalOpen(false);
                         }}
-                        className={UI.btnSoft}
+                        className={UI.btnPrimary}
+                        disabled={
+                          Number(flashingUnits) <= 0 ||
+                          Number(flashingUnitPrice) <= 0
+                        }
                       >
-                        Remove
+                        {(job.earnings?.flashingPay?.amountCents ?? 0) > 0
+                          ? "Update"
+                          : "Add"}
                       </button>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => setFlashingModalOpen(false)}
-                      className={UI.btnSoft}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await saveFlashingPay();
-                        setFlashingModalOpen(false);
-                      }}
-                      className={UI.btnPrimary}
-                      disabled={
-                        Number(flashingUnits) <= 0 ||
-                        Number(flashingUnitPrice) <= 0
-                      }
-                    >
-                      {(job.earnings?.flashingPay?.amountCents ?? 0) > 0
-                        ? "Update"
-                        : "Add"}
-                    </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* ===== Danger zone ===== */}
-            <motion.section className="mt-10 rounded-2xl p-4" {...fadeUp(0.27)}>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button
-                  onClick={() => setConfirmDeleteOpen(true)}
-                  className="rounded-md bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-600"
-                  title="Permanently delete this job"
-                >
-                  Permanently delete job…
-                </button>
-              </div>
-            </motion.section>
-            {/* ===== Confirm Permanently Delete Job Modal ===== */}
-            {confirmDeleteOpen && job && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                      Permanently delete this job?
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDeleteOpen(false)}
-                      className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+              {/* ===== Danger zone ===== */}
+              <motion.section
+                className="mt-10 rounded-2xl p-4"
+                {...fadeUp(0.27)}
+              >
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    onClick={() => setConfirmDeleteOpen(true)}
+                    className="rounded-md bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-600"
+                    title="Permanently delete this job"
+                  >
+                    Permanently delete job…
+                  </button>
+                </div>
+              </motion.section>
+              {/* ===== Confirm Permanently Delete Job Modal ===== */}
+              {confirmDeleteOpen && job && (
+                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+                  <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-4 shadow-xl">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                        Permanently delete this job?
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteOpen(false)}
+                        className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                        aria-label="Close"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <p className="text-sm text-[var(--color-muted)]">
+                      This will permanently remove{" "}
+                      <span className="font-semibold">
+                        {job.address?.fullLine || job.id}
+                      </span>{" "}
+                      and all of its materials, notes, and photos.{" "}
+                      <span className="font-semibold">
+                        This cannot be undone.
+                      </span>
+                    </p>
+
+                    <div className="mt-4 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteOpen(false)}
+                        className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void permanentlyDeleteJob()}
+                        disabled={deletingJob}
+                        className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {deletingJob ? "Deleting…" : "Yes, delete job"}
+                      </button>
+                    </div>
                   </div>
-
-                  <p className="text-sm text-[var(--color-muted)]">
-                    This will permanently remove{" "}
-                    <span className="font-semibold">
-                      {job.address?.fullLine || job.id}
-                    </span>{" "}
-                    and all of its materials, notes, and photos.{" "}
-                    <span className="font-semibold">
-                      This cannot be undone.
-                    </span>
-                  </p>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDeleteOpen(false)}
-                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-xs text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void permanentlyDeleteJob()}
-                      disabled={deletingJob}
-                      className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      {deletingJob ? "Deleting…" : "Yes, delete job"}
-                    </button>
-                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Edit Payouts Modal */}
-            <ModalShell
-              open={editPayoutModalOpen}
-              title="Edit payout"
-              onClose={() => {
-                setEditPayoutModalOpen(false);
-                setEditingPayoutId(null);
-              }}
-            >
-              <div className="mb-3">
-                <div className="text-xs text-[var(--color-muted)]">
-                  Editing payout for
-                </div>
-                <div className="text-sm font-semibold text-[var(--color-text)]">
-                  {editingPayout?.payeeNickname ?? "—"}
-                </div>
-              </div>
-
-              <form
-                className="grid gap-3"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  await saveEditedPayout();
+              {/* Edit Payouts Modal */}
+              <ModalShell
+                open={editPayoutModalOpen}
+                title="Edit payout"
+                onClose={() => {
+                  setEditPayoutModalOpen(false);
+                  setEditingPayoutId(null);
                 }}
               >
-                <div>
-                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                    Material labor
-                  </label>
-                  <select
-                    value={editPayoutCategory}
-                    onChange={(e) =>
-                      setEditPayoutCategory(
-                        e.target.value as "shingles" | "felt"
-                      )
-                    }
-                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  >
-                    <option value="shingles">Shingles</option>
-                    <option value="felt">Felt</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                    Sq
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={editPayoutSqft}
-                    onChange={(e) => setEditPayoutSqft(e.target.value)}
-                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                    Rate per sq
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={editPayoutRate}
-                    onChange={(e) => setEditPayoutRate(e.target.value)}
-                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                  />
-                </div>
-
-                <div className="mt-3 px-3 py-2">
-                  <div className="text-xs md:text-lg text-[var(--color-muted)]">
-                    Updated total
+                <div className="mb-3">
+                  <div className="text-xs text-[var(--color-muted)]">
+                    Editing payout for
                   </div>
-                  <div className="text-xs md:text-lg font-semibold text-[var(--color-text)]">
-                    $
-                    {(
-                      (Number(editPayoutSqft) || 0) *
-                      (Number(editPayoutRate) || 0)
-                    ).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                  <div className="text-sm font-semibold text-[var(--color-text)]">
+                    {editingPayout?.payeeNickname ?? "—"}
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditPayoutModalOpen(false);
-                      setEditingPayoutId(null);
-                    }}
-                    className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                  >
-                    Cancel
-                  </button>
+                <form
+                  className="grid gap-3"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    await saveEditedPayout();
+                  }}
+                >
+                  <div>
+                    <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                      Material labor
+                    </label>
+                    <select
+                      value={editPayoutCategory}
+                      onChange={(e) =>
+                        setEditPayoutCategory(
+                          e.target.value as "shingles" | "felt"
+                        )
+                      }
+                      className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                    >
+                      <option value="shingles">Shingles</option>
+                      <option value="felt">Felt</option>
+                    </select>
+                  </div>
 
-                  <button
-                    type="submit"
-                    className="bg-[var(--color-done)] cursor-pointer px-3 py-2 text-sm font-medium text-[var(--btn-text)] "
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </ModalShell>
+                  <div>
+                    <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                      Sq
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editPayoutSqft}
+                      onChange={(e) => setEditPayoutSqft(e.target.value)}
+                      className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                    />
+                  </div>
 
-            {/* Warranty packet preview */}
-            {warrantyModalOpen && job && (
-              <WarrantyReportModal
-                open={warrantyModalOpen}
-                onClose={() => setWarrantyModalOpen(false)}
+                  <div>
+                    <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                      Rate per sq
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editPayoutRate}
+                      onChange={(e) => setEditPayoutRate(e.target.value)}
+                      className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                    />
+                  </div>
+
+                  <div className="mt-3 px-3 py-2">
+                    <div className="text-xs md:text-lg text-[var(--color-muted)]">
+                      Updated total
+                    </div>
+                    <div className="text-xs md:text-lg font-semibold text-[var(--color-text)]">
+                      $
+                      {(
+                        (Number(editPayoutSqft) || 0) *
+                        (Number(editPayoutRate) || 0)
+                      ).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditPayoutModalOpen(false);
+                        setEditingPayoutId(null);
+                      }}
+                      className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="bg-[var(--color-done)] cursor-pointer px-3 py-2 text-sm font-medium text-[var(--btn-text)] "
+                    >
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </ModalShell>
+
+              {/* Warranty packet preview */}
+              {warrantyModalOpen && job && (
+                <WarrantyReportModal
+                  open={warrantyModalOpen}
+                  onClose={() => setWarrantyModalOpen(false)}
+                  job={job}
+                  photos={photos}
+                  totals={{
+                    earnings: totals.earnings,
+                    expenses: totals.expenses,
+                    net: totals.net,
+                  }}
+                />
+              )}
+
+              {/* Internal job report */}
+              {jobReportOpen && job && (
+                <JobReportModal
+                  open={jobReportOpen}
+                  onClose={() => setJobReportOpen(false)}
+                  job={job}
+                  photos={photos}
+                  totals={{
+                    earnings: totals.earnings,
+                    expenses: totals.expenses,
+                    net: totals.net,
+                  }}
+                />
+              )}
+
+              <WarrantyEditModal
+                open={warrantyEditOpen}
+                onClose={() => setWarrantyEditOpen(false)}
+                onOpenReport={() => setWarrantyModalOpen(true)}
                 job={job}
-                photos={photos}
-                totals={{
-                  earnings: totals.earnings,
-                  expenses: totals.expenses,
-                  net: totals.net,
-                }}
+                onSave={saveWarranty}
               />
-            )}
 
-            {/* Internal job report */}
-            {jobReportOpen && job && (
-              <JobReportModal
-                open={jobReportOpen}
-                onClose={() => setJobReportOpen(false)}
-                job={job}
-                photos={photos}
-                totals={{
-                  earnings: totals.earnings,
-                  expenses: totals.expenses,
-                  net: totals.net,
-                }}
-              />
-            )}
-
-            <WarrantyEditModal
-              open={warrantyEditOpen}
-              onClose={() => setWarrantyEditOpen(false)}
-              onOpenReport={() => setWarrantyModalOpen(true)}
-              job={job}
-              onSave={saveWarranty}
-            />
-
-            {/* Invoice Modal */}
-            {invoiceModalOpen && job && (
-              <InvoiceCreateModal
-                job={job}
-                open={invoiceModalOpen}
-                onClose={() => setInvoiceModalOpen(false)}
-              />
-            )}
-          </motion.div>
+              {/* Invoice Modal */}
+              {invoiceModalOpen && job && (
+                <InvoiceCreateModal
+                  job={job}
+                  open={invoiceModalOpen}
+                  onClose={() => setInvoiceModalOpen(false)}
+                />
+              )}
+            </motion.div>
+          </div>
         </div>
       </div>
     </>

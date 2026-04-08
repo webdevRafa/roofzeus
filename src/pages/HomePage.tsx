@@ -942,10 +942,13 @@ export default function HomePage() {
               </motion.div>
               <motion.h1
                 variants={fadeUp}
-                className="text-2xl   font-poppins mt-5 leading-[1.05] tracking-widest text-white/90 max-w-[500px]"
+                className="text-xl    mt-5 leading-[1.05]  text-white/90 max-w-[500px]"
               >
-                Manage jobs.<br></br> Track your money.<br></br> Create
-                professional documents.
+                <div className="space-y-3 flex-col flex ">
+                  <span>Manage jobs</span>
+                  <span>Track your money</span>
+                  <span>Create professional documents</span>
+                </div>
               </motion.h1>
               <motion.div
                 ref={heroCtaRef}
