@@ -4791,7 +4791,7 @@ function ModalShell({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[var(--color-background)]/60 backdrop-blur-md"
         onClick={onClose}
       />
 

@@ -533,7 +533,7 @@ export default function JobReportModal({
   if (!open) return null;
 
   return createPortal(
-    <div className="job-report-print fixed inset-0 z-[145] overflow-y-auto bg-black/55 p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:bg-transparent print:p-0">
+    <div className="job-report-print fixed inset-0 z-[145] overflow-y-auto bg-[var(--color-background)]/40 backdrop-blur-md p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:bg-transparent print:p-0">
       <button
         type="button"
         className="fixed inset-0 z-0 print:hidden"

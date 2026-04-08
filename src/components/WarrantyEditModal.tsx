@@ -148,7 +148,7 @@ export default function WarrantyEditModal({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/55 p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:hidden">
+    <div className="fixed inset-0 z-[120] overflow-y-auto bg-[var(--color-background)]/60 backdrop-blur-md p-3 pt-[calc(72px+12px)] sm:p-4 sm:pt-[calc(72px+16px)] print:hidden">
       <button
         type="button"
         className="fixed inset-0 z-0"
