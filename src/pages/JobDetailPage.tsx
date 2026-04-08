@@ -228,6 +228,7 @@ type MaterialDraft = {
   unitPrice: string;
   quantity: string;
   vendor?: string;
+  isCommitted: boolean;
 };
 
 const blankMaterial = (): MaterialDraft => ({
@@ -235,6 +236,7 @@ const blankMaterial = (): MaterialDraft => ({
   unitPrice: "",
   quantity: "",
   vendor: "",
+  isCommitted: false,
 });
 
 const PRESET_MATERIAL_OPTIONS: Array<{
@@ -442,16 +444,24 @@ export default function JobDetailPage({
   const [flashingModalOpen, setFlashingModalOpen] = useState(false);
 
   const [materialDrafts, setMaterialDrafts] = useState<MaterialDraft[]>([]);
-  const [committedMaterialDraftCount, setCommittedMaterialDraftCount] =
-    useState(0);
+  const [expandedMaterialIndex, setExpandedMaterialIndex] = useState<
+    number | null
+  >(null);
 
   const anyMaterialValid = useMemo(
-    () => materialDrafts.some(materialLineCanSubmit),
+    () => materialDrafts.some((d) => d.isCommitted && materialLineCanSubmit(d)),
     [materialDrafts]
   );
 
   const materialsGrandTotal = useMemo(
-    () => materialDrafts.reduce((sum, d) => sum + materialLineTotal(d), 0),
+    () =>
+      materialDrafts.reduce(
+        (sum, d) =>
+          d.isCommitted && materialLineCanSubmit(d)
+            ? sum + materialLineTotal(d)
+            : sum,
+        0
+      ),
     [materialDrafts]
   );
 
@@ -574,7 +584,7 @@ export default function JobDetailPage({
 
   const materialDraftPreviewItems = useMemo(() => {
     return materialDrafts
-      .slice(0, committedMaterialDraftCount)
+      .filter((draft) => draft.isCommitted && materialLineCanSubmit(draft))
       .map((draft, index) =>
         buildMaterialDraftPreview(
           draft,
@@ -583,7 +593,7 @@ export default function JobDetailPage({
           getMaterialOptionUnit
         )
       );
-  }, [materialDrafts, committedMaterialDraftCount, materialOptionsByKey]);
+  }, [materialDrafts, materialOptionsByKey]);
 
   function getMaterialDisplayName(material: MaterialExpense) {
     const snapshot = material.labelSnapshot?.trim();
@@ -654,21 +664,66 @@ export default function JobDetailPage({
     setViewerIndex((i) => (i + 1) % photos.length);
   }
   function addLineToList() {
-    setMaterialDrafts((current) => {
-      if (current.length === 0) {
-        return [blankMaterial()];
+    if (materialDrafts.length === 0) {
+      setMaterialDrafts([blankMaterial()]);
+      setExpandedMaterialIndex(0);
+      return;
+    }
+
+    const openIndex = getOpenMaterialDraftIndex(materialDrafts);
+
+    if (openIndex >= 0) {
+      const openDraft = materialDrafts[openIndex];
+
+      if (!materialLineCanSubmit(openDraft)) {
+        setExpandedMaterialIndex(openIndex);
+        return;
       }
 
-      const currentActiveIndex = current.length - 1;
-      const currentActiveDraft = current[currentActiveIndex];
+      const nextIndex = materialDrafts.length;
 
-      if (!materialLineCanSubmit(currentActiveDraft)) {
-        return current;
-      }
+      setMaterialDrafts((current) => [
+        ...current.map((row, i) =>
+          i === openIndex ? { ...row, isCommitted: true } : row
+        ),
+        blankMaterial(),
+      ]);
 
-      setCommittedMaterialDraftCount(current.length);
-      return [...current, blankMaterial()];
-    });
+      setExpandedMaterialIndex(nextIndex);
+      return;
+    }
+
+    const nextIndex = materialDrafts.length;
+    setMaterialDrafts((current) => [...current, blankMaterial()]);
+    setExpandedMaterialIndex(nextIndex);
+  }
+
+  function beginEditingLine(idx: number) {
+    setMaterialDrafts((current) =>
+      current.map((row, i) =>
+        i === idx ? { ...row, isCommitted: false } : row
+      )
+    );
+    setExpandedMaterialIndex(idx);
+  }
+
+  function finishEditingLine(idx: number) {
+    const row = materialDrafts[idx];
+    if (!row || !materialLineCanSubmit(row)) {
+      setExpandedMaterialIndex(idx);
+      return;
+    }
+
+    setMaterialDrafts((current) =>
+      current.map((draft, i) =>
+        i === idx ? { ...draft, isCommitted: true } : draft
+      )
+    );
+    setExpandedMaterialIndex(null);
+  }
+
+  function getOpenMaterialDraftIndex(rows: MaterialDraft[]) {
+    return rows.findIndex((row) => !row.isCommitted);
   }
 
   function updateLine<K extends keyof MaterialDraft>(
@@ -677,7 +732,9 @@ export default function JobDetailPage({
     value: MaterialDraft[K]
   ) {
     setMaterialDrafts((s) =>
-      s.map((row, i) => (i === idx ? { ...row, [key]: value } : row))
+      s.map((row, i) =>
+        i === idx ? { ...row, [key]: value, isCommitted: false } : row
+      )
     );
   }
 
@@ -685,20 +742,21 @@ export default function JobDetailPage({
     setMaterialDrafts((current) => {
       const next = current.filter((_, i) => i !== idx);
 
-      setCommittedMaterialDraftCount((prev) => {
-        if (idx < prev) return Math.max(0, prev - 1);
-        return Math.min(prev, next.length);
+      setExpandedMaterialIndex((prev) => {
+        if (next.length === 0) return null;
+        if (prev == null) return next.length - 1;
+        if (prev === idx) return Math.min(idx, next.length - 1);
+        if (prev > idx) return prev - 1;
+        return prev;
       });
 
       return next;
     });
   }
-
   function clearLines() {
     setMaterialDrafts([]);
-    setCommittedMaterialDraftCount(0);
+    setExpandedMaterialIndex(null);
   }
-
   async function saveFlashingPay() {
     if (!job) return;
 
@@ -1071,7 +1129,7 @@ export default function JobDetailPage({
   useEffect(() => {
     if (materialModalOpen) {
       setMaterialDrafts([]);
-      setCommittedMaterialDraftCount(0);
+      setExpandedMaterialIndex(null);
       prevMaterialDraftCountRef.current = 0;
     }
   }, [materialModalOpen]);
@@ -1811,7 +1869,9 @@ export default function JobDetailPage({
   async function handleAddMaterialsSubmit() {
     if (!job || !jobDocRef) return;
 
-    const valid = materialDrafts.filter(materialLineCanSubmit);
+    const valid = materialDrafts.filter(
+      (draft) => draft.isCommitted && materialLineCanSubmit(draft)
+    );
     if (!valid.length) return;
 
     const materialItems: MaterialExpense[] = valid.map((m) => {
@@ -1852,7 +1912,7 @@ export default function JobDetailPage({
 
     setMaterialModalOpen(false);
     setMaterialDrafts([]);
-    setCommittedMaterialDraftCount(0);
+    setExpandedMaterialIndex(null);
 
     setToast({
       status: "success",
@@ -3528,7 +3588,7 @@ export default function JobDetailPage({
                             materialDrafts[materialDrafts.length - 1]
                           )
                         }
-                        className="inline-flex py-1 shrink-0 items-center gap-2 border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 text-sm font-medium text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)] disabled:cursor-not-allowed disabled:opacity-45"
+                        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-[rgb(var(--color-blue-rgb,59_130_246)/0.24)] bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)] px-4 text-sm font-semibold text-[var(--color-text)] shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-200 hover:bg-[rgb(var(--color-blue-rgb,59_130_246)/0.16)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.24)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)]"
                         title="Complete the current item before adding another"
                       >
                         <Plus className="h-4 w-4" />
@@ -3543,8 +3603,8 @@ export default function JobDetailPage({
                     materialDrafts[materialDrafts.length - 1]
                   ) ? (
                     <div className="mb-2 text-xs text-[var(--color-muted)]">
-                      Complete unit price and quantity before adding another
-                      item.
+                      Finish the current item with Done or Add another after
+                      entering unit price and quantity. Vendor is optional.
                     </div>
                   ) : null}
 
@@ -3566,7 +3626,7 @@ export default function JobDetailPage({
                           <button
                             type="button"
                             onClick={addLineToList}
-                            className="mt-4 inline-flex items-center gap-2 border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-sm font-medium text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)]"
+                            className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-[rgb(var(--color-blue-rgb,59_130_246)/0.24)] bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)] px-4 text-sm font-semibold text-[var(--color-text)] shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-200 hover:bg-[rgb(var(--color-blue-rgb,59_130_246)/0.16)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.24)] active:scale-[0.98]"
                             title="Start your first material item"
                           >
                             <Plus className="h-4 w-4" />
@@ -3578,23 +3638,110 @@ export default function JobDetailPage({
                       materialDrafts.map((m, idx) => {
                         const lineTotal = materialLineTotal(m);
                         const selectedUnit = getMaterialOptionUnit(m.category);
+                        const canSubmitLine = materialLineCanSubmit(m);
+                        const isCommitted = !!m.isCommitted;
+                        const isExpanded =
+                          expandedMaterialIndex === idx ||
+                          (expandedMaterialIndex == null &&
+                            !isCommitted &&
+                            idx === materialDrafts.length - 1);
+
+                        if (!isExpanded) {
+                          return (
+                            <div
+                              key={idx}
+                              className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.10)] bg-[rgb(var(--color-surface-rgb)/0.12)] px-4 py-3"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                                      Item {idx + 1}
+                                    </div>
+                                    <span
+                                      className={
+                                        isCommitted
+                                          ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-300"
+                                          : "rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300"
+                                      }
+                                    >
+                                      {isCommitted ? "Added" : "Draft"}
+                                    </span>
+                                  </div>
+
+                                  <div className="mt-1 text-sm font-semibold text-[var(--color-text)]">
+                                    {getMaterialOptionName(m.category)}
+                                  </div>
+
+                                  <div className="mt-1 text-xs text-[var(--color-muted)]">
+                                    {m.quantity || 0} × $
+                                    {Number(m.unitPrice || 0).toFixed(2)}
+                                    {selectedUnit ? ` / ${selectedUnit}` : ""}
+                                    {m.vendor?.trim()
+                                      ? ` • ${m.vendor.trim()}`
+                                      : ""}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <div className="text-right">
+                                    <div className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)]">
+                                      Total
+                                    </div>
+                                    <div className="mt-0.5 text-sm font-semibold text-[var(--color-text)]">
+                                      ${lineTotal.toFixed(2)}
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => beginEditingLine(idx)}
+                                    className="inline-flex h-8 items-center rounded-md border border-[rgb(var(--color-border-rgb)/0.12)] bg-transparent px-3 text-[11px] font-medium text-[var(--color-text)] transition hover:bg-[var(--color-card-hover)]"
+                                    title={
+                                      isCommitted ? "Edit item" : "Resume item"
+                                    }
+                                  >
+                                    {isCommitted ? "Edit" : "Resume"}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => removeLineFromList(idx)}
+                                    className="inline-flex h-8 items-center rounded-md border border-[rgb(var(--color-border-rgb)/0.12)] bg-transparent px-3 text-[11px] font-medium text-[var(--color-muted)] transition hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
+                                    title="Remove item"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
 
                         return (
                           <div
                             key={idx}
-                            className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.12)] bg-[rgb(var(--color-surface-rgb)/0.18)] px-4 py-3"
+                            className="rounded-lg border border-[rgb(var(--color-blue-rgb,59_130_246)/0.28)] bg-[rgb(var(--color-surface-rgb)/0.22)] px-4 py-3 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]"
                           >
                             <div className="mb-3 flex items-center justify-between gap-3">
                               <div className="min-w-0">
-                                <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                                  Item {idx + 1}
+                                <div className="flex items-center gap-2">
+                                  <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                                    Item {idx + 1}
+                                  </div>
+                                  <span className="rounded-full border border-[rgb(var(--color-blue-rgb,59_130_246)/0.24)] bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text)]">
+                                    {canSubmitLine
+                                      ? "Ready to finish"
+                                      : "Currently editing"}
+                                  </span>
                                 </div>
+
                                 <div className="mt-0.5 text-sm font-semibold text-[var(--color-text)]">
                                   {getMaterialOptionName(m.category)}
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2">
                                 <div className="text-right">
                                   <div className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)]">
                                     Total
@@ -3603,6 +3750,16 @@ export default function JobDetailPage({
                                     ${lineTotal.toFixed(2)}
                                   </div>
                                 </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => finishEditingLine(idx)}
+                                  disabled={!canSubmitLine}
+                                  className="inline-flex h-8 items-center rounded-md border border-[rgb(var(--color-blue-rgb,59_130_246)/0.24)] bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)] px-3 text-[11px] font-medium text-[var(--color-text)] transition hover:bg-[var(--color-card-hover)] disabled:cursor-not-allowed disabled:opacity-45"
+                                  title="Finish this item"
+                                >
+                                  Done
+                                </button>
 
                                 <button
                                   type="button"
@@ -3713,7 +3870,7 @@ export default function JobDetailPage({
                   </div>
 
                   <div className="mt-3 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-4 lg:sticky lg:bottom-0 lg:z-20 lg:mt-4 lg:-mx-1 lg:px-1 lg:pb-1">
-                    <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[var(--color-card)]/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-card)]/80">
+                    <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[var(--color-card)]/95 px-4 py-3 shadow-[0_-10px_28px_rgba(0,0,0,0.22)] backdrop-blur supports-[backdrop-filter]:bg-[var(--color-card)]/80">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div className="min-w-0">
                           <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
@@ -3725,12 +3882,12 @@ export default function JobDetailPage({
                           </div>
                         </div>
 
-                        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                        <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
                           <button
                             type="button"
                             onClick={clearLines}
                             disabled={materialDrafts.length === 0}
-                            className="inline-flex h-9 items-center rounded-lg px-2 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-text)] disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="inline-flex h-10 items-center rounded-lg px-2 text-sm font-medium text-[var(--color-muted)] transition-colors duration-200 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             Clear
                           </button>
@@ -3738,7 +3895,7 @@ export default function JobDetailPage({
                           <button
                             type="button"
                             onClick={() => setMaterialModalOpen(false)}
-                            className="inline-flex h-9 items-center rounded-lg border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.38)] px-4 text-sm font-medium text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)]"
+                            className="inline-flex h-10 items-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.28)] px-4 text-sm font-medium text-[var(--color-text)] shadow-sm transition-all duration-200 hover:bg-[var(--color-card-hover)] hover:border-[rgb(var(--color-border-rgb)/0.28)] active:scale-[0.98]"
                           >
                             Cancel
                           </button>
@@ -3746,7 +3903,7 @@ export default function JobDetailPage({
                           <button
                             type="submit"
                             disabled={!anyMaterialValid}
-                            className="inline-flex h-9 items-center rounded-lg bg-[var(--btn-bg)] px-4 text-sm font-medium text-[var(--btn-text)] shadow-sm transition hover:bg-[var(--btn-hover-bg)] disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="inline-flex h-10 items-center rounded-lg bg-[var(--btn-bg)] px-5 text-sm font-semibold text-[var(--btn-text)] shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition-all duration-200 hover:bg-[var(--btn-hover-bg)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.30)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             Save materials
                           </button>
@@ -3758,11 +3915,9 @@ export default function JobDetailPage({
                 <div className="hidden lg:flex min-h-0 h-full flex-col rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.18)] overflow-hidden">
                   <div className="flex items-center justify-between border-b border-[rgb(var(--color-border-rgb)/0.14)] px-4 py-3">
                     <div className="min-w-0">
-                      <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                        Live preview
-                      </div>
+                      <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]"></div>
                       <div className="mt-1 text-sm text-[var(--color-text)]">
-                        Materials being added in this submission
+                        Materials being added
                       </div>
                     </div>
 
@@ -3780,67 +3935,82 @@ export default function JobDetailPage({
                             Nothing to preview yet
                           </div>
                           <div className="mt-1 text-xs text-[var(--color-muted)]">
-                            Completed items will appear here after you click{" "}
-                            <span className="font-medium text-[var(--color-text)]">
-                              Add another
-                            </span>
-                            .
+                            Finished items will appear here after you click Done
+                            or Add another.
                           </div>
                         </div>
                       </div>
                     ) : (
                       <ul className="space-y-1.5">
-                        {materialDraftPreviewItems.map((m, idx) => (
-                          <motion.li
-                            key={m.id}
-                            className="flex items-center justify-between rounded-md px-3 py-2.5 hover:bg-[var(--color-card)] transition duration-300 ease-in-out"
-                            variants={item}
-                          >
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-[var(--color-text)]">
-                                  {getMaterialDisplayName(m)}
-                                </span>
+                        {materialDraftPreviewItems.map((m) => {
+                          const originalIndex = materialDrafts.findIndex(
+                            (draft) =>
+                              materialLineCanSubmit(draft) &&
+                              draft.category === m.category &&
+                              (Number(draft.unitPrice) || 0) ===
+                                m.unitPriceCents / 100 &&
+                              Math.floor(Number(draft.quantity) || 0) ===
+                                m.quantity &&
+                              (draft.vendor || "").trim() ===
+                                (m.vendor || "").trim()
+                          );
 
-                                {m.vendor && (
-                                  <span className="ml-2 text-xs text-[var(--color-muted)]">
-                                    • {m.vendor}
+                          return (
+                            <motion.li
+                              key={m.id}
+                              className="flex items-center justify-between rounded-md px-3 py-2.5 hover:bg-[var(--color-card)] transition duration-300 ease-in-out"
+                              variants={item}
+                            >
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-[var(--color-text)]">
+                                    {getMaterialDisplayName(m)}
                                   </span>
-                                )}
+
+                                  {m.vendor && (
+                                    <span className="ml-2 text-xs text-[var(--color-muted)]">
+                                      • {m.vendor}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="text-xs text-[var(--color-muted)]">
+                                  {m.quantity} × $
+                                  {(m.unitPriceCents / 100).toFixed(2)}
+                                  {getMaterialDisplayUnit(m)
+                                    ? ` / ${getMaterialDisplayUnit(m)}`
+                                    : ""}
+                                </div>
                               </div>
 
-                              <div className="text-xs text-[var(--color-muted)]">
-                                {m.quantity} × $
-                                {(m.unitPriceCents / 100).toFixed(2)}
-                                {getMaterialDisplayUnit(m)
-                                  ? ` / ${getMaterialDisplayUnit(m)}`
-                                  : ""}
+                              <div className="flex items-center gap-3">
+                                <CountMoney
+                                  cents={m.amountCents}
+                                  className="text-sm text-[var(--color-text)]"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (originalIndex >= 0) {
+                                      removeLineFromList(originalIndex);
+                                    }
+                                  }}
+                                  className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                                  title="Remove"
+                                >
+                                  Delete
+                                </button>
                               </div>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                              <CountMoney
-                                cents={m.amountCents}
-                                className="text-sm text-[var(--color-text)]"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeLineFromList(idx)}
-                                className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
-                                title="Remove"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </motion.li>
-                        ))}
+                            </motion.li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>
 
                   <div className="border-t border-[rgb(var(--color-border-rgb)/0.14)] px-4 py-3">
                     <div className="text-xs text-[var(--color-muted)]">
-                      Preview updates as completed items are added.
+                      Preview only includes finished items.
                     </div>
                   </div>
                 </div>
