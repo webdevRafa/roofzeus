@@ -3588,7 +3588,7 @@ export default function JobDetailPage({
                             materialDrafts[materialDrafts.length - 1]
                           )
                         }
-                        className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-[rgb(var(--color-blue-rgb,59_130_246)/0.24)] bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)] px-4 text-sm font-semibold text-[var(--color-text)] shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-200 hover:bg-[rgb(var(--color-blue-rgb,59_130_246)/0.16)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.24)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)]"
+                        className="inline-flex py-1 shrink-0 items-center gap-2 rounded-lg border border-[rgb(var(--color-blue-rgb,59_130_246)/0.24)] bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)] px-4 text-sm font-semibold text-[var(--color-text)] shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-all duration-200 hover:bg-[rgb(var(--color-blue-rgb,59_130_246)/0.16)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.24)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-[rgb(var(--color-blue-rgb,59_130_246)/0.10)]"
                         title="Complete the current item before adding another"
                       >
                         <Plus className="h-4 w-4" />
@@ -3869,9 +3869,9 @@ export default function JobDetailPage({
                     )}
                   </div>
 
-                  <div className="mt-3 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-4 lg:sticky lg:bottom-0 lg:z-20 lg:mt-4 lg:-mx-1 lg:px-1 lg:pb-1">
-                    <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[var(--color-card)]/95 px-4 py-3 shadow-[0_-10px_28px_rgba(0,0,0,0.22)] backdrop-blur supports-[backdrop-filter]:bg-[var(--color-card)]/80">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div className="mt-3 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-4 lg:sticky lg:bottom-0 lg:z-20 lg:mt-4 lg:-mx-1 lg:px-1 lg:pb-4">
+                    <div className="rounded-2xl  py-2 px-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
                           <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
                             Submission total
@@ -3882,12 +3882,12 @@ export default function JobDetailPage({
                           </div>
                         </div>
 
-                        <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
+                        <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
                           <button
                             type="button"
                             onClick={clearLines}
                             disabled={materialDrafts.length === 0}
-                            className="inline-flex h-10 items-center rounded-lg px-2 text-sm font-medium text-[var(--color-muted)] transition-colors duration-200 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="inline-flex h-10 items-center rounded-lg px-2 text-sm font-medium text-[var(--color-muted)] transition-all duration-200 hover:text-red-300 hover:translate-y-[-1px] disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             Clear
                           </button>
@@ -3895,7 +3895,7 @@ export default function JobDetailPage({
                           <button
                             type="button"
                             onClick={() => setMaterialModalOpen(false)}
-                            className="inline-flex h-10 items-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.28)] px-4 text-sm font-medium text-[var(--color-text)] shadow-sm transition-all duration-200 hover:bg-[var(--color-card-hover)] hover:border-[rgb(var(--color-border-rgb)/0.28)] active:scale-[0.98]"
+                            className="inline-flex h-10 items-center rounded-xl   px-4 text-sm font-semibold text-[var(--color-text)]/70 hover:text-[var(--color-text)]  transition-all duration-200 hover:border-[rgb(var(--color-border-rgb)/0.30)]   active:scale-[0.985]"
                           >
                             Cancel
                           </button>
@@ -3903,7 +3903,7 @@ export default function JobDetailPage({
                           <button
                             type="submit"
                             disabled={!anyMaterialValid}
-                            className="inline-flex h-10 items-center rounded-lg bg-[var(--btn-bg)] px-5 text-sm font-semibold text-[var(--btn-text)] shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition-all duration-200 hover:bg-[var(--btn-hover-bg)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.30)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                            className="inline-flex h-10 items-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] hover:border-[rgb(var(--color-border-rgb)/0.4)]  bg-[var(--btn-bg)] px-5 text-sm font-semibold text-[var(--btn-text)]  transition-all duration-200 hover:bg-[var(--btn-hover-bg)]   active:scale-[0.985] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                           >
                             Save materials
                           </button>
@@ -3912,7 +3912,7 @@ export default function JobDetailPage({
                     </div>
                   </div>
                 </div>
-                <div className="hidden lg:flex min-h-0 h-full flex-col rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.18)] overflow-hidden">
+                <div className="hidden lg:flex min-h-0 h-full flex-col rounded-tr-xl rounded-tl-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.18)] overflow-hidden">
                   <div className="flex items-center justify-between border-b border-[rgb(var(--color-border-rgb)/0.14)] px-4 py-3">
                     <div className="min-w-0">
                       <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]"></div>
@@ -4006,12 +4006,6 @@ export default function JobDetailPage({
                         })}
                       </ul>
                     )}
-                  </div>
-
-                  <div className="border-t border-[rgb(var(--color-border-rgb)/0.14)] px-4 py-3">
-                    <div className="text-xs text-[var(--color-muted)]">
-                      Preview only includes finished items.
-                    </div>
                   </div>
                 </div>
               </form>
