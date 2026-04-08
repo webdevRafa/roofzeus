@@ -25,6 +25,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Camera,
   Image as ImageIcon,
   Clock,
@@ -313,6 +314,30 @@ function materialLineTotal(d: MaterialDraft) {
 function materialLineCanSubmit(d: MaterialDraft) {
   return (Number(d.unitPrice) || 0) > 0 && (Number(d.quantity) || 0) > 0;
 }
+function buildMaterialDraftPreview(
+  draft: MaterialDraft,
+  index: number,
+  getName: (category: string) => string,
+  getUnit: (category: string) => string
+): MaterialExpense {
+  const qty = Math.max(0, Math.floor(Number(draft.quantity) || 0));
+  const unitCents = toCents(Number(draft.unitPrice) || 0);
+  const vendor = (draft.vendor || "").trim();
+  const resolvedUnit = getUnit(draft.category);
+
+  return {
+    id: `draft-${index}`,
+    category: draft.category,
+    materialKey: draft.category,
+    labelSnapshot: getName(draft.category),
+    unitSnapshot: resolvedUnit,
+    unitPriceCents: unitCents,
+    quantity: qty,
+    amountCents: unitCents * qty,
+    ...(vendor ? { vendor } : {}),
+    createdAt: Timestamp.now(),
+  };
+}
 
 type JobDetailPageProps = {
   /**
@@ -417,6 +442,8 @@ export default function JobDetailPage({
   const [flashingModalOpen, setFlashingModalOpen] = useState(false);
 
   const [materialDrafts, setMaterialDrafts] = useState<MaterialDraft[]>([]);
+  const [committedMaterialDraftCount, setCommittedMaterialDraftCount] =
+    useState(0);
 
   const anyMaterialValid = useMemo(
     () => materialDrafts.some(materialLineCanSubmit),
@@ -545,6 +572,19 @@ export default function JobDetailPage({
     return formatMaterialUnit(materialOptionsByKey.get(category)?.unit);
   }
 
+  const materialDraftPreviewItems = useMemo(() => {
+    return materialDrafts
+      .slice(0, committedMaterialDraftCount)
+      .map((draft, index) =>
+        buildMaterialDraftPreview(
+          draft,
+          index,
+          getMaterialOptionName,
+          getMaterialOptionUnit
+        )
+      );
+  }, [materialDrafts, committedMaterialDraftCount, materialOptionsByKey]);
+
   function getMaterialDisplayName(material: MaterialExpense) {
     const snapshot = material.labelSnapshot?.trim();
     if (snapshot) return snapshot;
@@ -614,7 +654,21 @@ export default function JobDetailPage({
     setViewerIndex((i) => (i + 1) % photos.length);
   }
   function addLineToList() {
-    setMaterialDrafts((s) => [...s, blankMaterial()]);
+    setMaterialDrafts((current) => {
+      if (current.length === 0) {
+        return [blankMaterial()];
+      }
+
+      const currentActiveIndex = current.length - 1;
+      const currentActiveDraft = current[currentActiveIndex];
+
+      if (!materialLineCanSubmit(currentActiveDraft)) {
+        return current;
+      }
+
+      setCommittedMaterialDraftCount(current.length);
+      return [...current, blankMaterial()];
+    });
   }
 
   function updateLine<K extends keyof MaterialDraft>(
@@ -628,11 +682,21 @@ export default function JobDetailPage({
   }
 
   function removeLineFromList(idx: number) {
-    setMaterialDrafts((s) => s.filter((_, i) => i !== idx));
+    setMaterialDrafts((current) => {
+      const next = current.filter((_, i) => i !== idx);
+
+      setCommittedMaterialDraftCount((prev) => {
+        if (idx < prev) return Math.max(0, prev - 1);
+        return Math.min(prev, next.length);
+      });
+
+      return next;
+    });
   }
 
   function clearLines() {
     setMaterialDrafts([]);
+    setCommittedMaterialDraftCount(0);
   }
 
   async function saveFlashingPay() {
@@ -1007,6 +1071,7 @@ export default function JobDetailPage({
   useEffect(() => {
     if (materialModalOpen) {
       setMaterialDrafts([]);
+      setCommittedMaterialDraftCount(0);
       prevMaterialDraftCountRef.current = 0;
     }
   }, [materialModalOpen]);
@@ -1020,15 +1085,18 @@ export default function JobDetailPage({
       materialListRef.current
     ) {
       window.requestAnimationFrame(() => {
-        materialListRef.current?.scrollTo({
-          top: materialListRef.current.scrollHeight,
+        const el = materialListRef.current;
+        if (!el) return;
+
+        el.scrollTo({
+          top: el.scrollHeight,
           behavior: "smooth",
         });
       });
     }
 
     prevMaterialDraftCountRef.current = materialDrafts.length;
-  }, [materialDrafts, materialModalOpen]);
+  }, [materialDrafts.length, materialModalOpen]);
 
   // Keyboard handlers (ESC / Left / Right)
   useEffect(() => {
@@ -1784,10 +1852,11 @@ export default function JobDetailPage({
 
     setMaterialModalOpen(false);
     setMaterialDrafts([]);
+    setCommittedMaterialDraftCount(0);
 
     setToast({
       status: "success",
-      title: "Materials added",
+      title: "Materials saved",
       message: "Material items were saved successfully.",
     });
   }
@@ -2992,14 +3061,14 @@ export default function JobDetailPage({
                     )}
 
                     {activeSection === "Materials" && (
-                      <section className="">
+                      <section className="max-w-[800px]">
                         {/* Materials */}
                         <MotionCard>
-                          <div className="flex items-center justify-start">
+                          <div className="flex items-center justify-start ">
                             <button
                               type="button"
                               onClick={() => setMaterialModalOpen(true)}
-                              className="inline-flex items-center gap-2 cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+                              className="inline-flex items-center gap-2 cursor-pointer border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-2 text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition "
                               title="Add payout"
                             >
                               <Plus className="h-4 w-4" />
@@ -3013,7 +3082,7 @@ export default function JobDetailPage({
                               {(job?.expenses?.materials ?? []).map((m) => (
                                 <motion.li
                                   key={m.id}
-                                  className="mb-2 flex items-center justify-between rounded-xl bg-[var(--color-surface)]/30 p-3 ring-1 ring-white/10 hover:bg-[var(--color-surface)]/35 transition"
+                                  className="mb-2 flex items-center justify-between  p-3  hover:bg-[var(--color-card)] transition duration-300 ease-in-out"
                                   variants={item}
                                 >
                                   <div className="min-w-0">
@@ -3429,210 +3498,351 @@ export default function JobDetailPage({
             <ModalShell
               open={materialModalOpen}
               title="Add materials"
+              subtitle={job.address?.fullLine || undefined}
               onClose={() => setMaterialModalOpen(false)}
             >
               <form
-                className="grid gap-4"
+                className="grid gap-4 lg:h-[calc(100vh-14rem)] lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-stretch"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   await handleAddMaterialsSubmit();
                 }}
               >
-                <button
-                  type="button"
-                  onClick={addLineToList}
-                  className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                  title="Add another material"
-                >
-                  + Add item
-                </button>
-
-                <div
-                  ref={materialListRef}
-                  className="section-scroll max-h-[52vh] space-y-3 pr-1"
-                >
-                  {materialDrafts.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.18)] px-4 py-8 text-center">
-                      <div className="text-sm font-medium text-[var(--color-text)]">
-                        No material items yet
+                <div className="min-w-0 min-h-0 flex flex-col">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                        Material entries
                       </div>
-                      <div className="mt-1 text-xs text-[var(--color-muted)]">
-                        Click{" "}
-                        <span className="font-medium text-[var(--color-text)]">
-                          Add item
-                        </span>{" "}
-                        to start your first material entry.
+                      <div className="mt-1 text-sm text-[var(--color-text)]">
+                        Build your material list, then save it to this job.
                       </div>
                     </div>
-                  ) : (
-                    materialDrafts.map((m, idx) => {
-                      const lineTotal = materialLineTotal(m);
-                      const selectedUnit = getMaterialOptionUnit(m.category);
 
-                      return (
-                        <div
-                          key={idx}
-                          className="rounded-2xl border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.30)] p-4"
-                        >
-                          <div className="mb-3 flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
-                                Item {idx + 1}
+                    {materialDrafts.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={addLineToList}
+                        disabled={
+                          !materialLineCanSubmit(
+                            materialDrafts[materialDrafts.length - 1]
+                          )
+                        }
+                        className="inline-flex py-1 shrink-0 items-center gap-2 border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 text-sm font-medium text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)] disabled:cursor-not-allowed disabled:opacity-45"
+                        title="Complete the current item before adding another"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add another
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div className="mb-2 h-px w-full bg-[rgb(var(--color-border-rgb)/0.14)]" />
+                  {materialDrafts.length > 0 &&
+                  !materialLineCanSubmit(
+                    materialDrafts[materialDrafts.length - 1]
+                  ) ? (
+                    <div className="mb-2 text-xs text-[var(--color-muted)]">
+                      Complete unit price and quantity before adding another
+                      item.
+                    </div>
+                  ) : null}
+
+                  <div
+                    ref={materialListRef}
+                    className="section-scroll-ui min-h-0 flex-1 overflow-y-auto space-y-2 pr-1 pb-28"
+                  >
+                    {materialDrafts.length === 0 ? (
+                      <div className="flex min-h-[220px] items-center justify-center rounded-xl px-6 text-center">
+                        <div>
+                          <div className="text-sm font-medium text-[var(--color-text)]">
+                            No materials added yet
+                          </div>
+                          <div className="mt-1 text-xs text-[var(--color-muted)]">
+                            Start your first material entry to begin building
+                            this submission.
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={addLineToList}
+                            className="mt-4 inline-flex items-center gap-2 border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-sm font-medium text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)]"
+                            title="Start your first material item"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Start first item
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      materialDrafts.map((m, idx) => {
+                        const lineTotal = materialLineTotal(m);
+                        const selectedUnit = getMaterialOptionUnit(m.category);
+
+                        return (
+                          <div
+                            key={idx}
+                            className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.12)] bg-[rgb(var(--color-surface-rgb)/0.18)] px-4 py-3"
+                          >
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                                  Item {idx + 1}
+                                </div>
+                                <div className="mt-0.5 text-sm font-semibold text-[var(--color-text)]">
+                                  {getMaterialOptionName(m.category)}
+                                </div>
                               </div>
-                              <div className="mt-1 text-sm font-medium text-[var(--color-text)]">
-                                {getMaterialOptionName(m.category)}
+
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <div className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-muted)]">
+                                    Total
+                                  </div>
+                                  <div className="mt-0.5 text-sm font-semibold text-[var(--color-text)]">
+                                    ${lineTotal.toFixed(2)}
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => removeLineFromList(idx)}
+                                  className="inline-flex h-7 items-center rounded-md border border-[rgb(var(--color-border-rgb)/0.12)] bg-transparent px-2.5 text-[11px] font-medium text-[var(--color-muted)] transition hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
+                                  title="Remove item"
+                                >
+                                  Remove
+                                </button>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              <div className="text-right">
-                                <div className="text-[11px] text-[var(--color-muted)]">
-                                  Line total
-                                </div>
-                                <div className="text-sm font-semibold text-[var(--color-text)]">
-                                  ${lineTotal.toFixed(2)}
+                            <div className="grid gap-2 lg:grid-cols-12">
+                              <div className="lg:col-span-12">
+                                <label className="mb-1 block text-[11px] text-[var(--color-muted)]">
+                                  Material
+                                </label>
+
+                                <div className="relative">
+                                  <select
+                                    value={m.category}
+                                    onChange={(e) =>
+                                      updateLine(
+                                        idx,
+                                        "category",
+                                        e.target.value as
+                                          | MaterialCategory
+                                          | string
+                                      )
+                                    }
+                                    className={UI.select}
+                                  >
+                                    {materialOptions.map((option) => {
+                                      const unitLabel = formatMaterialUnit(
+                                        option.unit
+                                      );
+                                      return (
+                                        <option
+                                          key={option.key}
+                                          value={option.key}
+                                        >
+                                          {option.name}
+                                          {unitLabel ? ` (${unitLabel})` : ""}
+                                        </option>
+                                      );
+                                    })}
+                                  </select>
+
+                                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
                                 </div>
                               </div>
 
+                              <div className="lg:col-span-4">
+                                <label className="mb-1 block text-[11px] text-[var(--color-muted)]">
+                                  Unit price{" "}
+                                  {selectedUnit
+                                    ? `($ per ${selectedUnit})`
+                                    : "($)"}
+                                </label>
+                                <input
+                                  value={m.unitPrice}
+                                  onChange={(e) =>
+                                    updateLine(idx, "unitPrice", e.target.value)
+                                  }
+                                  type="number"
+                                  min={0}
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  className={UI.input}
+                                />
+                              </div>
+
+                              <div className="lg:col-span-3">
+                                <label className="mb-1 block text-[11px] text-[var(--color-muted)]">
+                                  Quantity
+                                </label>
+                                <input
+                                  value={m.quantity}
+                                  onChange={(e) =>
+                                    updateLine(idx, "quantity", e.target.value)
+                                  }
+                                  type="number"
+                                  min={0}
+                                  step="1"
+                                  placeholder="1"
+                                  className={UI.input}
+                                />
+                              </div>
+
+                              <div className="lg:col-span-5">
+                                <label className="mb-1 block text-[11px] text-[var(--color-muted)]">
+                                  Vendor
+                                </label>
+                                <input
+                                  value={m.vendor || ""}
+                                  onChange={(e) =>
+                                    updateLine(idx, "vendor", e.target.value)
+                                  }
+                                  placeholder="Optional"
+                                  className={UI.input}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="mt-3 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-4 lg:sticky lg:bottom-0 lg:z-20 lg:mt-4 lg:-mx-1 lg:px-1 lg:pb-1">
+                    <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[var(--color-card)]/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-card)]/80">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div className="min-w-0">
+                          <div className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                            Submission total
+                          </div>
+
+                          <div className="mt-1 text-2xl font-semibold text-[var(--color-text)]">
+                            ${materialsGrandTotal.toFixed(2)}
+                          </div>
+                        </div>
+
+                        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={clearLines}
+                            disabled={materialDrafts.length === 0}
+                            className="inline-flex h-9 items-center rounded-lg px-2 text-xs font-medium text-[var(--color-muted)] transition hover:text-[var(--color-text)] disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            Clear
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setMaterialModalOpen(false)}
+                            className="inline-flex h-9 items-center rounded-lg border border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.38)] px-4 text-sm font-medium text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)]"
+                          >
+                            Cancel
+                          </button>
+
+                          <button
+                            type="submit"
+                            disabled={!anyMaterialValid}
+                            className="inline-flex h-9 items-center rounded-lg bg-[var(--btn-bg)] px-4 text-sm font-medium text-[var(--btn-text)] shadow-sm transition hover:bg-[var(--btn-hover-bg)] disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            Save materials
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden lg:flex min-h-0 h-full flex-col rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.18)] overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-[rgb(var(--color-border-rgb)/0.14)] px-4 py-3">
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                        Live preview
+                      </div>
+                      <div className="mt-1 text-sm text-[var(--color-text)]">
+                        Materials being added in this submission
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-[var(--color-muted)]">
+                      {materialDraftPreviewItems.length} item
+                      {materialDraftPreviewItems.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+
+                  <div className="section-scroll-ui min-h-0 flex-1 overflow-y-auto p-3">
+                    {materialDraftPreviewItems.length === 0 ? (
+                      <div className="flex min-h-[220px] items-center justify-center text-center">
+                        <div>
+                          <div className="text-sm font-medium text-[var(--color-text)]">
+                            Nothing to preview yet
+                          </div>
+                          <div className="mt-1 text-xs text-[var(--color-muted)]">
+                            Completed items will appear here after you click{" "}
+                            <span className="font-medium text-[var(--color-text)]">
+                              Add another
+                            </span>
+                            .
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {materialDraftPreviewItems.map((m, idx) => (
+                          <motion.li
+                            key={m.id}
+                            className="flex items-center justify-between rounded-md px-3 py-2.5 hover:bg-[var(--color-card)] transition duration-300 ease-in-out"
+                            variants={item}
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-[var(--color-text)]">
+                                  {getMaterialDisplayName(m)}
+                                </span>
+
+                                {m.vendor && (
+                                  <span className="ml-2 text-xs text-[var(--color-muted)]">
+                                    • {m.vendor}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="text-xs text-[var(--color-muted)]">
+                                {m.quantity} × $
+                                {(m.unitPriceCents / 100).toFixed(2)}
+                                {getMaterialDisplayUnit(m)
+                                  ? ` / ${getMaterialDisplayUnit(m)}`
+                                  : ""}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <CountMoney
+                                cents={m.amountCents}
+                                className="text-sm text-[var(--color-text)]"
+                              />
                               <button
                                 type="button"
                                 onClick={() => removeLineFromList(idx)}
-                                className={`${UI.btnSoft} h-8 px-3 inline-flex`}
-                                title="Remove item"
+                                className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-xs text-[var(--color-muted)] hover:bg-[var(--color-card-hover)]"
+                                title="Remove"
                               >
-                                Remove
+                                Delete
                               </button>
                             </div>
-                          </div>
-
-                          <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="sm:col-span-2">
-                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                Material
-                              </label>
-                              <select
-                                value={m.category}
-                                onChange={(e) =>
-                                  updateLine(
-                                    idx,
-                                    "category",
-                                    e.target.value as MaterialCategory | string
-                                  )
-                                }
-                                className={UI.select}
-                              >
-                                {materialOptions.map((option) => {
-                                  const unitLabel = formatMaterialUnit(
-                                    option.unit
-                                  );
-                                  return (
-                                    <option key={option.key} value={option.key}>
-                                      {option.name}
-                                      {unitLabel ? ` (${unitLabel})` : ""}
-                                    </option>
-                                  );
-                                })}
-                              </select>
-                            </div>
-
-                            <div>
-                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                Unit price{" "}
-                                {selectedUnit
-                                  ? `($ per ${selectedUnit})`
-                                  : "($)"}
-                              </label>
-                              <input
-                                value={m.unitPrice}
-                                onChange={(e) =>
-                                  updateLine(idx, "unitPrice", e.target.value)
-                                }
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                placeholder="0.00"
-                                className={UI.input}
-                              />
-                            </div>
-
-                            <div>
-                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                Quantity
-                              </label>
-                              <input
-                                value={m.quantity}
-                                onChange={(e) =>
-                                  updateLine(idx, "quantity", e.target.value)
-                                }
-                                type="number"
-                                min={0}
-                                step="1"
-                                placeholder="1"
-                                className={UI.input}
-                              />
-                            </div>
-
-                            <div className="sm:col-span-2">
-                              <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                                Vendor
-                              </label>
-                              <input
-                                value={m.vendor || ""}
-                                onChange={(e) =>
-                                  updateLine(idx, "vendor", e.target.value)
-                                }
-                                placeholder="Optional"
-                                className={UI.input}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between gap-3 flex-wrap border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setMaterialModalOpen(false)}
-                    className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                  >
-                    Cancel
-                  </button>
-
-                  <div className="ml-auto flex items-center gap-2">
-                    <div className="mr-2 text-xs text-[var(--color-muted)]">
-                      Total{" "}
-                      <span className="font-semibold text-[var(--color-text)]">
-                        ${materialsGrandTotal.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={clearLines}
-                      disabled={materialDrafts.length === 0}
-                      className={`${UI.btnSoft} h-8 px-4 inline-flex`}
-                    >
-                      Clear
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={!anyMaterialValid}
-                      className={`${UI.btnPrimary} h-8 px-5 inline-flex ${
-                        !anyMaterialValid ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      Add materials
-                    </button>
+                          </motion.li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                </div>
 
-                <div className="text-[11px] text-[var(--color-muted)]">
-                  Active organization materials appear here automatically,
-                  including your custom items.
+                  <div className="border-t border-[rgb(var(--color-border-rgb)/0.14)] px-4 py-3">
+                    <div className="text-xs text-[var(--color-muted)]">
+                      Preview updates as completed items are added.
+                    </div>
+                  </div>
                 </div>
               </form>
             </ModalShell>
@@ -4805,11 +5015,13 @@ function MotionCard({
 function ModalShell({
   open,
   title,
+  subtitle,
   onClose,
   children,
 }: {
   open: boolean;
   title: string;
+  subtitle?: string;
   onClose: () => void;
   children: React.ReactNode;
 }) {
@@ -4840,27 +5052,33 @@ function ModalShell({
       />
 
       {/* Sheet / Modal */}
-      <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center p-0 sm:items-center sm:p-4">
+      <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center p-0 sm:items-start sm:px-4 sm:pb-6 sm:pt-20 lg:pt-24">
         <div
           className={[
             // Mobile: bottom sheet
             "w-full sm:w-full lg:p-2",
-            "bg-[var(--color-card)]  ",
+            "bg-[var(--color-card)]",
             // Height behavior
-            "max-h-[92vh] sm:max-h-[85vh]",
+            "max-h-[92vh] sm:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-7rem)]",
             // Width cap on larger screens
-            "sm:max-w-lg lg:max-w-xl",
+            "sm:max-w-lg lg:max-w-6xl",
             // Prevent layout overflow
             "overflow-hidden",
           ].join(" ")}
           onClick={(e) => e.stopPropagation()} // prevent backdrop close when clicking inside
         >
           {/* Header */}
-          <div className="flex items-center justify-between gap-3 border-b border-black/5 px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-start justify-between gap-3 border-b border-black/5 px-4 py-3 sm:px-6 sm:py-4">
             <div className="min-w-0">
               <h2 className="truncate text-base font-semibold text-[var(--color-text)] sm:text-lg">
                 {title}
               </h2>
+
+              {subtitle ? (
+                <div className="mt-1 truncate text-xs text-[rgb(var(--color-text-rgb)/0.62)] sm:text-sm">
+                  {subtitle}
+                </div>
+              ) : null}
             </div>
 
             <button
@@ -4875,7 +5093,7 @@ function ModalShell({
           </div>
 
           {/* Body (scrollable) */}
-          <div className="max-h-[calc(92vh-64px)] overflow-y-auto px-4 py-4 sm:max-h-[calc(85vh-72px)] sm:px-6 sm:py-5">
+          <div className="max-h-[calc(92vh-64px)] overflow-y-auto px-4 py-4 sm:max-h-[calc(100vh-10rem)] sm:px-6 sm:py-6 lg:max-h-[calc(100vh-11rem)] lg:overflow-hidden">
             {children}
           </div>
 
