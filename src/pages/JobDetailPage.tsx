@@ -2063,8 +2063,26 @@ export default function JobDetailPage({
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!job) return <div className="p-8">Not found.</div>;
 
-  const last = job.updatedAt ?? job.createdAt ?? null;
-  const lastStr = fmtDate(last);
+  const createdStr = fmtDate(job.createdAt ?? null);
+  const updatedStr = fmtDate(job.updatedAt ?? job.createdAt ?? null);
+  const headerAddress =
+    typeof job.address === "string"
+      ? job.address
+      : job.address?.fullLine ||
+        [
+          job.address?.line1,
+          job.address?.city,
+          job.address?.state,
+          job.address?.zip,
+        ]
+          .filter(Boolean)
+          .join(", ") ||
+        "Untitled job";
+
+  const roofSizeLabel =
+    typeof job.pricing?.sqft === "number" && job.pricing.sqft > 0
+      ? `${job.pricing.sqft.toLocaleString()} SQ`
+      : "—";
   const punchScheduledMs = toMillis(job.punchScheduledFor ?? null);
   const punchScheduledLabel =
     punchScheduledMs != null ? fmtLongDate(punchScheduledMs) : null;
@@ -2179,79 +2197,106 @@ export default function JobDetailPage({
             </motion.div>
           )}
         </AnimatePresence>
-        <motion.h1
+        <motion.div
           {...fadeUp(0)}
-          className="mt-10 text-sm md:text-lg lg:text-xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight bg-[var(--color-background)] text-center sticky top-18 z-40 pt-5 pb-1 pointer-events-none"
+          className="mt-10 sticky top-18 z-40 bg-[var(--color-background)] pt-4 pb-2"
         >
-          {job.address?.fullLine}
-        </motion.h1>
-        <div className="">
-          {/* Soft background using latest photo */}
+          <div className="mx-auto w-full max-w-[1200px] px-4">
+            <div className="flex flex-col gap-4">
+              <div className="text-center">
+                <h1 className="text-sm md:text-lg lg:text-xl font-bold font-poppins uppercase text-[var(--color-logo)] leading-tight break-words">
+                  {headerAddress}
+                </h1>
 
-          <motion.div
-            {...fadeUp(0.08)}
-            className="w-full mx-auto text-center flex flex-col md:flex-row justify-center items-center mb-5 md:mb-0 "
-          >
-            <div className="mx-auto mb-0!">
-              <motion.div
-                {...fadeUp(0.14)}
-                className="text-xs sm:text-sm text-[var(--color-muted)] text-center"
-              >
-                Last updated: {lastStr}
-              </motion.div>
-              {/* Header */}
+                <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm text-[var(--color-muted)]">
+                  <span>Created: {createdStr}</span>
+                  <span>Updated: {updatedStr}</span>
+                  <span>Job ID: {job.id}</span>
+                </div>
+              </div>
 
-              <motion.div {...fadeUp(0.2)} className="relative mt-2">
-                {/* Top row: job meta + actions */}
-                <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-start">
-                  <div className="flex w-full flex-col gap-2 lg:items-end">
-                    {/* Actions + status */}
-                    <div className="flex w-full flex-wrap items-center justify-start gap-2 lg:justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setWarrantyEditOpen(true)}
-                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                        title="Manage warranty details for this job"
-                      >
-                        Warranty
-                      </button>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setWarrantyEditOpen(true)}
+                  className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                  title="Manage warranty details for this job"
+                >
+                  Warranty
+                </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setSummaryNotesOpen(true)}
-                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                        title="Edit summary notes used in the job report"
-                      >
-                        Summary notes
-                      </button>
+                <button
+                  type="button"
+                  onClick={() => setSummaryNotesOpen(true)}
+                  className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                  title="Edit summary notes used in the job report"
+                >
+                  Summary notes
+                </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setJobReportOpen(true)}
-                        className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
-                        title="Open internal job report with financials"
-                      >
-                        Job report
-                      </button>
+                <button
+                  type="button"
+                  onClick={() => setJobReportOpen(true)}
+                  className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                  title="Open internal job report with financials"
+                >
+                  Job report
+                </button>
 
-                      <div className="inline-flex items-center gap-2   px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)] ">
-                        <span>Status</span>
-                        <span
-                          className={`px-2 text-[10px] py-0.5 ${statusClasses(
-                            job.status as JobStatus
-                          )}`}
-                        >
-                          {job.status}
-                        </span>
-                      </div>
-                    </div>
+                <div className="inline-flex items-center gap-2 px-3 py-2 text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                  <span>Status</span>
+                  <span
+                    className={`px-2 text-[10px] py-0.5 ${statusClasses(
+                      job.status as JobStatus
+                    )}`}
+                  >
+                    {job.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                    Earnings
+                  </div>
+                  <div className="mt-1.5 text-lg font-semibold text-[var(--color-text)]">
+                    <CountMoney cents={totals.earnings} />
                   </div>
                 </div>
-              </motion.div>
-              {/* motion ends */}
-            </div>
-          </motion.div>
 
+                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                    Expenses
+                  </div>
+                  <div className="mt-1.5 text-lg font-semibold text-[var(--color-text)]">
+                    <CountMoney cents={totals.expenses} />
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                    Profit
+                  </div>
+                  <div className="mt-1.5 text-lg font-semibold text-[var(--color-text)]">
+                    <CountMoney cents={totals.net} />
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                    Roof Size
+                  </div>
+                  <div className="mt-1.5 text-lg font-semibold text-[var(--color-text)]">
+                    {roofSizeLabel}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="">
           {/* new design */}
           <div className="mx-auto w-full py-6">
             {/* MOBILE-ONLY SECTION NAV */}
