@@ -3557,12 +3557,14 @@ export default function JobDetailPage({
             {/* Add Materials Modal */}
             <ModalShell
               open={materialModalOpen}
-              title="Add materials"
-              subtitle={job.address?.fullLine || undefined}
+              eyebrow="Add materials"
+              title={job.address?.fullLine || "Job"}
+              subtitle="Build your material list and save it to this job."
+              bodyClassName="lg:h-[calc(100vh-11rem)]"
               onClose={() => setMaterialModalOpen(false)}
             >
               <form
-                className="grid gap-4 lg:h-[calc(100vh-14rem)] lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-stretch"
+                className="grid gap-4 lg:h-full lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-stretch"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   await handleAddMaterialsSubmit();
@@ -3869,7 +3871,7 @@ export default function JobDetailPage({
                     )}
                   </div>
 
-                  <div className="mt-3 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-4 lg:sticky lg:bottom-0 lg:z-20 lg:mt-4 lg:-mx-1 lg:px-1 lg:pb-4">
+                  <div className="mt-3 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-4 lg:sticky lg:bottom-0 lg:z-20 lg:mt-4 lg:-mx-1 lg:px-1 lg:pb-5">
                     <div className="rounded-2xl  py-2 px-3">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
@@ -5180,12 +5182,16 @@ function ModalShell({
   open,
   title,
   subtitle,
+  eyebrow,
+  bodyClassName,
   onClose,
   children,
 }: {
   open: boolean;
   title: string;
   subtitle?: string;
+  eyebrow?: string;
+  bodyClassName?: string;
   onClose: () => void;
   children: React.ReactNode;
 }) {
@@ -5232,14 +5238,20 @@ function ModalShell({
           onClick={(e) => e.stopPropagation()} // prevent backdrop close when clicking inside
         >
           {/* Header */}
-          <div className="flex items-start justify-between gap-3 border-b border-black/5 px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-start justify-between gap-3 border-b border-black/5 px-4 py-4 sm:px-6 sm:py-5">
             <div className="min-w-0">
-              <h2 className="truncate text-base font-semibold text-[var(--color-text)] sm:text-lg">
+              {eyebrow ? (
+                <div className="mb-1 text-[11px] uppercase tracking-[0.14em] text-[var(--color-muted)]">
+                  {eyebrow}
+                </div>
+              ) : null}
+
+              <h2 className="truncate text-lg font-semibold text-[var(--color-text)] sm:text-xl">
                 {title}
               </h2>
 
               {subtitle ? (
-                <div className="mt-1 truncate text-xs text-[rgb(var(--color-text-rgb)/0.62)] sm:text-sm">
+                <div className="mt-1 truncate text-sm text-[rgb(var(--color-text-rgb)/0.62)]">
                   {subtitle}
                 </div>
               ) : null}
@@ -5248,7 +5260,7 @@ function ModalShell({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 hover:bg-white cursor-pointer"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition hover:bg-white/10 hover:text-[var(--color-text)] cursor-pointer"
               aria-label="Close"
               title="Close"
             >
@@ -5257,7 +5269,12 @@ function ModalShell({
           </div>
 
           {/* Body (scrollable) */}
-          <div className="max-h-[calc(92vh-64px)] overflow-y-auto px-4 py-4 sm:max-h-[calc(100vh-10rem)] sm:px-6 sm:py-6 lg:max-h-[calc(100vh-11rem)] lg:overflow-hidden">
+          <div
+            className={[
+              "max-h-[calc(92vh-64px)] overflow-y-auto px-4 py-4 sm:max-h-[calc(100vh-10rem)] sm:px-6 sm:py-6 lg:max-h-[calc(100vh-11rem)] lg:overflow-hidden",
+              bodyClassName ?? "",
+            ].join(" ")}
+          >
             {children}
           </div>
 
