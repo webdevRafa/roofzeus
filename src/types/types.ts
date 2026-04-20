@@ -330,54 +330,67 @@ export type WarrantyStatus =
   | "claimOpened"
   | "closed";
 
-export type WarrantyMeta = {
-  kind: WarrantyKind;
-
-  /** High-level lifecycle status so the UI can show “Draft / Submitted / Registered” etc. */
-  status?: WarrantyStatus;
-
-  /** Program info (Manufacturer / 3rd party) */
-  manufacturer?: string; // "GAF", "Owens Corning", "CertainTeed", etc (free text)
-  programName?: string; // "Golden Pledge", "Platinum", etc (free text)
-  coverageYears?: number;
-
-  /** Dates that matter for warranty packets */
-  installDate?: FirestoreTime; // when roof was installed (often shingles completion)
-  repairDate?: FirestoreTime; // if this job is actually a warranty repair job
-  expiresAt?: FirestoreTime;
-
-  /** Registration tracking */
-  registeredAt?: FirestoreTime;
-  submittedAt?: FirestoreTime;
-  registrationId?: string;
-
-  /** Claim tracking (manufacturer/3rd party/insurance) */
-  claimId?: string;
-  claimNumber?: string; // some systems call it claim # instead of claimId
-  claimStatus?: "open" | "pending" | "approved" | "denied" | "closed";
-  claimOpenedAt?: FirestoreTime;
-  claimClosedAt?: FirestoreTime;
-
-  /** Where/How you submit */
-  portalUrl?: string;
-  submittedBy?: { userId?: ID; name?: string };
-
-  /** People involved */
-  homeowner?: ContactInfo; // name/phone/email
-  adjuster?: ContactInfo; // insurance adjuster (optional)
-  thirdPartyAdmin?: ContactInfo; // 3rd-party warranty company (optional)
-
-  /** Insurance-ish metadata (optional, but common with “3rd party” talk) */
-  insuranceCarrier?: string;
-  policyNumber?: string;
-
-  /** Extra notes specifically for warranty/3rd-party context */
-  notes?: string;
-
-  /** Supporting documents (invoice, cert, confirmation, etc.) */
-  attachments?: WarrantyAttachment[];
-};
-
+  export type WarrantyMeta = {
+    kind: WarrantyKind;
+  
+    /** High-level lifecycle status so the UI can show “Draft / Submitted / Registered” etc. */
+    status?: WarrantyStatus;
+  
+    /** Program / issuer info */
+    manufacturer?: string; // GAF, Owens Corning, CertainTeed, etc.
+    programName?: string; // Golden Pledge, Platinum, internal workmanship plan, etc.
+    productLine?: string; // Timberline HDZ, Duration, Landmark, etc.
+    warrantyNumber?: string; // actual warranty/certificate number
+    coverageYears?: number;
+  
+    /** Dates */
+    installDate?: FirestoreTime;
+    repairDate?: FirestoreTime;
+    expiresAt?: FirestoreTime;
+  
+    /** Manufacturer registration / transfer */
+    submittedAt?: FirestoreTime;
+    registeredAt?: FirestoreTime;
+    registrationId?: string;
+    transferEligible?: boolean;
+    transferDeadline?: FirestoreTime;
+  
+    /** Claim tracking */
+    claimId?: string;
+    claimNumber?: string;
+    claimStatus?: "open" | "pending" | "approved" | "denied" | "closed";
+    claimOpenedAt?: FirestoreTime;
+    claimClosedAt?: FirestoreTime;
+  
+    /** Third-party / administrator workflow */
+    serviceRequestNumber?: string;
+    authorizationNumber?: string;
+  
+    /** Submission / portal */
+    portalUrl?: string;
+    submittedBy?: { userId?: ID; name?: string };
+  
+    /** People involved */
+    homeowner?: ContactInfo;
+    adjuster?: ContactInfo;
+    thirdPartyAdmin?: ContactInfo;
+  
+    /** Insurance-specific */
+    insuranceCarrier?: string;
+    policyNumber?: string;
+    lossDate?: FirestoreTime;
+    reportedAt?: FirestoreTime;
+    causeOfLoss?: string;
+    deductibleCents?: number;
+  
+    /** Workmanship-specific */
+    coveredScope?: string;
+    exclusionsSummary?: string;
+  
+    /** Notes / files */
+    notes?: string;
+    attachments?: WarrantyAttachment[];
+  };
 
 export type Earnings = {
   /** Cached sum for quick display & sorting */

@@ -916,13 +916,32 @@ export default function JobDetailPage({
 
       manufacturer: toOptionalOrDelete(nextWarranty.manufacturer),
       programName: toOptionalOrDelete(nextWarranty.programName),
+      productLine: toOptionalOrDelete((nextWarranty as any).productLine),
+      warrantyNumber: toOptionalOrDelete((nextWarranty as any).warrantyNumber),
+
       portalUrl: toOptionalOrDelete(nextWarranty.portalUrl),
       registrationId: toOptionalOrDelete(nextWarranty.registrationId),
+
       claimId: toOptionalOrDelete(nextWarranty.claimId),
       claimNumber: toOptionalOrDelete(nextWarranty.claimNumber),
       claimStatus: toOptionalOrDelete((nextWarranty as any).claimStatus),
+
       insuranceCarrier: toOptionalOrDelete(nextWarranty.insuranceCarrier),
       policyNumber: toOptionalOrDelete(nextWarranty.policyNumber),
+
+      serviceRequestNumber: toOptionalOrDelete(
+        (nextWarranty as any).serviceRequestNumber
+      ),
+      authorizationNumber: toOptionalOrDelete(
+        (nextWarranty as any).authorizationNumber
+      ),
+
+      causeOfLoss: toOptionalOrDelete((nextWarranty as any).causeOfLoss),
+      coveredScope: toOptionalOrDelete((nextWarranty as any).coveredScope),
+      exclusionsSummary: toOptionalOrDelete(
+        (nextWarranty as any).exclusionsSummary
+      ),
+
       notes: toOptionalOrDelete(nextWarranty.notes),
 
       coverageYears:
@@ -930,9 +949,35 @@ export default function JobDetailPage({
           ? nextWarranty.coverageYears
           : deleteField(),
 
+      deductibleCents:
+        typeof (nextWarranty as any).deductibleCents === "number"
+          ? (nextWarranty as any).deductibleCents
+          : deleteField(),
+
+      transferEligible:
+        typeof (nextWarranty as any).transferEligible === "boolean"
+          ? (nextWarranty as any).transferEligible
+          : deleteField(),
+
       installDate: dateToTimestampOrDelete(nextWarranty.installDate),
       repairDate: dateToTimestampOrDelete(nextWarranty.repairDate),
       expiresAt: dateToTimestampOrDelete(nextWarranty.expiresAt),
+
+      submittedAt: dateToTimestampOrDelete((nextWarranty as any).submittedAt),
+      registeredAt: dateToTimestampOrDelete((nextWarranty as any).registeredAt),
+      transferDeadline: dateToTimestampOrDelete(
+        (nextWarranty as any).transferDeadline
+      ),
+
+      lossDate: dateToTimestampOrDelete((nextWarranty as any).lossDate),
+      reportedAt: dateToTimestampOrDelete((nextWarranty as any).reportedAt),
+
+      claimOpenedAt: dateToTimestampOrDelete(
+        (nextWarranty as any).claimOpenedAt
+      ),
+      claimClosedAt: dateToTimestampOrDelete(
+        (nextWarranty as any).claimClosedAt
+      ),
 
       homeowner: nextWarranty.homeowner ?? deleteField(),
       adjuster: nextWarranty.adjuster ?? deleteField(),
