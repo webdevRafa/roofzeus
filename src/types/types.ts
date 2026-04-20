@@ -318,6 +318,8 @@ export type WarrantyKind =
   | "insurance"
   | "none";
 
+  export type WarrantyTypeKey = Exclude<WarrantyKind, "none">;
+  
 export type WarrantyStatus =
   | "notStarted"
   | "draft"
@@ -655,7 +657,13 @@ export type Job = {
   feltCompletedAt?: FSDate;
   shinglesScheduledFor?: FSDate;
   shinglesCompletedAt?: FSDate;
+
+  /** Legacy single warranty field kept for backward compatibility */
   warranty?: WarrantyMeta;
+
+  /** New multi-warranty structure: one record per warranty type */
+  warranties?: Partial<Record<WarrantyTypeKey, WarrantyMeta>>;
+
   warrantyPacket?: {
     lastGeneratedAt?: FirestoreTime;
     lastGeneratedBy?: ID | null;

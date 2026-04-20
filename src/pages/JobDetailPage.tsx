@@ -42,6 +42,8 @@ import { Pencil } from "lucide-react";
 import InvoiceCreateModal from "../components/InvoiceCreateModal";
 import WarrantyReportModal from "../components/WarrantyReportModal";
 import WarrantyEditModal from "../components/WarrantyEditModal";
+import WarrantyCenterModal from "../components/WarrantyCenterModal";
+
 import JobReportModal from "../components/JobReportModal";
 import { db } from "../firebase/firebaseConfig";
 import type {
@@ -55,6 +57,7 @@ import type {
   PayoutDoc,
   Org,
   OrgMaterialOption,
+  WarrantyTypeKey,
 } from "../types/types";
 import { jobConverter } from "../types/types";
 import { toCents } from "../utils/money";
@@ -176,6 +179,9 @@ type ActivityItem = {
   photoUrl?: string;
   photoCaption?: string;
 };
+
+type WarrantyDraft = NonNullable<Job["warranty"]>;
+type WarrantyRecord = Partial<Record<WarrantyTypeKey, WarrantyDraft>>;
 
 function toDateSafe(d: any): Date | null {
   if (!d) return null;
@@ -377,9 +383,13 @@ export default function JobDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
-  const [warrantyModalOpen, setWarrantyModalOpen] = useState(false);
-  const [jobReportOpen, setJobReportOpen] = useState(false);
+  const [warrantyCenterOpen, setWarrantyCenterOpen] = useState(false);
+  const [warrantyReportOpen, setWarrantyReportOpen] = useState(false);
   const [warrantyEditOpen, setWarrantyEditOpen] = useState(false);
+  const [activeWarrantyType, setActiveWarrantyType] =
+    useState<WarrantyTypeKey | null>(null);
+  const [jobReportOpen, setJobReportOpen] = useState(false);
+
   const [summaryNotesOpen, setSummaryNotesOpen] = useState(false);
   const [summaryNotesDraft, setSummaryNotesDraft] = useState("");
   const [payoutDocs, setPayoutDocs] = useState<PayoutDoc[]>([]);
@@ -892,16 +902,16 @@ export default function JobDetailPage({
     });
   }
 
-  async function saveWarranty(nextWarranty: NonNullable<Job["warranty"]>) {
+  async function saveWarranty(nextWarranty: WarrantyDraft) {
     if (!job) return;
-
     if (!jobDocRef) return;
-    const rawRef = jobDocRef; // org-scoped raw ref
+    if (!activeWarrantyType) return;
 
-    // Build a PATCH that deletes empties instead of writing ""/undefined
+    const rawRef = jobDocRef;
+    const type = activeWarrantyType;
+
     const warrantyPatch: any = {
-      // Always keep kind/status if present (or delete if missing)
-      kind: nextWarranty.kind ?? deleteField(),
+      kind: type,
       status: nextWarranty.status ?? deleteField(),
 
       manufacturer: toOptionalOrDelete(nextWarranty.manufacturer),
@@ -910,22 +920,20 @@ export default function JobDetailPage({
       registrationId: toOptionalOrDelete(nextWarranty.registrationId),
       claimId: toOptionalOrDelete(nextWarranty.claimId),
       claimNumber: toOptionalOrDelete(nextWarranty.claimNumber),
+      claimStatus: toOptionalOrDelete((nextWarranty as any).claimStatus),
       insuranceCarrier: toOptionalOrDelete(nextWarranty.insuranceCarrier),
       policyNumber: toOptionalOrDelete(nextWarranty.policyNumber),
       notes: toOptionalOrDelete(nextWarranty.notes),
 
-      // numbers
       coverageYears:
         typeof nextWarranty.coverageYears === "number"
           ? nextWarranty.coverageYears
           : deleteField(),
 
-      // dates (store as Timestamp)
       installDate: dateToTimestampOrDelete(nextWarranty.installDate),
       repairDate: dateToTimestampOrDelete(nextWarranty.repairDate),
       expiresAt: dateToTimestampOrDelete(nextWarranty.expiresAt),
 
-      // nested contacts (delete empty objects cleanly)
       homeowner: nextWarranty.homeowner ?? deleteField(),
       adjuster: nextWarranty.adjuster ?? deleteField(),
       thirdPartyAdmin: nextWarranty.thirdPartyAdmin ?? deleteField(),
@@ -939,13 +947,16 @@ export default function JobDetailPage({
       await setDoc(
         rawRef,
         {
-          warranty: warrantyPatch,
+          warranties: {
+            ...(job.warranties ?? {}),
+            [type]: warrantyPatch,
+          },
+          warranty: deleteField(),
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
 
-      // Re-fetch canonical typed doc (keeps your UI in sync)
       const typedRef = jobDocRef.withConverter(jobConverter);
       const snap = await getDoc(typedRef);
       if (snap.exists()) setJob(snap.data());
@@ -953,7 +964,7 @@ export default function JobDetailPage({
       setToast({
         status: "success",
         title: "Warranty saved",
-        message: "Warranty details and notes have been saved.",
+        message: `${type} warranty details were saved successfully.`,
       });
     } catch (e) {
       console.error("Failed to save warranty", e);
@@ -2058,6 +2069,28 @@ export default function JobDetailPage({
     }
   }
 
+  const jobWarranties: WarrantyRecord = useMemo(() => {
+    if (!job) return {};
+
+    const next: WarrantyRecord = {
+      ...(job.warranties ?? {}),
+    };
+
+    if (Object.keys(next).length > 0) return next;
+
+    const legacyWarranty = job.warranty as WarrantyDraft | null | undefined;
+    if (legacyWarranty?.kind && legacyWarranty.kind !== "none") {
+      next[legacyWarranty.kind as WarrantyTypeKey] = legacyWarranty;
+    }
+
+    return next;
+  }, [job, job?.warranties, job?.warranty]);
+
+  const activeWarranty =
+    activeWarrantyType && jobWarranties[activeWarrantyType]
+      ? jobWarranties[activeWarrantyType]
+      : null;
+
   if (loading)
     return <div className="p-8 text-[var(--color-text)]">Loading…</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
@@ -2218,7 +2251,7 @@ export default function JobDetailPage({
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setWarrantyEditOpen(true)}
+                  onClick={() => setWarrantyCenterOpen(true)}
                   className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
                   title="Manage warranty details for this job"
                 >
@@ -5120,17 +5153,50 @@ export default function JobDetailPage({
               </ModalShell>
 
               {/* Warranty packet preview */}
-              {warrantyModalOpen && job && (
+              {/* Warranty center */}
+              <WarrantyCenterModal
+                open={warrantyCenterOpen}
+                onClose={() => setWarrantyCenterOpen(false)}
+                job={job}
+                warranties={jobWarranties}
+                onCreateType={(type) => {
+                  setWarrantyCenterOpen(false);
+                  setActiveWarrantyType(type);
+                  setWarrantyEditOpen(true);
+                }}
+                onEditType={(type) => {
+                  setWarrantyCenterOpen(false);
+                  setActiveWarrantyType(type);
+                  setWarrantyEditOpen(true);
+                }}
+                onPreviewType={(type) => {
+                  setWarrantyCenterOpen(false);
+                  setActiveWarrantyType(type);
+                  setWarrantyReportOpen(true);
+                }}
+              />
+
+              {/* Warranty editor */}
+              {activeWarrantyType && (
+                <WarrantyEditModal
+                  open={warrantyEditOpen}
+                  onClose={() => setWarrantyEditOpen(false)}
+                  onOpenReport={() => setWarrantyReportOpen(true)}
+                  job={job}
+                  warrantyType={activeWarrantyType}
+                  warranty={activeWarranty}
+                  onSave={saveWarranty}
+                />
+              )}
+
+              {/* Warranty packet preview */}
+              {warrantyReportOpen && activeWarrantyType && (
                 <WarrantyReportModal
-                  open={warrantyModalOpen}
-                  onClose={() => setWarrantyModalOpen(false)}
+                  open={warrantyReportOpen}
+                  onClose={() => setWarrantyReportOpen(false)}
                   job={job}
                   photos={photos}
-                  totals={{
-                    earnings: totals.earnings,
-                    expenses: totals.expenses,
-                    net: totals.net,
-                  }}
+                  selectedWarranty={activeWarranty}
                 />
               )}
 
@@ -5148,14 +5214,6 @@ export default function JobDetailPage({
                   }}
                 />
               )}
-
-              <WarrantyEditModal
-                open={warrantyEditOpen}
-                onClose={() => setWarrantyEditOpen(false)}
-                onOpenReport={() => setWarrantyModalOpen(true)}
-                job={job}
-                onSave={saveWarranty}
-              />
 
               {/* Invoice Modal */}
               {invoiceModalOpen && job && (

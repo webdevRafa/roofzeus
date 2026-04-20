@@ -646,12 +646,13 @@ export default function WarrantyReportModal({
   onClose,
   job,
   photos,
+  selectedWarranty,
 }: {
   open: boolean;
   onClose: () => void;
   job: Job;
   photos: JobPhoto[];
-  totals: { earnings: number; expenses: number; net: number };
+  selectedWarranty?: NonNullable<Job["warranty"]> | null;
 }) {
   const address = formatAddress(job);
   const { orgId } = useOrg();
@@ -666,7 +667,7 @@ export default function WarrantyReportModal({
     [job.updatedAt]
   );
 
-  const warranty = job.warranty;
+  const warranty = selectedWarranty ?? undefined;
 
   const hasWarrantyData = useMemo(() => {
     if (!warranty) return false;

@@ -8,6 +8,23 @@ type WarrantyStatus = NonNullable<Job["warranty"]>["status"];
 
 type WarrantyDraft = NonNullable<Job["warranty"]>;
 
+type WarrantyTypeKey = Exclude<WarrantyKind, "none">;
+
+function labelForWarrantyType(type: WarrantyTypeKey) {
+  switch (type) {
+    case "workmanship":
+      return "Workmanship";
+    case "manufacturer":
+      return "Manufacturer";
+    case "thirdParty":
+      return "3rd party";
+    case "insurance":
+      return "Insurance";
+    default:
+      return type;
+  }
+}
+
 function toDateInputValue(d: any): string {
   // supports Date | Timestamp | string | null
   if (!d) return "";
@@ -71,18 +88,22 @@ export default function WarrantyEditModal({
   onClose,
   onOpenReport,
   job,
+  warrantyType,
+  warranty,
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
   onOpenReport?: () => void;
   job: Job;
+  warrantyType: WarrantyTypeKey;
+  warranty?: WarrantyDraft | null;
   onSave: (nextWarranty: WarrantyDraft) => Promise<void>;
 }) {
   const existing = useMemo<WarrantyDraft>(() => {
     return (
-      job.warranty ?? {
-        kind: "none",
+      warranty ?? {
+        kind: warrantyType,
         status: "draft",
         manufacturer: "",
         programName: "",
@@ -104,7 +125,7 @@ export default function WarrantyEditModal({
         attachments: [],
       }
     );
-  }, [job.warranty]);
+  }, [warranty, warrantyType]);
 
   const [draft, setDraft] = useState<WarrantyDraft>(existing);
   const [saving, setSaving] = useState(false);
@@ -133,7 +154,10 @@ export default function WarrantyEditModal({
   async function handleSave(openReport = false) {
     setSaving(true);
     try {
-      await onSave(draft);
+      await onSave({
+        ...draft,
+        kind: warrantyType,
+      });
 
       onClose();
 
@@ -209,32 +233,11 @@ export default function WarrantyEditModal({
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className={UI.label}>Type</label>
-                <select
-                  className={UI.select}
-                  value={draft.kind ?? "none"}
-                  onChange={(e) =>
-                    setDraft((d) => ({
-                      ...d,
-                      kind: e.target.value as WarrantyKind,
-                    }))
-                  }
+                <div
+                  className={`${UI.input} flex min-h-[44px] items-center font-medium`}
                 >
-                  <option className={UI.option} value="none">
-                    None
-                  </option>
-                  <option className={UI.option} value="workmanship">
-                    Workmanship
-                  </option>
-                  <option className={UI.option} value="manufacturer">
-                    Manufacturer
-                  </option>
-                  <option className={UI.option} value="thirdParty">
-                    3rd party
-                  </option>
-                  <option className={UI.option} value="insurance">
-                    Insurance
-                  </option>
-                </select>
+                  {labelForWarrantyType(warrantyType)}
+                </div>
               </div>
 
               <div>
