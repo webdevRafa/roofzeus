@@ -267,38 +267,38 @@ export default function WarrantyCenterModal({
                   <div className="space-y-3">
                     {existingTypes.map((type) => {
                       const warranty = normalizedWarranties[type];
+                      const detailText = [
+                        warranty?.manufacturer,
+                        warranty?.programName,
+                      ]
+                        .filter(Boolean)
+                        .join(" — ");
 
                       return (
                         <div
                           key={type}
                           className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4"
                         >
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0 flex-1">
                               <div className="text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.96)]">
                                 {typeLabel(type)}
                               </div>
 
-                              <div className="mt-1 flex flex-wrap items-center gap-2">
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <span className="inline-flex rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
                                   {statusLabel(warranty?.status)}
                                 </span>
 
-                                {(warranty?.manufacturer ||
-                                  warranty?.programName) && (
-                                  <span className="text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
-                                    {[
-                                      warranty?.manufacturer,
-                                      warranty?.programName,
-                                    ]
-                                      .filter(Boolean)
-                                      .join(" — ")}
+                                {detailText && (
+                                  <span className="min-w-0 truncate text-xs text-[rgb(var(--color-text-rgb)/0.56)] sm:max-w-[260px]">
+                                    {detailText}
                                   </span>
                                 )}
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex shrink-0 items-center gap-2 sm:min-w-[170px] sm:justify-end">
                               <button
                                 type="button"
                                 onClick={() => onEditType(type)}
