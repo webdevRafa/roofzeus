@@ -221,6 +221,61 @@ function WarrantyReportDocument({
   packetPhotos: JobPhoto[];
   orgBranding: OrgBranding | null;
 }) {
+  const kind = warranty?.kind;
+
+  const fmtMoney = (cents?: number) =>
+    typeof cents === "number"
+      ? (cents / 100).toLocaleString(undefined, {
+          style: "currency",
+          currency: "USD",
+        })
+      : "—";
+
+  function InfoCard({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) {
+    return (
+      <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
+          {title}
+        </div>
+        <div className="mt-3">{children}</div>
+      </div>
+    );
+  }
+
+  function Row({
+    label,
+    value,
+    noBorder = false,
+  }: {
+    label: string;
+    value?: React.ReactNode;
+    noBorder?: boolean;
+  }) {
+    return (
+      <div
+        className={[
+          "flex items-center justify-between gap-4",
+          !noBorder
+            ? "border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]"
+            : "",
+        ].join(" ")}
+      >
+        <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
+          {label}
+        </span>
+        <span className="text-right text-[14px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+          {value || "—"}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[var(--color-card)] print:bg-white print:text-black">
       <div className="p-5 print:px-8 print:py-7">
@@ -290,224 +345,342 @@ function WarrantyReportDocument({
 
           {hasWarrantyData ? (
             <>
-              {/* Primary info cards */}
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                    Type
-                  </div>
-                  <div className="mt-2 text-[16px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+              {/* Top summary */}
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <InfoCard title="Type">
+                  <div className="text-[16px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                     {labelForWarrantyKind(warranty?.kind)}
                   </div>
-                </div>
+                </InfoCard>
 
-                <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                    Manufacturer / Program
+                <InfoCard title="Status">
+                  <div className="text-[16px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                    {warranty?.status || "—"}
                   </div>
-                  <div className="mt-2 text-[16px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                    {[warranty?.manufacturer, warranty?.programName]
-                      .filter(Boolean)
-                      .join(" — ") || "—"}
-                  </div>
+                </InfoCard>
 
-                  {typeof warranty?.coverageYears === "number" ? (
-                    <div className="mt-2 text-[13px] text-[rgb(var(--color-text-rgb)/0.66)] print:text-[#4b5563]">
-                      Coverage term:{" "}
-                      <span className="font-semibold print:text-black">
-                        {warranty.coverageYears} years
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
+                <InfoCard title="Coverage term">
+                  <div className="text-[16px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                    {typeof warranty?.coverageYears === "number"
+                      ? `${warranty.coverageYears} years`
+                      : "—"}
+                  </div>
+                </InfoCard>
               </div>
 
-              {/* Detail grids */}
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                    Dates
+              {/* Manufacturer packet */}
+              {kind === "manufacturer" && (
+                <>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <InfoCard title="Manufacturer / program">
+                      <div className="space-y-3">
+                        <Row
+                          label="Manufacturer"
+                          value={warranty?.manufacturer}
+                        />
+                        <Row label="Program" value={warranty?.programName} />
+                        <Row
+                          label="Product / system"
+                          value={(warranty as any)?.productLine}
+                        />
+                        <Row
+                          label="Warranty #"
+                          value={(warranty as any)?.warrantyNumber}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
+
+                    <InfoCard title="Dates">
+                      <div className="space-y-3">
+                        <Row
+                          label="Install"
+                          value={fmtMaybeShortDate(warranty?.installDate)}
+                        />
+                        <Row
+                          label="Submitted"
+                          value={fmtMaybeShortDate(
+                            (warranty as any)?.submittedAt
+                          )}
+                        />
+                        <Row
+                          label="Registered"
+                          value={fmtMaybeShortDate(
+                            (warranty as any)?.registeredAt
+                          )}
+                        />
+                        <Row
+                          label="Expires"
+                          value={fmtMaybeShortDate(warranty?.expiresAt)}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
+
+                    <InfoCard title="Registration / transfer">
+                      <div className="space-y-3">
+                        <Row
+                          label="Registration ID"
+                          value={warranty?.registrationId}
+                        />
+                        <Row
+                          label="Transfer eligible"
+                          value={
+                            typeof (warranty as any)?.transferEligible ===
+                            "boolean"
+                              ? (warranty as any).transferEligible
+                                ? "Yes"
+                                : "No"
+                              : "—"
+                          }
+                        />
+                        <Row
+                          label="Transfer deadline"
+                          value={fmtMaybeShortDate(
+                            (warranty as any)?.transferDeadline
+                          )}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
+
+                    <InfoCard title="Portal / submission link">
+                      <div className="text-[14px] font-medium break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                        {warranty?.portalUrl || "—"}
+                      </div>
+
+                      {warranty?.portalUrl &&
+                      isValidHttpUrl(warranty.portalUrl) ? (
+                        <a
+                          href={warranty.portalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`${UI.linkBtn} mt-3 print:hidden`}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Open
+                        </a>
+                      ) : null}
+                    </InfoCard>
                   </div>
+                </>
+              )}
 
-                  <div className="mt-3 space-y-3">
-                    <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Install
-                      </span>
-                      <span className="text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {fmtMaybeShortDate(warranty?.installDate)}
-                      </span>
-                    </div>
+              {/* Workmanship packet */}
+              {kind === "workmanship" && (
+                <>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <InfoCard title="Service details">
+                      <div className="space-y-3">
+                        <Row
+                          label="Service request #"
+                          value={(warranty as any)?.serviceRequestNumber}
+                        />
+                        <Row
+                          label="Install"
+                          value={fmtMaybeShortDate(warranty?.installDate)}
+                        />
+                        <Row
+                          label="Repair"
+                          value={fmtMaybeShortDate(warranty?.repairDate)}
+                        />
+                        <Row
+                          label="Expires"
+                          value={fmtMaybeShortDate(warranty?.expiresAt)}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
 
-                    <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Repair
-                      </span>
-                      <span className="text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {fmtMaybeShortDate(warranty?.repairDate)}
-                      </span>
-                    </div>
+                    <InfoCard title="Coverage / exclusions">
+                      <div className="space-y-4">
+                        <div>
+                          <div className={UI.sectionLabel}>Covered scope</div>
+                          <div className="text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
+                            {(warranty as any)?.coveredScope || "—"}
+                          </div>
+                        </div>
 
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Expires
-                      </span>
-                      <span className="text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {fmtMaybeShortDate(warranty?.expiresAt)}
-                      </span>
-                    </div>
+                        <div>
+                          <div className={UI.sectionLabel}>
+                            Exclusions / reporting notes
+                          </div>
+                          <div className="text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
+                            {(warranty as any)?.exclusionsSummary || "—"}
+                          </div>
+                        </div>
+                      </div>
+                    </InfoCard>
                   </div>
-                </div>
+                </>
+              )}
 
-                <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                    Registration
+              {/* Third-party packet */}
+              {kind === "thirdParty" && (
+                <>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <InfoCard title="Administrator / program">
+                      <div className="space-y-3">
+                        <Row label="Program" value={warranty?.programName} />
+                        <Row
+                          label="Service request #"
+                          value={(warranty as any)?.serviceRequestNumber}
+                        />
+                        <Row
+                          label="Authorization #"
+                          value={(warranty as any)?.authorizationNumber}
+                        />
+                        <Row
+                          label="Claim #"
+                          value={warranty?.claimNumber}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
+
+                    <InfoCard title="Claim tracking">
+                      <div className="space-y-3">
+                        <Row
+                          label="Claim status"
+                          value={warranty?.claimStatus}
+                        />
+                        <Row
+                          label="Opened"
+                          value={fmtMaybeShortDate(
+                            (warranty as any)?.claimOpenedAt
+                          )}
+                        />
+                        <Row
+                          label="Closed"
+                          value={fmtMaybeShortDate(
+                            (warranty as any)?.claimClosedAt
+                          )}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
+
+                    <InfoCard title="Portal / submission link">
+                      <div className="text-[14px] font-medium break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                        {warranty?.portalUrl || "—"}
+                      </div>
+
+                      {warranty?.portalUrl &&
+                      isValidHttpUrl(warranty.portalUrl) ? (
+                        <a
+                          href={warranty.portalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`${UI.linkBtn} mt-3 print:hidden`}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Open
+                        </a>
+                      ) : null}
+                    </InfoCard>
+
+                    <InfoCard title="3rd party administrator">
+                      <div className="space-y-3">
+                        <Row
+                          label="Name"
+                          value={warranty?.thirdPartyAdmin?.name}
+                        />
+                        <Row
+                          label="Phone"
+                          value={warranty?.thirdPartyAdmin?.phone}
+                        />
+                        <Row
+                          label="Email"
+                          value={warranty?.thirdPartyAdmin?.email}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
                   </div>
+                </>
+              )}
 
-                  <div className="mt-3 space-y-3">
-                    <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Submitted
-                      </span>
-                      <span className="text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {fmtMaybeShortDate((warranty as any)?.submittedAt)}
-                      </span>
-                    </div>
+              {/* Insurance packet */}
+              {kind === "insurance" && (
+                <>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <InfoCard title="Carrier / policy">
+                      <div className="space-y-3">
+                        <Row
+                          label="Carrier"
+                          value={warranty?.insuranceCarrier}
+                        />
+                        <Row label="Policy #" value={warranty?.policyNumber} />
+                        <Row
+                          label="Loss date"
+                          value={fmtMaybeShortDate((warranty as any)?.lossDate)}
+                        />
+                        <Row
+                          label="Reported"
+                          value={fmtMaybeShortDate(
+                            (warranty as any)?.reportedAt
+                          )}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
 
-                    <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Registered
-                      </span>
-                      <span className="text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {fmtMaybeShortDate((warranty as any)?.registeredAt)}
-                      </span>
-                    </div>
+                    <InfoCard title="Claim / deductible">
+                      <div className="space-y-3">
+                        <Row label="Claim ID" value={warranty?.claimId} />
+                        <Row label="Claim #" value={warranty?.claimNumber} />
+                        <Row
+                          label="Claim status"
+                          value={warranty?.claimStatus}
+                        />
+                        <Row
+                          label="Deductible"
+                          value={fmtMoney((warranty as any)?.deductibleCents)}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
 
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        ID
-                      </span>
-                      <span className="text-[14px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {warranty?.registrationId || "—"}
-                      </span>
-                    </div>
+                    <InfoCard title="Cause of loss">
+                      <div className="text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
+                        {(warranty as any)?.causeOfLoss || "—"}
+                      </div>
+                    </InfoCard>
+
+                    <InfoCard title="Adjuster">
+                      <div className="space-y-3">
+                        <Row label="Name" value={warranty?.adjuster?.name} />
+                        <Row label="Phone" value={warranty?.adjuster?.phone} />
+                        <Row
+                          label="Email"
+                          value={warranty?.adjuster?.email}
+                          noBorder
+                        />
+                      </div>
+                    </InfoCard>
                   </div>
-                </div>
+                </>
+              )}
 
-                <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                    Claim
-                  </div>
-
-                  <div className="mt-3 space-y-3">
-                    <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Claim ID
-                      </span>
-                      <span className="text-[14px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {warranty?.claimId || "—"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Claim #
-                      </span>
-                      <span className="text-[14px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {warranty?.claimNumber || "—"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
-                        Status
-                      </span>
-                      <span className="text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {warranty?.claimStatus || "—"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                    Portal / submission link
-                  </div>
-
-                  <div className="mt-2 text-[14px] font-medium break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                    {warranty?.portalUrl || "—"}
-                  </div>
-
-                  {warranty?.portalUrl && isValidHttpUrl(warranty.portalUrl) ? (
-                    <a
-                      href={warranty.portalUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`${UI.linkBtn} mt-3 print:hidden`}
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Open
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Contacts */}
-              <div className="mt-5">
-                <div className="text-[15px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                  Contacts
-                </div>
-
-                <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                  <ContactBlock
-                    title="Homeowner"
-                    name={warranty?.homeowner?.name}
-                    phone={warranty?.homeowner?.phone}
-                    email={warranty?.homeowner?.email}
-                  />
-                  <ContactBlock
-                    title="Adjuster"
-                    name={warranty?.adjuster?.name}
-                    phone={warranty?.adjuster?.phone}
-                    email={warranty?.adjuster?.email}
-                  />
-                  <ContactBlock
-                    title="3rd party admin"
-                    name={warranty?.thirdPartyAdmin?.name}
-                    phone={warranty?.thirdPartyAdmin?.phone}
-                    email={warranty?.thirdPartyAdmin?.email}
-                  />
-                </div>
-              </div>
-
-              {/* Insurance */}
-              {warranty?.insuranceCarrier || warranty?.policyNumber ? (
-                <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
+              {/* Shared homeowner block */}
+              {(warranty?.homeowner?.name ||
+                warranty?.homeowner?.phone ||
+                warranty?.homeowner?.email) && (
+                <div className="mt-5">
                   <div className="text-[15px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                    Insurance
+                    Homeowner
                   </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                        Carrier
-                      </div>
-                      <div className="mt-1 text-[14px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {warranty?.insuranceCarrier || "—"}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-                        Policy #
-                      </div>
-                      <div className="mt-1 text-[14px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                        {warranty?.policyNumber || "—"}
-                      </div>
-                    </div>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-1">
+                    <ContactBlock
+                      title="Homeowner"
+                      name={warranty?.homeowner?.name}
+                      phone={warranty?.homeowner?.phone}
+                      email={warranty?.homeowner?.email}
+                    />
                   </div>
                 </div>
-              ) : null}
+              )}
 
               {/* Notes */}
               {warranty?.notes ? (
@@ -640,7 +813,6 @@ function WarrantyReportDocument({
     </div>
   );
 }
-
 export default function WarrantyReportModal({
   open,
   onClose,
@@ -675,21 +847,37 @@ export default function WarrantyReportModal({
     const hasMeaningful =
       (warranty.kind && warranty.kind !== "none") ||
       Boolean(
-        warranty.manufacturer ||
+        warranty.status ||
+          warranty.manufacturer ||
           warranty.programName ||
+          (warranty as any).productLine ||
+          (warranty as any).warrantyNumber ||
           warranty.coverageYears ||
-          warranty.status ||
           warranty.portalUrl ||
           warranty.registrationId ||
+          (warranty as any).transferEligible ||
+          (warranty as any).transferDeadline ||
           warranty.claimId ||
           warranty.claimNumber ||
           warranty.claimStatus ||
+          (warranty as any).claimOpenedAt ||
+          (warranty as any).claimClosedAt ||
+          (warranty as any).serviceRequestNumber ||
+          (warranty as any).authorizationNumber ||
           warranty.insuranceCarrier ||
           warranty.policyNumber ||
+          (warranty as any).lossDate ||
+          (warranty as any).reportedAt ||
+          (warranty as any).causeOfLoss ||
+          typeof (warranty as any).deductibleCents === "number" ||
+          (warranty as any).coveredScope ||
+          (warranty as any).exclusionsSummary ||
           warranty.notes ||
           warranty.installDate ||
           warranty.repairDate ||
           warranty.expiresAt ||
+          (warranty as any).submittedAt ||
+          (warranty as any).registeredAt ||
           (warranty.attachments && warranty.attachments.length > 0) ||
           warranty.homeowner?.name ||
           warranty.homeowner?.phone ||
