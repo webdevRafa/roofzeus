@@ -470,6 +470,7 @@ function WarrantyReportDocument({
               {kind === "workmanship" && (
                 <>
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    {/* Service details for workmanship warranties */}
                     <InfoCard title="Service details">
                       <div className="space-y-3">
                         <Row
@@ -492,8 +493,10 @@ function WarrantyReportDocument({
                       </div>
                     </InfoCard>
 
-                    <InfoCard title="Coverage / exclusions">
+                    {/* Scope and exclusions – combine covered scope with reporting notes */}
+                    <InfoCard title="Covered scope & exclusions">
                       <div className="space-y-4">
+                        {/* Covered scope section */}
                         <div>
                           <div className={UI.sectionLabel}>Covered scope</div>
                           <div className="text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
@@ -501,6 +504,7 @@ function WarrantyReportDocument({
                           </div>
                         </div>
 
+                        {/* Exclusions / reporting notes section */}
                         <div>
                           <div className={UI.sectionLabel}>
                             Exclusions / reporting notes
@@ -538,11 +542,22 @@ function WarrantyReportDocument({
                       </div>
                     </InfoCard>
 
+                    {/* Include submission date for third‑party warranties.  
+                        Users can enter a submission date when filling out a third‑party packet, 
+                        but previously it wasn’t displayed in the report.  
+                        Adding it here keeps the report in sync with the edit fields. */}
                     <InfoCard title="Claim tracking">
                       <div className="space-y-3">
                         <Row
                           label="Claim status"
                           value={warranty?.claimStatus}
+                        />
+                        {/* Submission date: when the 3rd‑party claim or program was submitted. */}
+                        <Row
+                          label="Submitted"
+                          value={fmtMaybeShortDate(
+                            (warranty as any)?.submittedAt
+                          )}
                         />
                         <Row
                           label="Opened"
