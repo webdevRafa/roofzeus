@@ -173,7 +173,7 @@ function ContactBlock({
   if (!hasAny) return null;
 
   return (
-    <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
+    <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
       <div className={UI.sectionLabel}>{title}</div>
 
       <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
@@ -239,8 +239,8 @@ function WarrantyReportDocument({
     children: React.ReactNode;
   }) {
     return (
-      <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
+      <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#9ca3af]">
           {title}
         </div>
         <div className="mt-3">{children}</div>
@@ -276,11 +276,40 @@ function WarrantyReportDocument({
     );
   }
 
+  function SummaryMiniRow({
+    label,
+    value,
+    noBorder = false,
+  }: {
+    label: string;
+    value?: React.ReactNode;
+    noBorder?: boolean;
+  }) {
+    return (
+      <div
+        className={[
+          "grid grid-cols-[110px_minmax(0,1fr)] items-center gap-4 py-2.5",
+          !noBorder
+            ? "border-b border-[rgb(var(--color-border-rgb)/0.10)] print:border-[#e5e7eb]"
+            : "",
+        ].join(" ")}
+      >
+        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.50)] print:text-[#6b7280]">
+          {label}
+        </div>
+
+        <div className="min-w-0 text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+          {value || "—"}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[var(--color-card)] print:bg-white print:text-black">
-      <div className="p-5 print:px-8 print:py-7">
+      <div className="px-5 py-5 print:px-4 print:py-2">
         {/* ===== Print-first document header ===== */}
-        <div className="border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-5 py-5 print:border-[#d1d5db] print:bg-white">
+        <div className=" bg-[rgb(var(--color-background-rgb)/0.14)] p-4 print:border-[#d1d5db] print:bg-white mt-0">
           <div className="flex flex-col gap-5 border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#d1d5db] sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex items-start gap-4">
@@ -303,7 +332,7 @@ function WarrantyReportDocument({
                     </div>
                   ) : null}
 
-                  <h1 className="mt-1 text-[28px] font-semibold tracking-[-0.02em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                  <h1 className="mt-1 text-[12px] font-semibold tracking-[-0.02em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                     Warranty Packet
                   </h1>
                 </div>
@@ -323,7 +352,7 @@ function WarrantyReportDocument({
           </div>
 
           <div className="pt-4">
-            <div className="text-[22px] font-semibold leading-tight text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="text-[16px] font-semibold leading-tight text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               {address}
             </div>
             <div className="mt-2 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
@@ -336,9 +365,9 @@ function WarrantyReportDocument({
         </div>
 
         {/* ===== Main warranty section ===== */}
-        <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-5 py-5 print:border-[#d1d5db] print:bg-white">
-          <div className="border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#d1d5db]">
-            <div className="text-[18px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+        <div className="mt-2 border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-5 py-3 print:border-0 print:bg-white print:px-0 print:py-0">
+          <div className="border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#e5e7eb]">
+            <div className="text-[14px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               Warranty Details
             </div>
           </div>
@@ -346,26 +375,26 @@ function WarrantyReportDocument({
           {hasWarrantyData ? (
             <>
               {/* Top summary */}
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <InfoCard title="Type">
-                  <div className="text-[16px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                    {labelForWarrantyKind(warranty?.kind)}
-                  </div>
-                </InfoCard>
+              <div className="mt-4">
+                <SummaryMiniRow
+                  label="Type"
+                  value={labelForWarrantyKind(warranty?.kind)}
+                />
 
-                <InfoCard title="Status">
-                  <div className="text-[16px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                    {warranty?.status || "—"}
-                  </div>
-                </InfoCard>
+                <SummaryMiniRow
+                  label="Status"
+                  value={warranty?.status || "—"}
+                />
 
-                <InfoCard title="Coverage term">
-                  <div className="text-[16px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                    {typeof warranty?.coverageYears === "number"
-                      ? `${warranty.coverageYears} years`
-                      : "—"}
-                  </div>
-                </InfoCard>
+                <SummaryMiniRow
+                  label="Coverage term"
+                  value={
+                    typeof warranty?.coverageYears === "number"
+                      ? `${warranty?.coverageYears} years`
+                      : "—"
+                  }
+                  noBorder
+                />
               </div>
 
               {/* Manufacturer packet */}
@@ -469,8 +498,8 @@ function WarrantyReportDocument({
               {/* Workmanship packet */}
               {kind === "workmanship" && (
                 <>
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {/* Service details for workmanship warranties */}
+                  {/* SCREEN / MODAL VERSION */}
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 print:hidden">
                     <InfoCard title="Service details">
                       <div className="space-y-3">
                         <Row
@@ -493,10 +522,8 @@ function WarrantyReportDocument({
                       </div>
                     </InfoCard>
 
-                    {/* Scope and exclusions – combine covered scope with reporting notes */}
                     <InfoCard title="Covered scope & exclusions">
                       <div className="space-y-4">
-                        {/* Covered scope section */}
                         <div>
                           <div className={UI.sectionLabel}>Covered scope</div>
                           <div className="text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
@@ -504,7 +531,6 @@ function WarrantyReportDocument({
                           </div>
                         </div>
 
-                        {/* Exclusions / reporting notes section */}
                         <div>
                           <div className={UI.sectionLabel}>
                             Exclusions / reporting notes
@@ -515,6 +541,83 @@ function WarrantyReportDocument({
                         </div>
                       </div>
                     </InfoCard>
+                  </div>
+
+                  {/* PRINT-ONLY VERSION */}
+                  <div className="hidden print:block mt-6">
+                    <div className="grid grid-cols-[1.05fr_1fr] gap-8">
+                      {/* Left column */}
+                      <div>
+                        <div className="pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#4b5563] border-b border-[#e5e7eb]">
+                          Service details
+                        </div>
+
+                        <div className="pt-3 space-y-0">
+                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
+                            <div className="text-[12px] text-[#64748b]">
+                              Service request #
+                            </div>
+                            <div className="text-[14px] font-semibold text-black">
+                              {(warranty as any)?.serviceRequestNumber || "—"}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
+                            <div className="text-[12px] text-[#64748b]">
+                              Install
+                            </div>
+                            <div className="text-[14px] font-semibold text-black">
+                              {fmtMaybeShortDate(warranty?.installDate)}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
+                            <div className="text-[12px] text-[#64748b]">
+                              Repair
+                            </div>
+                            <div className="text-[14px] font-semibold text-black">
+                              {fmtMaybeShortDate(warranty?.repairDate)}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#e5e7eb]">
+                            <div className="text-[12px] text-[#64748b]">
+                              Expires
+                            </div>
+                            <div className="text-[14px] font-semibold text-black">
+                              {fmtMaybeShortDate(warranty?.expiresAt)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right column */}
+                      <div>
+                        <div className="pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#4b5563] border-b border-[#e5e7eb]">
+                          Covered scope & exclusions
+                        </div>
+
+                        <div className="pt-3">
+                          <div>
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9ca3af]">
+                              Covered scope
+                            </div>
+                            <div className="mt-2 whitespace-pre-wrap text-[14px] leading-6 text-black">
+                              {(warranty as any)?.coveredScope || "—"}
+                            </div>
+                          </div>
+
+                          <div className="mt-5 pt-4 border-t border-[#eef2f7]">
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9ca3af]">
+                              Exclusions / reporting notes
+                            </div>
+                            <div className="mt-2 whitespace-pre-wrap text-[14px] leading-6 text-black">
+                              {(warranty as any)?.exclusionsSummary || "—"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}
@@ -699,7 +802,7 @@ function WarrantyReportDocument({
 
               {/* Notes */}
               {warranty?.notes ? (
-                <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
+                <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
                   <div className="text-[15px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                     Warranty notes
                   </div>
@@ -711,7 +814,7 @@ function WarrantyReportDocument({
 
               {/* Attachments */}
               {warranty?.attachments && warranty.attachments.length > 0 ? (
-                <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#d1d5db] print:bg-white">
+                <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-[15px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                       Attachments
@@ -731,7 +834,7 @@ function WarrantyReportDocument({
                       return (
                         <div
                           key={a.id}
-                          className="flex items-start justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-background-rgb)/0.08)] px-3 py-3 print:border-[#e5e7eb] print:bg-white"
+                          className="flex items-start justify-between gap-3 border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-background-rgb)/0.08)] px-3 py-3 print:border-[#f3f4f6] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0"
                         >
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
@@ -782,8 +885,8 @@ function WarrantyReportDocument({
         </div>
 
         {/* Photos */}
-        <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-5 py-5 print:border-[#d1d5db] print:bg-white">
-          <div className="border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#d1d5db]">
+        <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-5 py-5 print:border-0 print:bg-white print:px-0 print:py-0">
+          <div className="border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#e5e7eb]">
             <div className="text-[18px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
               Supporting Photos
             </div>
@@ -796,7 +899,7 @@ function WarrantyReportDocument({
                 return (
                   <div
                     key={p.id}
-                    className="break-inside-avoid border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.08)] p-2 print:border-[#d1d5db] print:bg-white"
+                    className="break-inside-avoid border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.08)] p-2 print:border-[#f3f4f6] print:bg-white"
                   >
                     {src ? (
                       <img
