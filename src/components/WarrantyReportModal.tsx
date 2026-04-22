@@ -29,7 +29,7 @@ type JobPhoto = {
   url?: string;
   caption?: string;
 };
-type OrgBranding = Pick<Org, "name" | "legalName" | "logoUrl">;
+type OrgBranding = Pick<Org, "name" | "legalName" | "logoUrl" | "address">;
 
 type FsTimestampLike = { toDate: () => Date };
 function isFsTimestamp(x: unknown): x is FsTimestampLike {
@@ -84,6 +84,19 @@ function formatAddress(job: Job) {
       .join(", ") ||
     job.id
   );
+}
+
+function formatOrgAddress(orgBranding: OrgBranding | null) {
+  const addr = orgBranding?.address;
+  if (!addr) return "";
+
+  const line1 = (addr.line1 || "").trim();
+  const city = (addr.city || "").trim();
+  const state = (addr.state || "").trim().toUpperCase();
+  const zip = (addr.zip || addr.postalCode || "").trim();
+
+  const locality = [city, state].filter(Boolean).join(", ");
+  return [line1, locality, zip].filter(Boolean).join(" ");
 }
 
 const UI = {
@@ -163,18 +176,20 @@ function ContactBlock({
   name,
   phone,
   email,
+  hideTitle = false,
 }: {
   title: string;
   name?: string;
   phone?: string;
   email?: string;
+  hideTitle?: boolean;
 }) {
   const hasAny = Boolean(name || phone || email);
   if (!hasAny) return null;
 
   return (
     <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
-      <div className={UI.sectionLabel}>{title}</div>
+      {!hideTitle ? <div className={UI.sectionLabel}>{title}</div> : null}
 
       <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
         {name ? (
@@ -222,6 +237,7 @@ function WarrantyReportDocument({
   orgBranding: OrgBranding | null;
 }) {
   const kind = warranty?.kind;
+  const orgAddress = formatOrgAddress(orgBranding);
 
   const fmtMoney = (cents?: number) =>
     typeof cents === "number"
@@ -335,6 +351,12 @@ function WarrantyReportDocument({
                   <h1 className="mt-1 text-[12px] font-semibold tracking-[-0.02em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
                     Warranty Packet
                   </h1>
+
+                  {orgAddress ? (
+                    <div className="mt-1 max-w-[420px] text-[11px] leading-5 text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
+                      {orgAddress}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -522,7 +544,7 @@ function WarrantyReportDocument({
                       </div>
                     </InfoCard>
 
-                    <InfoCard title="Covered scope & exclusions">
+                    <InfoCard title="">
                       <div className="space-y-4">
                         <div>
                           <div className={UI.sectionLabel}>Covered scope</div>
@@ -545,7 +567,7 @@ function WarrantyReportDocument({
 
                   {/* PRINT-ONLY VERSION */}
                   <div className="hidden print:block mt-6">
-                    <div className="grid grid-cols-[1.05fr_1fr] gap-8">
+                    <div className="grid grid-cols-[1fr_1.12fr] gap-10">
                       {/* Left column */}
                       <div>
                         <div className="pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#4b5563] border-b border-[#e5e7eb]">
@@ -553,38 +575,38 @@ function WarrantyReportDocument({
                         </div>
 
                         <div className="pt-3 space-y-0">
-                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
-                            <div className="text-[12px] text-[#64748b]">
+                          <div className="grid grid-cols-[118px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
+                            <div className="text-[11px] font-medium text-[#64748b]">
                               Service request #
                             </div>
-                            <div className="text-[14px] font-semibold text-black">
+                            <div className="text-[13px] font-semibold text-black">
                               {(warranty as any)?.serviceRequestNumber || "—"}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
-                            <div className="text-[12px] text-[#64748b]">
+                          <div className="grid grid-cols-[118px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
+                            <div className="text-[11px] font-medium text-[#64748b]">
                               Install
                             </div>
-                            <div className="text-[14px] font-semibold text-black">
+                            <div className="text-[13px] font-semibold text-black">
                               {fmtMaybeShortDate(warranty?.installDate)}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
-                            <div className="text-[12px] text-[#64748b]">
+                          <div className="grid grid-cols-[118px_1fr] items-start gap-4 py-2 border-b border-[#eef2f7]">
+                            <div className="text-[11px] font-medium text-[#64748b]">
                               Repair
                             </div>
-                            <div className="text-[14px] font-semibold text-black">
+                            <div className="text-[13px] font-semibold text-black">
                               {fmtMaybeShortDate(warranty?.repairDate)}
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-[120px_1fr] items-start gap-4 py-2 border-b border-[#e5e7eb]">
-                            <div className="text-[12px] text-[#64748b]">
+                          <div className="grid grid-cols-[118px_1fr] items-start gap-4 py-2 border-b border-[#e5e7eb]">
+                            <div className="text-[11px] font-medium text-[#64748b]">
                               Expires
                             </div>
-                            <div className="text-[14px] font-semibold text-black">
+                            <div className="text-[13px] font-semibold text-black">
                               {fmtMaybeShortDate(warranty?.expiresAt)}
                             </div>
                           </div>
@@ -592,26 +614,22 @@ function WarrantyReportDocument({
                       </div>
 
                       {/* Right column */}
-                      <div>
-                        <div className="pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#4b5563] border-b border-[#e5e7eb]">
-                          Covered scope & exclusions
-                        </div>
-
-                        <div className="pt-3">
+                      <div className="pt-[1px]">
+                        <div className="space-y-5">
                           <div>
-                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9ca3af]">
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6b7280]">
                               Covered scope
                             </div>
-                            <div className="mt-2 whitespace-pre-wrap text-[14px] leading-6 text-black">
+                            <div className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.7] text-black">
                               {(warranty as any)?.coveredScope || "—"}
                             </div>
                           </div>
 
-                          <div className="mt-5 pt-4 border-t border-[#eef2f7]">
-                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9ca3af]">
+                          <div className="border-t border-[#edf2f7] pt-4">
+                            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6b7280]">
                               Exclusions / reporting notes
                             </div>
-                            <div className="mt-2 whitespace-pre-wrap text-[14px] leading-6 text-black">
+                            <div className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.7] text-black">
                               {(warranty as any)?.exclusionsSummary || "—"}
                             </div>
                           </div>
@@ -784,14 +802,15 @@ function WarrantyReportDocument({
               {(warranty?.homeowner?.name ||
                 warranty?.homeowner?.phone ||
                 warranty?.homeowner?.email) && (
-                <div className="mt-5">
-                  <div className="text-[15px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
+                  <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                     Homeowner
                   </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-1">
+                  <div className="mt-3">
                     <ContactBlock
                       title="Homeowner"
+                      hideTitle
                       name={warranty?.homeowner?.name}
                       phone={warranty?.homeowner?.phone}
                       email={warranty?.homeowner?.email}
@@ -802,11 +821,11 @@ function WarrantyReportDocument({
 
               {/* Notes */}
               {warranty?.notes ? (
-                <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
-                  <div className="text-[15px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-                    Warranty notes
+                <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
+                  <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                    Warranty Notes
                   </div>
-                  <div className="mt-3 text-[14px] leading-7 whitespace-pre-wrap text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
+                  <div className="mt-3 max-w-[72ch] whitespace-pre-wrap text-[13px] leading-[1.75] text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
                     {warranty.notes}
                   </div>
                 </div>
@@ -885,9 +904,9 @@ function WarrantyReportDocument({
         </div>
 
         {/* Photos */}
-        <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.14)] px-5 py-5 print:border-0 print:bg-white print:px-0 print:py-0">
-          <div className="border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#e5e7eb]">
-            <div className="text-[18px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+        <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
+          <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] pb-3 print:border-[#e5e7eb]">
+            <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
               Supporting Photos
             </div>
           </div>
@@ -921,9 +940,8 @@ function WarrantyReportDocument({
               })}
             </div>
           ) : (
-            <div className="mt-4 flex items-center gap-2 border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-3 text-sm text-[rgb(var(--color-text-rgb)/0.62)] print:border-[#d1d5db] print:bg-white print:text-[#4b5563]">
-              <AlertCircle className="h-4 w-4" />
-              No photos uploaded yet.
+            <div className="mt-4 text-[13px] italic text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
+              No supporting photos included in this packet.
             </div>
           )}
         </div>
@@ -1034,6 +1052,7 @@ export default function WarrantyReportModal({
           name: data.name ?? "",
           legalName: data.legalName ?? "",
           logoUrl: data.logoUrl ?? null,
+          address: data.address ?? null,
         });
       },
       () => {

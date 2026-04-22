@@ -14,7 +14,12 @@ import {
 import { db } from "../firebase/firebaseConfig";
 import { useOrg } from "../contexts/OrgContext";
 import BrandLogoModal from "../components/BrandLogoModal";
-import type { Org, OrgMaterialOption, MaterialCategory } from "../types/types";
+import type {
+  Org,
+  OrgMaterialOption,
+  MaterialCategory,
+  Address,
+} from "../types/types";
 
 function dollarsToCents(value: string): number {
   const n = Number(value);
@@ -25,6 +30,53 @@ function dollarsToCents(value: string): number {
 function centsToDollars(value?: number | null): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return "";
   return (value / 100).toFixed(2);
+}
+
+function cleanAddressPart(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function buildOrgAddress({
+  line1,
+  city,
+  state,
+  zip,
+  country,
+}: {
+  line1: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}): Address | null {
+  const nextLine1 = cleanAddressPart(line1);
+  const nextCity = cleanAddressPart(city);
+  const nextState = cleanAddressPart(state).toUpperCase();
+  const nextZip = cleanAddressPart(zip);
+  const nextCountry = cleanAddressPart(country).toUpperCase();
+
+  const hasAny =
+    nextLine1.length > 0 ||
+    nextCity.length > 0 ||
+    nextState.length > 0 ||
+    nextZip.length > 0 ||
+    nextCountry.length > 0;
+
+  if (!hasAny) return null;
+
+  const locality = [nextCity, nextState, nextZip].filter(Boolean).join(", ");
+  const fullLine = [nextLine1, locality, nextCountry]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    fullLine,
+    ...(nextLine1 ? { line1: nextLine1 } : {}),
+    ...(nextCity ? { city: nextCity } : {}),
+    ...(nextState ? { state: nextState } : {}),
+    ...(nextZip ? { zip: nextZip, postalCode: nextZip } : {}),
+    ...(nextCountry ? { country: nextCountry } : {}),
+  };
 }
 
 function makeCustomMaterialRow(): OrgMaterialOption {
@@ -89,6 +141,13 @@ export default function OrganizationSettingsPage() {
   const [legalName, setLegalName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressCity, setAddressCity] = useState("");
+  const [addressState, setAddressState] = useState("");
+  const [addressZip, setAddressZip] = useState("");
+  const [addressCountry, setAddressCountry] = useState("US");
+
   const [defaultState, setDefaultState] = useState("");
   const [defaultJobFee, setDefaultJobFee] = useState("");
   const [commonMaterials, setCommonMaterials] = useState<OrgMaterialOption[]>(
@@ -116,6 +175,13 @@ export default function OrganizationSettingsPage() {
     setLegalName(next?.legalName ?? "");
     setPhone(next?.phone ?? "");
     setEmail(next?.email ?? "");
+
+    setAddressLine1(next?.address?.line1 ?? "");
+    setAddressCity(next?.address?.city ?? "");
+    setAddressState((next?.address?.state ?? "").toUpperCase());
+    setAddressZip(next?.address?.zip ?? next?.address?.postalCode ?? "");
+    setAddressCountry((next?.address?.country ?? "US").toUpperCase());
+
     setDefaultState((next?.defaultState ?? "").toUpperCase());
     setDefaultJobFee(centsToDollars(next?.defaultJobFeeCents));
     setCommonMaterials(
@@ -246,6 +312,14 @@ export default function OrganizationSettingsPage() {
     setSaving(true);
 
     try {
+      const nextAddress = buildOrgAddress({
+        line1: addressLine1,
+        city: addressCity,
+        state: addressState,
+        zip: addressZip,
+        country: addressCountry,
+      });
+
       const cleanedMaterials = mergedMaterials.allRowsForSave
         .map((row, idx) => {
           const existingKey =
@@ -281,6 +355,7 @@ export default function OrganizationSettingsPage() {
           legalName: legalName.trim() || null,
           phone: phone.trim() || null,
           email: email.trim() || null,
+          address: nextAddress,
           defaultState: defaultState.trim().toUpperCase() || null,
           defaultJobFeeCents: dollarsToCents(defaultJobFee),
           commonMaterials: cleanedMaterials,
@@ -406,6 +481,98 @@ export default function OrganizationSettingsPage() {
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm uppercase text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             />
           </label>
+
+          <div className="md:col-span-2 mt-2 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.28)] p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-[var(--color-text)]">
+                  Company address
+                </div>
+                <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                  Used on printable documents, warranty packets, and
+                  company-facing records.
+                </div>
+              </div>
+
+              <div className="hidden sm:inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.42)] px-3 py-1 text-[11px] font-medium text-[rgb(var(--color-text-rgb)/0.66)]">
+                Organization document
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="block md:col-span-2">
+                <div className="mb-1 text-xs text-[var(--color-text)]/65">
+                  Street address
+                </div>
+                <input
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
+                  placeholder="123 Main St"
+                  autoComplete="address-line1"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                />
+              </label>
+
+              <label className="block">
+                <div className="mb-1 text-xs text-[var(--color-text)]/65">
+                  City
+                </div>
+                <input
+                  value={addressCity}
+                  onChange={(e) => setAddressCity(e.target.value)}
+                  placeholder="San Antonio"
+                  autoComplete="address-level2"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                />
+              </label>
+
+              <div className="grid grid-cols-2 gap-4">
+                <label className="block">
+                  <div className="mb-1 text-xs text-[var(--color-text)]/65">
+                    State
+                  </div>
+                  <input
+                    value={addressState}
+                    onChange={(e) =>
+                      setAddressState(e.target.value.toUpperCase())
+                    }
+                    maxLength={2}
+                    placeholder="TX"
+                    autoComplete="address-level1"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm uppercase text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                </label>
+
+                <label className="block">
+                  <div className="mb-1 text-xs text-[var(--color-text)]/65">
+                    ZIP code
+                  </div>
+                  <input
+                    value={addressZip}
+                    onChange={(e) => setAddressZip(e.target.value)}
+                    placeholder="78205"
+                    autoComplete="postal-code"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                </label>
+              </div>
+
+              <label className="block md:col-span-2">
+                <div className="mb-1 text-xs text-[var(--color-text)]/65">
+                  Country
+                </div>
+                <input
+                  value={addressCountry}
+                  onChange={(e) =>
+                    setAddressCountry(e.target.value.toUpperCase())
+                  }
+                  placeholder="US"
+                  autoComplete="country"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm uppercase text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                />
+              </label>
+            </div>
+          </div>
         </div>
       </section>
 
