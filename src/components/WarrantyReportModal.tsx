@@ -216,13 +216,13 @@ function ContactBlock({
     </div>
   );
 }
-
 function WarrantyReportDocument({
   job,
   address,
   createdLabel,
   updatedLabel,
   warranty,
+  homeowner,
   hasWarrantyData,
   packetPhotos,
   orgBranding,
@@ -232,6 +232,11 @@ function WarrantyReportDocument({
   createdLabel: string;
   updatedLabel: string;
   warranty: Job["warranty"];
+  homeowner: {
+    name?: string;
+    phone?: string;
+    email?: string;
+  };
   hasWarrantyData: boolean;
   packetPhotos: JobPhoto[];
   orgBranding: OrgBranding | null;
@@ -799,11 +804,9 @@ function WarrantyReportDocument({
               )}
 
               {/* Shared homeowner block */}
-              {(warranty?.homeowner?.name ||
-                warranty?.homeowner?.phone ||
-                warranty?.homeowner?.email) && (
+              {(homeowner.name || homeowner.phone || homeowner.email) && (
                 <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
-                  <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                  <div className="text-[14px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                     Homeowner
                   </div>
 
@@ -811,9 +814,9 @@ function WarrantyReportDocument({
                     <ContactBlock
                       title="Homeowner"
                       hideTitle
-                      name={warranty?.homeowner?.name}
-                      phone={warranty?.homeowner?.phone}
-                      email={warranty?.homeowner?.email}
+                      name={homeowner.name}
+                      phone={homeowner.phone}
+                      email={homeowner.email}
                     />
                   </div>
                 </div>
@@ -904,14 +907,14 @@ function WarrantyReportDocument({
         </div>
 
         {/* Photos */}
-        <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
-          <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] pb-3 print:border-[#e5e7eb]">
-            <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
-              Supporting Photos
+        {packetPhotos.length > 0 ? (
+          <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
+            <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] pb-3 print:border-[#e5e7eb]">
+              <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                Supporting Photos
+              </div>
             </div>
-          </div>
 
-          {packetPhotos.length ? (
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {packetPhotos.map((p) => {
                 const src = safePhotoUrl(p);
@@ -939,12 +942,18 @@ function WarrantyReportDocument({
                 );
               })}
             </div>
-          ) : (
-            <div className="mt-4 text-[13px] italic text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
-              No supporting photos included in this packet.
+          </div>
+        ) : (
+          // ✅ MODAL-ONLY EMPTY STATE (hidden in print)
+          <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:hidden">
+            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-[13px] text-yellow-200">
+              No supporting photos will be included in this packet.
+              <span className="block mt-1 text-[12px] text-yellow-300/80">
+                You can add photos by editing this warranty.
+              </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -976,6 +985,22 @@ export default function WarrantyReportModal({
   );
 
   const warranty = selectedWarranty ?? undefined;
+
+  const homeowner = useMemo(
+    () => ({
+      name: job.homeowner?.name ?? warranty?.homeowner?.name ?? "",
+      phone: job.homeowner?.phone ?? warranty?.homeowner?.phone ?? "",
+      email: job.homeowner?.email ?? warranty?.homeowner?.email ?? "",
+    }),
+    [
+      job.homeowner?.name,
+      job.homeowner?.phone,
+      job.homeowner?.email,
+      warranty?.homeowner?.name,
+      warranty?.homeowner?.phone,
+      warranty?.homeowner?.email,
+    ]
+  );
 
   const hasWarrantyData = useMemo(() => {
     if (!warranty) return false;
@@ -1015,9 +1040,9 @@ export default function WarrantyReportModal({
           (warranty as any).submittedAt ||
           (warranty as any).registeredAt ||
           (warranty.attachments && warranty.attachments.length > 0) ||
-          warranty.homeowner?.name ||
-          warranty.homeowner?.phone ||
-          warranty.homeowner?.email ||
+          ((warranty as any).warrantyPhotoIds &&
+            Array.isArray((warranty as any).warrantyPhotoIds) &&
+            (warranty as any).warrantyPhotoIds.length > 0) ||
           warranty.adjuster?.name ||
           warranty.adjuster?.phone ||
           warranty.adjuster?.email ||
@@ -1029,7 +1054,22 @@ export default function WarrantyReportModal({
     return Boolean(hasMeaningful);
   }, [warranty]);
 
-  const packetPhotos = useMemo(() => photos.slice(0, 8), [photos]);
+  const packetPhotos = useMemo(() => {
+    const selectedIds =
+      Array.isArray((warranty as any)?.warrantyPhotoIds) &&
+      (warranty as any).warrantyPhotoIds.length > 0
+        ? ((warranty as any).warrantyPhotoIds as string[])
+        : [];
+
+    if (!selectedIds.length) return [];
+
+    const photoMap = new Map(photos.map((photo) => [photo.id, photo] as const));
+
+    return selectedIds
+      .map((id) => photoMap.get(id))
+      .filter((photo): photo is JobPhoto => Boolean(photo))
+      .slice(0, 8);
+  }, [photos, warranty]);
 
   useEffect(() => {
     if (!orgId) {
@@ -1121,6 +1161,7 @@ export default function WarrantyReportModal({
                 createdLabel={createdLabel}
                 updatedLabel={updatedLabel}
                 warranty={warranty}
+                homeowner={homeowner}
                 hasWarrantyData={hasWarrantyData}
                 packetPhotos={packetPhotos}
                 orgBranding={orgBranding}
@@ -1139,6 +1180,7 @@ export default function WarrantyReportModal({
             createdLabel={createdLabel}
             updatedLabel={updatedLabel}
             warranty={warranty}
+            homeowner={homeowner}
             hasWarrantyData={hasWarrantyData}
             packetPhotos={packetPhotos}
             orgBranding={orgBranding}

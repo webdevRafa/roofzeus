@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { AlertCircle, Save, X } from "lucide-react";
-import type { Job } from "../types/types";
+import type { Job, ContactInfo } from "../types/types";
 
 type WarrantyKind = NonNullable<Job["warranty"]>["kind"];
 type WarrantyStatus = NonNullable<Job["warranty"]>["status"];
@@ -83,6 +83,15 @@ const UI = {
   iconBtn:
     "border border-transparent p-2 text-[rgb(var(--color-text-rgb)/0.58)] transition hover:border-[rgb(var(--color-border-rgb)/0.3)] hover:bg-[rgb(var(--color-background-rgb)/0.24)] hover:text-[rgb(var(--color-text-rgb)/0.9)]",
 };
+
+type WarrantySelectablePhoto = {
+  id: string;
+  thumbUrl?: string;
+  fullUrl?: string;
+  url?: string;
+  caption?: string;
+};
+
 export default function WarrantyEditModal({
   open,
   onClose,
@@ -90,6 +99,7 @@ export default function WarrantyEditModal({
   job,
   warrantyType,
   warranty,
+  availablePhotos,
   onSave,
 }: {
   open: boolean;
@@ -98,7 +108,11 @@ export default function WarrantyEditModal({
   job: Job;
   warrantyType: WarrantyTypeKey;
   warranty?: WarrantyDraft | null;
-  onSave: (nextWarranty: WarrantyDraft) => Promise<void>;
+  availablePhotos: WarrantySelectablePhoto[];
+  onSave: (
+    nextWarranty: WarrantyDraft,
+    nextHomeowner: ContactInfo
+  ) => Promise<void>;
 }) {
   const existing = useMemo<WarrantyDraft>(() => {
     return (
@@ -144,11 +158,16 @@ export default function WarrantyEditModal({
         claimOpenedAt: null,
         claimClosedAt: null,
 
-        homeowner: { name: "", phone: "", email: "" },
+        homeowner: {
+          name: job.homeowner?.name ?? "",
+          phone: job.homeowner?.phone ?? "",
+          email: job.homeowner?.email ?? "",
+        },
         adjuster: { name: "", phone: "", email: "" },
         thirdPartyAdmin: { name: "", phone: "", email: "" },
 
         attachments: [],
+        warrantyPhotoIds: [],
       }
     );
   }, [warranty, warrantyType]);
@@ -156,10 +175,57 @@ export default function WarrantyEditModal({
   const [draft, setDraft] = useState<WarrantyDraft>(existing);
   const [saving, setSaving] = useState(false);
 
+  const existingHomeowner = useMemo<ContactInfo>(
+    () => ({
+      name: job.homeowner?.name ?? warranty?.homeowner?.name ?? "",
+      phone: job.homeowner?.phone ?? warranty?.homeowner?.phone ?? "",
+      email: job.homeowner?.email ?? warranty?.homeowner?.email ?? "",
+    }),
+    [
+      job.homeowner?.name,
+      job.homeowner?.phone,
+      job.homeowner?.email,
+      warranty?.homeowner?.name,
+      warranty?.homeowner?.phone,
+      warranty?.homeowner?.email,
+    ]
+  );
+
+  const [homeownerDraft, setHomeownerDraft] =
+    useState<ContactInfo>(existingHomeowner);
+
   useEffect(() => {
     if (!open) return;
     setDraft(existing);
-  }, [open, existing]);
+    setHomeownerDraft(existingHomeowner);
+  }, [open, existing, existingHomeowner]);
+
+  function safePhotoUrl(photo: WarrantySelectablePhoto) {
+    return photo.thumbUrl || photo.fullUrl || photo.url || "";
+  }
+
+  function toggleWarrantyPhoto(photoId: string) {
+    setDraft((prev) => {
+      const current = Array.isArray((prev as any).warrantyPhotoIds)
+        ? (prev as any).warrantyPhotoIds
+        : [];
+
+      const nextIds = current.includes(photoId)
+        ? current.filter((id: string) => id !== photoId)
+        : [...current, photoId];
+
+      return {
+        ...prev,
+        warrantyPhotoIds: nextIds,
+      };
+    });
+  }
+
+  const selectedWarrantyPhotoIds = Array.isArray(
+    (draft as any).warrantyPhotoIds
+  )
+    ? (draft as any).warrantyPhotoIds
+    : [];
 
   if (!open) return null;
 
@@ -182,7 +248,6 @@ export default function WarrantyEditModal({
     Boolean((draft as any).exclusionsSummary?.trim()) ||
     typeof draft.coverageYears === "number" ||
     typeof (draft as any).deductibleCents === "number" ||
-    Boolean(draft.homeowner?.name?.trim()) ||
     Boolean(draft.adjuster?.name?.trim()) ||
     Boolean(draft.thirdPartyAdmin?.name?.trim());
 
@@ -194,10 +259,17 @@ export default function WarrantyEditModal({
   async function handleSave(openReport = false) {
     setSaving(true);
     try {
-      await onSave({
-        ...draft,
-        kind: warrantyType,
-      });
+      await onSave(
+        {
+          ...draft,
+          kind: warrantyType,
+        },
+        {
+          name: homeownerDraft.name?.trim() || "",
+          phone: homeownerDraft.phone?.trim() || "",
+          email: homeownerDraft.email?.trim() || "",
+        }
+      );
 
       onClose();
 
@@ -1028,57 +1100,152 @@ export default function WarrantyEditModal({
               </div>
             )}
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div>
-                <label className={UI.label}>Homeowner name</label>
-                <input
-                  className={UI.input}
-                  value={draft.homeowner?.name ?? ""}
-                  onChange={(e) =>
-                    setDraft((d) => ({
-                      ...d,
-                      homeowner: {
-                        ...(d.homeowner ?? {}),
+            <div className="mt-5 border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.12)] px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold tracking-[0.01em] text-[rgb(var(--color-text-rgb)/0.96)]">
+                    Homeowner
+                  </div>
+                  <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.52)]">
+                    This homeowner contact is shared across the entire job and
+                    is used for all warranty packets.
+                  </div>
+                </div>
+
+                <div className="rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+                  Job-level
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label className={UI.label}>Homeowner name</label>
+                  <input
+                    className={UI.input}
+                    value={homeownerDraft.name ?? ""}
+                    onChange={(e) =>
+                      setHomeownerDraft((prev) => ({
+                        ...prev,
                         name: e.target.value,
-                      },
-                    }))
-                  }
-                />
-              </div>
+                      }))
+                    }
+                  />
+                </div>
 
-              <div>
-                <label className={UI.label}>Homeowner phone</label>
-                <input
-                  className={UI.input}
-                  value={draft.homeowner?.phone ?? ""}
-                  onChange={(e) =>
-                    setDraft((d) => ({
-                      ...d,
-                      homeowner: {
-                        ...(d.homeowner ?? {}),
+                <div>
+                  <label className={UI.label}>Homeowner phone</label>
+                  <input
+                    className={UI.input}
+                    value={homeownerDraft.phone ?? ""}
+                    onChange={(e) =>
+                      setHomeownerDraft((prev) => ({
+                        ...prev,
                         phone: e.target.value,
-                      },
-                    }))
-                  }
-                />
+                      }))
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className={UI.label}>Homeowner email</label>
+                  <input
+                    className={UI.input}
+                    value={homeownerDraft.email ?? ""}
+                    onChange={(e) =>
+                      setHomeownerDraft((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* supporting photos */}
+            <div className="mt-5 px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold tracking-[0.01em] text-[rgb(var(--color-text-rgb)/0.96)]">
+                    Supporting photos
+                  </div>
+                  <div className="mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.52)]">
+                    Select only the job photos that should appear in this
+                    warranty packet.
+                  </div>
+                </div>
+
+                {selectedWarrantyPhotoIds.length > 0 ? (
+                  <div className="rounded-full border border-[rgb(var(--color-primary-rgb)/0.30)] bg-[rgb(var(--color-primary-rgb)/0.10)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+                    {selectedWarrantyPhotoIds.length} selected
+                  </div>
+                ) : null}
               </div>
 
-              <div>
-                <label className={UI.label}>Homeowner email</label>
-                <input
-                  className={UI.input}
-                  value={draft.homeowner?.email ?? ""}
-                  onChange={(e) =>
-                    setDraft((d) => ({
-                      ...d,
-                      homeowner: {
-                        ...(d.homeowner ?? {}),
-                        email: e.target.value,
-                      },
-                    }))
-                  }
-                />
-              </div>
+              {availablePhotos.length === 0 ? (
+                <div className="mt-3 rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.14)] px-3 py-3 text-sm text-[rgb(var(--color-text-rgb)/0.62)]">
+                  No job photos have been uploaded yet for this job.
+                </div>
+              ) : (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {availablePhotos.map((photo) => {
+                    const src = safePhotoUrl(photo);
+                    const selected = selectedWarrantyPhotoIds.includes(
+                      photo.id
+                    );
+
+                    return (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        onClick={() => toggleWarrantyPhoto(photo.id)}
+                        className={[
+                          "overflow-hidden rounded-xl border text-left transition",
+                          selected
+                            ? "border-[rgb(var(--color-primary-rgb)/0.52)] bg-[rgb(var(--color-primary-rgb)/0.12)]"
+                            : "border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-background-rgb)/0.14)] hover:bg-[rgb(var(--color-background-rgb)/0.24)]",
+                        ].join(" ")}
+                      >
+                        <div className="aspect-[4/3] w-full overflow-hidden bg-[rgb(var(--color-background-rgb)/0.18)]">
+                          {src ? (
+                            <img
+                              src={src}
+                              alt={photo.caption || "Job photo"}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-[rgb(var(--color-text-rgb)/0.45)]">
+                              No image
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-start justify-between gap-2 px-3 py-2.5">
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium text-[rgb(var(--color-text-rgb)/0.92)]">
+                              {photo.caption?.trim() || "Untitled photo"}
+                            </div>
+                            <div className="mt-0.5 text-[11px] text-[rgb(var(--color-text-rgb)/0.52)]">
+                              {photo.id.slice(0, 8)}
+                            </div>
+                          </div>
+
+                          <div
+                            className={[
+                              "shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
+                              selected
+                                ? "bg-[rgb(var(--color-primary-rgb)/0.18)] text-[rgb(var(--color-text-rgb)/0.96)]"
+                                : "bg-[rgb(var(--color-background-rgb)/0.22)] text-[rgb(var(--color-text-rgb)/0.56)]",
+                            ].join(" ")}
+                          >
+                            {selected ? "Included" : "Select"}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* warranty notes */}

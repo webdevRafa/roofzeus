@@ -179,7 +179,7 @@ export default function WarrantyCenterModal({
         <div className={UI.shell}>
           <div className="flex items-start justify-between gap-4 border-b border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.18)] px-5 py-4">
             <div className="min-w-0">
-              <div className={UI.title}>Warranty</div>
+              <div className={UI.title}>Warranty Center</div>
               <div className="mt-1 truncate text-[13px] font-medium text-[rgb(var(--color-text-rgb)/0.82)]">
                 {addressLabel(job)}
               </div>

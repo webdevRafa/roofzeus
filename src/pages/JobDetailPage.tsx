@@ -58,7 +58,9 @@ import type {
   Org,
   OrgMaterialOption,
   WarrantyTypeKey,
+  ContactInfo,
 } from "../types/types";
+
 import { jobConverter } from "../types/types";
 import { toCents } from "../utils/money";
 import { recomputeJob } from "../utils/calc";
@@ -817,6 +819,22 @@ export default function JobDetailPage({
     return t.length ? t : deleteField();
   }
 
+  function toContactOrDelete(contact?: ContactInfo | null) {
+    const name = typeof contact?.name === "string" ? contact.name.trim() : "";
+    const phone =
+      typeof contact?.phone === "string" ? contact.phone.trim() : "";
+    const email =
+      typeof contact?.email === "string" ? contact.email.trim() : "";
+
+    if (!name && !phone && !email) return deleteField();
+
+    return {
+      ...(name ? { name } : {}),
+      ...(phone ? { phone } : {}),
+      ...(email ? { email } : {}),
+    };
+  }
+
   function dateToTimestampOrDelete(d: any) {
     if (!d) return deleteField();
 
@@ -902,7 +920,10 @@ export default function JobDetailPage({
     });
   }
 
-  async function saveWarranty(nextWarranty: WarrantyDraft) {
+  async function saveWarranty(
+    nextWarranty: WarrantyDraft,
+    nextHomeowner: ContactInfo
+  ) {
     if (!job) return;
     if (!jobDocRef) return;
     if (!activeWarrantyType) return;
@@ -979,12 +1000,21 @@ export default function JobDetailPage({
         (nextWarranty as any).claimClosedAt
       ),
 
-      homeowner: nextWarranty.homeowner ?? deleteField(),
+      /**
+       * Homeowner is now job-level.
+       * Delete the legacy packet-level homeowner so all packets use job.homeowner.
+       */
+      homeowner: deleteField(),
+
       adjuster: nextWarranty.adjuster ?? deleteField(),
       thirdPartyAdmin: nextWarranty.thirdPartyAdmin ?? deleteField(),
 
       attachments: Array.isArray(nextWarranty.attachments)
         ? nextWarranty.attachments
+        : deleteField(),
+
+      warrantyPhotoIds: Array.isArray((nextWarranty as any).warrantyPhotoIds)
+        ? (nextWarranty as any).warrantyPhotoIds
         : deleteField(),
     };
 
@@ -992,11 +1022,8 @@ export default function JobDetailPage({
       await setDoc(
         rawRef,
         {
-          warranties: {
-            ...(job.warranties ?? {}),
-            [type]: warrantyPatch,
-          },
-          warranty: deleteField(),
+          [`warranties.${type}`]: warrantyPatch,
+          homeowner: toContactOrDelete(nextHomeowner),
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -1009,7 +1036,7 @@ export default function JobDetailPage({
       setToast({
         status: "success",
         title: "Warranty saved",
-        message: `${type} warranty details were saved successfully.`,
+        message: "Warranty details and homeowner contact have been saved.",
       });
     } catch (e) {
       console.error("Failed to save warranty", e);
@@ -5230,10 +5257,10 @@ export default function JobDetailPage({
                   job={job}
                   warrantyType={activeWarrantyType}
                   warranty={activeWarranty}
+                  availablePhotos={photos}
                   onSave={saveWarranty}
                 />
               )}
-
               {/* Warranty packet preview */}
               {warrantyReportOpen && activeWarrantyType && (
                 <WarrantyReportModal

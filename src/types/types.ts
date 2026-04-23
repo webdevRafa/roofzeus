@@ -370,7 +370,8 @@ export type WarrantyStatus =
     portalUrl?: string;
     submittedBy?: { userId?: ID; name?: string };
   
-    /** People involved */
+     /** People involved */
+    /** Legacy only — new source of truth is Job.homeowner */
     homeowner?: ContactInfo;
     adjuster?: ContactInfo;
     thirdPartyAdmin?: ContactInfo;
@@ -387,9 +388,12 @@ export type WarrantyStatus =
     coveredScope?: string;
     exclusionsSummary?: string;
   
-    /** Notes / files */
-    notes?: string;
-    attachments?: WarrantyAttachment[];
+       /** Notes / files */
+       notes?: string;
+       attachments?: WarrantyAttachment[];
+   
+       /** Selected job photo ids to include in this specific warranty packet */
+       warrantyPhotoIds?: ID[];
   };
 
 export type Earnings = {
@@ -652,6 +656,9 @@ export type Job = {
   status: JobStatus;
   pricing?: JobPricing;
   address: Address;
+
+  /** Shared homeowner contact for this job. All warranty packets should read from here. */
+  homeowner?: ContactInfo;
 
   /** Final punch information (walkthrough / completion). */
   punchedAt?: Timestamp | Date | FieldValue | null;
