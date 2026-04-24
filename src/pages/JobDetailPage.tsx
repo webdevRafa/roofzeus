@@ -32,6 +32,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Plus,
+  UserRound,
 } from "lucide-react";
 import { MdArrowBackIos } from "react-icons/md";
 
@@ -184,6 +185,13 @@ type ActivityItem = {
 
 type WarrantyDraft = NonNullable<Job["warranty"]>;
 type WarrantyRecord = Partial<Record<WarrantyTypeKey, WarrantyDraft>>;
+
+const WARRANTY_TYPES: WarrantyTypeKey[] = [
+  "workmanship",
+  "manufacturer",
+  "thirdParty",
+  "insurance",
+];
 
 function toDateSafe(d: any): Date | null {
   if (!d) return null;
@@ -394,6 +402,15 @@ export default function JobDetailPage({
 
   const [summaryNotesOpen, setSummaryNotesOpen] = useState(false);
   const [summaryNotesDraft, setSummaryNotesDraft] = useState("");
+
+  const [homeownerOpen, setHomeownerOpen] = useState(false);
+  const [homeownerSaving, setHomeownerSaving] = useState(false);
+  const [homeownerDraft, setHomeownerDraft] = useState<ContactInfo>({
+    name: "",
+    phone: "",
+    email: "",
+  });
+
   const [payoutDocs, setPayoutDocs] = useState<PayoutDoc[]>([]);
 
   const [photos, setPhotos] = useState<JobPhoto[]>([]);
@@ -920,6 +937,45 @@ export default function JobDetailPage({
     });
   }
 
+  async function saveHomeowner() {
+    if (!jobDocRef) return;
+
+    setHomeownerSaving(true);
+
+    try {
+      await setDoc(
+        jobDocRef,
+        {
+          homeowner: toContactOrDelete(homeownerDraft),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      const typedRef = jobDocRef.withConverter(jobConverter);
+      const snap = await getDoc(typedRef);
+      if (snap.exists()) setJob(snap.data());
+
+      setHomeownerOpen(false);
+
+      setToast({
+        status: "success",
+        title: "Homeowner saved",
+        message:
+          "Homeowner information is now available for all warranty packets.",
+      });
+    } catch (e) {
+      console.error("Failed to save homeowner", e);
+      setToast({
+        status: "error",
+        title: "Homeowner save failed",
+        message: "Check console for details and try again.",
+      });
+    } finally {
+      setHomeownerSaving(false);
+    }
+  }
+
   async function saveWarranty(
     nextWarranty: WarrantyDraft,
     nextHomeowner: ContactInfo
@@ -1022,7 +1078,9 @@ export default function JobDetailPage({
       await setDoc(
         rawRef,
         {
-          [`warranties.${type}`]: warrantyPatch,
+          warranties: {
+            [type]: warrantyPatch,
+          },
           homeowner: toContactOrDelete(nextHomeowner),
           updatedAt: serverTimestamp(),
         },
@@ -2144,9 +2202,23 @@ export default function JobDetailPage({
   const jobWarranties: WarrantyRecord = useMemo(() => {
     if (!job) return {};
 
+    const rawJob = job as Job &
+      Partial<Record<`warranties.${WarrantyTypeKey}`, WarrantyDraft>>;
+
     const next: WarrantyRecord = {
       ...(job.warranties ?? {}),
     };
+
+    for (const type of WARRANTY_TYPES) {
+      const dottedWarranty = rawJob[`warranties.${type}`];
+
+      if (!next[type] && dottedWarranty && typeof dottedWarranty === "object") {
+        next[type] = {
+          ...dottedWarranty,
+          kind: type,
+        };
+      }
+    }
 
     if (Object.keys(next).length > 0) return next;
 
@@ -2321,6 +2393,23 @@ export default function JobDetailPage({
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHomeownerDraft({
+                      name: job.homeowner?.name ?? "",
+                      phone: job.homeowner?.phone ?? "",
+                      email: job.homeowner?.email ?? "",
+                    });
+                    setHomeownerOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                  title="Add homeowner information used by warranty packets"
+                >
+                  <UserRound className="h-4 w-4 text-[var(--color-muted)]" />
+                  {job.homeowner?.name ? "Homeowner" : "Add homeowner"}
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setWarrantyCenterOpen(true)}
@@ -3487,6 +3576,104 @@ export default function JobDetailPage({
                 </div>
               </main>
             </div>
+
+            {/* Home Owner Edit Modal */}
+            <ModalShell
+              open={homeownerOpen}
+              title="Homeowner Information"
+              onClose={() => setHomeownerOpen(false)}
+            >
+              <form
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void saveHomeowner();
+                }}
+              >
+                <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.14)] px-4 py-3">
+                  <div className="text-sm font-semibold text-[var(--color-text)]">
+                    Shared job-level homeowner
+                  </div>
+                  <p className="mt-1 text-xs leading-5 text-[var(--color-muted)]">
+                    This contact is saved once on the job document and will be
+                    used by manufacturer, workmanship, 3rd party, and insurance
+                    warranty packets.
+                  </p>
+                </div>
+
+                <label className="block">
+                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                    Homeowner name
+                  </div>
+                  <input
+                    value={homeownerDraft.name ?? ""}
+                    onChange={(e) =>
+                      setHomeownerDraft((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g. John Smith"
+                    className={UI.input}
+                  />
+                </label>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                      Phone
+                    </div>
+                    <input
+                      value={homeownerDraft.phone ?? ""}
+                      onChange={(e) =>
+                        setHomeownerDraft((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
+                      placeholder="(210) 555-1234"
+                      className={UI.input}
+                    />
+                  </label>
+
+                  <label className="block">
+                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                      Email
+                    </div>
+                    <input
+                      value={homeownerDraft.email ?? ""}
+                      onChange={(e) =>
+                        setHomeownerDraft((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                      placeholder="homeowner@email.com"
+                      className={UI.input}
+                    />
+                  </label>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setHomeownerOpen(false)}
+                    className={`${UI.btnSoft} h-9 px-4`}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={homeownerSaving}
+                    className={`${UI.btnPrimary} h-9 px-5`}
+                  >
+                    {homeownerSaving ? "Saving…" : "Save homeowner"}
+                  </button>
+                </div>
+              </form>
+            </ModalShell>
+
             {/* Summary Notes Modal */}
             <ModalShell
               open={summaryNotesOpen}
@@ -5219,6 +5406,103 @@ export default function JobDetailPage({
                       className="bg-[var(--color-done)] cursor-pointer px-3 py-2 text-sm font-medium text-[var(--btn-text)] "
                     >
                       Save
+                    </button>
+                  </div>
+                </form>
+              </ModalShell>
+
+              {/* Home Owner Edit Modal */}
+              <ModalShell
+                open={homeownerOpen}
+                title="Homeowner Information"
+                onClose={() => setHomeownerOpen(false)}
+              >
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void saveHomeowner();
+                  }}
+                >
+                  <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.14)] px-4 py-3">
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
+                      Shared job-level homeowner
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-[var(--color-muted)]">
+                      This contact is saved once on the job document and will be
+                      used by manufacturer, workmanship, 3rd party, and
+                      insurance warranty packets.
+                    </p>
+                  </div>
+
+                  <label className="block">
+                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                      Homeowner name
+                    </div>
+                    <input
+                      value={homeownerDraft.name ?? ""}
+                      onChange={(e) =>
+                        setHomeownerDraft((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. John Smith"
+                      className={UI.input}
+                    />
+                  </label>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Phone
+                      </div>
+                      <input
+                        value={homeownerDraft.phone ?? ""}
+                        onChange={(e) =>
+                          setHomeownerDraft((prev) => ({
+                            ...prev,
+                            phone: e.target.value,
+                          }))
+                        }
+                        placeholder="(210) 555-1234"
+                        className={UI.input}
+                      />
+                    </label>
+
+                    <label className="block">
+                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Email
+                      </div>
+                      <input
+                        value={homeownerDraft.email ?? ""}
+                        onChange={(e) =>
+                          setHomeownerDraft((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                        placeholder="homeowner@email.com"
+                        className={UI.input}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setHomeownerOpen(false)}
+                      className={`${UI.btnSoft} h-9 px-4`}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={homeownerSaving}
+                      className={`${UI.btnPrimary} h-9 px-5`}
+                    >
+                      {homeownerSaving ? "Saving…" : "Save homeowner"}
                     </button>
                   </div>
                 </form>
