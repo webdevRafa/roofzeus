@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Printer, X, AlertCircle, Image as ImageIcon } from "lucide-react";
+import {
+  Printer,
+  X,
+  AlertCircle,
+  Image as ImageIcon,
+  MapPin,
+} from "lucide-react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useOrg } from "../contexts/OrgContext";
@@ -547,11 +553,18 @@ export default function JobReportModal({
           <div className="border-b border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4 print:hidden sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div className="min-w-0 flex-1">
-                <div className={UI.address}>{address}</div>
-
-                <div className="mt-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.52)]">
-                  Tip: Disable "Headers and footers" in print settings for a
-                  cleaner report.
+                <div className=" px-3 py-2">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Job address
+                      </div>
+                      <div className="mt-0.5 text-sm font-semibold leading-snug text-[var(--color-text)] break-words">
+                        {address}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

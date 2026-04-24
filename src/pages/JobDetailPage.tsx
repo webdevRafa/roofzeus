@@ -33,6 +33,10 @@ import {
   AlertTriangle,
   Plus,
   UserRound,
+  Hammer,
+  Layers3,
+  Calculator,
+  MapPin,
 } from "lucide-react";
 import { MdArrowBackIos } from "react-icons/md";
 
@@ -641,18 +645,18 @@ export default function JobDetailPage({
   const UI = {
     input:
       "h-10 w-full min-w-0  border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 text-sm text-[var(--color-text)] outline-none " +
-      "focus:ring-2 focus:ring-[var(--color-accent)] shadow-sm",
+      "focus:ring-2 focus:ring-[var(--color-accent)]/70 shadow-sm",
     textarea:
       "w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-4 py-3 text-sm leading-6 " +
-      "outline-none shadow-sm focus:ring-2 focus:ring-[var(--color-accent)] " +
+      "outline-none shadow-sm focus:ring-1 focus:ring-[var(--color-accent)] " +
       "placeholder:text-[var(--color-muted)] resize-none",
 
     select:
       "h-11 w-full min-w-0  border border-[var(--color-border)] bg-[var(--color-card)] px-3 pr-10 text-sm text-[var(--color-text)] outline-none shadow-sm transition " +
       "hover:bg-[var(--color-card-hover)] focus:ring-2 focus:ring-[var(--color-accent)] focus:border-[var(--color-accent)] appearance-none cursor-pointer",
     btnPrimary:
-      "h-8 inline-flex items-center justify-center rounded-md bg-[var(--btn-bg)] px-2 text-xs font-medium " +
-      "text-[var(--btn-text)] shadow-sm hover:bg-[var(--btn-hover-bg)] transition disabled:opacity-60 disabled:cursor-not-allowed",
+      "h-8 inline-flex items-center justify-center rounded-md bg-[var(--color-card-hover)] text-[var(--color-text)]/85 hover:text-[var(--color-text)] cursor-pointer px-2 text-xs font-medium " +
+      "text-[var(--btn-text)] shadow-sm  transition disabled:opacity-60 disabled:cursor-not-allowed",
     btnSoft:
       "h-8 inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 text-xs " +
       "font-medium text-[var(--color-text)] shadow-sm hover:bg-[var(--color-card-hover)] transition",
@@ -1406,6 +1410,11 @@ export default function JobDetailPage({
   // Tabs for payouts
   type PayoutTab = "shingles" | "felt" | "technician";
   const [payoutTab, setPayoutTab] = useState<PayoutTab>("shingles");
+  useEffect(() => {
+    if (payoutModalOpen && payoutTab === "technician") {
+      setPayoutTab("shingles");
+    }
+  }, [payoutModalOpen, payoutTab]);
   const payeeRef = useRef<HTMLInputElement | null>(null);
   const noteRef = useRef<HTMLTextAreaElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
@@ -3596,6 +3605,7 @@ export default function JobDetailPage({
             <ModalShell
               open={homeownerOpen}
               title="Homeowner Information"
+              width="md"
               onClose={() => setHomeownerOpen(false)}
             >
               <form
@@ -3605,15 +3615,18 @@ export default function JobDetailPage({
                   void saveHomeowner();
                 }}
               >
-                <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.14)] px-4 py-3">
-                  <div className="text-sm font-semibold text-[var(--color-text)]">
-                    Shared job-level homeowner
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Job address
+                      </div>
+                      <div className="mt-0.5 text-sm font-semibold leading-snug text-[var(--color-text)] break-words">
+                        {headerAddress}
+                      </div>
+                    </div>
                   </div>
-                  <p className="mt-1 text-xs leading-5 text-[var(--color-muted)]">
-                    This contact is saved once on the job document and will be
-                    used by manufacturer, workmanship, 3rd party, and insurance
-                    warranty packets.
-                  </p>
                 </div>
 
                 <label className="block">
@@ -3696,6 +3709,7 @@ export default function JobDetailPage({
             <ModalShell
               open={summaryNotesOpen}
               title="Edit summary notes"
+              width="md"
               onClose={() => {
                 setSummaryNotesDraft(job?.summaryNotes ?? "");
                 setSummaryNotesOpen(false);
@@ -3708,6 +3722,19 @@ export default function JobDetailPage({
                   await saveSummaryNotes();
                 }}
               >
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Job address
+                      </div>
+                      <div className="mt-0.5 text-sm font-semibold leading-snug text-[var(--color-text)] break-words">
+                        {headerAddress}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-[var(--color-text)]">
@@ -3776,138 +3803,245 @@ export default function JobDetailPage({
                 </div>
               </form>
             </ModalShell>
+
             {/* Add Payout Modal */}
             <ModalShell
               open={payoutModalOpen}
               title="Add payout"
               onClose={() => setPayoutModalOpen(false)}
             >
-              {/* Tabs */}
-              <div className="mb-3 inline-flex max-w-full flex-wrap  p-1 text-sm">
-                {(["shingles", "felt"] as PayoutTab[]).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setPayoutTab(t)}
-                    className={
-                      "px-3 py-1 capitalize " +
-                      (payoutTab === t
-                        ? " transition duration-300 ease-in-out text-[var(--btn-text)] border-b-1 border-b-[var(--color-muted)]/20"
-                        : "text-[var(--color-muted)]/60 hover:text-[var(--color-text)]")
-                    }
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-
               <form
-                className={
-                  payoutTab === "technician"
-                    ? "grid w-full gap-2 sm:grid-cols-[minmax(0,1fr)_160px_110px] items-stretch"
-                    : "grid w-full gap-2 sm:grid-cols-[120px_140px_110px] items-stretch"
-                }
+                className="space-y-3"
                 onSubmit={async (e) => {
                   e.preventDefault();
                   await handleAddPayoutSubmit();
                 }}
               >
-                <div className="sm:col-span-full">
-                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                    Employee
-                  </label>
+                {/* Job address card */}
+                <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.14)] px-3 py-2.5">
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/8">
+                      <MapPin className="h-4 w-4 text-[var(--color-primary)]" />
+                    </span>
 
-                  <select
-                    ref={payeeRef as any}
-                    value={activePayout.employeeId ?? ""}
-                    onChange={(e) => {
-                      const id = e.target.value || undefined;
-                      const emp = employees.find((x) => x.id === id);
-                      setActivePayout({
-                        employeeId: id,
-                        payeeNickname: emp?.name ?? "",
-                      });
-                    }}
-                    className={`${UI.select} sm:col-span-full`}
-                  >
-                    <option value="">
-                      {activeEmployees.length
-                        ? "Select active employee…"
-                        : employees.length
-                        ? "No active employees (toggle status on Employees page)."
-                        : "No employees yet (add on Employees page)."}
-                    </option>
-                    {activeEmployees.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.name}
-                      </option>
-                    ))}
-                  </select>
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)]">
+                        Job address
+                      </div>
+                      <div className="mt-1 text-sm font-semibold leading-5 text-[rgb(var(--color-text-rgb)/0.94)]">
+                        {job.address?.fullLine || "Address not available"}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {payoutTab === "technician" ? (
-                  <input
-                    value={activePayout.amount}
-                    onChange={(e) =>
-                      setActivePayout({ amount: e.target.value })
-                    }
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    placeholder="Amount $"
-                    className={UI.input}
-                  />
-                ) : (
-                  <>
-                    <input
-                      value={activePayout.sqft}
-                      onChange={(e) =>
-                        setActivePayout({ sqft: e.target.value })
-                      }
-                      type="number"
-                      min={0}
-                      step="1"
-                      placeholder="Sq"
-                      className={UI.input}
-                    />
-                    <input
-                      value={activePayout.rate}
-                      onChange={(e) =>
-                        setActivePayout({ rate: e.target.value })
-                      }
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      placeholder="Rate $/sq.ft"
-                      className={UI.input}
-                    />
-                  </>
-                )}
+                {/* Payout type selector */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--color-text)]">
+                        Payout type
+                      </div>
+                      <div className="text-xs text-[var(--color-muted)]">
+                        Choose the labor category for this payout.
+                      </div>
+                    </div>
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={!payoutCanSubmit}
-                  className={[
-                    "text-white py-0 text-sm w-full shrink-0 bg-[var(--color-done)] max-w-[100px] mx-auto cursor-pointer",
-                    !payoutCanSubmit ? "opacity-60 cursor-not-allowed" : "",
-                  ].join(" ")}
-                >
-                  Add
-                </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["shingles", "felt"] as PayoutTab[]).map((t) => {
+                      const active = payoutTab === t;
+                      const label = t === "felt" ? "Dry In" : "Shingles";
+                      const Icon = t === "felt" ? Layers3 : Hammer;
+
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setPayoutTab(t)}
+                          className={[
+                            "group rounded-xl border px-3 py-2.5 text-left transition",
+                            active
+                              ? "border-[var(--color-primary)]/45 bg-[var(--color-primary)]/12 shadow-sm"
+                              : "border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.35)] hover:bg-[rgb(var(--color-surface-rgb)/0.55)]",
+                          ].join(" ")}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span
+                              className={[
+                                "inline-flex h-8 w-8 items-center justify-center rounded-lg border transition",
+                                active
+                                  ? "border-[var(--color-primary)]/30 bg-[var(--color-primary)]/15"
+                                  : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.18)]",
+                              ].join(" ")}
+                            >
+                              <Icon
+                                className={[
+                                  "h-5 w-5",
+                                  active
+                                    ? "text-[var(--color-primary)]"
+                                    : "text-[rgb(var(--color-text-rgb)/0.55)]",
+                                ].join(" ")}
+                              />
+                            </span>
+
+                            {active && (
+                              <span className="rounded-full border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">
+                                Selected
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-2 text-sm font-semibold text-[var(--color-text)]">
+                            {label}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Details card */}
+                <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.22)] p-3">
+                  <div className="mb-3 flex items-start gap-2">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-background-rgb)/0.22)]">
+                      <UserRound className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.65)]" />
+                    </span>
+
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--color-text)]">
+                        Payout details
+                      </div>
+                      <div className="text-xs text-[var(--color-muted)]">
+                        Select the employee and enter the square count with the
+                        agreed rate.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3">
+                    <div>
+                      <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                        Employee
+                      </label>
+
+                      <select
+                        ref={payeeRef as any}
+                        value={activePayout.employeeId ?? ""}
+                        onChange={(e) => {
+                          const id = e.target.value || undefined;
+                          const emp = employees.find((x) => x.id === id);
+                          setActivePayout({
+                            employeeId: id,
+                            payeeNickname: emp?.name ?? "",
+                          });
+                        }}
+                        className={UI.select}
+                      >
+                        <option value="">
+                          {activeEmployees.length
+                            ? "Select active employee..."
+                            : employees.length
+                            ? "No active employees. Toggle status on Employees page."
+                            : "No employees yet. Add one on Employees page."}
+                        </option>
+                        {activeEmployees.map((e) => (
+                          <option key={e.id} value={e.id}>
+                            {e.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                          Squares
+                        </label>
+                        <input
+                          value={activePayout.sqft}
+                          onChange={(e) =>
+                            setActivePayout({ sqft: e.target.value })
+                          }
+                          type="number"
+                          min={0}
+                          step="1"
+                          placeholder="0"
+                          className={UI.input}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                          Rate per square
+                        </label>
+                        <input
+                          value={activePayout.rate}
+                          onChange={(e) =>
+                            setActivePayout({ rate: e.target.value })
+                          }
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          placeholder="0.00"
+                          className={UI.input}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total summary */}
+                <div className="rounded-xl border border-[var(--color-primary)]/18 bg-[var(--color-primary)]/8 px-3 py-2.5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10">
+                        <Calculator className="h-4 w-4 text-[var(--color-primary)]" />
+                      </span>
+
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                          Calculated payout
+                        </div>
+                        <div className="mt-0.5 text-xl font-semibold tracking-tight text-[var(--color-text)]">
+                          ${(payoutAmountCents / 100).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right text-xs text-[var(--color-muted)]">
+                      <div>{payoutTab === "felt" ? "Dry In" : "Shingles"}</div>
+                      <div className="mt-1">
+                        {activePayout.sqft || 0} sq @ ${activePayout.rate || 0}
+                        /sq
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex flex-col-reverse gap-2 border-t border-[rgb(var(--color-border-rgb)/0.12)] pt-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setPayoutModalOpen(false)}
+                    className={`${UI.btnSoft} h-10 px-4 inline-flex`}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={!payoutCanSubmit}
+                    className={[
+                      UI.btnPrimary,
+                      "h-10 px-5 text-sm font-semibold",
+                      !payoutCanSubmit ? "opacity-60 cursor-not-allowed" : "",
+                    ].join(" ")}
+                  >
+                    Add payout
+                  </button>
+                </div>
               </form>
-
-              <div className="mt-5  text-[var(--color-muted)]">
-                Total {payoutTab} labor:{" "}
-                <span className="font-medium text-[var(--color-text)]">
-                  ${(payoutAmountCents / 100).toFixed(2)}
-                </span>
-                {payoutTab !== "technician" ? (
-                  <span className="ml-2 opacity-70">
-                    {activePayout.sqft || 0} sq @ ${activePayout.rate || 0}
-                    /sq
-                  </span>
-                ) : null}
-              </div>
             </ModalShell>
             {/* Add Materials Modal */}
             <ModalShell
@@ -5429,103 +5563,6 @@ export default function JobDetailPage({
                 </form>
               </ModalShell>
 
-              {/* Home Owner Edit Modal */}
-              <ModalShell
-                open={homeownerOpen}
-                title="Homeowner Information"
-                onClose={() => setHomeownerOpen(false)}
-              >
-                <form
-                  className="space-y-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void saveHomeowner();
-                  }}
-                >
-                  <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.14)] px-4 py-3">
-                    <div className="text-sm font-semibold text-[var(--color-text)]">
-                      Shared job-level homeowner
-                    </div>
-                    <p className="mt-1 text-xs leading-5 text-[var(--color-muted)]">
-                      This contact is saved once on the job document and will be
-                      used by manufacturer, workmanship, 3rd party, and
-                      insurance warranty packets.
-                    </p>
-                  </div>
-
-                  <label className="block">
-                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                      Homeowner name
-                    </div>
-                    <input
-                      value={homeownerDraft.name ?? ""}
-                      onChange={(e) =>
-                        setHomeownerDraft((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      placeholder="e.g. John Smith"
-                      className={UI.input}
-                    />
-                  </label>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="block">
-                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                        Phone
-                      </div>
-                      <input
-                        value={homeownerDraft.phone ?? ""}
-                        onChange={(e) =>
-                          setHomeownerDraft((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
-                          }))
-                        }
-                        placeholder="(210) 555-1234"
-                        className={UI.input}
-                      />
-                    </label>
-
-                    <label className="block">
-                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                        Email
-                      </div>
-                      <input
-                        value={homeownerDraft.email ?? ""}
-                        onChange={(e) =>
-                          setHomeownerDraft((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                        placeholder="homeowner@email.com"
-                        className={UI.input}
-                      />
-                    </label>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setHomeownerOpen(false)}
-                      className={`${UI.btnSoft} h-9 px-4`}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={homeownerSaving}
-                      className={`${UI.btnPrimary} h-9 px-5`}
-                    >
-                      {homeownerSaving ? "Saving…" : "Save homeowner"}
-                    </button>
-                  </div>
-                </form>
-              </ModalShell>
-
               {/* Warranty packet preview */}
               {/* Warranty center */}
               <WarrantyCenterModal
@@ -5655,12 +5692,22 @@ function MotionCard({
   );
 }
 
+type ModalShellWidth = "sm" | "md" | "lg" | "xl";
+
+const modalShellWidthClass: Record<ModalShellWidth, string> = {
+  sm: "sm:max-w-md lg:max-w-md",
+  md: "sm:max-w-xl lg:max-w-2xl",
+  lg: "sm:max-w-lg lg:max-w-4xl",
+  xl: "sm:max-w-lg lg:max-w-6xl",
+};
+
 function ModalShell({
   open,
   title,
   subtitle,
   eyebrow,
   bodyClassName,
+  width = "xl",
   onClose,
   children,
 }: {
@@ -5669,6 +5716,7 @@ function ModalShell({
   subtitle?: string;
   eyebrow?: string;
   bodyClassName?: string;
+  width?: ModalShellWidth;
   onClose: () => void;
   children: React.ReactNode;
 }) {
@@ -5708,7 +5756,7 @@ function ModalShell({
             // Height behavior
             "max-h-[92vh] sm:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-7rem)]",
             // Width cap on larger screens
-            "sm:max-w-lg lg:max-w-6xl",
+            modalShellWidthClass[width],
             // Prevent layout overflow
             "overflow-hidden",
           ].join(" ")}
