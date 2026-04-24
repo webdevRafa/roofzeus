@@ -47,6 +47,36 @@ function fromDateInputValue(v: string): Date | null {
   return new Date(y, m - 1, d);
 }
 
+function formatPhoneInput(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  }
+
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+function cleanPhoneInput(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 10);
+}
+
+function warrantyTypeLabel(type: WarrantyTypeKey): string {
+  switch (type) {
+    case "manufacturer":
+      return "Manufacturer Warranty";
+    case "workmanship":
+      return "Workmanship Warranty";
+    case "thirdParty":
+      return "3rd Party Warranty";
+    case "insurance":
+      return "Insurance Warranty";
+    default:
+      return "Warranty";
+  }
+}
+
 const UI = {
   input:
     "w-full border border-[rgb(var(--color-border-rgb)/0.42)] bg-[rgb(var(--color-background-rgb)/0.34)] px-3 py-2.5 text-sm text-[rgb(var(--color-text-rgb)/0.96)] placeholder:text-[rgb(var(--color-text-rgb)/0.38)] outline-none transition " +
@@ -263,10 +293,22 @@ export default function WarrantyEditModal({
         {
           ...draft,
           kind: warrantyType,
+          thirdPartyAdmin: draft.thirdPartyAdmin
+            ? {
+                ...draft.thirdPartyAdmin,
+                phone: cleanPhoneInput(draft.thirdPartyAdmin.phone ?? ""),
+              }
+            : undefined,
+          adjuster: draft.adjuster
+            ? {
+                ...draft.adjuster,
+                phone: cleanPhoneInput(draft.adjuster.phone ?? ""),
+              }
+            : undefined,
         },
         {
           name: homeownerDraft.name?.trim() || "",
-          phone: homeownerDraft.phone?.trim() || "",
+          phone: cleanPhoneInput(homeownerDraft.phone ?? ""),
           email: homeownerDraft.email?.trim() || "",
         }
       );
@@ -298,7 +340,7 @@ export default function WarrantyEditModal({
           <div className="flex items-center justify-between border-b border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.18)] px-5 py-4">
             <div className="min-w-0">
               <div className="text-[15px] font-semibold tracking-[0.02em] text-[rgb(var(--color-text-rgb)/0.98)]">
-                Warranty
+                {warrantyTypeLabel(warrantyType)}
               </div>
 
               <div className="mt-1 truncate text-[13px] font-medium text-[rgb(var(--color-text-rgb)/0.82)]">
@@ -867,14 +909,18 @@ export default function WarrantyEditModal({
                 <div>
                   <label className={UI.label}>Admin phone</label>
                   <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="(210) 555-1234"
                     className={UI.input}
-                    value={draft.thirdPartyAdmin?.phone ?? ""}
+                    value={formatPhoneInput(draft.thirdPartyAdmin?.phone ?? "")}
                     onChange={(e) =>
                       setDraft((d) => ({
                         ...d,
                         thirdPartyAdmin: {
                           ...(d.thirdPartyAdmin ?? {}),
-                          phone: e.target.value,
+                          phone: cleanPhoneInput(e.target.value),
                         },
                       }))
                     }
@@ -1111,10 +1157,6 @@ export default function WarrantyEditModal({
                     is used for all warranty packets.
                   </div>
                 </div>
-
-                <div className="rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
-                  Job-level
-                </div>
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -1135,12 +1177,16 @@ export default function WarrantyEditModal({
                 <div>
                   <label className={UI.label}>Homeowner phone</label>
                   <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="(210) 555-1234"
                     className={UI.input}
-                    value={homeownerDraft.phone ?? ""}
+                    value={formatPhoneInput(homeownerDraft.phone ?? "")}
                     onChange={(e) =>
                       setHomeownerDraft((prev) => ({
                         ...prev,
-                        phone: e.target.value,
+                        phone: cleanPhoneInput(e.target.value),
                       }))
                     }
                   />

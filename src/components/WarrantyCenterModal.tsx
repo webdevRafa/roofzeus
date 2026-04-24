@@ -72,8 +72,7 @@ function addressLabel(job: Job) {
 const UI = {
   shell:
     "relative w-full max-w-5xl overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.34)] bg-[var(--color-card)] shadow-[0_30px_90px_rgba(0,0,0,0.55)]",
-  panel:
-    "rounded-2xl border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-background-rgb)/0.16)]",
+  panel: "rounded-2xl  bg-[var(--color-card)]",
   title:
     "text-[15px] font-semibold tracking-[0.02em] text-[rgb(var(--color-text-rgb)/0.98)]",
   subtitle: "mt-1 text-[12px] text-[rgb(var(--color-text-rgb)/0.56)]",
