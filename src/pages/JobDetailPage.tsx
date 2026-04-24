@@ -5429,6 +5429,103 @@ export default function JobDetailPage({
                 </form>
               </ModalShell>
 
+              {/* Home Owner Edit Modal */}
+              <ModalShell
+                open={homeownerOpen}
+                title="Homeowner Information"
+                onClose={() => setHomeownerOpen(false)}
+              >
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void saveHomeowner();
+                  }}
+                >
+                  <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.14)] px-4 py-3">
+                    <div className="text-sm font-semibold text-[var(--color-text)]">
+                      Shared job-level homeowner
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-[var(--color-muted)]">
+                      This contact is saved once on the job document and will be
+                      used by manufacturer, workmanship, 3rd party, and
+                      insurance warranty packets.
+                    </p>
+                  </div>
+
+                  <label className="block">
+                    <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                      Homeowner name
+                    </div>
+                    <input
+                      value={homeownerDraft.name ?? ""}
+                      onChange={(e) =>
+                        setHomeownerDraft((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      placeholder="e.g. John Smith"
+                      className={UI.input}
+                    />
+                  </label>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block">
+                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Phone
+                      </div>
+                      <input
+                        value={homeownerDraft.phone ?? ""}
+                        onChange={(e) =>
+                          setHomeownerDraft((prev) => ({
+                            ...prev,
+                            phone: e.target.value,
+                          }))
+                        }
+                        placeholder="(210) 555-1234"
+                        className={UI.input}
+                      />
+                    </label>
+
+                    <label className="block">
+                      <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Email
+                      </div>
+                      <input
+                        value={homeownerDraft.email ?? ""}
+                        onChange={(e) =>
+                          setHomeownerDraft((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                        placeholder="homeowner@email.com"
+                        className={UI.input}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setHomeownerOpen(false)}
+                      className={`${UI.btnSoft} h-9 px-4`}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={homeownerSaving}
+                      className={`${UI.btnPrimary} h-9 px-5`}
+                    >
+                      {homeownerSaving ? "Saving…" : "Save homeowner"}
+                    </button>
+                  </div>
+                </form>
+              </ModalShell>
+
               {/* Warranty packet preview */}
               {/* Warranty center */}
               <WarrantyCenterModal

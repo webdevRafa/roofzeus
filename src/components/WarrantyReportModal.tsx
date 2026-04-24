@@ -188,34 +188,35 @@ function ContactBlock({
   if (!hasAny) return null;
 
   return (
-    <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
+    <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-0 print:bg-transparent print:px-0 print:py-1">
       {!hideTitle ? <div className={UI.sectionLabel}>{title}</div> : null}
 
-      <div className="space-y-2 text-sm text-[rgb(var(--color-text-rgb)/0.94)] print:text-black">
+      <div className="space-y-1.5 text-[12px] leading-5 text-[rgb(var(--color-text-rgb)/0.9)] print:text-[#111827]">
         {name ? (
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.52)] print:text-[#6b7280]" />
-            <span className="break-words">{name}</span>
+            <User className="h-3.5 w-3.5 text-[rgb(var(--color-text-rgb)/0.52)] print:text-[#6b7280]" />
+            <span className="break-words font-normal">{name}</span>
           </div>
         ) : null}
 
         {phone ? (
           <div className="flex items-center gap-2">
-            <Phone className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.52)] print:text-[#6b7280]" />
-            <span className="break-words">{phone}</span>
+            <Phone className="h-3.5 w-3.5 text-[rgb(var(--color-text-rgb)/0.52)] print:text-[#6b7280]" />
+            <span className="break-words font-normal">{phone}</span>
           </div>
         ) : null}
 
         {email ? (
           <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.52)] print:text-[#6b7280]" />
-            <span className="break-words">{email}</span>
+            <Mail className="h-3.5 w-3.5 text-[rgb(var(--color-text-rgb)/0.52)] print:text-[#6b7280]" />
+            <span className="break-words font-normal">{email}</span>
           </div>
         ) : null}
       </div>
     </div>
   );
 }
+
 function WarrantyReportDocument({
   job,
   address,
@@ -260,11 +261,13 @@ function WarrantyReportDocument({
     children: React.ReactNode;
   }) {
     return (
-      <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-[#e5e7eb] print:border-t-0 print:border-x-0 print:border-b print:bg-transparent print:px-0 print:py-3">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#9ca3af]">
-          {title}
-        </div>
-        <div className="mt-3">{children}</div>
+      <div className="border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.10)] px-4 py-4 print:border-0 print:bg-transparent print:px-0 print:py-2">
+        {title ? (
+          <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
+            {title}
+          </div>
+        ) : null}
+        <div className={title ? "mt-2" : ""}>{children}</div>
       </div>
     );
   }
@@ -281,16 +284,17 @@ function WarrantyReportDocument({
     return (
       <div
         className={[
-          "flex items-center justify-between gap-4",
+          "grid grid-cols-[108px_minmax(0,1fr)] items-start gap-2.5 py-1.5",
           !noBorder
-            ? "border-b border-[rgb(var(--color-border-rgb)/0.14)] pb-2 print:border-[#e5e7eb]"
+            ? "border-b border-[rgb(var(--color-border-rgb)/0.10)] print:border-[#edf2f7]"
             : "",
         ].join(" ")}
       >
-        <span className="text-[13px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
+        <span className="text-[12px] leading-5 text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
           {label}
         </span>
-        <span className="text-right text-[14px] font-semibold break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+
+        <span className="min-w-0 text-left text-[12px] font-normal leading-5 break-words text-[rgb(var(--color-text-rgb)/0.92)] print:text-[#111827] print:font-normal">
           {value || "—"}
         </span>
       </div>
@@ -309,17 +313,16 @@ function WarrantyReportDocument({
     return (
       <div
         className={[
-          "grid grid-cols-[110px_minmax(0,1fr)] items-center gap-4 py-2.5",
+          "grid grid-cols-[82px_minmax(0,1fr)] items-start gap-3 py-1.5",
           !noBorder
-            ? "border-b border-[rgb(var(--color-border-rgb)/0.10)] print:border-[#e5e7eb]"
+            ? "border-b border-[rgb(var(--color-border-rgb)/0.10)] print:border-[#edf2f7]"
             : "",
         ].join(" ")}
       >
-        <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.50)] print:text-[#6b7280]">
+        <div className="text-[9.5px] font-medium uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.50)] print:text-[#6b7280]">
           {label}
         </div>
-
-        <div className="min-w-0 text-[14px] font-semibold text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+        <div className="min-w-0 text-[12px] font-normal leading-5 text-[rgb(var(--color-text-rgb)/0.92)] print:text-[#111827] print:font-normal">
           {value || "—"}
         </div>
       </div>
@@ -328,9 +331,9 @@ function WarrantyReportDocument({
 
   return (
     <div className="bg-[var(--color-card)] print:bg-white print:text-black">
-      <div className="px-5 py-5 print:px-4 print:py-2">
+      <div className="px-5 py-5 print:px-4 print:py-1">
         {/* ===== Print-first document header ===== */}
-        <div className=" bg-[rgb(var(--color-background-rgb)/0.14)] p-4 print:border-[#d1d5db] print:bg-white mt-0">
+        <div className="bg-[rgb(var(--color-background-rgb)/0.14)] p-4 print:bg-white print:p-3 mt-0">
           <div className="flex flex-col gap-5 border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#d1d5db] sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex items-start gap-4">
@@ -379,12 +382,12 @@ function WarrantyReportDocument({
           </div>
 
           <div className="pt-4">
-            <div className="text-[16px] font-semibold leading-tight text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+            <div className="text-[14px] font-medium leading-tight text-[rgb(var(--color-text-rgb)/0.98)] print:text-[#111827]">
               {address}
             </div>
             <div className="mt-2 text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] print:text-[#4b5563]">
               Reference ID:{" "}
-              <span className="font-medium text-[rgb(var(--color-text-rgb)/0.92)] print:text-black">
+              <span className="font-normal text-[rgb(var(--color-text-rgb)/0.82)] print:text-[#374151]">
                 {job.id}
               </span>
             </div>
@@ -402,7 +405,7 @@ function WarrantyReportDocument({
           {hasWarrantyData ? (
             <>
               {/* Top summary */}
-              <div className="mt-4">
+              <div className="mt-3">
                 <SummaryMiniRow
                   label="Type"
                   value={labelForWarrantyKind(warranty?.kind)}
@@ -427,7 +430,7 @@ function WarrantyReportDocument({
               {/* Manufacturer packet */}
               {kind === "manufacturer" && (
                 <>
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-2">
                     <InfoCard title="Manufacturer / program">
                       <div className="space-y-3">
                         <Row
@@ -501,7 +504,7 @@ function WarrantyReportDocument({
                     </InfoCard>
 
                     <InfoCard title="Portal / submission link">
-                      <div className="text-[14px] font-medium break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                      <div className="text-[12px]  break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                         {warranty?.portalUrl || "—"}
                       </div>
 
@@ -648,7 +651,7 @@ function WarrantyReportDocument({
               {/* Third-party packet */}
               {kind === "thirdParty" && (
                 <>
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-2">
                     <InfoCard title="Administrator / program">
                       <div className="space-y-3">
                         <Row label="Program" value={warranty?.programName} />
@@ -702,7 +705,7 @@ function WarrantyReportDocument({
                     </InfoCard>
 
                     <InfoCard title="Portal / submission link">
-                      <div className="text-[14px] font-medium break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                      <div className="text-[12px]  break-words text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                         {warranty?.portalUrl || "—"}
                       </div>
 
@@ -744,7 +747,7 @@ function WarrantyReportDocument({
               {/* Insurance packet */}
               {kind === "insurance" && (
                 <>
-                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-2">
                     <InfoCard title="Carrier / policy">
                       <div className="space-y-3">
                         <Row
@@ -805,8 +808,8 @@ function WarrantyReportDocument({
 
               {/* Shared homeowner block */}
               {(homeowner.name || homeowner.phone || homeowner.email) && (
-                <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
-                  <div className="text-[14px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                <div className="mt-4 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-3 print:border-[#e5e7eb]">
+                  <div className="text-[12px] font-medium tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-[#111827]">
                     Homeowner
                   </div>
 
@@ -824,11 +827,11 @@ function WarrantyReportDocument({
 
               {/* Notes */}
               {warranty?.notes ? (
-                <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
-                  <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
+                <div className="mt-4 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-3 print:border-[#e5e7eb]">
+                  <div className="text-[12px] font-medium tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-[#111827]">
                     Warranty Notes
                   </div>
-                  <div className="mt-3 max-w-[72ch] whitespace-pre-wrap text-[13px] leading-[1.75] text-[rgb(var(--color-text-rgb)/0.9)] print:text-black">
+                  <div className="mt-2 max-w-[72ch] whitespace-pre-wrap text-[12px] leading-6 text-[rgb(var(--color-text-rgb)/0.9)] print:text-[#111827]">
                     {warranty.notes}
                   </div>
                 </div>
@@ -908,7 +911,7 @@ function WarrantyReportDocument({
 
         {/* Photos */}
         {packetPhotos.length > 0 ? (
-          <div className="mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-5 print:border-[#e5e7eb]">
+          <div className="mt-4 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-3 print:border-[#e5e7eb]">
             <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] pb-3 print:border-[#e5e7eb]">
               <div className="text-[15px] font-semibold tracking-[-0.01em] text-[rgb(var(--color-text-rgb)/0.96)] print:text-black">
                 Supporting Photos
