@@ -341,6 +341,7 @@ export default function PayoutsPage() {
   } = useDashboardPayoutsData();
 
   const [stubs, setStubs] = useState<PayoutStubDoc[]>([]);
+  const [stubsReady, setStubsReady] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [localError, setLocalError] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>("payouts");
@@ -360,8 +361,10 @@ export default function PayoutsPage() {
     if (!orgId) {
       setStubs([]);
       setEmployees([]);
+      setStubsReady(true);
       return;
     }
+    setStubsReady(false);
 
     setLocalError(null);
 
@@ -376,13 +379,18 @@ export default function PayoutsPage() {
 
     const unsubStubs = onSnapshot(
       stubsQ,
-      (snap) =>
+      (snap) => {
         setStubs(
           snap.docs.map(
             (d) => ({ id: d.id, ...(d.data() as any) } as PayoutStubDoc)
           )
-        ),
-      (err) => setLocalError(err.message || String(err))
+        );
+        setStubsReady(true);
+      },
+      (err) => {
+        setLocalError(err.message || String(err));
+        setStubsReady(true);
+      }
     );
 
     const unsubEmployees = onSnapshot(
@@ -509,6 +517,13 @@ export default function PayoutsPage() {
     const start = (pageSafe - 1) * PER_PAGE;
     return filtered.slice(start, start + PER_PAGE);
   }, [filtered, pageSafe]);
+
+  const showFirstPaystubGuide = stubsReady && stubs.length === 0;
+
+  const firstGuidedPendingPayoutId = useMemo(() => {
+    if (!showFirstPaystubGuide) return null;
+    return paged.find((p) => !isPaid(p))?.id ?? null;
+  }, [paged, showFirstPaystubGuide]);
 
   const kpis = useMemo(() => {
     const pending = payouts.filter((p) => !isPaid(p));
@@ -908,6 +923,8 @@ export default function PayoutsPage() {
                   const paid = isPaid(p);
                   const amountCents = Number((p as any).amountCents) || 0;
                   const canSelect = !paid;
+                  const showSelectGuide =
+                    firstGuidedPendingPayoutId === p.id && canSelect;
 
                   return (
                     <motion.div
@@ -916,7 +933,7 @@ export default function PayoutsPage() {
                       className={cx(
                         "grid gap-3 px-4 py-4 transition md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
                         selected
-                          ? "bg-[rgb(var(--color-primary-rgb)/0.07)]"
+                          ? "bg-[var(--color-card-hover)]"
                           : "hover:bg-[var(--color-card-hover)]"
                       )}
                     >
@@ -979,24 +996,45 @@ export default function PayoutsPage() {
                             </button>
                           ) : null}
 
-                          <button
-                            type="button"
-                            disabled={!canSelect}
-                            onClick={() => togglePayoutSelected(p.id)}
-                            className={cx(
-                              "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
-                              selected
-                                ? "border-[rgb(var(--color-primary-rgb)/0.38)] bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)]"
-                                : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] text-[rgb(var(--color-text-rgb)/0.78)] hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[var(--color-text)]"
-                            )}
-                          >
-                            {selected ? (
-                              <CheckCircle2 className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                            {selected ? "Selected" : paid ? "Paid" : "Select"}
-                          </button>
+                          <div className="relative inline-flex">
+                            {showSelectGuide ? (
+                              <span className="pointer-events-none absolute -inset-2 rounded-2xl " />
+                            ) : null}
+
+                            <button
+                              type="button"
+                              disabled={!canSelect}
+                              onClick={() => togglePayoutSelected(p.id)}
+                              className={cx(
+                                "group relative z-10 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
+                                showSelectGuide &&
+                                  "border-[rgb(var(--color-primary-rgb)/0.85)] bg-[rgb(var(--color-primary-rgb)/0.14)] shadow-[0_0_24px_rgb(var(--color-primary-rgb)/0.25)]",
+                                selected
+                                  ? "border-[rgb(var(--color-primary-rgb)/0.38)] bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)]"
+                                  : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] text-[rgb(var(--color-text-rgb)/0.78)] hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[var(--color-text)]"
+                              )}
+                            >
+                              {showSelectGuide ? (
+                                <span className="pointer-events-none absolute bottom-full right-0 z-40 mb-3 hidden w-[270px] rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[var(--color-card)] p-3 text-left shadow-[0_18px_50px_rgba(0,0,0,0.45)] group-hover:block">
+                                  <span className="block text-[12px] font-extrabold text-[var(--color-text)]">
+                                    Create your first pay stub
+                                  </span>
+                                  <span className="mt-1 block text-[11px] leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
+                                    Select one or more pending payouts for the
+                                    same member to create a pay stub.
+                                  </span>
+                                </span>
+                              ) : null}
+
+                              {selected ? (
+                                <CheckCircle2 className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+
+                              {selected ? "Selected" : paid ? "Paid" : "Select"}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

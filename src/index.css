@@ -514,3 +514,28 @@ select:autofill {
   box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.03) inset;
   -webkit-text-fill-color: #f5f6f8;
 }
+
+
+@keyframes rzSlowPulse {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.30;
+  }
+
+  50% {
+    transform: scale(1.14);
+    opacity: 0.16;
+  }
+
+  100% {
+    transform: scale(0.96);
+    opacity: 0.30;
+  }
+}
+
+.rz-slow-pulse {
+  animation: rzSlowPulse 2.8s cubic-bezier(0.2, 1, 0.1, 1) infinite;
+}
+.animate-ping-slow {
+  animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
