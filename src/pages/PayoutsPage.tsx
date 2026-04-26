@@ -208,7 +208,6 @@ function KpiCard({
   valueCents,
   value,
   sub,
-  icon: Icon,
 }: {
   label: string;
   valueCents?: number;
@@ -220,14 +219,14 @@ function KpiCard({
     <motion.div
       variants={fadeUpItem}
       whileHover={{ y: -2, transition: { duration: 0.2, ease: EASE } }}
-      className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] p-4 shadow-sm transition hover:bg-[var(--color-card-hover)] hover:shadow-md"
+      className="rounded-2xl  p-4 shadow-sm transition hover:bg-[var(--color-card-hover)] hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.62)]">
             {label}
           </div>
-          <div className="mt-2 text-2xl font-extrabold leading-none text-[var(--color-text)]">
+          <div className="mt-2 text-xl font-poppins leading-none text-[var(--color-text)]">
             {typeof valueCents === "number" ? (
               <CountUp
                 end={valueCents / 100}
@@ -243,9 +242,6 @@ function KpiCard({
           <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.56)]">
             {sub}
           </div>
-        </div>
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[rgb(var(--color-primary-rgb)/0.22)] bg-[rgb(var(--color-primary-rgb)/0.10)]">
-          <Icon className="h-5 w-5 text-[var(--color-primary)]" />
         </div>
       </div>
     </motion.div>
@@ -284,7 +280,7 @@ function FilterButton({
         "inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:shadow-sm",
         active
           ? "border-[rgb(var(--color-primary-rgb)/0.36)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]"
-          : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] text-[rgb(var(--color-text-rgb)/0.68)] hover:bg-[rgb(var(--color-surface-rgb)/0.68)] hover:text-[rgb(var(--color-text-rgb)/0.90)]"
+          : "border-none text-[rgb(var(--color-text-rgb)/0.68)]  hover:text-[rgb(var(--color-text-rgb)/0.90)]"
       )}
     >
       {children}
@@ -648,18 +644,14 @@ export default function PayoutsPage() {
   }
 
   return (
-    <div className="mx-auto w-[min(1200px,94vw)] py-8">
+    <div className="mx-auto w-[min(1450px,94vw)]">
       <motion.header {...fadeUp(0)} className="mb-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-primary-rgb)/0.24)] bg-[rgb(var(--color-primary-rgb)/0.08)] px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-primary)]">
-              <BadgeDollarSign className="h-3.5 w-3.5" />
-              Crew accounting
-            </div>
-            <h1 className="mt-3 text-2xl font-extrabold uppercase tracking-tight text-[var(--color-text)] sm:text-3xl">
+            <h1 className="text-xs md:text-md lg:text-lg font-semibold text-[var(--color-text)] uppercase font-poppins">
               Payouts
             </h1>
-            <p className="mt-1 max-w-2xl text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
+            <p className="mt-0 max-w-2xl text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
               Track pending and paid payouts, create clean pay stubs, and export
               the filtered payout ledger.
             </p>
@@ -756,7 +748,7 @@ export default function PayoutsPage() {
         />
       </motion.section>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
         <motion.section
           {...fadeUp(0.05)}
           className={cx(
@@ -811,7 +803,7 @@ export default function PayoutsPage() {
               </div>
             </div>
 
-            <div className="mt-4 grid gap-2 xl:grid-cols-[minmax(220px,1fr)_minmax(250px,0.75fr)_minmax(360px,1fr)]">
+            <div className="mt-4 grid gap-2 2xl:grid-cols-[minmax(260px,1fr)_minmax(250px,0.75fr)_minmax(420px,1fr)]">
               <div className="relative min-w-0">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgb(var(--color-text-rgb)/0.45)]" />
                 <input
@@ -904,7 +896,7 @@ export default function PayoutsPage() {
           </div>
 
           <div className="max-h-[66vh] overflow-y-auto p-4 section-scroll">
-            <div className="overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.24)]">
+            <div className="overflow-hidden ">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-[rgb(var(--color-border-rgb)/0.16)] px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.62)]">
                 <div>Payout</div>
                 <div className="text-right">Amount</div>
@@ -920,13 +912,12 @@ export default function PayoutsPage() {
                   return (
                     <motion.div
                       key={p.id}
-                      whileHover={{ y: -1 }}
                       transition={{ duration: 0.18, ease: EASE }}
                       className={cx(
                         "grid gap-3 px-4 py-4 transition md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
                         selected
                           ? "bg-[rgb(var(--color-primary-rgb)/0.07)]"
-                          : "hover:bg-[rgb(var(--color-surface-rgb)/0.30)]"
+                          : "hover:bg-[var(--color-card-hover)]"
                       )}
                     >
                       <div className="min-w-0">
@@ -1030,7 +1021,7 @@ export default function PayoutsPage() {
             </div>
           </div>
 
-          <div className="sticky bottom-0 z-20 border-t border-[var(--color-border)] bg-[rgb(var(--color-background-rgb)/0.88)] backdrop-blur-xl">
+          <div className="sticky bottom-0 z-20 border-t border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.18)] backdrop-blur-xl">
             <AnimatePresence initial={false}>
               {selectedPayoutIds.length > 0 ? (
                 <motion.div

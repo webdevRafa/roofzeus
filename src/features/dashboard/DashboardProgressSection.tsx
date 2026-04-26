@@ -206,14 +206,14 @@ export function DashboardProgressSection({
     };
 
   return (
-    <section className="mt-8  bg-[var(--color-surface)] shadow-md overflow-hidden">
+    <section className="mt-0 bg-[var(--color-surface)] shadow-md overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-[var(--color-border)] px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[var(--color-border)] pb-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
-            <h2 className="text-lg md:text-2xl font-bebas font-semibold text-[var(--color-text)] tracking-wide">
+            <h1 className="text-xs md:text-md lg:text-lg font-semibold text-[var(--color-text)] uppercase font-poppins">
               SCHEDULED
-            </h2>
+            </h1>
           </div>
         </div>
 

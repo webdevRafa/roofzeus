@@ -22,7 +22,7 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="mx-auto w-full py-6 sm:py-10">
+    <div className="mx-auto w-full">
       <DashboardProgressSection
         upcomingOpen={upcomingOpen}
         setUpcomingOpen={setUpcomingOpen}
