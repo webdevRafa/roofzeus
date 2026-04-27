@@ -352,6 +352,10 @@ export default function PayoutsPage() {
   const [dateEnd, setDateEnd] = useState("");
   const [viewStubId, setViewStubId] = useState<string | null>(null);
   const [dayRateOpen, setDayRateOpen] = useState(false);
+  const [dismissFirstStubGuide, setDismissFirstStubGuide] = useState(false);
+
+  const selectedOneMember =
+    selectedPayoutIds.length > 0 && selectedEmployeeIds.length === 1;
 
   const listTopRef = useRef<HTMLDivElement | null>(null);
   const PER_PAGE = 10;
@@ -518,7 +522,18 @@ export default function PayoutsPage() {
     return filtered.slice(start, start + PER_PAGE);
   }, [filtered, pageSafe]);
 
-  const showFirstPaystubGuide = stubsReady && stubs.length === 0;
+  const showFirstPaystubGuide =
+    stubsReady &&
+    stubs.length === 0 &&
+    !dismissFirstStubGuide &&
+    payoutFilter === "pending" &&
+    filtered.some((p) => !isPaid(p));
+
+  const firstStubGuideStep: "select" | "create" | null = showFirstPaystubGuide
+    ? selectedOneMember
+      ? "create"
+      : "select"
+    : null;
 
   const firstGuidedPendingPayoutId = useMemo(() => {
     if (!showFirstPaystubGuide) return null;
@@ -924,8 +939,9 @@ export default function PayoutsPage() {
                   const amountCents = Number((p as any).amountCents) || 0;
                   const canSelect = !paid;
                   const showSelectGuide =
-                    firstGuidedPendingPayoutId === p.id && canSelect;
-
+                    firstStubGuideStep === "select" &&
+                    firstGuidedPendingPayoutId === p.id &&
+                    canSelect;
                   return (
                     <motion.div
                       key={p.id}
@@ -996,9 +1012,26 @@ export default function PayoutsPage() {
                             </button>
                           ) : null}
 
-                          <div className="relative inline-flex">
+                          <div
+                            className={cx(
+                              "relative inline-flex",
+                              showSelectGuide && "z-40"
+                            )}
+                          >
                             {showSelectGuide ? (
-                              <span className="pointer-events-none absolute -inset-2 rounded-2xl " />
+                              <motion.span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -inset-1.5 rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.55)] bg-[rgb(var(--color-primary-rgb)/0.08)]"
+                                animate={{
+                                  opacity: [0.55, 1, 0.55],
+                                  scale: [1, 1.045, 1],
+                                }}
+                                transition={{
+                                  duration: 1.8,
+                                  repeat: Infinity,
+                                  ease: "easeInOut",
+                                }}
+                              />
                             ) : null}
 
                             <button
@@ -1006,26 +1039,14 @@ export default function PayoutsPage() {
                               disabled={!canSelect}
                               onClick={() => togglePayoutSelected(p.id)}
                               className={cx(
-                                "group relative z-10 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
-                                showSelectGuide &&
-                                  "border-[rgb(var(--color-primary-rgb)/0.85)] bg-[rgb(var(--color-primary-rgb)/0.14)] shadow-[0_0_24px_rgb(var(--color-primary-rgb)/0.25)]",
-                                selected
+                                "relative z-10 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
+                                showSelectGuide
+                                  ? "border-[rgb(var(--color-primary-rgb)/0.55)] bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)] shadow-[0_12px_30px_rgb(var(--color-primary-rgb)/0.18)] hover:bg-[rgb(var(--color-primary-rgb)/0.18)]"
+                                  : selected
                                   ? "border-[rgb(var(--color-primary-rgb)/0.38)] bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)]"
                                   : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] text-[rgb(var(--color-text-rgb)/0.78)] hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[var(--color-text)]"
                               )}
                             >
-                              {showSelectGuide ? (
-                                <span className="pointer-events-none absolute bottom-full right-0 z-40 mb-3 hidden w-[270px] rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[var(--color-card)] p-3 text-left shadow-[0_18px_50px_rgba(0,0,0,0.45)] group-hover:block">
-                                  <span className="block text-[12px] font-extrabold text-[var(--color-text)]">
-                                    Create your first pay stub
-                                  </span>
-                                  <span className="mt-1 block text-[11px] leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
-                                    Select one or more pending payouts for the
-                                    same member to create a pay stub.
-                                  </span>
-                                </span>
-                              ) : null}
-
                               {selected ? (
                                 <CheckCircle2 className="h-4 w-4" />
                               ) : (
@@ -1034,6 +1055,48 @@ export default function PayoutsPage() {
 
                               {selected ? "Selected" : paid ? "Paid" : "Select"}
                             </button>
+
+                            {showSelectGuide ? (
+                              <motion.div
+                                initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                                transition={{ duration: 0.2, ease: EASE }}
+                                className="absolute right-0 top-full z-50 mt-3 w-[320px] rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[var(--color-card)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]">
+                                    <ChevronRight className="h-4 w-4" />
+                                  </div>
+
+                                  <div className="min-w-0">
+                                    <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary)]">
+                                      Step 1 of 2
+                                    </div>
+
+                                    <div className="mt-1 text-sm font-extrabold text-[var(--color-text)]">
+                                      Select a pending payout
+                                    </div>
+
+                                    <p className="mt-1 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
+                                      Choose one or more payouts for the same
+                                      member. This is how you start creating
+                                      your first pay stub.
+                                    </p>
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setDismissFirstStubGuide(true)
+                                      }
+                                      className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.48)] hover:text-[var(--color-text)]"
+                                    >
+                                      Not now
+                                    </button>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -1091,14 +1154,57 @@ export default function PayoutsPage() {
                       >
                         <X className="h-4 w-4" /> Clear
                       </button>
-                      <button
-                        type="button"
-                        disabled={!canCreateStub}
-                        onClick={() => setStubOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.14)] px-4 py-2 text-sm font-bold text-[rgb(var(--pill-success-rgb))] transition hover:bg-[rgb(var(--pill-success-rgb)/0.20)] disabled:cursor-not-allowed disabled:opacity-40"
+                      <div
+                        className={cx(
+                          "relative",
+                          firstStubGuideStep === "create" && "z-50"
+                        )}
                       >
-                        <FileText className="h-4 w-4" /> Create stub
-                      </button>
+                        <button
+                          type="button"
+                          disabled={!canCreateStub}
+                          onClick={() => setStubOpen(true)}
+                          className={cx(
+                            "relative inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
+                            firstStubGuideStep === "create"
+                              ? "border-[rgb(var(--pill-success-rgb)/0.75)] bg-[rgb(var(--pill-success-rgb)/0.22)] text-[rgb(var(--pill-success-rgb))] shadow-[0_0_0_6px_rgb(var(--pill-success-rgb)/0.10),0_0_34px_rgb(var(--pill-success-rgb)/0.36)]"
+                              : "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.14)] text-[rgb(var(--pill-success-rgb))] hover:bg-[rgb(var(--pill-success-rgb)/0.20)]"
+                          )}
+                        >
+                          {firstStubGuideStep === "create" ? (
+                            <span className="pointer-events-none absolute -inset-2 -z-10 rounded-2xl bg-[rgb(var(--pill-success-rgb)/0.14)] animate-pulse" />
+                          ) : null}
+                          <FileText className="h-4 w-4" /> Create stub
+                        </button>
+
+                        {firstStubGuideStep === "create" ? (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                            transition={{ duration: 0.2, ease: EASE }}
+                            className="absolute bottom-full right-0 z-50 mb-3 w-[320px] rounded-2xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[var(--color-card)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
+                          >
+                            <div className="text-[11px] font-bold uppercase tracking-wide text-[rgb(var(--pill-success-rgb))]">
+                              Step 2 of 2
+                            </div>
+                            <div className="mt-1 text-sm font-extrabold text-[var(--color-text)]">
+                              Create the pay stub
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
+                              Now generate the printable stub. After review, you
+                              can mark these payouts as paid.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setDismissFirstStubGuide(true)}
+                              className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.48)] hover:text-[var(--color-text)]"
+                            >
+                              Not now
+                            </button>
+                          </motion.div>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
