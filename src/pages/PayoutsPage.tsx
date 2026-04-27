@@ -353,7 +353,9 @@ export default function PayoutsPage() {
   const [viewStubId, setViewStubId] = useState<string | null>(null);
   const [dayRateOpen, setDayRateOpen] = useState(false);
   const [dismissFirstStubGuide, setDismissFirstStubGuide] = useState(false);
-
+  const [stubModalGuideStep, setStubModalGuideStep] = useState<
+    "print" | "markPaid" | null
+  >(null);
   const selectedOneMember =
     selectedPayoutIds.length > 0 && selectedEmployeeIds.length === 1;
 
@@ -1075,13 +1077,15 @@ export default function PayoutsPage() {
                                     </div>
 
                                     <div className="mt-1 text-sm font-extrabold text-[var(--color-text)]">
-                                      Select a pending payout
+                                      Create your first pay stub
                                     </div>
 
                                     <p className="mt-1 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
-                                      Choose one or more payouts for the same
-                                      member. This is how you start creating
-                                      your first pay stub.
+                                      Select one or more pending payouts for the
+                                      same member. RoofZeus will group them into
+                                      a clean pay stub so you can review the
+                                      payment, print or save the stub, and then
+                                      mark those payouts as paid.
                                     </p>
 
                                     <button
@@ -1163,7 +1167,10 @@ export default function PayoutsPage() {
                         <button
                           type="button"
                           disabled={!canCreateStub}
-                          onClick={() => setStubOpen(true)}
+                          onClick={() => {
+                            setStubModalGuideStep("print");
+                            setStubOpen(true);
+                          }}
                           className={cx(
                             "relative inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
                             firstStubGuideStep === "create"
@@ -1347,8 +1354,20 @@ export default function PayoutsPage() {
             payouts={selectedPayouts}
             employee={stubEmployee}
             saving={stubSaving}
+            firstStubGuideStep={
+              showFirstPaystubGuide ? stubModalGuideStep : null
+            }
+            onFirstStubGuideStepChange={setStubModalGuideStep}
+            onDismissFirstStubGuide={() => {
+              setDismissFirstStubGuide(true);
+              setStubModalGuideStep(null);
+            }}
             onClose={() => setStubOpen(false)}
-            onConfirmPaid={markSelectedPayoutsAsPaid}
+            onConfirmPaid={async () => {
+              await markSelectedPayoutsAsPaid();
+              setDismissFirstStubGuide(true);
+              setStubModalGuideStep(null);
+            }}
           />
         ) : null}
 

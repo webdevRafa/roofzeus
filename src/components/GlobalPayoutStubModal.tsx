@@ -1,13 +1,19 @@
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
+import { CheckCircle2, ChevronRight, FileText } from "lucide-react";
 import type { Employee, PayoutDoc, EmployeeAddress, Job } from "../types/types";
 import logo from "../assets/rogers-roofing.webp";
 
 export type GlobalPayoutStubModalProps = {
-  employee: Employee | null; // EmployeeDetailPage can just pass non-null
+  employee: Employee | null;
   payouts: PayoutDoc[];
   onClose: () => void;
   onConfirmPaid: () => Promise<void>;
   saving: boolean;
+
+  firstStubGuideStep?: "print" | "markPaid" | null;
+  onFirstStubGuideStepChange?: (step: "print" | "markPaid" | null) => void;
+  onDismissFirstStubGuide?: () => void;
 };
 
 // Normalize Employee.address into a consistent shape
@@ -69,7 +75,13 @@ export function GlobalPayoutStubModal({
   onClose,
   onConfirmPaid,
   saving,
+  firstStubGuideStep = null,
+  onFirstStubGuideStepChange,
+  onDismissFirstStubGuide,
 }: GlobalPayoutStubModalProps) {
+  const showPrintGuide = firstStubGuideStep === "print";
+  const showMarkPaidGuide = firstStubGuideStep === "markPaid";
+
   const totalCents = payouts.reduce(
     (sum, p) => sum + ((p as any).amountCents ?? 0),
     0
@@ -92,8 +104,8 @@ export function GlobalPayoutStubModal({
     <div className="paystub-print fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 print:bg-white print:p-0">
       <div
         className={[
-          "paystub-print-inner w-full max-w-3xl rounded-2xl border shadow-[0_24px_80px_rgba(0,0,0,0.55)] overflow-hidden",
-          "bg-gradient-to-tr from-[var(--color-background)] via-[var(--color-surface)] to-[var(--color-background)]",
+          "paystub-print-inner w-full max-w-3xl rounded-sm border-none py-4 lg:py-10  overflow-hidden",
+          "bg-[var(--color-card)]",
           "print:bg-white print:text-black print:border-transparent print:shadow-none print:rounded-none",
         ].join(" ")}
       >
@@ -102,16 +114,6 @@ export function GlobalPayoutStubModal({
           className="relative px-5 py-4 border-b print:border-gray-200"
           style={{ borderColor: "rgba(58,63,75,0.75)" }}
         >
-          {/* subtle glows (screen only) */}
-          <div
-            className="pointer-events-none absolute -top-24 -right-24 h-56 w-56 rounded-full blur-3xl print:hidden"
-            style={{ backgroundColor: "rgba(207,174,93,0.10)" }}
-          />
-          <div
-            className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full blur-3xl print:hidden"
-            style={{ backgroundColor: "rgba(245,246,248,0.06)" }}
-          />
-
           <div className="relative flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex gap-3 items-center">
@@ -171,14 +173,11 @@ export function GlobalPayoutStubModal({
         {/* Table */}
         <div className="p-5 print:p-0">
           <div
-            className="overflow-hidden rounded-2xl border print:rounded-none print:border-gray-200"
+            className="overflow-hidden rounded-sm border print:rounded-none print:border-gray-200"
             style={{ borderColor: "rgba(58,63,75,0.75)" }}
           >
             <table className="min-w-full text-xs sm:text-sm">
-              <thead
-                className="text-[11px] uppercase tracking-wide print:bg-gray-50"
-                style={{ backgroundColor: "rgba(11,14,20,0.45)" }}
-              >
+              <thead className="text-[11px] uppercase tracking-wide print:bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
                     Address
@@ -210,7 +209,7 @@ export function GlobalPayoutStubModal({
                       style={{ borderColor: "rgba(58,63,75,0.65)" }}
                     >
                       {/* Address */}
-                      <td className="px-3 py-2 align-top">
+                      <td className="px-3 py-2 align-top ">
                         <div className="font-medium text-white print:text-black">
                           {a.display || "—"}
                         </div>
@@ -271,31 +270,164 @@ export function GlobalPayoutStubModal({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="rounded-xl border px-3 py-2 text-xs font-semibold transition"
-                style={{
-                  borderColor: "rgba(58,63,75,0.85)",
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  color: "rgba(245,246,248,0.85)",
-                }}
-              >
-                Print / Save PDF
-              </button>
+              <div className="relative">
+                {showPrintGuide ? (
+                  <motion.span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -inset-1.5 rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.55)] bg-[rgb(var(--color-primary-rgb)/0.08)]"
+                    animate={{
+                      opacity: [0.55, 1, 0.55],
+                      scale: [1, 1.045, 1],
+                    }}
+                    transition={{
+                      duration: 1.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                ) : null}
 
-              <button
-                type="button"
-                onClick={onConfirmPaid}
-                disabled={saving}
-                className="rounded-xl px-4 py-2 text-xs font-semibold transition disabled:opacity-60"
-                style={{
-                  backgroundColor: "rgba(16,185,129,0.85)",
-                  color: "white",
-                }}
-              >
-                {saving ? "Marking as paid…" : "Mark all as paid"}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFirstStubGuideStepChange?.("markPaid");
+                    window.print();
+                  }}
+                  className={[
+                    "relative z-10 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition",
+                    showPrintGuide
+                      ? "border-[rgb(var(--color-primary-rgb)/0.55)] bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)] shadow-[0_12px_30px_rgb(var(--color-primary-rgb)/0.18)]"
+                      : "",
+                  ].join(" ")}
+                  style={
+                    showPrintGuide
+                      ? undefined
+                      : {
+                          borderColor: "rgba(58,63,75,0.85)",
+                          backgroundColor: "rgba(255,255,255,0.04)",
+                          color: "rgba(245,246,248,0.85)",
+                        }
+                  }
+                >
+                  <FileText className="h-4 w-4" />
+                  Print / Save PDF
+                </button>
+
+                {showPrintGuide ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute bottom-full right-0 z-50 mb-3 w-[320px] rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[var(--color-card)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]">
+                        <FileText className="h-4 w-4" />
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary)]">
+                          Step 3 of 4
+                        </div>
+
+                        <div className="mt-1 text-sm font-extrabold text-[var(--color-text)]">
+                          Save or print the pay stub
+                        </div>
+
+                        <p className="mt-1 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
+                          Review the stub first, then use this button to print
+                          it or save it as a PDF for your records.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={onDismissFirstStubGuide}
+                          className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.48)] hover:text-[var(--color-text)]"
+                        >
+                          Not now
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : null}
+              </div>
+
+              <div className="relative">
+                {showMarkPaidGuide ? (
+                  <motion.span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -inset-1.5 rounded-2xl border border-[rgb(var(--pill-success-rgb)/0.65)] bg-[rgb(var(--pill-success-rgb)/0.10)]"
+                    animate={{
+                      opacity: [0.55, 1, 0.55],
+                      scale: [1, 1.045, 1],
+                    }}
+                    transition={{
+                      duration: 1.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                ) : null}
+
+                <button
+                  type="button"
+                  onClick={onConfirmPaid}
+                  disabled={saving}
+                  className={[
+                    "relative z-10 inline-flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition disabled:opacity-60",
+                    showMarkPaidGuide
+                      ? "shadow-[0_0_0_6px_rgb(var(--pill-success-rgb)/0.10),0_0_34px_rgb(var(--pill-success-rgb)/0.36)]"
+                      : "",
+                  ].join(" ")}
+                  style={{
+                    color: "white",
+                  }}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {saving ? "Marking as paid…" : "Mark all as paid"}
+                </button>
+
+                {showMarkPaidGuide ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute bottom-full right-0 z-50 mb-3 w-[320px] rounded-2xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[var(--color-card)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]">
+                        <ChevronRight className="h-4 w-4" />
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-bold uppercase tracking-wide text-[rgb(var(--pill-success-rgb))]">
+                          Step 4 of 4
+                        </div>
+
+                        <div className="mt-1 text-sm font-extrabold text-[var(--color-text)]">
+                          Mark payouts as paid
+                        </div>
+
+                        <p className="mt-1 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
+                          Once the stub is saved, mark these payouts as paid.
+                          RoofZeus will update your payout ledger and save this
+                          stub in your history.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={onDismissFirstStubGuide}
+                          className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.48)] hover:text-[var(--color-text)]"
+                        >
+                          Not now
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : null}
+              </div>
             </div>
           </div>
 
