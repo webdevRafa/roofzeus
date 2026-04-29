@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Download,
   FileText,
   Filter,
@@ -277,17 +278,24 @@ function FilterButton({
       type="button"
       onClick={onClick}
       className={cx(
-        "inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:shadow-sm",
+        "relative inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-xs font-semibold transition",
         active
-          ? "border-[rgb(var(--color-primary-rgb)/0.36)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]"
-          : "border-none text-[rgb(var(--color-text-rgb)/0.68)]  hover:text-[rgb(var(--color-text-rgb)/0.90)]"
+          ? "text-[var(--color-primary)]"
+          : "text-[rgb(var(--color-text-rgb)/0.62)] hover:text-[rgb(var(--color-text-rgb)/0.88)]"
       )}
     >
-      {children}
+      {active && (
+        <motion.span
+          layoutId="payout-filter-active-pill"
+          className="absolute inset-0 rounded-full border border-[rgb(var(--color-primary-rgb)/0.36)] bg-[rgb(var(--color-primary-rgb)/0.12)] "
+          transition={{ type: "spring", stiffness: 420, damping: 34 }}
+        />
+      )}
+
+      <span className="relative z-10">{children}</span>
     </button>
   );
 }
-
 function SelectShell({
   value,
   onChange,
@@ -299,16 +307,97 @@ function SelectShell({
   children: ReactNode;
   label: string;
 }) {
+  const [open, setOpen] = useState(false);
+
+  const options = useMemo(
+    () =>
+      Array.from((children as any[]).flat?.() ?? [children])
+        .filter(Boolean)
+        .map((child: any) => ({
+          value: String(child.props.value),
+          label: child.props.children,
+        })),
+    [children]
+  );
+
+  const selected = options.find((option) => option.value === value);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onClick(e: MouseEvent) {
+      if (!buttonRef.current?.parentElement?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+
+    window.addEventListener("mousedown", onClick);
+    window.addEventListener("keydown", onKey);
+
+    return () => {
+      window.removeEventListener("mousedown", onClick);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
-    <label className="block min-w-0">
+    <label className="relative block min-w-0">
       <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-10 w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.58)] px-3 text-xs font-semibold text-[var(--color-text)] outline-none transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] focus:border-[rgb(var(--color-primary-rgb)/0.42)] focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.12)]"
+
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-10 w-full items-center justify-between rounded-xl border  border-[rgb(var(--color-border-rgb)/0.18)] bg-[var(--color-card-hover)] hover:bg-[var(--color-card)] px-3 text-left text-xs font-semibold text-[var(--color-text)] outline-none transition "
       >
-        {children}
-      </select>
+        <span className="truncate">{selected?.label ?? label}</span>
+        <ChevronDown
+          className={cx(
+            "h-4 w-4 shrink-0 text-[rgb(var(--color-text-rgb)/0.55)] transition",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+            transition={{ duration: 0.14, ease: EASE }}
+            className="absolute left-0 top-[calc(100%+0.35rem)] z-50 max-h-60 w-full overflow-y-auto rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] p-1  section-scroll-ui"
+          >
+            {options.map((option) => {
+              const active = option.value === value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(option.value);
+                    setOpen(false);
+                  }}
+                  className={cx(
+                    "flex w-full mt-1 items-center rounded-lg px-3 py-2 text-left text-xs font-semibold transition",
+                    active
+                      ? "bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)]"
+                      : "text-[rgb(var(--color-text-rgb)/0.82)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </label>
   );
 }
@@ -830,7 +919,7 @@ export default function PayoutsPage() {
             className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.18)] p-4"
           >
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.36)] p-1">
                 <FilterButton
                   active={payoutFilter === "all"}
                   onClick={() => setPayoutFilter("all" as PayoutFilter)}
@@ -879,7 +968,7 @@ export default function PayoutsPage() {
                   value={payoutSearch}
                   onChange={(e) => setPayoutSearch(e.target.value)}
                   placeholder="Search member, address, category…"
-                  className="h-10 w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.58)] pl-10 pr-3 text-sm text-[var(--color-text)] outline-none transition placeholder:text-[rgb(var(--color-text-rgb)/0.36)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] focus:border-[rgb(var(--color-primary-rgb)/0.42)] focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.12)]"
+                  className="h-10 w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[var(--color-card-hover)] pl-10 pr-3 text-sm text-[var(--color-text)] outline-none transition placeholder:text-[rgb(var(--color-text-rgb)/0.36)] hover:bg-[var(--color-card)] focus:border-[rgb(var(--color-primary-rgb)/0.42)] focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.12)]"
                 />
               </div>
 
@@ -888,13 +977,13 @@ export default function PayoutsPage() {
                   value={dateStart}
                   onChange={(e) => setDateStart(e.target.value)}
                   type="date"
-                  className="h-10 min-w-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.58)] px-3 text-xs font-semibold text-[var(--color-text)] outline-none transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] focus:border-[rgb(var(--color-primary-rgb)/0.42)] focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.12)]"
+                  className="h-10 min-w-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[var(--color-card-hover)] px-3 text-xs font-semibold text-[var(--color-text)] outline-none transition hover:bg-[var(--color-card)] focus:border-[rgb(var(--color-primary-rgb)/0.42)] focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.12)]"
                 />
                 <input
                   value={dateEnd}
                   onChange={(e) => setDateEnd(e.target.value)}
                   type="date"
-                  className="h-10 min-w-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.58)] px-3 text-xs font-semibold text-[var(--color-text)] outline-none transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] focus:border-[rgb(var(--color-primary-rgb)/0.42)] focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.12)]"
+                  className="h-10 min-w-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[var(--color-card-hover)] px-3 text-xs font-semibold text-[var(--color-text)] outline-none transition hover:bg-[var(--color-card)] focus:border-[rgb(var(--color-primary-rgb)/0.42)] focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.12)]"
                 />
               </div>
 
@@ -906,7 +995,7 @@ export default function PayoutsPage() {
                 >
                   <option
                     value="all"
-                    className="bg-[var(--color-surface)] text-[var(--color-text)]"
+                    className=" bg-[var(--color-surface)] text-[var(--color-text)]"
                   >
                     Member
                   </option>
@@ -914,7 +1003,7 @@ export default function PayoutsPage() {
                     <option
                       key={employee.id}
                       value={employee.id}
-                      className="bg-[var(--color-surface)] text-[var(--color-text)]"
+                      className="bg-[var(--color-card)] text-[var(--color-text)]"
                     >
                       {employee.name || employee.id}
                     </option>
@@ -936,7 +1025,7 @@ export default function PayoutsPage() {
                     <option
                       key={c}
                       value={c}
-                      className="bg-[var(--color-surface)] text-[var(--color-text)]"
+                      className="bg-[var(--color-card)] text-[var(--color-text)]"
                     >
                       {categoryLabel(c)}
                     </option>
