@@ -21,7 +21,14 @@ import type {
   PayoutStubDoc,
   PayoutStubLine,
 } from "../types/types";
-import { ChevronDown, ChevronLeft, Search, ReceiptText } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  ReceiptText,
+} from "lucide-react";
 import { GlobalPayoutStubModal } from "../components/GlobalPayoutStubModal";
 import { PayoutStubViewerModal } from "../components/PayoutStubViewerModal";
 import { useOrg } from "../contexts/OrgContext";
@@ -39,6 +46,36 @@ function money(cents: number | undefined | null): string {
     style: "currency",
     currency: "USD",
   });
+}
+function isPaid(p: PayoutDoc) {
+  return Boolean((p as any).paidAt);
+}
+
+function categoryLabel(category?: string) {
+  if (category === "felt") return "Dry In";
+  if (category === "shingles") return "Shingles";
+  if (category === "technician") return "Day Rate";
+  return category || "Payout";
+}
+
+function methodLabel(method?: string) {
+  if (!method) return "Check";
+  return method.charAt(0).toUpperCase() + method.slice(1);
+}
+
+function StatusPill({ paid }: { paid: boolean }) {
+  return (
+    <span
+      className={cx(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
+        paid
+          ? "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]"
+          : "border-[rgb(var(--color-primary-rgb)/0.32)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]"
+      )}
+    >
+      {paid ? "Paid" : "Pending"}
+    </span>
+  );
 }
 
 type AnyAddress = unknown;
@@ -129,7 +166,7 @@ function StatMoney({
 }) {
   const dollars = cents / 100;
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+    <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] uppercase tracking-wide text-white/55">
           {label}
@@ -297,7 +334,7 @@ export default function EmployeeDetailPage() {
 
       await setDoc(ref, next, { merge: true });
 
-      navigate(`/org/${orgId}/employees`, {
+      navigate(`/employees`, {
         replace: true,
         state: { message: "Employee details saved successfully." },
       });
@@ -541,7 +578,7 @@ export default function EmployeeDetailPage() {
     return (
       <div className="min-h-[70vh] bg-[#070A10]">
         <div className="mx-auto w-[min(1100px,94vw)] py-10">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-red-200">
+          <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-5 text-sm text-red-200">
             {error}
           </div>
         </div>
@@ -551,9 +588,9 @@ export default function EmployeeDetailPage() {
 
   if (!employee) {
     return (
-      <div className="min-h-[70vh] bg-[#070A10]">
+      <div className="min-h-[70vh] ">
         <div className="mx-auto w-[min(1100px,94vw)] py-10">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm text-white/70">
+          <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] p-5 text-sm text-white/70">
             Not found.
           </div>
         </div>
@@ -562,11 +599,8 @@ export default function EmployeeDetailPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-72px)] bg-[#070A10]">
+    <div className="min-h-[calc(100vh-72px)] ">
       {/* ambient gradient */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_20%_15%,rgba(252,181,0,0.12),transparent_60%),radial-gradient(900px_500px_at_80%_20%,rgba(177,7,8,0.16),transparent_55%),radial-gradient(900px_600px_at_50%_90%,rgba(25,182,217,0.10),transparent_60%)]" />
-      </div>
 
       <motion.div
         variants={pageVariants}
@@ -577,7 +611,7 @@ export default function EmployeeDetailPage() {
         {/* Back */}
         <div className="mb-6">
           <button
-            onClick={() => navigate(`/org/${orgId}/employees`)}
+            onClick={() => navigate(`/employees`)}
             className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-white/75 shadow-sm hover:bg-white/[0.06] hover:text-white transition"
           >
             <ChevronLeft className="h-4 w-4 opacity-80 group-hover:opacity-100" />
@@ -589,7 +623,7 @@ export default function EmployeeDetailPage() {
         <motion.div variants={fadeUp} className="mb-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/[0.04]">
+              <div className="mt-0.5 grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-[var(--color-card)]">
                 <ReceiptText className="h-5 w-5 text-[var(--color-accent)]" />
               </div>
 
@@ -611,8 +645,7 @@ export default function EmployeeDetailPage() {
                 </div>
 
                 <p className="mt-1 text-sm text-white/55">
-                  Employee profile, payouts, and pay stub history — scoped per
-                  organization.
+                  Employee profile, payouts, and pay stub history.
                 </p>
               </div>
             </div>
@@ -651,7 +684,7 @@ export default function EmployeeDetailPage() {
               cents={stats.paidTotal}
               hint="Total paid out (all time) for this employee."
             />
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-card)] px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
               <p className="text-[11px] uppercase tracking-wide text-white/55">
                 Last paid
               </p>
@@ -670,7 +703,7 @@ export default function EmployeeDetailPage() {
         {/* Employee profile card (collapsible) */}
         <motion.div
           variants={fadeUp}
-          className="rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
+          className="rounded-3xl border border-white/10 bg-[var(--color-card)] shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
         >
           <button
             type="button"
@@ -835,7 +868,7 @@ export default function EmployeeDetailPage() {
         {/* Payouts section */}
         <motion.section
           variants={fadeUp}
-          className="mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
+          className="mt-6 rounded-3xl border border-white/10 bg-[var(--color-card)] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
         >
           {/* HEADER */}
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -964,113 +997,130 @@ export default function EmployeeDetailPage() {
                 {!payoutsLoading &&
                   !payoutsError &&
                   filteredPayouts.length > 0 && (
-                    <div className="mt-2 max-h-[55vh] md:max-h-[440px] overflow-y-auto overscroll-contain pr-1">
-                      <ul className="space-y-2">
-                        {filteredPayouts.map((p) => {
-                          const addr = normalizeJobAddress(
-                            p.jobAddressSnapshot
-                          );
-                          const isChecked = selectedIds.includes(p.id);
+                    <div className="mt-2 max-h-[55vh] md:max-h-[440px] overflow-y-auto section-scroll overscroll-contain">
+                      <div className="overflow-hidden">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-[rgb(var(--color-border-rgb)/0.16)] px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.62)]">
+                          <div>Payout</div>
+                          <div className="text-right">Amount</div>
+                        </div>
 
-                          return (
-                            <li
-                              key={p.id}
-                              className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.05] transition"
-                            >
-                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="flex items-start gap-3">
-                                  {payoutFilter === "pending" && (
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={() => toggleSelected(p.id)}
-                                      className="mt-1 h-4 w-4 rounded border-white/20 bg-transparent text-[var(--color-accent)]"
-                                    />
-                                  )}
+                        <div className="divide-y divide-[rgb(var(--color-border-rgb)/0.16)]">
+                          {filteredPayouts.map((p) => {
+                            const a = normalizeJobAddress(p.jobAddressSnapshot);
+                            const selected = selectedIds.includes(p.id);
+                            const paid = isPaid(p);
+                            const canSelect =
+                              !paid && payoutFilter === "pending";
+                            const amountCents =
+                              Number((p as any).amountCents) || 0;
 
-                                  <div>
-                                    <div className="font-semibold text-white">
-                                      {addr.display || "—"}
+                            return (
+                              <motion.div
+                                key={p.id}
+                                transition={{ duration: 0.18, ease }}
+                                className={cx(
+                                  "relative grid gap-3 px-4 py-4 transition duration-300 md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
+                                  selected
+                                    ? "bg-[var(--color-card-hover)]/70"
+                                    : "hover:bg-[var(--color-card-hover)]"
+                                )}
+                              >
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <div className="truncate text-sm font-extrabold text-[var(--color-text)]">
+                                      {a.display || "No job address saved"}
                                     </div>
 
-                                    {(addr.city || addr.state || addr.zip) && (
-                                      <div className="text-xs text-white/55">
-                                        {[addr.city, addr.state, addr.zip]
-                                          .filter(Boolean)
-                                          .join(", ")}
-                                      </div>
-                                    )}
+                                    <StatusPill paid={paid} />
 
-                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/60">
-                                      <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white/70">
-                                        {p.category || "payout"}
+                                    <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
+                                      {categoryLabel(p.category)}
+                                    </span>
+
+                                    <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
+                                      {methodLabel((p as any).method)}
+                                    </span>
+                                  </div>
+
+                                  {(a.city || a.state || a.zip) && (
+                                    <div className="mt-2 truncate text-sm text-[rgb(var(--color-text-rgb)/0.82)]">
+                                      {[a.city, a.state, a.zip]
+                                        .filter(Boolean)
+                                        .join(", ")}
+                                    </div>
+                                  )}
+
+                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.54)]">
+                                    <span>
+                                      Created {fmtDate(p.createdAt as unknown)}
+                                    </span>
+
+                                    {paid ? (
+                                      <span className="text-[rgb(var(--pill-success-rgb)/0.82)]">
+                                        Paid {fmtDate(p.paidAt as unknown)}
                                       </span>
+                                    ) : null}
 
-                                      {typeof p.sqft === "number" &&
-                                        typeof p.ratePerSqFt === "number" && (
-                                          <span>
-                                            {p.sqft.toLocaleString()} sq.ft @ $
-                                            {p.ratePerSqFt.toFixed(2)}/sq.ft
-                                          </span>
+                                    {typeof p.sqft === "number" &&
+                                    typeof p.ratePerSqFt === "number" ? (
+                                      <span>
+                                        {p.sqft.toLocaleString()} SQ x $
+                                        {p.ratePerSqFt.toFixed(2)} / SQ
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-3 md:flex-col md:items-end">
+                                  <div className="rounded-xl px-3 py-2 text-right">
+                                    <div className="text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
+                                      Amount
+                                    </div>
+                                    <div className="text-base font-semibold text-[var(--color-text)]">
+                                      {money(amountCents)}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center justify-end gap-2">
+                                    {p.jobId ? (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          navigate(`/job/${p.jobId}`)
+                                        }
+                                        className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-xs font-bold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[var(--color-text)]"
+                                      >
+                                        View job
+                                      </button>
+                                    ) : null}
+
+                                    {canSelect ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleSelected(p.id)}
+                                        className={cx(
+                                          "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition",
+                                          selected
+                                            ? "border-[rgb(var(--color-primary-rgb)/0.38)] bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)]"
+                                            : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] text-[rgb(var(--color-text-rgb)/0.78)] hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[var(--color-text)]"
                                         )}
-                                    </div>
+                                      >
+                                        {selected ? (
+                                          <CheckCircle2 className="h-4 w-4" />
+                                        ) : (
+                                          <ChevronRight className="h-4 w-4" />
+                                        )}
 
-                                    <div className="mt-1 text-[11px] text-white/45">
-                                      Created: {fmtDate(p.createdAt as unknown)}
-                                      {p.paidAt && (
-                                        <>
-                                          {" "}
-                                          • Paid: {fmtDate(p.paidAt as unknown)}
-                                        </>
-                                      )}
-                                      {!p.paidAt && (
-                                        <span className="ml-2 inline-flex items-center rounded-full border border-yellow-400/25 bg-yellow-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-yellow-200">
-                                          Pending
-                                        </span>
-                                      )}
-                                    </div>
+                                        {selected ? "Selected" : "Select"}
+                                      </button>
+                                    ) : null}
                                   </div>
                                 </div>
-
-                                <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                                  <div className="text-right">
-                                    <div className="text-[11px] text-white/45">
-                                      Total
-                                    </div>
-                                    <div className="text-base font-semibold text-white">
-                                      {money(p.amountCents)}
-                                    </div>
-                                  </div>
-
-                                  {p.jobId && (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        navigate(
-                                          `/org/${orgId}/jobs/${p.jobId}`
-                                        )
-                                      }
-                                      className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-semibold text-white/75 hover:bg-white/[0.06] transition"
-                                    >
-                                      View Job
-                                    </button>
-                                  )}
-
-                                  {p.paidAt ? (
-                                    <span className="inline-flex items-center rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-200">
-                                      Paid
-                                    </span>
-                                  ) : payoutFilter !== "pending" ? (
-                                    <span className="inline-flex items-center rounded-full border border-yellow-400/25 bg-yellow-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase text-yellow-200">
-                                      Pending
-                                    </span>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ul>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   )}
               </motion.div>
@@ -1082,7 +1132,7 @@ export default function EmployeeDetailPage() {
         {/* Pay stubs history */}
         <motion.section
           variants={fadeUp}
-          className="mt-6 rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
+          className="mt-6 rounded-3xl border border-white/10 bg-[var(--color-card)] p-6 shadow-[0_25px_80px_rgba(0,0,0,0.35)]"
         >
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>

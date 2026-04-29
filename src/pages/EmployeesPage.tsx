@@ -576,9 +576,7 @@ export default function EmployeesPage() {
                       variants={fadeUp}
                       role="button"
                       tabIndex={0}
-                      onClick={() =>
-                        navigate(`/org/${orgId}/employees/${e.id}`)
-                      }
+                      onClick={() => navigate(`/employees/${e.id}`)}
                       onKeyDown={(ev) => {
                         if (ev.key === "Enter" || ev.key === " ") {
                           ev.preventDefault();

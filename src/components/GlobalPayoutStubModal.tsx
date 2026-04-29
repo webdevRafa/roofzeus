@@ -1,8 +1,19 @@
 import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
+import { doc, onSnapshot } from "firebase/firestore";
 import { motion } from "framer-motion";
 import { CheckCircle2, ChevronRight, FileText } from "lucide-react";
-import type { Employee, PayoutDoc, EmployeeAddress, Job } from "../types/types";
-import logo from "../assets/rogers-roofing.webp";
+import type {
+  Employee,
+  PayoutDoc,
+  EmployeeAddress,
+  Job,
+  Organization,
+  Address,
+} from "../types/types";
+import { db } from "../firebase/firebaseConfig";
+import { useOrg } from "../contexts/OrgContext";
+import fallbackLogo from "../assets/rogers-roofing.webp";
 
 export type GlobalPayoutStubModalProps = {
   employee: Employee | null;
@@ -69,6 +80,24 @@ function addr(a: Job["address"] | null | undefined) {
   return { display, line1, city, state, zip };
 }
 
+function formatOrgAddress(address: Address | null | undefined): string {
+  if (!address) return "";
+
+  const fullLine = address.fullLine?.trim();
+  if (fullLine) return fullLine;
+
+  const line1 = address.line1 || address.street || "";
+  const cityStateZip = [
+    address.city,
+    address.state,
+    address.zip || address.postalCode,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return [line1, cityStateZip].filter(Boolean).join(" • ");
+}
+
 export function GlobalPayoutStubModal({
   payouts,
   employee,
@@ -81,6 +110,44 @@ export function GlobalPayoutStubModal({
 }: GlobalPayoutStubModalProps) {
   const showPrintGuide = firstStubGuideStep === "print";
   const showMarkPaidGuide = firstStubGuideStep === "markPaid";
+
+  const { orgId } = useOrg();
+  const [org, setOrg] = useState<Organization | null>(null);
+
+  useEffect(() => {
+    if (!orgId) {
+      setOrg(null);
+      return;
+    }
+
+    const ref = doc(db, "organizations", orgId);
+
+    const unsub = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) {
+        setOrg(null);
+        return;
+      }
+
+      setOrg({
+        id: snap.id,
+        ...(snap.data() as Omit<Organization, "id">),
+      });
+    });
+
+    return () => unsub();
+  }, [orgId]);
+
+  const orgDisplayName = useMemo(() => {
+    return (
+      org?.legalName?.trim() || org?.name?.trim() || "Your Roofing Company"
+    );
+  }, [org]);
+
+  const orgAddressLine = useMemo(() => {
+    return formatOrgAddress(org?.address ?? null);
+  }, [org]);
+
+  const orgLogoSrc = org?.logoUrl?.trim() || fallbackLogo;
 
   const totalCents = payouts.reduce(
     (sum, p) => sum + ((p as any).amountCents ?? 0),
@@ -117,14 +184,22 @@ export function GlobalPayoutStubModal({
           <div className="relative flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex gap-3 items-center">
-                <img src={logo} className="max-w-[92px] rounded-md" alt="" />
+                <img
+                  src={orgLogoSrc}
+                  className="h-[76px] w-[92px] rounded-md object-contain bg-white"
+                  alt={`${orgDisplayName} logo`}
+                />
+
                 <div className="min-w-0">
                   <h2 className="text-lg sm:text-xl font-semibold leading-tight print:text-black">
-                    Roger&apos;s Roofing &amp; Contracting LLC
+                    {orgDisplayName}
                   </h2>
-                  <div className="text-xs text-white/60 print:text-gray-600">
-                    3618 Angus Crossing • San Antonio, Texas 75245
-                  </div>
+
+                  {orgAddressLine ? (
+                    <div className="text-xs text-white/60 print:text-gray-600">
+                      {orgAddressLine}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
