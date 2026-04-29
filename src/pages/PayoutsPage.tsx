@@ -353,9 +353,11 @@ export default function PayoutsPage() {
   const [viewStubId, setViewStubId] = useState<string | null>(null);
   const [dayRateOpen, setDayRateOpen] = useState(false);
   const [dismissFirstStubGuide, setDismissFirstStubGuide] = useState(false);
+  const [hideStep2Guide, setHideStep2Guide] = useState(false);
   const [stubModalGuideStep, setStubModalGuideStep] = useState<
     "print" | "markPaid" | null
   >(null);
+
   const selectedOneMember =
     selectedPayoutIds.length > 0 && selectedEmployeeIds.length === 1;
 
@@ -613,9 +615,8 @@ export default function PayoutsPage() {
       togglePayoutSelected(p.id);
     });
 
-    // Once all available payouts for this member are selected,
-    // remove the Step 2 guide so the Create stub CTA is the clear next action.
-    setDismissFirstStubGuide(true);
+    // Hide only the Step 2 tooltip. Keep the tutorial alive for steps 3 and 4.
+    setHideStep2Guide(true);
   }
 
   const activeFilterCount = [
@@ -1221,7 +1222,10 @@ export default function PayoutsPage() {
 
                       <button
                         type="button"
-                        onClick={clearSelectedPayouts}
+                        onClick={() => {
+                          clearSelectedPayouts();
+                          setHideStep2Guide(false);
+                        }}
                         className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.75)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)]"
                       >
                         <X className="h-4 w-4" /> Clear
@@ -1249,7 +1253,7 @@ export default function PayoutsPage() {
                           <FileText className="h-4 w-4" /> Create stub
                         </button>
 
-                        {firstStubGuideStep === "create" ? (
+                        {firstStubGuideStep === "create" && !hideStep2Guide ? (
                           <motion.div
                             initial={{ opacity: 0, y: 8, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1281,7 +1285,7 @@ export default function PayoutsPage() {
 
                             <button
                               type="button"
-                              onClick={() => setDismissFirstStubGuide(true)}
+                              onClick={() => setHideStep2Guide(true)}
                               className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.58)] hover:text-[var(--color-text)]"
                             >
                               Keep selecting

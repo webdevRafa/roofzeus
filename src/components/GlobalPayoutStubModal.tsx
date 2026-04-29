@@ -172,84 +172,95 @@ export function GlobalPayoutStubModal({
 
         {/* Table */}
         <div className="p-5 print:p-0">
-          <div
-            className="overflow-hidden rounded-sm border print:rounded-none print:border-gray-200"
-            style={{ borderColor: "rgba(58,63,75,0.75)" }}
-          >
-            <table className="min-w-full text-xs sm:text-sm">
-              <thead className="text-[11px] uppercase tracking-wide print:bg-gray-50">
-                <tr>
-                  <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                    Address
-                  </th>
-                  <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                    Material
-                  </th>
-                  <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                    SqCount
-                  </th>
-                  <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                    Rate
-                  </th>
-                  <th className="px-3 py-2 text-right text-white/60 print:text-gray-600">
-                    Total
-                  </th>
-                </tr>
-              </thead>
+          <div className="relative">
+            {showPrintGuide ? (
+              <div className="pointer-events-none absolute inset-0 z-10 rounded-sm bg-black/10" />
+            ) : null}
 
-              <tbody>
-                {payouts.map((p) => {
-                  const a = addr((p as any).jobAddressSnapshot as any);
-                  const materialLabel = formatCategory(p.category);
+            <div
+              className={[
+                "overflow-hidden rounded-sm border print:rounded-none print:border-gray-200 transition-all duration-300",
+                showPrintGuide
+                  ? "blur-[2px] pointer-events-none select-none"
+                  : "",
+              ].join(" ")}
+              style={{ borderColor: "rgba(58,63,75,0.75)" }}
+            >
+              <table className="min-w-full text-xs sm:text-sm">
+                <thead className="text-[11px] uppercase tracking-wide print:bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                      Address
+                    </th>
+                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                      Material
+                    </th>
+                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                      SqCount
+                    </th>
+                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                      Rate
+                    </th>
+                    <th className="px-3 py-2 text-right text-white/60 print:text-gray-600">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
 
-                  return (
-                    <tr
-                      key={p.id}
-                      className="border-t print:border-gray-200"
-                      style={{ borderColor: "rgba(58,63,75,0.65)" }}
-                    >
-                      {/* Address */}
-                      <td className="px-3 py-2 align-top ">
-                        <div className="font-medium text-white print:text-black">
-                          {a.display || "—"}
-                        </div>
-                        {(a.city || a.state || a.zip) && (
-                          <div className="text-[11px] text-white/50 print:text-gray-600">
-                            {[a.city, a.state, a.zip]
-                              .filter(Boolean)
-                              .join(", ")}
+                <tbody>
+                  {payouts.map((p) => {
+                    const a = addr((p as any).jobAddressSnapshot as any);
+                    const materialLabel = formatCategory(p.category);
+
+                    return (
+                      <tr
+                        key={p.id}
+                        className="border-t print:border-gray-200"
+                        style={{ borderColor: "rgba(58,63,75,0.65)" }}
+                      >
+                        {/* Address */}
+                        <td className="px-3 py-2 align-top ">
+                          <div className="font-medium text-white print:text-black">
+                            {a.display || "—"}
                           </div>
-                        )}
-                      </td>
+                          {(a.city || a.state || a.zip) && (
+                            <div className="text-[11px] text-white/50 print:text-gray-600">
+                              {[a.city, a.state, a.zip]
+                                .filter(Boolean)
+                                .join(", ")}
+                            </div>
+                          )}
+                        </td>
 
-                      {/* Material */}
-                      <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
-                        {materialLabel || "—"}
-                      </td>
+                        {/* Material */}
+                        <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
+                          {materialLabel || "—"}
+                        </td>
 
-                      {/* SqCount */}
-                      <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
-                        {typeof (p as any).sqft === "number"
-                          ? (p as any).sqft.toLocaleString()
-                          : "—"}
-                      </td>
+                        {/* SqCount */}
+                        <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
+                          {typeof (p as any).sqft === "number"
+                            ? (p as any).sqft.toLocaleString()
+                            : "—"}
+                        </td>
 
-                      {/* Rate */}
-                      <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
-                        {typeof (p as any).ratePerSqFt === "number"
-                          ? `$${(p as any).ratePerSqFt.toFixed(2)}/sq.ft`
-                          : "—"}
-                      </td>
+                        {/* Rate */}
+                        <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
+                          {typeof (p as any).ratePerSqFt === "number"
+                            ? `$${(p as any).ratePerSqFt.toFixed(2)}/sq.ft`
+                            : "—"}
+                        </td>
 
-                      {/* Total */}
-                      <td className="px-3 py-2 align-top text-right font-semibold text-white print:text-black">
-                        {money((p as any).amountCents ?? 0)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        {/* Total */}
+                        <td className="px-3 py-2 align-top text-right font-semibold text-white print:text-black">
+                          {money((p as any).amountCents ?? 0)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Totals + actions */}
@@ -269,7 +280,7 @@ export function GlobalPayoutStubModal({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="relative">
                 {showPrintGuide ? (
                   <motion.span
@@ -375,7 +386,7 @@ export function GlobalPayoutStubModal({
                   onClick={onConfirmPaid}
                   disabled={saving}
                   className={[
-                    "relative z-10 inline-flex items-center gap-2 rounded-md px-4 py-2 text-xs font-semibold transition disabled:opacity-60",
+                    "relative z-10 inline-flex items-center gap-2 rounded-md bg-[var(--color-card-hover)] px-4 py-2 text-xs font-semibold transition disabled:opacity-60",
                     showMarkPaidGuide
                       ? "shadow-[0_0_0_6px_rgb(var(--pill-success-rgb)/0.10),0_0_34px_rgb(var(--pill-success-rgb)/0.36)]"
                       : "",
