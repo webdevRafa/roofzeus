@@ -586,6 +586,38 @@ export default function PayoutsPage() {
     [selectedPayouts]
   );
 
+  const selectedMemberId =
+    selectedEmployeeIds.length === 1 ? selectedEmployeeIds[0] : null;
+
+  const selectedMemberName = useMemo(() => {
+    if (!selectedMemberId) return "";
+    const selectedPayout = selectedPayouts.find(
+      (p) => (p as any).employeeId === selectedMemberId
+    );
+    return selectedPayout ? getEmployeeDisplayName(selectedPayout) : "member";
+  }, [selectedMemberId, selectedPayouts]);
+
+  const selectablePayoutsForSelectedMember = useMemo(() => {
+    if (!selectedMemberId) return [];
+
+    return filtered.filter(
+      (p) =>
+        !isPaid(p) &&
+        (p as any).employeeId === selectedMemberId &&
+        !selectedPayoutIds.includes(p.id)
+    );
+  }, [filtered, selectedMemberId, selectedPayoutIds]);
+
+  function selectAllForSelectedMember() {
+    selectablePayoutsForSelectedMember.forEach((p) => {
+      togglePayoutSelected(p.id);
+    });
+
+    // Once all available payouts for this member are selected,
+    // remove the Step 2 guide so the Create stub CTA is the clear next action.
+    setDismissFirstStubGuide(true);
+  }
+
   const activeFilterCount = [
     employeeId !== "all",
     category !== "all",
@@ -963,7 +995,7 @@ export default function PayoutsPage() {
                       className={cx(
                         "relative grid gap-3 px-4 py-4 transition duration-300 md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
                         selected
-                          ? "bg-[var(--color-card-hover)]"
+                          ? "bg-[var(--color-card-hover)]/70"
                           : "hover:bg-[var(--color-card-hover)]",
                         showSelectGuide &&
                           "z-30 bg-[rgb(var(--color-primary-rgb)/0.07)] ring-1 ring-[rgb(var(--color-primary-rgb)/0.24)] shadow-[0_18px_70px_rgba(0,0,0,0.28)]",
@@ -1008,11 +1040,11 @@ export default function PayoutsPage() {
                       </div>
 
                       <div className="flex items-center justify-between gap-3 md:flex-col md:items-end">
-                        <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-background-rgb)/0.22)] px-3 py-2 text-right">
-                          <div className="text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
+                        <div className="rounded-xl  px-3 py-2 text-right">
+                          <div className="text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                             Amount
                           </div>
-                          <div className="text-base font-extrabold text-[var(--color-text)]">
+                          <div className="text-base font-semibold text-[var(--color-text)]">
                             {money(amountCents)}
                           </div>
                         </div>
@@ -1172,6 +1204,21 @@ export default function PayoutsPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      {selectedOneMember &&
+                      selectablePayoutsForSelectedMember.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={selectAllForSelectedMember}
+                          className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.10)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[rgb(var(--color-primary-rgb)/0.16)]"
+                        >
+                          <Users className="h-4 w-4" />
+                          Select all for {selectedMemberName}
+                          <span className="rounded-full bg-[rgb(var(--color-primary-rgb)/0.14)] px-2 py-0.5 text-[11px]">
+                            +{selectablePayoutsForSelectedMember.length}
+                          </span>
+                        </button>
+                      ) : null}
+
                       <button
                         type="button"
                         onClick={clearSelectedPayouts}
@@ -1193,10 +1240,10 @@ export default function PayoutsPage() {
                             setStubOpen(true);
                           }}
                           className={cx(
-                            "relative inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer",
+                            "relative inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer border-[rgb(var(--pill-success-rgb)]",
                             firstStubGuideStep === "create"
-                              ? "text-[rgb(var(--pill-success-rgb))] "
-                              : "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.14)] text-[rgb(var(--pill-success-rgb))] hover:bg-[rgb(var(--pill-success-rgb)/0.20)]"
+                              ? "text-[rgb(var(--pill-success-rgb))]  "
+                              : "  text-[rgb(var(--pill-success-rgb))] hover:bg-[rgb(var(--pill-success-rgb)/0.20)]"
                           )}
                         >
                           <FileText className="h-4 w-4" /> Create stub
