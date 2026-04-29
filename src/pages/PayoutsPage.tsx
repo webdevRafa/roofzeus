@@ -542,6 +542,10 @@ export default function PayoutsPage() {
     return paged.find((p) => !isPaid(p))?.id ?? null;
   }, [paged, showFirstPaystubGuide]);
 
+  const shouldBlurPayoutListForStep2 = false;
+
+  const shouldFocusFirstPayoutForStep1 = firstStubGuideStep === "select";
+
   const kpis = useMemo(() => {
     const pending = payouts.filter((p) => !isPaid(p));
     const paid = payouts.filter((p) => isPaid(p));
@@ -927,7 +931,13 @@ export default function PayoutsPage() {
             </div>
           </div>
 
-          <div className="max-h-[66vh] overflow-y-auto p-4 section-scroll">
+          <div
+            className={cx(
+              "max-h-[66vh] overflow-y-auto p-4 section-scroll transition duration-300",
+              shouldBlurPayoutListForStep2 &&
+                "blur-[2px] opacity-55 pointer-events-none select-none"
+            )}
+          >
             <div className="overflow-hidden ">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-[rgb(var(--color-border-rgb)/0.16)] px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.62)]">
                 <div>Payout</div>
@@ -944,15 +954,21 @@ export default function PayoutsPage() {
                     firstStubGuideStep === "select" &&
                     firstGuidedPendingPayoutId === p.id &&
                     canSelect;
+                  const shouldBlurThisRowForStep1 =
+                    shouldFocusFirstPayoutForStep1 && !showSelectGuide;
                   return (
                     <motion.div
                       key={p.id}
                       transition={{ duration: 0.18, ease: EASE }}
                       className={cx(
-                        "grid gap-3 px-4 py-4 transition md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
+                        "relative grid gap-3 px-4 py-4 transition duration-300 md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
                         selected
                           ? "bg-[var(--color-card-hover)]"
-                          : "hover:bg-[var(--color-card-hover)]"
+                          : "hover:bg-[var(--color-card-hover)]",
+                        showSelectGuide &&
+                          "z-30 bg-[rgb(var(--color-primary-rgb)/0.07)] ring-1 ring-[rgb(var(--color-primary-rgb)/0.24)] shadow-[0_18px_70px_rgba(0,0,0,0.28)]",
+                        shouldBlurThisRowForStep1 &&
+                          "blur-[2px] opacity-45 pointer-events-none select-none"
                       )}
                     >
                       <div className="min-w-0">
@@ -984,8 +1000,8 @@ export default function PayoutsPage() {
                           ) : null}
                           {(p as any).sqft && (p as any).ratePerSqFt ? (
                             <span>
-                              {(p as any).sqft} sq.ft × $
-                              {Number((p as any).ratePerSqFt).toFixed(2)}
+                              {(p as any).sqft} SQ x $
+                              {Number((p as any).ratePerSqFt).toFixed(2)} / SQ
                             </span>
                           ) : null}
                         </div>
@@ -1073,7 +1089,7 @@ export default function PayoutsPage() {
 
                                   <div className="min-w-0">
                                     <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary)]">
-                                      Step 1 of 2
+                                      Step 1 of 4
                                     </div>
 
                                     <div className="mt-1 text-sm font-extrabold text-[var(--color-text)]">
@@ -1126,7 +1142,12 @@ export default function PayoutsPage() {
             </div>
           </div>
 
-          <div className="sticky bottom-0 z-20 border-t border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.18)] backdrop-blur-xl">
+          <div
+            className={cx(
+              "sticky bottom-0 z-20 border-t border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.18)] backdrop-blur-xl",
+              firstStubGuideStep === "create" && "z-50"
+            )}
+          >
             <AnimatePresence initial={false}>
               {selectedPayoutIds.length > 0 ? (
                 <motion.div
@@ -1172,15 +1193,12 @@ export default function PayoutsPage() {
                             setStubOpen(true);
                           }}
                           className={cx(
-                            "relative inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
+                            "relative inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer",
                             firstStubGuideStep === "create"
-                              ? "border-[rgb(var(--pill-success-rgb)/0.75)] bg-[rgb(var(--pill-success-rgb)/0.22)] text-[rgb(var(--pill-success-rgb))] shadow-[0_0_0_6px_rgb(var(--pill-success-rgb)/0.10),0_0_34px_rgb(var(--pill-success-rgb)/0.36)]"
+                              ? "text-[rgb(var(--pill-success-rgb))] "
                               : "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.14)] text-[rgb(var(--pill-success-rgb))] hover:bg-[rgb(var(--pill-success-rgb)/0.20)]"
                           )}
                         >
-                          {firstStubGuideStep === "create" ? (
-                            <span className="pointer-events-none absolute -inset-2 -z-10 rounded-2xl bg-[rgb(var(--pill-success-rgb)/0.14)] animate-pulse" />
-                          ) : null}
                           <FileText className="h-4 w-4" /> Create stub
                         </button>
 
@@ -1190,24 +1208,36 @@ export default function PayoutsPage() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 8, scale: 0.98 }}
                             transition={{ duration: 0.2, ease: EASE }}
-                            className="absolute bottom-full right-0 z-50 mb-3 w-[320px] rounded-2xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[var(--color-card)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.65)]"
+                            className="absolute bottom-full right-0 z-50 mb-3 w-[320px] rounded-2xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[var(--color-card)] p-4 text-left "
                           >
                             <div className="text-[11px] font-bold uppercase tracking-wide text-[rgb(var(--pill-success-rgb))]">
-                              Step 2 of 2
+                              Step 2 of 4
                             </div>
                             <div className="mt-1 text-sm font-extrabold text-[var(--color-text)]">
-                              Create the pay stub
+                              Review your selected payouts
                             </div>
+
                             <p className="mt-1 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
-                              Now generate the printable stub. After review, you
-                              can mark these payouts as paid.
+                              Add any other pending payouts for this same member
+                              before creating the stub. When everything looks
+                              right, click{" "}
+                              <span className="font-bold text-[rgb(var(--pill-success-rgb))]">
+                                Create stub
+                              </span>
+                              .
                             </p>
+
+                            <div className="mt-3 rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] px-3 py-2 text-[11px] leading-4 text-[rgb(var(--color-text-rgb)/0.58)]">
+                              Tip: select multiple payouts now so they print
+                              together on one clean pay stub.
+                            </div>
+
                             <button
                               type="button"
                               onClick={() => setDismissFirstStubGuide(true)}
-                              className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.48)] hover:text-[var(--color-text)]"
+                              className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.58)] hover:text-[var(--color-text)]"
                             >
-                              Not now
+                              Keep selecting
                             </button>
                           </motion.div>
                         ) : null}
@@ -1289,13 +1319,13 @@ export default function PayoutsPage() {
           </div>
 
           <div className="max-h-[66vh] overflow-y-auto p-4 section-scroll">
-            <div className="space-y-2">
+            <div className="divide-y divide-[rgb(var(--color-border-rgb)/0.16)]">
               {stubs.slice(0, 18).map((stub) => (
                 <button
                   key={stub.id}
                   type="button"
                   onClick={() => setViewStubId(stub.id)}
-                  className="w-full rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.28)] p-3 text-left transition hover:bg-[rgb(var(--color-surface-rgb)/0.48)] hover:shadow-sm"
+                  className="w-full  p-3 text-left transition hover:bg-[var(--color-card-hover)] hover:shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -1338,11 +1368,6 @@ export default function PayoutsPage() {
                   </div>
                 </div>
               ) : null}
-            </div>
-
-            <div className="mt-3 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.26)] p-3 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.58)]">
-              Tip: Use filters to isolate a week or pay period before creating a
-              stub.
             </div>
           </div>
         </motion.aside>
