@@ -168,10 +168,12 @@ export type PayoutDoc = {
   sqft?: number;
   ratePerSqFt?: number;
 
-   // technician breakdown
-   daysWorked?: number;
-   ratePerDayCents?: number;
-   note?: string;
+// technician / day-rate breakdown
+daysWorked?: number;
+workedDates?: string[]; // YYYY-MM-DD dates selected in PayTechnicianModal
+ratePerDayCents?: number;
+note?: string;
+memo?: string;
   createdAt: Timestamp | FieldValue;
   paidAt?: Timestamp | Date | FieldValue | null;
 

@@ -846,7 +846,7 @@ export default function PayoutsPage() {
             <button
               type="button"
               onClick={() => setDayRateOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.12)] px-4 py-2 text-sm font-bold text-[var(--color-primary)] shadow-sm transition hover:bg-[rgb(var(--color-primary-rgb)/0.18)] hover:shadow-md"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.05)] px-4 py-2 text-sm font-bold text-[var(--color-text)] cursor-pointer shadow-sm transition hover:bg-[rgb(var(--color-primary-rgb)/0.18)] hover:shadow-md"
             >
               <Users className="h-4 w-4" />
               Day-rate payout
@@ -855,7 +855,7 @@ export default function PayoutsPage() {
             <button
               type="button"
               onClick={exportCsv}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.76)] hover:text-[var(--color-text)]"
+              className="inline-flex items-center cursor-pointer justify-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.76)] hover:text-[var(--color-text)]"
             >
               <Download className="h-4 w-4" />
               Export CSV

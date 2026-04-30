@@ -98,6 +98,34 @@ function formatOrgAddress(address: Address | null | undefined): string {
   return [line1, cityStateZip].filter(Boolean).join(" • ");
 }
 
+function formatWorkDate(ymd: string) {
+  const [year, month, day] = ymd.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  if (Number.isNaN(date.getTime())) return ymd;
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function dayRateSummary(p: PayoutDoc) {
+  const dates = Array.isArray((p as any).workedDates)
+    ? ((p as any).workedDates as string[])
+    : [];
+
+  if (dates.length > 0) {
+    return dates.map(formatWorkDate).join(", ");
+  }
+
+  const memo = (p as any).note || (p as any).memo;
+  if (typeof memo === "string" && memo.trim()) return memo.trim();
+
+  return "Day-rate work";
+}
+
 export function GlobalPayoutStubModal({
   payouts,
   employee,
@@ -153,6 +181,8 @@ export function GlobalPayoutStubModal({
     (sum, p) => sum + ((p as any).amountCents ?? 0),
     0
   );
+  const isDayRateStub =
+    payouts.length > 0 && payouts.every((p) => p.category === "technician");
 
   // Use the helper we created earlier to normalize the employee address
   const empAddr = employee ? normalizeEmployeeAddress(employee.address) : null;
@@ -262,28 +292,99 @@ export function GlobalPayoutStubModal({
               style={{ borderColor: "rgba(58,63,75,0.75)" }}
             >
               <table className="min-w-full text-xs sm:text-sm">
-                <thead className="text-[11px] uppercase tracking-wide print:bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                      Address
-                    </th>
-                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                      Material
-                    </th>
-                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                      SqCount
-                    </th>
-                    <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                      Rate
-                    </th>
-                    <th className="px-3 py-2 text-right text-white/60 print:text-gray-600">
-                      Total
-                    </th>
-                  </tr>
+                <thead
+                  className="text-[11px] uppercase tracking-wide print:bg-gray-50"
+                  style={{ backgroundColor: "rgba(11,14,20,0.45)" }}
+                >
+                  {isDayRateStub ? (
+                    <tr>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        Work dates
+                      </th>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        Days
+                      </th>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        Rate
+                      </th>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        Notes
+                      </th>
+                      <th className="px-3 py-2 text-right text-white/60 print:text-gray-600">
+                        Total
+                      </th>
+                    </tr>
+                  ) : (
+                    <tr>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        Address
+                      </th>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        Material
+                      </th>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        SqCount
+                      </th>
+                      <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
+                        Rate
+                      </th>
+                      <th className="px-3 py-2 text-right text-white/60 print:text-gray-600">
+                        Total
+                      </th>
+                    </tr>
+                  )}
                 </thead>
 
                 <tbody>
                   {payouts.map((p) => {
+                    if (isDayRateStub) {
+                      const days =
+                        typeof (p as any).daysWorked === "number"
+                          ? (p as any).daysWorked
+                          : Array.isArray((p as any).workedDates)
+                          ? (p as any).workedDates.length
+                          : 0;
+
+                      const ratePerDayCents =
+                        typeof (p as any).ratePerDayCents === "number"
+                          ? (p as any).ratePerDayCents
+                          : days > 0
+                          ? Math.round(((p as any).amountCents ?? 0) / days)
+                          : 0;
+
+                      const note = (p as any).note || (p as any).memo || "—";
+
+                      return (
+                        <tr
+                          key={p.id}
+                          className="border-t print:border-gray-200"
+                          style={{ borderColor: "rgba(58,63,75,0.65)" }}
+                        >
+                          <td className="px-3 py-2 align-top text-white/85 print:text-gray-800">
+                            {dayRateSummary(p)}
+                          </td>
+
+                          <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
+                            {days || "—"}
+                          </td>
+
+                          <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
+                            {ratePerDayCents
+                              ? `${money(ratePerDayCents)}/day`
+                              : "—"}
+                          </td>
+
+                          <td className="px-3 py-2 align-top text-white/70 print:text-gray-700">
+                            {note}
+                          </td>
+
+                          <td className="px-3 py-2 align-top text-right font-semibold text-white print:text-black">
+                            {money((p as any).amountCents ?? 0)}
+                          </td>
+                        </tr>
+                      );
+                    }
+
                     const a = addr((p as any).jobAddressSnapshot as any);
                     const materialLabel = formatCategory(p.category);
 
@@ -293,8 +394,7 @@ export function GlobalPayoutStubModal({
                         className="border-t print:border-gray-200"
                         style={{ borderColor: "rgba(58,63,75,0.65)" }}
                       >
-                        {/* Address */}
-                        <td className="px-3 py-2 align-top ">
+                        <td className="px-3 py-2 align-top">
                           <div className="font-medium text-white print:text-black">
                             {a.display || "—"}
                           </div>
@@ -307,26 +407,22 @@ export function GlobalPayoutStubModal({
                           )}
                         </td>
 
-                        {/* Material */}
                         <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
                           {materialLabel || "—"}
                         </td>
 
-                        {/* SqCount */}
                         <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
                           {typeof (p as any).sqft === "number"
                             ? (p as any).sqft.toLocaleString()
                             : "—"}
                         </td>
 
-                        {/* Rate */}
                         <td className="px-3 py-2 align-top text-white/80 print:text-gray-800">
                           {typeof (p as any).ratePerSqFt === "number"
                             ? `$${(p as any).ratePerSqFt.toFixed(2)}/sq.ft`
                             : "—"}
                         </td>
 
-                        {/* Total */}
                         <td className="px-3 py-2 align-top text-right font-semibold text-white print:text-black">
                           {money((p as any).amountCents ?? 0)}
                         </td>
