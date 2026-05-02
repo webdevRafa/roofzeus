@@ -278,11 +278,35 @@ export function useDashboardPayoutsData() {
         new Set(lines.map((l) => l.jobId).filter(Boolean))
       ) as string[];
 
-      const employeeAddr = stubEmployee.address
-        ? typeof stubEmployee.address === "string"
-          ? { fullLine: stubEmployee.address, line1: stubEmployee.address }
-          : stubEmployee.address
-        : null;
+      const employeeAddr = (() => {
+        const raw = stubEmployee.address;
+      
+        if (!raw) return null;
+      
+        if (typeof raw === "string") {
+          const fullLine = raw.trim();
+          return fullLine ? { fullLine, line1: fullLine } : null;
+        }
+      
+        const fullLine = raw.fullLine?.trim() || "";
+        const line1 = raw.line1?.trim() || "";
+        const city = raw.city?.trim() || "";
+        const state = raw.state?.trim() || "";
+        const zip = raw.zip?.trim() || "";
+      
+        const cityStateZip = [city, state, zip].filter(Boolean).join(", ");
+        const displayLine = fullLine || [line1, cityStateZip].filter(Boolean).join(", ");
+      
+        if (!displayLine && !line1 && !city && !state && !zip) return null;
+      
+        return {
+          ...(displayLine ? { fullLine: displayLine } : {}),
+          ...(line1 ? { line1 } : {}),
+          ...(city ? { city } : {}),
+          ...(state ? { state } : {}),
+          ...(zip ? { zip } : {}),
+        };
+      })();
 
       await setDoc(stubRef, {
         id: stubRef.id,

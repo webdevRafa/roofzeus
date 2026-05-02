@@ -45,6 +45,28 @@ function money(cents: number | null | undefined): string {
   });
 }
 
+function formatIssuedDate(date = new Date()): string {
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function makeStubNumber(payouts: PayoutDoc[]): string {
+  const seed = payouts
+    .map((p) => p.id)
+    .filter(Boolean)
+    .join("-");
+
+  if (!seed) return `RZ-${Date.now().toString().slice(-6)}`;
+
+  return `RZ-${seed
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 8)
+    .toUpperCase()}`;
+}
+
 // ---- Address normalizer (string or object, supports `fullLine`) ----
 function pickString(obj: Record<string, unknown>, keys: string[]): string {
   for (const k of keys) {
@@ -181,6 +203,10 @@ export function GlobalPayoutStubModal({
     (sum, p) => sum + ((p as any).amountCents ?? 0),
     0
   );
+
+  const issuedDate = formatIssuedDate();
+  const stubNumber = makeStubNumber(payouts);
+
   const isDayRateStub =
     payouts.length > 0 && payouts.every((p) => p.category === "technician");
 
@@ -198,19 +224,33 @@ export function GlobalPayoutStubModal({
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="paystub-print fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 print:bg-white print:p-0">
+    <div className="paystub-print fixed inset-0 z-50 grid place-items-center p-4 bg-black/60  print:bg-white print:p-0">
       <div
         className={[
-          "paystub-print-inner w-full max-w-3xl rounded-sm border-none py-4 lg:py-10  overflow-hidden",
+          "paystub-print-inner w-full max-w-3xl rounded-sm border-none   overflow-hidden",
           "bg-[var(--color-card)]",
-          "print:bg-white print:text-black print:border-transparent print:shadow-none print:rounded-none",
+          "print:bg-white print:text-black print:border-transparent print:shadow-none print:rounded-none print:py-0",
         ].join(" ")}
       >
-        {/* Top bar */}
+        {/* Header / document identity */}
         <div
-          className="relative px-5 py-4 border-b print:border-gray-200"
+          className="relative p-4  border-b print:border-gray-200"
           style={{ borderColor: "rgba(58,63,75,0.75)" }}
         >
+          <div className="w-full flex justify-end mb-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className=" rounded-xl border px-3 py-2 text-xs font-semibold transition print:hidden"
+              style={{
+                borderColor: "rgba(58,63,75,0.85)",
+                backgroundColor: "rgba(255,255,255,0.04)",
+                color: "rgba(245,246,248,0.85)",
+              }}
+            >
+              Close
+            </button>
+          </div>
           <div className="relative flex items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex gap-3 items-center">
@@ -232,51 +272,82 @@ export function GlobalPayoutStubModal({
                   ) : null}
                 </div>
               </div>
-
-              {/* Dynamic employee info */}
-              {employee && (
-                <div className="mt-4">
-                  <div className="text-sm font-semibold text-white print:text-black">
-                    {employee.name}
-                  </div>
-
-                  {empAddr && (
-                    <div className="mt-1 text-xs text-white/60 print:text-gray-700">
-                      {(empAddr.fullLine || empAddr.line1) && (
-                        <div>{empAddr.fullLine || empAddr.line1}</div>
-                      )}
-                      {(empAddr.city || empAddr.state || empAddr.zip) && (
-                        <div>
-                          {[empAddr.city, empAddr.state, empAddr.zip]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             <div className="text-right">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-xl border px-3 py-2 text-xs font-semibold transition print:hidden"
-                style={{
-                  borderColor: "rgba(58,63,75,0.85)",
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  color: "rgba(245,246,248,0.85)",
-                }}
-              >
-                Close
-              </button>
+              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45 print:text-gray-500">
+                Earnings Statement
+              </div>
+
+              <div className="mt-2 space-y-0.5 text-[11px] text-white/55 print:text-gray-600">
+                <div>
+                  <span className="font-semibold text-white/75 print:text-gray-800">
+                    Stub #:
+                  </span>{" "}
+                  {stubNumber}
+                </div>
+
+                <div>
+                  <span className="font-semibold text-white/75 print:text-gray-800">
+                    Issue date:
+                  </span>{" "}
+                  {issuedDate}
+                </div>
+
+                <div>
+                  <span className="font-semibold text-white/75 print:text-gray-800">
+                    Payouts:
+                  </span>{" "}
+                  {payouts.length}
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Payee block */}
+          {employee && (
+            <div className="relative mt-2 rounded-sm  p-3 print:border-gray-200 print:bg-gray-50">
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45 print:text-gray-500">
+                Pay to
+              </div>
+
+              <div className="mt-1">
+                <div className="text-sm font-semibold text-white print:text-black">
+                  {employee.name}
+                </div>
+
+                {empAddr && (
+                  <div className="mt-1 text-xs text-white/60 print:text-black">
+                    {(empAddr.fullLine || empAddr.line1) && (
+                      <div>{empAddr.fullLine || empAddr.line1}</div>
+                    )}
+
+                    {(empAddr.city || empAddr.state || empAddr.zip) && (
+                      <div>
+                        {[empAddr.city, empAddr.state, empAddr.zip]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Table */}
+        {/* Earnings table */}
         <div className="p-5 print:p-0">
+          <div className="mb-2 flex items-end justify-between print:px-5 print:pt-4">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/45 print:text-gray-500">
+                Earnings breakdown
+              </div>
+              <div className="text-xs text-white/55 print:text-gray-600">
+                Roofing labor payouts included in this statement
+              </div>
+            </div>
+          </div>
           <div className="relative">
             {showPrintGuide ? (
               <div className="pointer-events-none absolute inset-0 z-10 rounded-sm bg-black/10" />
@@ -320,10 +391,10 @@ export function GlobalPayoutStubModal({
                         Address
                       </th>
                       <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                        Material
+                        Labor
                       </th>
                       <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
-                        SqCount
+                        Sq Count
                       </th>
                       <th className="px-3 py-2 text-left text-white/60 print:text-gray-600">
                         Rate
@@ -444,7 +515,7 @@ export function GlobalPayoutStubModal({
                 {payouts.length}
               </div>
               <div className="mt-1 text-lg font-semibold text-white">
-                Total:{" "}
+                Net pay:
                 <span style={{ color: "rgba(207,174,93,0.95)" }}>
                   {money(totalCents)}
                 </span>
@@ -613,13 +684,35 @@ export function GlobalPayoutStubModal({
             </div>
           </div>
 
-          {/* PRINT-ONLY totals */}
-          <div className="hidden print:flex w-full justify-end p-5">
-            <div className="text-right">
-              <div className="text-[11px] text-gray-600">Grand total</div>
-              <div className="mt-1 text-lg font-semibold text-black">
-                {money(totalCents)}
+          {/* PRINT-ONLY totals + compliance footer */}
+          <div className="hidden print:block p-5">
+            <div className="ml-auto w-[240px] border-t border-gray-300 pt-3">
+              <div className="flex justify-between text-[11px] text-gray-600">
+                <span>Subtotal</span>
+                <span>{money(totalCents)}</span>
               </div>
+
+              <div className="mt-1 flex justify-between text-[11px] text-gray-600">
+                <span>Deductions</span>
+                <span>$0.00</span>
+              </div>
+
+              <div className="mt-2 flex justify-between border-t border-gray-300 pt-2 text-sm font-bold text-black">
+                <span>Net pay</span>
+                <span>{money(totalCents)}</span>
+              </div>
+            </div>
+
+            <div className="mt-8 border-t border-gray-200 pt-3 text-[10px] leading-4 text-gray-500">
+              This document serves as a record of roofing labor earnings and
+              payouts issued by the company listed above. RoofZeus provides
+              document generation and recordkeeping tools only and does not
+              provide tax, payroll, legal, or accounting advice. Contractors and
+              workers are responsible for their own reporting obligations.
+            </div>
+
+            <div className="mt-2 text-[10px] text-gray-400">
+              Generated by RoofZeus • {issuedDate}
             </div>
           </div>
         </div>

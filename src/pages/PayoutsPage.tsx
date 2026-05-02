@@ -1083,7 +1083,7 @@ export default function PayoutsPage() {
                       key={p.id}
                       transition={{ duration: 0.18, ease: EASE }}
                       className={cx(
-                        "relative grid gap-3 px-4 py-4 transition duration-300 md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
+                        "relative grid gap-3 px-4 py-2 transition duration-300 md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
                         selected
                           ? "bg-[var(--color-card-hover)]/70"
                           : "hover:bg-[var(--color-card-hover)]",
@@ -1099,10 +1099,10 @@ export default function PayoutsPage() {
                             {getEmployeeDisplayName(p)}
                           </div>
                           <StatusPill paid={paid} />
-                          <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
+                          <span className="rounded-full   px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
                             {categoryLabel(getCategory(p))}
                           </span>
-                          <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
+                          <span className="rounded-full  px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
                             {methodLabel(getMethod(p))}
                           </span>
                         </div>
