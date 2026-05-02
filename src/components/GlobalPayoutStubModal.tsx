@@ -105,19 +105,26 @@ function addr(a: Job["address"] | null | undefined) {
 function formatOrgAddress(address: Address | null | undefined): string {
   if (!address) return "";
 
+  const removeCountry = (value: string) =>
+    value
+      .replace(/,\s*(US|USA|United States|United States of America)\s*$/i, "")
+      .trim();
+
   const fullLine = address.fullLine?.trim();
-  if (fullLine) return fullLine;
+  if (fullLine) return removeCountry(fullLine);
 
   const line1 = address.line1 || address.street || "";
+
   const cityStateZip = [
     address.city,
-    address.state,
-    address.zip || address.postalCode,
+    [address.state, address.zip || address.postalCode]
+      .filter(Boolean)
+      .join(" "),
   ]
     .filter(Boolean)
     .join(", ");
 
-  return [line1, cityStateZip].filter(Boolean).join(" • ");
+  return removeCountry([line1, cityStateZip].filter(Boolean).join(" • "));
 }
 
 function formatWorkDate(ymd: string) {
@@ -513,7 +520,7 @@ export function GlobalPayoutStubModal({
               {payouts.length}
             </div>
             <div className="mt-1 text-lg font-semibold text-white">
-              Net pay:
+              Net pay: &nbsp;
               <span style={{ color: "rgba(207,174,93,0.95)" }}>
                 {money(totalCents)}
               </span>

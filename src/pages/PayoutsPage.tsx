@@ -220,7 +220,7 @@ function KpiCard({
     <motion.div
       variants={fadeUpItem}
       whileHover={{ y: -2, transition: { duration: 0.2, ease: EASE } }}
-      className="rounded-2xl  p-4 shadow-sm transition hover:bg-[var(--color-card-hover)] hover:shadow-md"
+      className="rounded-2xl  p-2 shadow-sm transition hover:bg-[var(--color-card-hover)] hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -803,7 +803,7 @@ export default function PayoutsPage() {
 
   return (
     <div className="mx-auto w-[min(1450px,94vw)]">
-      <motion.header {...fadeUp(0)} className="mb-6">
+      <motion.header {...fadeUp(0)} className="mb-3">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
             <h1 className="text-xs md:text-md lg:text-lg font-semibold text-[var(--color-text)] uppercase font-poppins">
@@ -906,7 +906,7 @@ export default function PayoutsPage() {
         />
       </motion.section>
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] mb-[200px]">
         <motion.section
           {...fadeUp(0.05)}
           className={cx(
