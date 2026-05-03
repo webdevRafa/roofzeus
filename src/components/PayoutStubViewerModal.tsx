@@ -258,7 +258,7 @@ export function PayoutStubViewerModal({
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card-hover)]"
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 py-2 text-xs font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card)]"
               >
                 Print / Save PDF
               </button>
@@ -266,7 +266,7 @@ export function PayoutStubViewerModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs font-semibold text-[var(--color-text)]/75 transition hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 py-2 text-xs font-semibold text-[var(--color-text)]/75 transition hover:bg-[var(--color-card)] hover:text-[var(--color-text)]"
               >
                 Close
               </button>

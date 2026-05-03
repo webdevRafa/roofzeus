@@ -1131,12 +1131,12 @@ export default function PayoutsPage() {
         />
       </motion.section>
 
-      <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] mb-[200px]">
+      <div className="mt-5 grid min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_380px] xl:h-[calc(100vh-7.5rem)] xl:min-h-[720px] mb-8">
         <motion.section
           {...fadeUp(0.05)}
           className={cx(
-            "overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm",
-            mobileView !== "payouts" && "hidden md:block"
+            "min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm",
+            mobileView !== "payouts" ? "hidden md:flex" : "flex"
           )}
         >
           <div
@@ -1144,7 +1144,7 @@ export default function PayoutsPage() {
             className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.18)] p-4"
           >
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-              <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.36)] p-1">
+              <div className="inline-flex flex-wrap items-center gap-1  p-1">
                 <FilterButton
                   active={payoutFilter === "all"}
                   onClick={() => setPayoutFilter("all" as PayoutFilter)}
@@ -1280,7 +1280,7 @@ export default function PayoutsPage() {
 
           <div
             className={cx(
-              "max-h-[66vh] overflow-y-auto p-4 section-scroll transition duration-300",
+              "min-h-0 flex-1 overflow-y-auto p-4 payouts-table-scroll transition duration-300",
               shouldBlurPayoutListForStep2 &&
                 "blur-[2px] opacity-55 pointer-events-none select-none"
             )}
@@ -1636,7 +1636,7 @@ export default function PayoutsPage() {
                         <button
                           type="button"
                           onClick={selectAllForSelectedMember}
-                          className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.10)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[rgb(var(--color-primary-rgb)/0.16)]"
+                          className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.05)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[rgb(var(--color-primary-rgb)/0.16)]"
                         >
                           <Users className="h-4 w-4" />
                           Select all {selectedPayoutGroupLabel} for{" "}
@@ -1654,9 +1654,10 @@ export default function PayoutsPage() {
                           setHideStep2Guide(false);
                           setSelectionError(null);
                         }}
-                        className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.75)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)]"
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-red-400/28 bg-red-400/5 px-4 py-2 text-sm font-semibold text-[var(--color-text)] transition hover:bg-red-400/16"
                       >
-                        <X className="h-4 w-4" /> Clear
+                        <X className="h-4 w-4 text-red-300" />
+                        Clear
                       </button>
                       <div
                         className={cx(
@@ -1681,14 +1682,10 @@ export default function PayoutsPage() {
                             setStubModalGuideStep("print");
                             setStubOpen(true);
                           }}
-                          className={cx(
-                            "relative inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer border-[rgb(var(--pill-success-rgb)]",
-                            firstStubGuideStep === "create"
-                              ? "text-[rgb(var(--pill-success-rgb))]  "
-                              : "  text-[rgb(var(--pill-success-rgb))] hover:bg-[rgb(var(--pill-success-rgb)/0.20)]"
-                          )}
+                          className="relative inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[rgb(var(--pill-success-rgb)/0.28)] bg-[rgb(var(--pill-success-rgb)/0.05)] px-4 py-2 text-sm font-bold text-[var(--color-text)] transition hover:bg-[rgb(var(--pill-success-rgb)/0.16)] disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          <FileText className="h-4 w-4" /> Create stub
+                          <FileText className="h-4 w-4 text-[rgb(var(--pill-success-rgb))]" />
+                          Create stub
                         </button>
 
                         {firstStubGuideStep === "create" && !hideStep2Guide ? (
@@ -1782,8 +1779,8 @@ export default function PayoutsPage() {
         <motion.aside
           {...fadeUp(0.08)}
           className={cx(
-            "overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm",
-            mobileView !== "stubs" && "hidden md:block"
+            "min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm",
+            mobileView !== "stubs" ? "hidden md:flex" : "flex"
           )}
         >
           <div className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.18)] p-4">
@@ -1807,7 +1804,7 @@ export default function PayoutsPage() {
             </div>
           </div>
 
-          <div className="max-h-[66vh] overflow-y-auto p-4 section-scroll">
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 payouts-table-scroll">
             <div className="divide-y divide-[rgb(var(--color-border-rgb)/0.16)]">
               {stubs.slice(0, 18).map((stub) => (
                 <button
