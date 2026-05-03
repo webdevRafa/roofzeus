@@ -7,7 +7,14 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import {
   AnimatePresence,
@@ -26,8 +33,11 @@ import {
   Download,
   FileText,
   Filter,
+  MoreHorizontal,
+  Pencil,
   ReceiptText,
   Search,
+  Trash2,
   UserRound,
   Users,
   X,
@@ -168,6 +178,61 @@ function categoryLabel(category: string) {
   return category || "Unknown";
 }
 
+function isDayRatePayout(p: PayoutDoc) {
+  return getCategory(p) === "technician";
+}
+
+function formatWorkedDateLabel(value: string) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-").map(Number);
+
+  if (!year || !month || !day) return value;
+
+  const date = new Date(year, month - 1, day);
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getDayRateDisplay(p: PayoutDoc) {
+  const workedDates = Array.isArray((p as any).workedDates)
+    ? ((p as any).workedDates as string[]).filter(Boolean).sort()
+    : [];
+
+  const daysWorked =
+    typeof (p as any).daysWorked === "number"
+      ? (p as any).daysWorked
+      : workedDates.length;
+
+  const ratePerDayCents =
+    typeof (p as any).ratePerDayCents === "number"
+      ? (p as any).ratePerDayCents
+      : null;
+
+  const datesLabel =
+    workedDates.length > 0
+      ? workedDates.map(formatWorkedDateLabel).join(" • ")
+      : "No worked dates saved";
+
+  const daysLabel = `${daysWorked || 0} ${daysWorked === 1 ? "day" : "days"}`;
+
+  const rateLabel =
+    ratePerDayCents != null ? `${money(ratePerDayCents)} / day` : "";
+
+  return {
+    workedDates,
+    daysWorked,
+    datesLabel,
+    daysLabel,
+    rateLabel,
+  };
+}
+
 function getMethod(p: PayoutDoc) {
   return safeText((p as any).method) || "check";
 }
@@ -253,10 +318,10 @@ function StatusPill({ paid }: { paid: boolean }) {
   return (
     <span
       className={cx(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
+        "inline-flex items-center rounded-full  px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
         paid
-          ? "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]"
-          : "border-[rgb(var(--color-primary-rgb)/0.32)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]"
+          ? "  text-[rgb(var(--pill-success-rgb))]"
+          : "  text-[var(--color-primary)]"
       )}
     >
       {paid ? "Paid" : "Pending"}
@@ -433,6 +498,7 @@ export default function PayoutsPage() {
   const [stubsReady, setStubsReady] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>("payouts");
   const [category, setCategory] = useState("all");
   const [method, setMethod] = useState("all");
@@ -441,6 +507,14 @@ export default function PayoutsPage() {
   const [dateEnd, setDateEnd] = useState("");
   const [viewStubId, setViewStubId] = useState<string | null>(null);
   const [dayRateOpen, setDayRateOpen] = useState(false);
+  const [editingDayRatePayout, setEditingDayRatePayout] =
+    useState<PayoutDoc | null>(null);
+  const [deleteDayRatePayout, setDeleteDayRatePayout] =
+    useState<PayoutDoc | null>(null);
+  const [deletingDayRatePayout, setDeletingDayRatePayout] = useState(false);
+  const [openActionsPayoutId, setOpenActionsPayoutId] = useState<string | null>(
+    null
+  );
   const [dismissFirstStubGuide, setDismissFirstStubGuide] = useState(false);
   const [hideStep2Guide, setHideStep2Guide] = useState(false);
   const [stubModalGuideStep, setStubModalGuideStep] = useState<
@@ -449,6 +523,38 @@ export default function PayoutsPage() {
 
   const selectedOneMember =
     selectedPayoutIds.length > 0 && selectedEmployeeIds.length === 1;
+
+  const employeesById = useMemo(() => {
+    const map = new Map<string, Employee>();
+
+    employees.forEach((employee) => {
+      if (employee.id) map.set(employee.id, employee);
+    });
+
+    return map;
+  }, [employees]);
+
+  function getLiveEmployeeDisplayName(p: PayoutDoc) {
+    const payoutEmployeeId = (p as any).employeeId as string | undefined;
+    const liveEmployee = payoutEmployeeId
+      ? employeesById.get(payoutEmployeeId)
+      : null;
+
+    return (
+      liveEmployee?.name?.trim() ||
+      getEmployeeDisplayName(p) ||
+      "Unknown member"
+    );
+  }
+
+  function getLiveEmployeeNameById(
+    id: string | null | undefined,
+    fallback = "member"
+  ) {
+    if (!id) return fallback;
+
+    return employeesById.get(id)?.name?.trim() || fallback;
+  }
 
   const listTopRef = useRef<HTMLDivElement | null>(null);
   const PER_PAGE = 10;
@@ -506,13 +612,23 @@ export default function PayoutsPage() {
   }, [orgId, orgLoading]);
 
   useEffect(() => {
-    if (!viewStubId && !stubOpen && !dayRateOpen) return;
+    if (
+      !viewStubId &&
+      !stubOpen &&
+      !dayRateOpen &&
+      !editingDayRatePayout &&
+      !deleteDayRatePayout
+    )
+      return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setViewStubId(null);
         setStubOpen(false);
         setDayRateOpen(false);
+        setEditingDayRatePayout(null);
+        setDeleteDayRatePayout(null);
+        setOpenActionsPayoutId(null);
       }
     };
 
@@ -524,7 +640,14 @@ export default function PayoutsPage() {
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
     };
-  }, [viewStubId, stubOpen, dayRateOpen, setStubOpen]);
+  }, [
+    viewStubId,
+    stubOpen,
+    dayRateOpen,
+    editingDayRatePayout,
+    deleteDayRatePayout,
+    setStubOpen,
+  ]);
 
   const selectedStub = useMemo(() => {
     if (!viewStubId) return null;
@@ -557,7 +680,7 @@ export default function PayoutsPage() {
 
       if (search) {
         const haystack = [
-          getEmployeeDisplayName(p),
+          getLiveEmployeeDisplayName(p),
           getJobAddress(p),
           getCategory(p),
           getMethod(p),
@@ -588,6 +711,7 @@ export default function PayoutsPage() {
     method,
     startMs,
     endMs,
+    employeesById,
   ]);
 
   useEffect(() => {
@@ -680,29 +804,130 @@ export default function PayoutsPage() {
   const selectedMemberId =
     selectedEmployeeIds.length === 1 ? selectedEmployeeIds[0] : null;
 
+  const selectedHasDayRatePayout = useMemo(
+    () => selectedPayouts.some(isDayRatePayout),
+    [selectedPayouts]
+  );
+
+  const selectedHasJobPayout = useMemo(
+    () => selectedPayouts.some((p) => !isDayRatePayout(p)),
+    [selectedPayouts]
+  );
+
+  const selectedPayoutTypeConflict =
+    selectedHasDayRatePayout && selectedHasJobPayout;
+
+  const canCreateStubForSelectedPayouts =
+    canCreateStub && !selectedPayoutTypeConflict;
+
+  const selectedPayoutGroupLabel = selectedHasDayRatePayout
+    ? "day-rate payouts"
+    : "job payouts";
+
+  function getPayoutSelectionBlockReason(p: PayoutDoc) {
+    if (isPaid(p)) return null;
+
+    // Already-selected payouts should always be allowed to toggle off.
+    if (selectedPayoutIds.includes(p.id)) return null;
+
+    const payoutEmployeeId = (p as any).employeeId as string | undefined;
+
+    if (selectedMemberId && payoutEmployeeId !== selectedMemberId) {
+      return "You can only create a stub for one member at a time. Clear the current selection before selecting another member.";
+    }
+
+    if (selectedHasDayRatePayout && !isDayRatePayout(p)) {
+      return "Day-rate payouts need their own stub. They cannot be combined with dry-in or shingles payouts.";
+    }
+
+    if (selectedHasJobPayout && isDayRatePayout(p)) {
+      return "Day-rate payouts need their own stub. Clear the selected dry-in/shingles payouts first.";
+    }
+
+    return null;
+  }
+
+  function handleTogglePayoutSelected(p: PayoutDoc) {
+    const blockReason = getPayoutSelectionBlockReason(p);
+
+    if (blockReason) {
+      setSelectionError(blockReason);
+      return;
+    }
+
+    setSelectionError(null);
+    togglePayoutSelected(p.id);
+  }
+
+  async function confirmDeleteDayRatePayout() {
+    if (!orgId || !deleteDayRatePayout?.id) return;
+
+    setDeletingDayRatePayout(true);
+    setLocalError(null);
+
+    try {
+      await deleteDoc(
+        doc(db, "organizations", orgId, "payouts", deleteDayRatePayout.id)
+      );
+
+      if (selectedPayoutIds.includes(deleteDayRatePayout.id)) {
+        togglePayoutSelected(deleteDayRatePayout.id);
+      }
+
+      setDeleteDayRatePayout(null);
+      setOpenActionsPayoutId(null);
+    } catch (error) {
+      setLocalError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setDeletingDayRatePayout(false);
+    }
+  }
+
   const selectedMemberName = useMemo(() => {
     if (!selectedMemberId) return "";
+
+    const liveName = getLiveEmployeeNameById(selectedMemberId, "");
+    if (liveName) return liveName;
+
     const selectedPayout = selectedPayouts.find(
       (p) => (p as any).employeeId === selectedMemberId
     );
-    return selectedPayout ? getEmployeeDisplayName(selectedPayout) : "member";
-  }, [selectedMemberId, selectedPayouts]);
+
+    return selectedPayout
+      ? getLiveEmployeeDisplayName(selectedPayout)
+      : "member";
+  }, [selectedMemberId, selectedPayouts, employeesById]);
 
   const selectablePayoutsForSelectedMember = useMemo(() => {
     if (!selectedMemberId) return [];
 
-    return filtered.filter(
-      (p) =>
-        !isPaid(p) &&
-        (p as any).employeeId === selectedMemberId &&
-        !selectedPayoutIds.includes(p.id)
-    );
-  }, [filtered, selectedMemberId, selectedPayoutIds]);
+    return filtered.filter((p) => {
+      if (isPaid(p)) return false;
+      if ((p as any).employeeId !== selectedMemberId) return false;
+      if (selectedPayoutIds.includes(p.id)) return false;
+
+      // Once the user starts a day-rate stub, only add other day-rate payouts.
+      if (selectedHasDayRatePayout) return isDayRatePayout(p);
+
+      // Once the user starts a job-work stub, only add dry-in/shingles payouts.
+      if (selectedHasJobPayout) return !isDayRatePayout(p);
+
+      return true;
+    });
+  }, [
+    filtered,
+    selectedMemberId,
+    selectedPayoutIds,
+    selectedHasDayRatePayout,
+    selectedHasJobPayout,
+  ]);
 
   function selectAllForSelectedMember() {
     selectablePayoutsForSelectedMember.forEach((p) => {
       togglePayoutSelected(p.id);
     });
+
+    setSelectionError(null);
 
     // Hide only the Step 2 tooltip. Keep the tutorial alive for steps 3 and 4.
     setHideStep2Guide(true);
@@ -729,7 +954,7 @@ export default function PayoutsPage() {
   function exportCsv() {
     const rows = filtered.map((p) => ({
       id: p.id,
-      employee: getEmployeeDisplayName(p),
+      employee: getLiveEmployeeDisplayName(p),
       address: getJobAddress(p),
       category: categoryLabel(getCategory(p)),
       method: methodLabel(getMethod(p)),
@@ -1080,7 +1305,12 @@ export default function PayoutsPage() {
                     shouldFocusFirstPayoutForStep1 && !showSelectGuide;
                   return (
                     <motion.div
-                      key={p.id}
+                      key={
+                        p.id ||
+                        `${(p as any).employeeId}-${
+                          (p as any).createdAt?.seconds ?? Math.random()
+                        }`
+                      }
                       transition={{ duration: 0.18, ease: EASE }}
                       className={cx(
                         "relative grid gap-3 px-4 py-2 transition duration-300 md:grid-cols-[minmax(0,1fr)_auto] md:items-center",
@@ -1096,7 +1326,7 @@ export default function PayoutsPage() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="truncate text-sm font-extrabold text-[var(--color-text)]">
-                            {getEmployeeDisplayName(p)}
+                            {getLiveEmployeeDisplayName(p)}
                           </div>
                           <StatusPill paid={paid} />
                           <span className="rounded-full   px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.72)]">
@@ -1107,9 +1337,29 @@ export default function PayoutsPage() {
                           </span>
                         </div>
 
-                        <div className="mt-2 truncate text-sm text-[rgb(var(--color-text-rgb)/0.82)]">
-                          {getJobAddress(p) || "No job address saved"}
-                        </div>
+                        {isDayRatePayout(p) ? (
+                          <div className="mt-2 text-sm text-[rgb(var(--color-text-rgb)/0.82)]">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-semibold text-[var(--color-text)]">
+                                {getDayRateDisplay(p).datesLabel}
+                              </span>
+
+                              <span className="rounded-full border border-[rgb(var(--color-primary-rgb)/0.22)] bg-[rgb(var(--color-primary-rgb)/0.10)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-primary)]">
+                                {getDayRateDisplay(p).daysLabel}
+                              </span>
+                            </div>
+
+                            {getDayRateDisplay(p).rateLabel ? (
+                              <div className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                                {getDayRateDisplay(p).rateLabel}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="mt-2 truncate text-sm text-[rgb(var(--color-text-rgb)/0.82)]">
+                            {getJobAddress(p) || "No job address saved"}
+                          </div>
+                        )}
 
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.54)]">
                           <span>
@@ -1125,6 +1375,10 @@ export default function PayoutsPage() {
                               {(p as any).sqft} SQ x $
                               {Number((p as any).ratePerSqFt).toFixed(2)} / SQ
                             </span>
+                          ) : null}
+                          {isDayRatePayout(p) &&
+                          getDayRateDisplay(p).rateLabel ? (
+                            <span>{getDayRateDisplay(p).rateLabel}</span>
                           ) : null}
                         </div>
                       </div>
@@ -1152,6 +1406,73 @@ export default function PayoutsPage() {
                             </button>
                           ) : null}
 
+                          {isDayRatePayout(p) ? (
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setOpenActionsPayoutId((current) =>
+                                    current === p.id ? null : p.id
+                                  )
+                                }
+                                className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-xs font-bold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)] hover:text-[var(--color-text)]"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                Actions
+                              </button>
+
+                              <AnimatePresence>
+                                {openActionsPayoutId === p.id ? (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                                    transition={{ duration: 0.16, ease: EASE }}
+                                    className="absolute right-0 top-[calc(100%+0.45rem)] z-50 w-56 overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] p-1 shadow-[0_24px_70px_rgba(0,0,0,0.55)]"
+                                  >
+                                    {!paid ? (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setEditingDayRatePayout(p);
+                                            setOpenActionsPayoutId(null);
+                                          }}
+                                          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-[rgb(var(--color-text-rgb)/0.86)] transition hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]"
+                                        >
+                                          <Pencil className="h-4 w-4" />
+                                          Edit payout
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setDeleteDayRatePayout(p);
+                                            setOpenActionsPayoutId(null);
+                                          }}
+                                          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-red-300 transition hover:bg-red-500/10 hover:text-red-200"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                          Delete payout
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <div className="rounded-xl px-3 py-2">
+                                        <div className="text-xs font-bold text-[var(--color-text)]">
+                                          Void / Correction
+                                        </div>
+                                        <p className="mt-1 text-[11px] leading-4 text-[rgb(var(--color-text-rgb)/0.58)]">
+                                          Paid stubs are locked. A correction
+                                          workflow can be added next.
+                                        </p>
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                ) : null}
+                              </AnimatePresence>
+                            </div>
+                          ) : null}
+
                           <div
                             className={cx(
                               "relative inline-flex",
@@ -1177,7 +1498,7 @@ export default function PayoutsPage() {
                             <button
                               type="button"
                               disabled={!canSelect}
-                              onClick={() => togglePayoutSelected(p.id)}
+                              onClick={() => handleTogglePayoutSelected(p)}
                               className={cx(
                                 "relative z-10 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40",
                                 showSelectGuide
@@ -1285,14 +1606,30 @@ export default function PayoutsPage() {
                         {selectedPayoutIds.length}
                       </span>{" "}
                       selected • {money(selectedTotalCents)} total
+                      {selectedPayoutIds.length > 0 ? (
+                        <span className="mt-1 flex items-center gap-1 text-[rgb(var(--color-text-rgb)/0.56)] sm:mt-0 sm:inline-flex sm:pl-2">
+                          Group: {selectedPayoutGroupLabel}
+                        </span>
+                      ) : null}
                       {selectedEmployeeIds.length > 1 ? (
                         <span className="mt-1 flex items-center gap-1 text-amber-300/85 sm:mt-0 sm:inline-flex sm:pl-2">
                           <AlertTriangle className="h-4 w-4" /> Select one
                           member only to create a stub.
                         </span>
                       ) : null}
+                      {selectedPayoutTypeConflict ? (
+                        <span className="mt-1 flex items-center gap-1 text-amber-300/85 sm:mt-0 sm:inline-flex sm:pl-2">
+                          <AlertTriangle className="h-4 w-4" /> Day-rate payouts
+                          cannot be combined with dry-in/shingles payouts.
+                        </span>
+                      ) : null}
+                      {selectionError ? (
+                        <div className="mt-2 flex items-start gap-2 rounded-xl border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-200">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>{selectionError}</span>
+                        </div>
+                      ) : null}
                     </div>
-
                     <div className="flex flex-wrap items-center gap-2">
                       {selectedOneMember &&
                       selectablePayoutsForSelectedMember.length > 0 ? (
@@ -1302,7 +1639,8 @@ export default function PayoutsPage() {
                           className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.10)] px-4 py-2 text-sm font-semibold text-[var(--color-primary)] transition hover:bg-[rgb(var(--color-primary-rgb)/0.16)]"
                         >
                           <Users className="h-4 w-4" />
-                          Select all for {selectedMemberName}
+                          Select all {selectedPayoutGroupLabel} for{" "}
+                          {selectedMemberName}
                           <span className="rounded-full bg-[rgb(var(--color-primary-rgb)/0.14)] px-2 py-0.5 text-[11px]">
                             +{selectablePayoutsForSelectedMember.length}
                           </span>
@@ -1314,6 +1652,7 @@ export default function PayoutsPage() {
                         onClick={() => {
                           clearSelectedPayouts();
                           setHideStep2Guide(false);
+                          setSelectionError(null);
                         }}
                         className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-4 py-2 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.75)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)]"
                       >
@@ -1327,8 +1666,18 @@ export default function PayoutsPage() {
                       >
                         <button
                           type="button"
-                          disabled={!canCreateStub}
+                          disabled={!canCreateStubForSelectedPayouts}
                           onClick={() => {
+                            if (!canCreateStubForSelectedPayouts) {
+                              setSelectionError(
+                                selectedPayoutTypeConflict
+                                  ? "Day-rate payouts cannot be combined with dry-in/shingles payouts."
+                                  : "Select pending payouts for one member before creating a stub."
+                              );
+                              return;
+                            }
+
+                            setSelectionError(null);
                             setStubModalGuideStep("print");
                             setStubOpen(true);
                           }}
@@ -1476,7 +1825,10 @@ export default function PayoutsPage() {
                       <div className="mt-1 flex items-center gap-1 truncate text-xs text-[rgb(var(--color-text-rgb)/0.62)]">
                         <UserRound className="h-3.5 w-3.5 shrink-0" />
                         <span className="truncate">
-                          {(stub as any).employeeNameSnapshot || "Member"}
+                          {getLiveEmployeeNameById(
+                            (stub as any).employeeId,
+                            (stub as any).employeeNameSnapshot || "Member"
+                          )}
                         </span>
                       </div>
                     </div>
@@ -1551,8 +1903,82 @@ export default function PayoutsPage() {
         {dayRateOpen && orgId ? (
           <PayTechnicianModal
             orgId={orgId}
+            existingDayRatePayouts={payouts.filter(isDayRatePayout)}
             onClose={() => setDayRateOpen(false)}
           />
+        ) : null}
+
+        {editingDayRatePayout && orgId ? (
+          <PayTechnicianModal
+            orgId={orgId}
+            editPayout={editingDayRatePayout}
+            existingDayRatePayouts={payouts.filter(isDayRatePayout)}
+            onClose={() => setEditingDayRatePayout(null)}
+          />
+        ) : null}
+
+        {deleteDayRatePayout ? (
+          <motion.div
+            className="fixed inset-0 z-[90] grid place-items-center bg-black/65 px-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              {...fadeUp(0)}
+              className="w-full max-w-md overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] shadow-[0_28px_90px_rgba(0,0,0,0.65)]"
+            >
+              <div className="border-b border-[rgb(var(--color-border-rgb)/0.18)] px-5 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-red-400/25 bg-red-400/10 text-red-300">
+                    <Trash2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[var(--color-text)]">
+                      Delete day-rate payout?
+                    </h3>
+                    <p className="mt-1 text-sm leading-5 text-[rgb(var(--color-text-rgb)/0.64)]">
+                      This only deletes the pending payout for{" "}
+                      {getLiveEmployeeDisplayName(deleteDayRatePayout)}. Paid or
+                      stubbed payouts should use a correction workflow instead.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-5 py-4 text-sm text-[rgb(var(--color-text-rgb)/0.72)]">
+                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-3">
+                  <div className="font-semibold text-[var(--color-text)]">
+                    {getDayRateDisplay(deleteDayRatePayout).datesLabel}
+                  </div>
+                  <div className="mt-1 text-xs">
+                    {money((deleteDayRatePayout as any).amountCents)} •{" "}
+                    {getDayRateDisplay(deleteDayRatePayout).rateLabel ||
+                      "Day rate"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 border-t border-[rgb(var(--color-border-rgb)/0.18)] px-5 py-4">
+                <button
+                  type="button"
+                  onClick={() => setDeleteDayRatePayout(null)}
+                  disabled={deletingDayRatePayout}
+                  className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-4 py-2 text-xs font-bold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteDayRatePayout}
+                  disabled={deletingDayRatePayout}
+                  className="rounded-xl border border-red-400/25 bg-red-500/15 px-4 py-2 text-xs font-bold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
+                >
+                  {deletingDayRatePayout ? "Deleting…" : "Delete payout"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         ) : null}
       </AnimatePresence>
     </div>

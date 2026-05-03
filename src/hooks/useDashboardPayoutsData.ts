@@ -102,7 +102,17 @@ export function useDashboardPayoutsData() {
     const unsub = onSnapshot(
       payoutsQuery,
       (snap) => {
-        setPayouts(snap.docs.map((d) => d.data() as PayoutDoc));
+        setPayouts(
+          snap.docs.map((d) => {
+            const data = d.data() as PayoutDoc;
+    
+            return {
+              ...data,
+              id: data.id || d.id,
+            };
+          })
+        );
+    
         setPayoutsLoading(false);
         setPayoutsError(null);
       },

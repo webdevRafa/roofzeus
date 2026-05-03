@@ -18,6 +18,7 @@ import {
   ChevronRight,
   CalendarDays,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { AnimatePresence, motion, type MotionProps } from "framer-motion";
 import { db } from "../firebase/firebaseConfig";
@@ -58,6 +59,12 @@ export type PayTechnicianModalProps = {
 
   /** Optional: default method */
   defaultMethod?: "cash" | "check" | "zelle" | "other";
+
+  /** Existing payouts used to prevent duplicate day-rate dates for the same member */
+  existingDayRatePayouts?: PayoutDoc[];
+
+  /** Existing pending day-rate payout to edit */
+  editPayout?: PayoutDoc | null;
 };
 
 function money(cents: number | null | undefined): string {
@@ -91,6 +98,19 @@ const softFade: MotionProps = {
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
+}
+
+function isPaidPayout(p: PayoutDoc) {
+  return Boolean((p as any).paidAt);
+}
+
+function payoutStubLabel(p: PayoutDoc) {
+  return (
+    (p as any).paidStubNumber ||
+    (p as any).payoutStubId ||
+    (p as any).stubId ||
+    "stubbed"
+  );
 }
 
 function SelectShell({
@@ -211,6 +231,7 @@ function MultiDatePicker({
   inputBase,
   formatWorkDate,
   onOpenChange,
+  blockedDates = {},
 }: {
   selectedDates: string[];
   onChange: (dates: string[]) => void;
@@ -218,6 +239,7 @@ function MultiDatePicker({
   inputBase: string;
   formatWorkDate: (ymd: string) => string;
   onOpenChange?: (open: boolean) => void;
+  blockedDates?: Record<string, string>;
 }) {
   const [open, setOpen] = useState(false);
   const [draftDates, setDraftDates] = useState<string[]>(selectedDates);
@@ -271,6 +293,8 @@ function MultiDatePicker({
   }, [year, month]);
 
   function toggleDate(ymd: string) {
+    if (blockedDates[ymd]) return;
+
     setDraftDates((prev) =>
       prev.includes(ymd) ? prev.filter((d) => d !== ymd) : [...prev, ymd].sort()
     );
@@ -355,20 +379,26 @@ function MultiDatePicker({
             <div className="grid grid-cols-7 gap-1 p-3">
               {calendarDays.map(({ ymd, date, inMonth }) => {
                 const selected = draftDates.includes(ymd);
+                const blockedReason = blockedDates[ymd];
+                const blocked = Boolean(blockedReason);
 
                 return (
                   <button
                     key={ymd}
                     type="button"
+                    disabled={blocked}
+                    title={blockedReason || undefined}
                     onClick={() => toggleDate(ymd)}
                     className={cx(
                       "relative grid h-9 place-items-center rounded-xl text-xs font-semibold transition",
                       inMonth
                         ? "text-[var(--color-text)]"
                         : "text-[var(--color-text)]/30",
-                      selected
+                      blocked &&
+                        "cursor-not-allowed border border-amber-300/25 bg-amber-300/10 text-amber-200/60 line-through opacity-70",
+                      selected && !blocked
                         ? "bg-[var(--btn-bg)] text-[var(--btn-text)] ring-2 ring-[var(--color-accent-gold)]/70 shadow-[0_0_0_4px_rgb(var(--color-primary-rgb)/0.18)]"
-                        : "hover:bg-[var(--color-card-hover)]"
+                        : !blocked && "hover:bg-[var(--color-card-hover)]"
                     )}
                   >
                     {date.getDate()}
@@ -419,6 +449,8 @@ export default function PayTechnicianModal({
   onCreated,
   defaultRatePerDay,
   defaultMethod = "check",
+  existingDayRatePayouts = [],
+  editPayout = null,
 }: PayTechnicianModalProps) {
   if (typeof document === "undefined") return null;
 
@@ -426,16 +458,41 @@ export default function PayTechnicianModal({
   const [loadingEmployees, setLoadingEmployees] = useState(true);
   const [employeesError, setEmployeesError] = useState<string | null>(null);
 
-  const [employeeId, setEmployeeId] = useState(defaultEmployeeId ?? "");
-  const [workedDates, setWorkedDates] = useState<string[]>([]);
+  const isEditing = Boolean(editPayout?.id);
+
+  const [employeeId, setEmployeeId] = useState(
+    ((editPayout as any)?.employeeId as string | undefined) ??
+      defaultEmployeeId ??
+      ""
+  );
+  const [workedDates, setWorkedDates] = useState<string[]>(() =>
+    Array.isArray((editPayout as any)?.workedDates)
+      ? [...((editPayout as any).workedDates as string[])]
+          .filter(Boolean)
+          .sort()
+      : []
+  );
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [ratePerDay, setRatePerDay] = useState<string>(
-    typeof defaultRatePerDay === "number" ? String(defaultRatePerDay) : ""
-  );
+  const [ratePerDay, setRatePerDay] = useState<string>(() => {
+    const editRateCents = (editPayout as any)?.ratePerDayCents;
+    if (typeof editRateCents === "number") return String(editRateCents / 100);
+    return typeof defaultRatePerDay === "number"
+      ? String(defaultRatePerDay)
+      : "";
+  });
   const [method, setMethod] = useState<"cash" | "check" | "zelle" | "other">(
-    defaultMethod
+    ((editPayout as any)?.method as
+      | "cash"
+      | "check"
+      | "zelle"
+      | "other"
+      | undefined) ?? defaultMethod
   );
-  const [note, setNote] = useState<string>("");
+  const [note, setNote] = useState<string>(
+    ((editPayout as any)?.note as string | undefined) ??
+      ((editPayout as any)?.memo as string | undefined) ??
+      ""
+  );
 
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -466,11 +523,15 @@ export default function PayTechnicianModal({
 
         setEmployees(list);
 
-        if (!defaultEmployeeId && list.length > 0) {
+        if (!isEditing && !defaultEmployeeId && list.length > 0) {
           setEmployeeId((prev) => prev || list[0].id);
         }
 
-        if (defaultEmployeeId && list.some((e) => e.id === defaultEmployeeId)) {
+        if (
+          !isEditing &&
+          defaultEmployeeId &&
+          list.some((e) => e.id === defaultEmployeeId)
+        ) {
           setEmployeeId(defaultEmployeeId);
         }
 
@@ -485,7 +546,7 @@ export default function PayTechnicianModal({
     );
 
     return () => unsub();
-  }, [orgId, defaultEmployeeId]);
+  }, [orgId, defaultEmployeeId, isEditing]);
 
   const selectedEmployee = useMemo(
     () => employees.find((e) => e.id === employeeId) ?? null,
@@ -517,6 +578,43 @@ export default function PayTechnicianModal({
     return Math.round(daysNum * toCents(rateNum));
   }, [daysNum, rateNum]);
 
+  const blockedDates = useMemo(() => {
+    if (!employeeId) return {} as Record<string, string>;
+
+    const map: Record<string, string> = {};
+
+    existingDayRatePayouts.forEach((p) => {
+      if (editPayout?.id && p.id === editPayout.id) return;
+      if ((p as any).employeeId !== employeeId) return;
+      if ((p as any).category !== "technician") return;
+
+      const dates = Array.isArray((p as any).workedDates)
+        ? ((p as any).workedDates as string[])
+        : [];
+
+      dates.forEach((date) => {
+        if (!date) return;
+
+        const status = isPaidPayout(p)
+          ? `already paid on ${payoutStubLabel(p)}`
+          : "already exists as a pending day-rate payout";
+
+        map[date] = `${formatWorkDate(date)} ${status}.`;
+      });
+    });
+
+    return map;
+  }, [employeeId, existingDayRatePayouts, editPayout?.id]);
+
+  const blockedSelectedDates = useMemo(
+    () => workedDates.filter((date) => blockedDates[date]),
+    [workedDates, blockedDates]
+  );
+
+  useEffect(() => {
+    setWorkedDates((prev) => prev.filter((date) => !blockedDates[date]));
+  }, [blockedDates]);
+
   async function submit() {
     setFormError(null);
 
@@ -536,6 +634,14 @@ export default function PayTechnicianModal({
       setFormError("Enter rate per day (must be greater than 0).");
       return;
     }
+    if (blockedSelectedDates.length > 0) {
+      setFormError(
+        `Remove duplicate date${
+          blockedSelectedDates.length === 1 ? "" : "s"
+        }: ${blockedSelectedDates.map(formatWorkDate).join(", ")}.`
+      );
+      return;
+    }
     if (!orgId) {
       setFormError("Org not loaded. Please refresh and try again.");
       return;
@@ -546,12 +652,30 @@ export default function PayTechnicianModal({
 
     setSaving(true);
     try {
-      const payoutRef = doc(collection(db, "organizations", orgId, "payouts"));
+      const payoutRef = editPayout?.id
+        ? doc(db, "organizations", orgId, "payouts", editPayout.id)
+        : doc(collection(db, "organizations", orgId, "payouts"));
 
-      // NOTE: keep the doc minimal + compatible with your existing dashboard renders
-      const docData: Omit<PayoutDoc, "id"> & {
+      // NOTE: keep the doc minimal + compatible with your existing dashboard renders.
+      // This is typed as a Firestore patch because edit mode intentionally preserves createdAt.
+      const docData: Partial<Omit<PayoutDoc, "id">> & {
+        id: string;
+        orgId: string;
+        employeeId: string;
+        employeeNameSnapshot: string;
+        category: "technician";
+        amountCents: number;
+        method: "cash" | "check" | "zelle" | "other";
+        daysWorked: number;
+        workedDates: string[];
+        ratePerDayCents: number;
+        note?: string;
         memo?: string;
+        createdAt?: FieldValue;
+        updatedAt?: FieldValue;
+        paidAt?: null;
       } = {
+        id: payoutRef.id,
         orgId,
         employeeId,
         employeeNameSnapshot:
@@ -569,13 +693,15 @@ export default function PayTechnicianModal({
 
         ...(note.trim().length ? { note: note.trim(), memo: note.trim() } : {}),
 
-        createdAt: serverTimestamp() as unknown as FieldValue,
+        ...(editPayout?.id
+          ? { updatedAt: serverTimestamp() as unknown as FieldValue }
+          : { createdAt: serverTimestamp() as unknown as FieldValue }),
 
-        // unpaid by default
-        paidAt: null as any,
+        // unpaid by default. Do not overwrite paidAt when editing.
+        ...(editPayout?.id ? {} : { paidAt: null as any }),
       };
 
-      await setDoc(payoutRef, docData as any);
+      await setDoc(payoutRef, docData as any, { merge: true });
 
       const created: PayoutDoc = {
         id: payoutRef.id,
@@ -749,11 +875,25 @@ export default function PayTechnicianModal({
                 <MultiDatePicker
                   selectedDates={workedDates}
                   onChange={setWorkedDates}
-                  disabled={saving}
+                  disabled={saving || !employeeId}
                   inputBase={inputBase}
                   formatWorkDate={formatWorkDate}
                   onOpenChange={setDatePickerOpen}
+                  blockedDates={blockedDates}
                 />
+
+                {Object.keys(blockedDates).length > 0 ? (
+                  <div className="mt-2 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs leading-5 text-amber-100">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <div>
+                        Some dates are locked because this member already has
+                        day-rate payouts for them. Edit or void the existing
+                        payout instead of paying the same day twice.
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
 
                 {workedDates.length > 0 ? (
                   <div className="mt-2 grid max-h-[118px] grid-cols-2 gap-1.5 overflow-y-auto overscroll-contain section-scroll rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-background-rgb)/0.22)] p-2 pr-1">
