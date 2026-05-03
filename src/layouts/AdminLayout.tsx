@@ -126,7 +126,7 @@ const NAV_ITEMS: AppNavItem[] = [
   },
   {
     to: "/pipeline",
-    label: "Pipeline",
+    label: "Schedule",
     icon: CalendarDays,
   },
   {
@@ -141,7 +141,7 @@ const NAV_ITEMS: AppNavItem[] = [
   },
   {
     to: "/schedule",
-    label: "Schedule",
+    label: "Calendar",
     icon: CalendarDays,
   },
   {

@@ -292,7 +292,7 @@ function KpiCard({
           <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.62)]">
             {label}
           </div>
-          <div className="mt-2 text-xl font-poppins leading-none text-[var(--color-text)]">
+          <div className="mt-2 text-md font-poppins leading-none text-[var(--color-text)]">
             {typeof valueCents === "number" ? (
               <CountUp
                 end={valueCents / 100}
@@ -516,6 +516,7 @@ export default function PayoutsPage() {
     null
   );
   const [dismissFirstStubGuide, setDismissFirstStubGuide] = useState(false);
+  const [hideStep1Guide, setHideStep1Guide] = useState(false);
   const [hideStep2Guide, setHideStep2Guide] = useState(false);
   const [stubModalGuideStep, setStubModalGuideStep] = useState<
     "print" | "markPaid" | null
@@ -759,7 +760,14 @@ export default function PayoutsPage() {
 
   const shouldBlurPayoutListForStep2 = false;
 
-  const shouldFocusFirstPayoutForStep1 = firstStubGuideStep === "select";
+  const shouldFocusFirstPayoutForStep1 =
+    firstStubGuideStep === "select" && !hideStep1Guide;
+
+  useEffect(() => {
+    if (firstStubGuideStep !== "select") {
+      setHideStep1Guide(false);
+    }
+  }, [firstStubGuideStep]);
 
   const kpis = useMemo(() => {
     const pending = payouts.filter((p) => !isPaid(p));
@@ -1301,6 +1309,10 @@ export default function PayoutsPage() {
                     firstStubGuideStep === "select" &&
                     firstGuidedPendingPayoutId === p.id &&
                     canSelect;
+
+                  const showSelectGuideCallout =
+                    showSelectGuide && !hideStep1Guide;
+
                   const shouldBlurThisRowForStep1 =
                     shouldFocusFirstPayoutForStep1 && !showSelectGuide;
                   return (
@@ -1517,7 +1529,7 @@ export default function PayoutsPage() {
                               {selected ? "Selected" : paid ? "Paid" : "Select"}
                             </button>
 
-                            {showSelectGuide ? (
+                            {showSelectGuideCallout ? (
                               <motion.div
                                 initial={{ opacity: 0, y: 8, scale: 0.98 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1526,10 +1538,6 @@ export default function PayoutsPage() {
                                 className="absolute right-0 top-full z-50 mt-3 w-[320px] rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[var(--color-card)] p-4 text-left shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
                               >
                                 <div className="flex items-start gap-3">
-                                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[var(--color-primary)]">
-                                    <ChevronRight className="h-4 w-4" />
-                                  </div>
-
                                   <div className="min-w-0">
                                     <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary)]">
                                       Step 1 of 4
@@ -1549,9 +1557,7 @@ export default function PayoutsPage() {
 
                                     <button
                                       type="button"
-                                      onClick={() =>
-                                        setDismissFirstStubGuide(true)
-                                      }
+                                      onClick={() => setHideStep1Guide(true)}
                                       className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.48)] hover:text-[var(--color-text)]"
                                     >
                                       Not now
@@ -1605,10 +1611,16 @@ export default function PayoutsPage() {
                       <span className="font-bold text-[var(--color-text)]">
                         {selectedPayoutIds.length}
                       </span>{" "}
-                      selected • {money(selectedTotalCents)} total
+                      selected{" "}
+                      <span className="text-[var(--color-text)]/30">|</span>{" "}
+                      <span className="text-[var(--color-text)]">
+                        {" "}
+                        {money(selectedTotalCents)}
+                      </span>{" "}
+                      <span className="text-[var(--color-text)]/70">total</span>
                       {selectedPayoutIds.length > 0 ? (
                         <span className="mt-1 flex items-center gap-1 text-[rgb(var(--color-text-rgb)/0.56)] sm:mt-0 sm:inline-flex sm:pl-2">
-                          Group: {selectedPayoutGroupLabel}
+                          {selectedPayoutGroupLabel}
                         </span>
                       ) : null}
                       {selectedEmployeeIds.length > 1 ? (
@@ -1636,7 +1648,7 @@ export default function PayoutsPage() {
                         <button
                           type="button"
                           onClick={selectAllForSelectedMember}
-                          className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.05)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[rgb(var(--color-primary-rgb)/0.16)]"
+                          className="inline-flex items-center cursor-pointer gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.05)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[rgb(var(--color-primary-rgb)/0.16)]"
                         >
                           <Users className="h-4 w-4" />
                           Select all {selectedPayoutGroupLabel} for{" "}
@@ -1752,24 +1764,50 @@ export default function PayoutsPage() {
                   type="button"
                   disabled={pageSafe <= 1}
                   onClick={() => setPayoutsPage((p) => Math.max(1, p - 1))}
-                  className="inline-flex items-center gap-1 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-xs font-bold text-[rgb(var(--color-text-rgb)/0.72)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className={[
+                    "inline-flex cursor-pointer items-center gap-1.5 rounded-xl border",
+                    "border-[rgb(var(--color-border-rgb)/0.28)] bg-[rgb(var(--color-text-rgb)/0.05)]",
+                    "px-2 py-1 text-sm font-bold text-[var(--color-text)] transition",
+                    "hover:border-[rgb(var(--color-border-rgb)/0.42)] hover:bg-[rgb(var(--color-text-rgb)/0.10)]",
+                    "disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[rgb(var(--color-border-rgb)/0.28)] disabled:hover:bg-[rgb(var(--color-text-rgb)/0.05)]",
+                  ].join(" ")}
                 >
-                  <ChevronLeft className="h-4 w-4" /> Prev
+                  <ChevronLeft className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.68)]" />
+                  Prev
                 </button>
-                <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+
+                <div
+                  className={[
+                    "inline-flex items-center justify-center rounded-xl",
+                    "",
+                    "px-2 py-1 text-sm text-[var(--color-text)]",
+                  ].join(" ")}
+                >
                   Page{" "}
-                  <span className="text-[var(--color-text)]">{pageSafe}</span> /{" "}
-                  {pageCount}
+                  <span className="mx-1 text-[var(--color-text)]">
+                    {pageSafe}
+                  </span>
+                  <span className="text-[rgb(var(--color-text-rgb)/0.55)]">
+                    / {pageCount}
+                  </span>
                 </div>
+
                 <button
                   type="button"
                   disabled={pageSafe >= pageCount}
                   onClick={() =>
                     setPayoutsPage((p) => Math.min(pageCount, p + 1))
                   }
-                  className="inline-flex items-center gap-1 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-xs font-bold text-[rgb(var(--color-text-rgb)/0.72)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.72)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className={[
+                    "inline-flex cursor-pointer items-center gap-1.5 rounded-xl border",
+                    "border-[rgb(var(--color-border-rgb)/0.28)] bg-[rgb(var(--color-text-rgb)/0.05)]",
+                    "px-2 py-1 text-sm font-bold text-[var(--color-text)] transition",
+                    "hover:border-[rgb(var(--color-border-rgb)/0.42)] hover:bg-[rgb(var(--color-text-rgb)/0.10)]",
+                    "disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[rgb(var(--color-border-rgb)/0.28)] disabled:hover:bg-[rgb(var(--color-text-rgb)/0.05)]",
+                  ].join(" ")}
                 >
-                  Next <ChevronRight className="h-4 w-4" />
+                  Next
+                  <ChevronRight className="h-4 w-4 text-[rgb(var(--color-text-rgb)/0.68)]" />
                 </button>
               </div>
             </div>
@@ -1844,10 +1882,7 @@ export default function PayoutsPage() {
               ))}
 
               {stubs.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.24)] p-6 text-center">
-                  <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl border border-[rgb(var(--color-primary-rgb)/0.22)] bg-[rgb(var(--color-primary-rgb)/0.08)]">
-                    <FileText className="h-5 w-5 text-[var(--color-primary)]" />
-                  </div>
+                <div className="rounded-2xl   p-6 text-center">
                   <div className="mt-3 text-sm font-bold text-[var(--color-text)]">
                     No stubs yet
                   </div>

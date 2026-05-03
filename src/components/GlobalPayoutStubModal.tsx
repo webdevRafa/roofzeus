@@ -168,6 +168,25 @@ export function GlobalPayoutStubModal({
   const showPrintGuide = firstStubGuideStep === "print";
   const showMarkPaidGuide = firstStubGuideStep === "markPaid";
 
+  const [hidePrintGuideCallout, setHidePrintGuideCallout] = useState(false);
+
+  const showPrintGuideCallout = showPrintGuide && !hidePrintGuideCallout;
+  const shouldBlurTableForPrintGuide = showPrintGuideCallout;
+
+  useEffect(() => {
+    if (firstStubGuideStep !== "print") {
+      setHidePrintGuideCallout(false);
+    }
+  }, [firstStubGuideStep]);
+
+  function handlePrintSavePdf() {
+    window.print();
+
+    // window.print() resumes after the print preview closes in modern browsers,
+    // so Step 4 appears after the user exits the print/save flow.
+    onFirstStubGuideStepChange?.("markPaid");
+  }
+
   const { orgId } = useOrg();
   const [org, setOrg] = useState<Organization | null>(null);
 
@@ -248,16 +267,17 @@ export function GlobalPayoutStubModal({
           className="relative shrink-0 p-4 border-b print:border-gray-200"
           style={{ borderColor: "rgba(58,63,75,0.75)" }}
         >
-          <div className="w-full flex justify-end mb-2">
+          <div className="w-full flex justify-end mb-2 print:hidden">
             <button
               type="button"
               onClick={onClose}
-              className=" rounded-xl border px-3 py-2 text-xs font-semibold transition print:hidden"
-              style={{
-                borderColor: "rgba(58,63,75,0.85)",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                color: "rgba(245,246,248,0.85)",
-              }}
+              className={[
+                "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border",
+                "border-[rgb(var(--color-border-rgb)/0.28)] bg-[rgb(var(--color-text-rgb)/0.05)]",
+                "px-4 py-2 text-sm font-bold text-[var(--color-text)] transition",
+                "hover:border-[rgb(var(--color-border-rgb)/0.42)] hover:bg-[rgb(var(--color-text-rgb)/0.10)]",
+                "focus:outline-none focus:ring-2 focus:ring-[rgb(var(--color-primary-rgb)/0.24)]",
+              ].join(" ")}
             >
               Close
             </button>
@@ -353,14 +373,14 @@ export function GlobalPayoutStubModal({
             </div>
           </div>
           <div className="relative">
-            {showPrintGuide ? (
+            {showPrintGuideCallout ? (
               <div className="pointer-events-none absolute inset-0 z-10 rounded-sm bg-black/10" />
             ) : null}
 
             <div
               className={[
                 "overflow-hidden rounded-sm  print:rounded-none  transition-all duration-300",
-                showPrintGuide
+                shouldBlurTableForPrintGuide
                   ? "blur-[2px] pointer-events-none select-none"
                   : "",
               ].join(" ")}
@@ -547,31 +567,19 @@ export function GlobalPayoutStubModal({
 
               <button
                 type="button"
-                onClick={() => {
-                  onFirstStubGuideStepChange?.("markPaid");
-                  window.print();
-                }}
+                onClick={handlePrintSavePdf}
                 className={[
-                  "relative z-10 inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition",
+                  "relative z-10 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[rgb(var(--color-primary-rgb)/0.28)] bg-[rgb(var(--color-primary-rgb)/0.05)] px-4 py-2 text-sm font-bold text-[var(--color-text)] transition hover:bg-[rgb(var(--color-primary-rgb)/0.16)]",
                   showPrintGuide
-                    ? "border-[rgb(var(--color-primary-rgb)/0.55)] bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)] shadow-[0_12px_30px_rgb(var(--color-primary-rgb)/0.18)]"
+                    ? "shadow-[0_0_0_6px_rgb(var(--color-primary-rgb)/0.10),0_0_34px_rgb(var(--color-primary-rgb)/0.36)]"
                     : "",
                 ].join(" ")}
-                style={
-                  showPrintGuide
-                    ? undefined
-                    : {
-                        borderColor: "rgba(58,63,75,0.85)",
-                        backgroundColor: "rgba(255,255,255,0.04)",
-                        color: "rgba(245,246,248,0.85)",
-                      }
-                }
               >
-                <FileText className="h-4 w-4" />
+                <FileText className="h-4 w-4 text-[rgb(var(--color-primary-rgb))]" />
                 Print / Save PDF
               </button>
 
-              {showPrintGuide ? (
+              {showPrintGuideCallout ? (
                 <motion.div
                   initial={{ opacity: 0, y: 8, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -600,7 +608,7 @@ export function GlobalPayoutStubModal({
 
                       <button
                         type="button"
-                        onClick={onDismissFirstStubGuide}
+                        onClick={() => setHidePrintGuideCallout(true)}
                         className="mt-3 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.48)] hover:text-[var(--color-text)]"
                       >
                         Not now
@@ -633,16 +641,13 @@ export function GlobalPayoutStubModal({
                 onClick={onConfirmPaid}
                 disabled={saving}
                 className={[
-                  "relative z-10 inline-flex items-center gap-2 rounded-md bg-[var(--color-card-hover)] px-4 py-2 text-xs font-semibold transition disabled:opacity-60",
+                  "relative z-10 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[rgb(var(--pill-success-rgb)/0.28)] bg-[rgb(var(--pill-success-rgb)/0.05)] px-4 py-2 text-sm font-bold text-[var(--color-text)] transition hover:bg-[rgb(var(--pill-success-rgb)/0.16)] disabled:cursor-not-allowed disabled:opacity-40",
                   showMarkPaidGuide
                     ? "shadow-[0_0_0_6px_rgb(var(--pill-success-rgb)/0.10),0_0_34px_rgb(var(--pill-success-rgb)/0.36)]"
                     : "",
                 ].join(" ")}
-                style={{
-                  color: "white",
-                }}
               >
-                <CheckCircle2 className="h-4 w-4" />
+                <CheckCircle2 className="h-4 w-4 text-[rgb(var(--pill-success-rgb))]" />
                 {saving ? "Marking as paid…" : "Mark all as paid"}
               </button>
 
