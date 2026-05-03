@@ -82,6 +82,48 @@ html[data-theme="dark"] .section-scroll-workers::-webkit-scrollbar-thumb {
     background-color: rgba(245, 246, 248, 0.18);
   }
 
+
+/* DashboardJobsSection main jobs table scroll area.
+   No fixed 30rem cap — the component controls the height. */
+   .jobs-table-scroll {
+    overflow-y: auto;
+    min-height: 0;
+    height: clamp(34rem, calc(100vh - 24rem), 52rem);
+    padding-right: 0.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(245, 246, 248, 0.18) transparent;
+  }
+  
+  .jobs-table-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .jobs-table-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(245, 246, 248, 0.18);
+    border-radius: 999px;
+  }
+  
+  .jobs-table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  html[data-theme="light"] .jobs-table-scroll {
+    scrollbar-color: rgba(15, 23, 42, 0.18) transparent;
+  }
+  
+  html[data-theme="light"] .jobs-table-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(15, 23, 42, 0.18);
+  }
+  
+  html[data-theme="dark"] .jobs-table-scroll {
+    scrollbar-color: rgba(245, 246, 248, 0.18) transparent;
+  }
+  
+  html[data-theme="dark"] .jobs-table-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(245, 246, 248, 0.18);
+  }
+
+
 .section-scroll-ui {
   overflow-y: auto;
   padding-right: 0.25rem;
@@ -398,7 +440,8 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      --color-section: #0b0e14;
      --color-fixed-background: #0b0e14;
      --color-surface: #0c1527;          
-     --color-card: #162842;            
+     --color-card: #162842;
+     --color-card-alt: #1a2d47;              
      --color-card-hover: #1f3557;
      --color-border: rgba(255,255,255,0.10);
      --color-blue: #0a90f0;
@@ -455,6 +498,7 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
      --bg-label: #101d35;
      --color-surface: #f6f9fc;
      --color-card: #ffffff;
+     --color-card-alt: #f7f6f6; 
      --color-card-hover: #f3f4f6;
      --color-border: rgba(15,23,42,0.10);
      --color-blue: #0a90f0;

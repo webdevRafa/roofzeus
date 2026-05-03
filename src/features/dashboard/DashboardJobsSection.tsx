@@ -836,7 +836,7 @@ export function DashboardJobsSection({
                     initial="initial"
                     animate="animate"
                   >
-                    <div className="relative overflow-auto section-scroll">
+                    <div className="relative overflow-auto section-scroll lg:max-h-[650px]!">
                       <table className="w-full table-fixed text-xs border-separate border-spacing-0">
                         <thead className="sticky top-0 z-30 bg-[var(--color-background)] pb-4 backdrop-blur md:text-[12px] lg:text-[15px] font-poppins uppercase tracking-wide text-[var(--color-text)]">
                           <tr>
@@ -873,9 +873,9 @@ export function DashboardJobsSection({
                                 className={cx(
                                   "transition",
                                   idx % 2 === 0
-                                    ? "bg-[rgb(var(--color-surface-rgb)/0.35)]"
-                                    : "bg-transparent",
-                                  "hover:bg-[var(--color-card)]/50"
+                                    ? "bg-[var(--color-card)]"
+                                    : "bg-[var(--color-card-alt)]",
+                                  "hover:bg-[var(--color-card-hover)]"
                                 )}
                               >
                                 <td className="px-4 py-3">
