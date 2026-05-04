@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, type MotionProps } from "framer-motion";
+import { motion } from "framer-motion";
 import {
+  AlertTriangle,
   CalendarOff,
   ChevronDown,
   ClipboardCheck,
@@ -214,13 +215,70 @@ function missingScheduleSummary(job: Job): string {
   return missing.length ? `Missing ${missing.join(", ")}` : "Fully scheduled";
 }
 
-const EASE = [0.16, 1, 0.3, 1] as const;
+function startOfTodayMs() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+}
 
-const fadeUp = (delay = 0): MotionProps => ({
-  initial: { opacity: 0, y: 12, filter: "blur(6px)" },
-  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-  transition: { duration: 0.45, ease: EASE, delay },
-});
+function isStageBehindSchedule({
+  scheduledAt,
+  completedAt,
+  todayStartMs,
+}: {
+  scheduledAt: unknown;
+  completedAt: unknown;
+  todayStartMs: number;
+}) {
+  const scheduledMs = toMillis(scheduledAt);
+  const completedMs = toMillis(completedAt);
+
+  // If the stage is already completed, it should not count as behind.
+  if (completedMs != null) return false;
+
+  // Only scheduled stages can be behind.
+  if (scheduledMs == null) return false;
+
+  // "Older than today" means yesterday or earlier.
+  return scheduledMs < todayStartMs;
+}
+
+function getBehindScheduleStages(job: Job, todayStartMs = startOfTodayMs()) {
+  const stages = [
+    {
+      label: "Dry In",
+      scheduledAt: (job as any).feltScheduledFor ?? null,
+      completedAt: (job as any).feltCompletedAt ?? null,
+    },
+    {
+      label: "Shingles",
+      scheduledAt: (job as any).shinglesScheduledFor ?? null,
+      completedAt: (job as any).shinglesCompletedAt ?? null,
+    },
+    {
+      label: "Punch",
+      scheduledAt: (job as any).punchScheduledFor ?? null,
+      completedAt: (job as any).punchedAt ?? null,
+    },
+  ];
+
+  return stages.filter((stage) =>
+    isStageBehindSchedule({
+      scheduledAt: stage.scheduledAt,
+      completedAt: stage.completedAt,
+      todayStartMs,
+    })
+  );
+}
+
+function oldestBehindScheduleMs(job: Job, todayStartMs = startOfTodayMs()) {
+  const behindStages = getBehindScheduleStages(job, todayStartMs)
+    .map((stage) => toMillis(stage.scheduledAt))
+    .filter((ms): ms is number => ms != null);
+
+  if (behindStages.length === 0) return Number.POSITIVE_INFINITY;
+
+  return Math.min(...behindStages);
+}
 
 function TableShell({
   title,
@@ -242,10 +300,7 @@ function TableShell({
   onToggle: () => void;
 }) {
   return (
-    <motion.section
-      {...fadeUp(0.04)}
-      className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md"
-    >
+    <section className="rz-dashboard-card overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] hover:shadow-md">
       <header className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-start gap-3">
@@ -296,7 +351,7 @@ function TableShell({
           )}
         </div>
       )}
-    </motion.section>
+    </section>
   );
 }
 
@@ -347,21 +402,89 @@ function StageCell({
     </div>
   );
 }
+
+function BehindScheduleStageCell({
+  scheduledAt,
+  completedAt,
+}: {
+  scheduledAt: unknown;
+  completedAt: unknown;
+}) {
+  const completedMs = toMillis(completedAt);
+  const scheduledMs = toMillis(scheduledAt);
+  const behind = isStageBehindSchedule({
+    scheduledAt,
+    completedAt,
+    todayStartMs: startOfTodayMs(),
+  });
+
+  if (completedMs != null) {
+    return (
+      <div className="min-w-0">
+        <div className="inline-flex rounded-full border border-[rgb(var(--pill-success-rgb)/0.24)] bg-[rgb(var(--pill-success-rgb)/0.10)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--pill-success-rgb)/0.92)]">
+          Completed
+        </div>
+        <div className="mt-1 truncate text-[11px] text-[rgb(var(--color-text-rgb)/0.58)]">
+          {fmtDateOnly(completedMs)}
+        </div>
+      </div>
+    );
+  }
+
+  if (scheduledMs != null && behind) {
+    return (
+      <div className="min-w-0">
+        <div className="inline-flex rounded-full border border-red-400/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-red-300 shadow-[0_0_0_1px_rgba(248,113,113,0.08)]">
+          Behind
+        </div>
+        <div className="mt-1 truncate text-[11px] font-medium text-red-300/80">
+          {fmtDateOnly(scheduledMs)}
+        </div>
+      </div>
+    );
+  }
+
+  if (scheduledMs != null) {
+    return (
+      <div className="min-w-0">
+        <div className="inline-flex rounded-full border border-[rgb(var(--pill-success-rgb)/0.24)] bg-[rgb(var(--pill-success-rgb)/0.10)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--pill-success-rgb)/0.90)]">
+          On time
+        </div>
+        <div className="mt-1 truncate text-[11px] text-[rgb(var(--color-text-rgb)/0.56)]">
+          {fmtDateOnly(scheduledMs)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-w-0">
+      <div className="inline-flex rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.30)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)]">
+        Not set
+      </div>
+      <div className="mt-1 truncate text-[11px] text-[rgb(var(--color-text-rgb)/0.42)]">
+        —
+      </div>
+    </div>
+  );
+}
+
 function JobTable({
   jobs,
   mode,
   navigate,
 }: {
   jobs: Job[];
-  mode: "pendingCompletion" | "unscheduled" | "noPayouts";
+  mode: "pendingCompletion" | "behindSchedule" | "unscheduled" | "noPayouts";
   navigate: (path: string) => void;
 }) {
-  const isPendingCompletionTable = mode === "pendingCompletion";
+  const isStageTable =
+    mode === "pendingCompletion" || mode === "behindSchedule";
 
   return (
     <div className="max-h-[420px] overflow-y-auto section-scroll">
       <table className="w-full table-fixed text-sm">
-        {isPendingCompletionTable ? (
+        {isStageTable ? (
           <colgroup>
             <col className="w-[22%]" />
             <col className="w-[10%]" />
@@ -383,8 +506,8 @@ function JobTable({
           </colgroup>
         )}
 
-        <thead className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-card)]">
-          {isPendingCompletionTable ? (
+        <thead className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-card)]/95 backdrop-blur">
+          {isStageTable ? (
             <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.70)]">
               <th className="px-4 py-3">Job</th>
               <th className="px-4 py-3">Status</th>
@@ -427,7 +550,7 @@ function JobTable({
             return (
               <tr
                 key={job.id}
-                className="bg-[rgb(var(--color-surface-rgb)/0.42)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.68)]"
+                className="rz-dashboard-table-row bg-[rgb(var(--color-surface-rgb)/0.42)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.68)]"
               >
                 <td className="px-4 py-3 align-middle">
                   <div className="truncate font-semibold text-[var(--color-text)]">
@@ -448,27 +571,48 @@ function JobTable({
                   </span>
                 </td>
 
-                {isPendingCompletionTable ? (
+                {isStageTable ? (
                   <>
                     <td className="px-4 py-3 align-middle">
-                      <StageCell
-                        scheduledAt={feltScheduledFor}
-                        completedAt={feltCompletedAt}
-                      />
+                      {mode === "behindSchedule" ? (
+                        <BehindScheduleStageCell
+                          scheduledAt={feltScheduledFor}
+                          completedAt={feltCompletedAt}
+                        />
+                      ) : (
+                        <StageCell
+                          scheduledAt={feltScheduledFor}
+                          completedAt={feltCompletedAt}
+                        />
+                      )}
                     </td>
 
                     <td className="px-4 py-3 align-middle">
-                      <StageCell
-                        scheduledAt={shinglesScheduledFor}
-                        completedAt={shinglesCompletedAt}
-                      />
+                      {mode === "behindSchedule" ? (
+                        <BehindScheduleStageCell
+                          scheduledAt={shinglesScheduledFor}
+                          completedAt={shinglesCompletedAt}
+                        />
+                      ) : (
+                        <StageCell
+                          scheduledAt={shinglesScheduledFor}
+                          completedAt={shinglesCompletedAt}
+                        />
+                      )}
                     </td>
 
                     <td className="px-4 py-3 align-middle">
-                      <StageCell
-                        scheduledAt={punchScheduledFor}
-                        completedAt={punchedAt}
-                      />
+                      {mode === "behindSchedule" ? (
+                        <BehindScheduleStageCell
+                          scheduledAt={punchScheduledFor}
+                          completedAt={punchedAt}
+                        />
+                      ) : (
+                        <StageCell
+                          scheduledAt={punchScheduledFor}
+                          completedAt={punchedAt}
+                        />
+                      )}
                     </td>
                   </>
                 ) : (
@@ -531,7 +675,7 @@ function PayoutTable({
           <col className="w-[7%]" />
         </colgroup>
 
-        <thead className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-card)]">
+        <thead className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-card)]/95 backdrop-blur">
           <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.70)]">
             <th className="px-4 py-3">Member</th>
             <th className="px-4 py-3">Payout</th>
@@ -550,7 +694,7 @@ function PayoutTable({
             return (
               <tr
                 key={payout.id}
-                className="bg-[rgb(var(--color-surface-rgb)/0.42)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.68)]"
+                className="rz-dashboard-table-row bg-[rgb(var(--color-surface-rgb)/0.42)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.68)]"
               >
                 <td className="px-4 py-3 align-middle">
                   <div className="truncate font-semibold text-[var(--color-text)]">
@@ -621,6 +765,7 @@ export default function DashboardPage() {
 
   const [openSections, setOpenSections] = useState({
     pendingCompletion: true,
+    behindSchedule: true,
     pendingPayouts: true,
     unscheduled: true,
     noPayouts: true,
@@ -628,11 +773,51 @@ export default function DashboardPage() {
 
   const pendingCompletionJobs = useMemo(() => {
     return jobs
-      .filter((job) => !isJobFullyComplete(job))
+      .filter((job) => {
+        if (isJobFullyComplete(job)) return false;
+
+        const hasFeltSchedule = Boolean(
+          toMillis((job as any).feltScheduledFor ?? null)
+        );
+        const hasShinglesSchedule = Boolean(
+          toMillis((job as any).shinglesScheduledFor ?? null)
+        );
+        const hasPunchSchedule = Boolean(
+          toMillis((job as any).punchScheduledFor ?? null)
+        );
+
+        // Only show jobs here once at least one roofing stage has been scheduled.
+        // Fully unscheduled jobs should live in the "Unscheduled jobs" section only.
+        return hasFeltSchedule || hasShinglesSchedule || hasPunchSchedule;
+      })
       .sort((a, b) => {
         const aMs = toMillis(a.updatedAt ?? a.createdAt) ?? 0;
         const bMs = toMillis(b.updatedAt ?? b.createdAt) ?? 0;
         return bMs - aMs;
+      });
+  }, [jobs]);
+
+  const behindScheduleJobs = useMemo(() => {
+    const todayStartMs = startOfTodayMs();
+
+    return jobs
+      .filter((job) => {
+        if (isJobFullyComplete(job)) return false;
+
+        return getBehindScheduleStages(job, todayStartMs).length > 0;
+      })
+      .sort((a, b) => {
+        const aOldestBehind = oldestBehindScheduleMs(a, todayStartMs);
+        const bOldestBehind = oldestBehindScheduleMs(b, todayStartMs);
+
+        if (aOldestBehind !== bOldestBehind) {
+          return aOldestBehind - bOldestBehind;
+        }
+
+        const aUpdated = toMillis(a.updatedAt ?? a.createdAt) ?? 0;
+        const bUpdated = toMillis(b.updatedAt ?? b.createdAt) ?? 0;
+
+        return bUpdated - aUpdated;
       });
   }, [jobs]);
 
@@ -710,7 +895,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="w-full pb-10">
+    <div className="rz-dashboard-shell w-full min-h-screen pb-10">
       <motion.div
         className="mx-auto w-full max-w-[1400px] px-4 sm:px-6"
         initial="initial"
@@ -719,7 +904,7 @@ export default function DashboardPage() {
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold tracking-wide text-[var(--color-text)] sm:text-2xl">
-              Dashboard
+              Command Center
             </h1>
             <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
               Work queues for completion, payouts, scheduling, and payout
@@ -774,6 +959,27 @@ export default function DashboardPage() {
             <JobTable
               jobs={pendingCompletionJobs}
               mode="pendingCompletion"
+              navigate={navigate}
+            />
+          </TableShell>
+
+          <TableShell
+            title="Jobs behind schedule"
+            subtitle="Jobs with Dry In, Shingles, or Punch scheduled before today and not yet completed."
+            count={behindScheduleJobs.length}
+            icon={<AlertTriangle className="h-4 w-4" />}
+            open={openSections.behindSchedule}
+            onToggle={() =>
+              setOpenSections((prev) => ({
+                ...prev,
+                behindSchedule: !prev.behindSchedule,
+              }))
+            }
+            emptyText="No jobs are behind schedule right now."
+          >
+            <JobTable
+              jobs={behindScheduleJobs}
+              mode="behindSchedule"
               navigate={navigate}
             />
           </TableShell>

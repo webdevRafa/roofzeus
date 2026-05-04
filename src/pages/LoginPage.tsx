@@ -249,14 +249,14 @@ const LoginPage = () => {
                     className="rounded-xl p-3"
                   >
                     <img
-                      className="max-w-[250px] w-full select-none"
+                      className="max-w-[200px] w-full select-none opacity-30"
                       src={logo}
                       alt="ROOFZEUS"
                       draggable={false}
                     />
                   </motion.div>
                   <motion.div variants={item} className="text-center">
-                    <div className="mt-2 text-white/60 text-sm leading-relaxed max-w-md">
+                    <div className="mt-2 text-white text-xl leading-relaxed max-w-md">
                       manage jobs, track your money, and generate professional
                       documents.
                     </div>
@@ -394,7 +394,7 @@ const LoginPage = () => {
                       }
                       className={[
                         "w-full mt-10 cursor-pointer p-2 text-sm font-semibold transition max-w-[100px] mx-auto block",
-                        "bg-[#17233a] text-white/70 hover:text-white hover:brightness-110 active:brightness-95",
+                        "bg-[#1f3557] text-white/70 hover:text-white hover:brightness-110 active:brightness-95",
                         "disabled:opacity-70 disabled:cursor-not-allowed",
                       ].join(" ")}
                     >
@@ -404,7 +404,7 @@ const LoginPage = () => {
                       <div className="flex-1 h-px bg-white/30"></div>
                       <span className="text-white/30">
                         New to{" "}
-                        <span className="font-orbitron uppercase text-white/70">
+                        <span className=" uppercase text-white/70">
                           Roof Zeus
                         </span>
                         &nbsp;?

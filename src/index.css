@@ -476,55 +476,98 @@ html[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
     opacity: 0.95;
   }
 
-   html[data-theme="light"] {
-    --pill-success-text-rgb: 255 255 255; /* white text on emerald-600 pill */
-
-    --pill-info-rgb: 2 132 199;     /* sky-600-ish */
-    --color-primary-rgb: 154 123 46; /* matches #9a7b2e */
-    --kpi-value: rgb(var(--color-text-rgb) / 0.92);
-    --panel-bg: rgb(var(--color-surface-rgb) / 0.65);
-    --panel-bg-hover: rgb(var(--color-surface-rgb) / 0.85);
-    
-
-     /* Status / semantic chips (light) */
-  --pill-success-rgb: 5 150 105;   /* emerald-600 */
-  --pill-warning-rgb: 180 83 9;    /* amber-700 */
-  --pill-danger-rgb: 220 38 38;    /* red-600 */
+  html[data-theme="light"] {
+    --pill-success-text-rgb: 255 255 255;
   
-     /* Base */
-     --color-background: #f8fbfd;
-     --color-fixed-background: #0b0e14;
-     --color-primary-text: #ffffff;
-     --bg-label: #101d35;
-     --color-surface: #f6f9fc;
-     --color-card: #ffffff;
-     --color-card-alt: #f7f6f6; 
-     --color-card-hover: #f3f4f6;
-     --color-border: rgba(15,23,42,0.10);
-     --color-blue: #0a90f0;
-     --color-cta: #ffffff;
-     --color-section: #ffffff;
-     --color-mark-done: #79f083;
-     --color-done: #046e52;
-     /* Text */
-     --color-text: #0f172a;
-     --color-muted: rgba(15,23,42,0.65);
-     --text-status-complete: #ffffff;
-     --bg-status-complete: #379b76;
-     --text-mark-done: #ffffff;
-     --bg-mark-done: #379b76; 
-     /* Accents */
-     --color-primary: #9a7b2e;          /* slightly deeper gold for contrast on white */
-     --color-danger: #dc2626;
-     --color-success: #16a34a;
+    --pill-info-rgb: 2 132 199;
+    --color-primary-rgb: 154 123 46;
+  
+    --kpi-value: rgb(var(--color-text-rgb) / 0.94);
+    --panel-bg: rgb(var(--color-surface-rgb) / 0.78);
+    --panel-bg-hover: rgb(var(--color-surface-rgb) / 0.95);
+  
+    /* Status / semantic chips (light) */
+    --pill-success-rgb: 5 150 105;
+    --pill-warning-rgb: 180 83 9;
+    --pill-danger-rgb: 220 38 38;
+  
+    /* Base — premium light mode */
+    --color-background: #edf2f7;
+    --color-fixed-background: #0b0e14;
+    --color-primary-text: #ffffff;
+    --bg-label: #101d35;
+  
+    --color-surface: #f8fafc;
+    --color-card: #ffffff;
+    --color-card-alt: #f1f5f9;
+    --color-card-hover: #f8fafc;
+  
+    --color-border: rgba(15, 23, 42, 0.14);
+  
+    --color-blue: #0a90f0;
+    --color-cta: #ffffff;
+    --color-section: #ffffff;
+  
+    --color-mark-done: #79f083;
+    --color-done: #046e52;
+  
+    /* Text */
+    --color-text: #0f172a;
+    --color-muted: rgba(15, 23, 42, 0.64);
+  
+    --text-status-complete: #ffffff;
+    --bg-status-complete: #379b76;
+    --text-mark-done: #ffffff;
+    --bg-mark-done: #379b76;
+  
+    /* Accents */
+    --color-primary: #9a7b2e;
+    --color-danger: #dc2626;
+    --color-success: #16a34a;
     --color-pending: #0f172a;
-     /* RGB helpers */
-     --color-background-rgb: 246 247 251;
-     --color-surface-rgb: 255 255 255;
-     --color-card-rgb: 255 255 255;
-     --color-text-rgb: 15 23 42;
-     --color-border-rgb: 15 23 42;
-   }
+  
+    /* RGB helpers */
+    --color-background-rgb: 237 242 247;
+    --color-surface-rgb: 248 250 252;
+    --color-card-rgb: 255 255 255;
+    --color-text-rgb: 15 23 42;
+    --color-border-rgb: 15 23 42;
+  }
+
+  html[data-theme="light"] body {
+    background:
+      radial-gradient(circle at 18% 0%, rgba(10, 144, 240, 0.075), transparent 34rem),
+      radial-gradient(circle at 82% 10%, rgba(154, 123, 46, 0.06), transparent 30rem),
+      linear-gradient(180deg, #f8fafc 0%, #edf2f7 34%, #e8eef5 100%);
+  }
+  
+  html[data-theme="light"] .rz-dashboard-shell {
+    background:
+      radial-gradient(circle at top left, rgba(10, 144, 240, 0.06), transparent 30rem),
+      radial-gradient(circle at top right, rgba(154, 123, 46, 0.055), transparent 28rem);
+  }
+  
+  html[data-theme="light"] .rz-dashboard-card {
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.05),
+      0 14px 34px rgba(15, 23, 42, 0.075);
+  }
+  
+  html[data-theme="light"] .rz-dashboard-card:hover {
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 18px 46px rgba(15, 23, 42, 0.10);
+  }
+  
+  html[data-theme="light"] .rz-dashboard-table-row {
+    background: rgba(255, 255, 255, 0.82);
+  }
+  
+  html[data-theme="light"] .rz-dashboard-table-row:hover {
+    background: rgba(248, 250, 252, 0.98);
+  }
+
+
    
    /* Global application of tokens */
    html,
