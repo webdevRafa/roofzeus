@@ -1404,23 +1404,6 @@ export default function DashboardPage() {
           </TableShell>
 
           <TableShell
-            title="Pending payouts"
-            subtitle="Payouts created but not yet marked as paid."
-            count={pendingPayouts.length}
-            icon={<DollarSign className="h-4 w-4" />}
-            open={openSections.pendingPayouts}
-            onToggle={() =>
-              setOpenSections((prev) => ({
-                ...prev,
-                pendingPayouts: !prev.pendingPayouts,
-              }))
-            }
-            emptyText="No pending payouts right now."
-          >
-            <PayoutTable payouts={pendingPayouts} navigate={navigate} />
-          </TableShell>
-
-          <TableShell
             title="Unscheduled jobs"
             subtitle="Jobs with no Dry In, Shingles, or Punch scheduled yet."
             count={unscheduledJobs.length}
@@ -1461,6 +1444,22 @@ export default function DashboardPage() {
               mode="noPayouts"
               navigate={navigate}
             />
+          </TableShell>
+          <TableShell
+            title="Pending payouts"
+            subtitle="Payouts created but not yet marked as paid."
+            count={pendingPayouts.length}
+            icon={<DollarSign className="h-4 w-4" />}
+            open={openSections.pendingPayouts}
+            onToggle={() =>
+              setOpenSections((prev) => ({
+                ...prev,
+                pendingPayouts: !prev.pendingPayouts,
+              }))
+            }
+            emptyText="No pending payouts right now."
+          >
+            <PayoutTable payouts={pendingPayouts} navigate={navigate} />
           </TableShell>
         </div>
         {scheduleModal ? (

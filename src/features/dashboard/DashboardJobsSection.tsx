@@ -1,7 +1,10 @@
 // src/pages/dashboard/DashboardJobsSection.tsx
 import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import type { Job, JobStatus, Employee } from "../../types/types";
 import { Link } from "react-router-dom";
+import { db } from "../../firebase/firebaseConfig";
+import { useOrg } from "../../contexts/OrgContext";
 import {
   motion,
   AnimatePresence,
@@ -167,6 +170,7 @@ function CountMoney({ cents }: { cents: number }) {
 
 type StatusFilter = "all" | JobStatus;
 type DatePreset = "custom" | "last7" | "thisMonth" | "ytd";
+type RoofStage = "dryIn" | "shingles" | "punch";
 
 export interface DashboardJobsSectionProps {
   jobsOpen: boolean;
@@ -230,31 +234,185 @@ export interface DashboardJobsSectionProps {
   JOBS_PER_PAGE: number;
   setJobsPage: Dispatch<SetStateAction<number>>;
   totalNet: number;
+
+  // scheduling from table pills
+  onOpenScheduleStage?: (job: Job, stage: RoofStage) => void;
 }
 
-// ---- Pipeline note: derived (non-breaking, read-only) ----
-function pipelineNote(job: Job): string {
-  const feltSch = toMillis((job as any).feltScheduledFor ?? null);
-  const feltDone = toMillis((job as any).feltCompletedAt ?? null);
-  const shinglesSch = toMillis((job as any).shinglesScheduledFor ?? null);
-  const shinglesDone = toMillis((job as any).shinglesCompletedAt ?? null);
-  const punchSch = toMillis((job as any).punchScheduledFor ?? null);
-
-  if (job.status === "paid") return "Paid • stub created";
-  if (job.status === "invoiced") return "Invoice sent • awaiting payment";
-  if (punchSch) return `Punch scheduled  ${fmtDateOnly(punchSch)}`;
-
-  // Production stage
-  if (shinglesDone) return "Shingles completed • ready for punch";
-  if (shinglesSch) return `Shingles scheduled • ${fmtDateOnly(shinglesSch)}`;
-  if (feltDone) return "Dry-in completed • awaiting shingles";
-  if (feltSch) return `Dry-in scheduled • ${fmtDateOnly(feltSch)}`;
-
-  if (job.status === "pending") return "Pending • needs attention";
-  if (job.status === "active") return "Active • in progress";
-  return "In pipeline";
+function startOfTodayMs() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 }
 
+function stageLabel(stage: RoofStage) {
+  if (stage === "dryIn") return "Dry in";
+  if (stage === "shingles") return "Shingles";
+  return "Punch";
+}
+
+function getStageData(job: Job, stage: RoofStage) {
+  if (stage === "dryIn") {
+    const scheduledMs = toMillis((job as any).feltScheduledFor ?? null);
+    const completedMs = toMillis((job as any).feltCompletedAt ?? null);
+    return { scheduledMs, completedMs };
+  }
+
+  if (stage === "shingles") {
+    const scheduledMs = toMillis((job as any).shinglesScheduledFor ?? null);
+    const completedMs = toMillis((job as any).shinglesCompletedAt ?? null);
+    return { scheduledMs, completedMs };
+  }
+
+  const scheduledMs = toMillis((job as any).punchScheduledFor ?? null);
+  const completedMs = toMillis((job as any).punchedAt ?? null);
+  return { scheduledMs, completedMs };
+}
+
+function getStageState(job: Job, stage: RoofStage) {
+  const { scheduledMs, completedMs } = getStageData(job, stage);
+
+  if (completedMs != null) {
+    return {
+      label: "Completed",
+      dateLabel: fmtDateOnly(completedMs),
+      tone: "complete" as const,
+      actionable: false,
+    };
+  }
+
+  if (scheduledMs != null) {
+    const isBehind = scheduledMs < startOfTodayMs();
+
+    return {
+      label: isBehind ? "Behind schedule" : "Scheduled",
+      dateLabel: fmtDateOnly(scheduledMs),
+      tone: isBehind ? ("behind" as const) : ("scheduled" as const),
+      actionable: true,
+    };
+  }
+
+  return {
+    label: "Needs schedule",
+    dateLabel: "No date set",
+    tone: "needs" as const,
+    actionable: true,
+  };
+}
+
+function scheduledFieldForStage(stage: RoofStage) {
+  if (stage === "dryIn") return "feltScheduledFor";
+  if (stage === "shingles") return "shinglesScheduledFor";
+  return "punchScheduledFor";
+}
+
+function ymdFromUnknown(value: unknown): string {
+  const ms = toMillis(value);
+  if (ms == null) return "";
+
+  const d = new Date(ms);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function singleDateToDate(ymd: string) {
+  const [year, month, day] = ymd.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function stagePillClasses(tone: "complete" | "scheduled" | "behind" | "needs") {
+  if (tone === "complete") {
+    return "border-[rgb(var(--pill-success-rgb)/0.24)] bg-[rgb(var(--pill-success-rgb)/0.10)] text-[rgb(var(--pill-success-rgb)/0.92)]";
+  }
+
+  if (tone === "behind") {
+    return "border-red-400/30 bg-red-500/10 text-red-300 shadow-[0_0_0_1px_rgba(248,113,113,0.08)]";
+  }
+
+  if (tone === "needs") {
+    return "border-[rgb(var(--pill-warning-rgb)/0.36)] bg-[rgb(var(--pill-warning-rgb)/0.14)] text-[rgb(var(--pill-warning-rgb))] shadow-[0_0_0_1px_rgb(var(--pill-warning-rgb)/0.08)]";
+  }
+
+  return "border-[rgb(var(--color-border-rgb)/0.28)] bg-[rgb(var(--color-surface-rgb)/0.34)] text-[rgb(var(--color-text-rgb)/0.68)]";
+}
+
+function StagePill({
+  job,
+  stage,
+  onOpenScheduleStage,
+  compact = false,
+}: {
+  job: Job;
+  stage: RoofStage;
+  onOpenScheduleStage?: (job: Job, stage: RoofStage) => void;
+  compact?: boolean;
+}) {
+  const state = getStageState(job, stage);
+  const canClick = state.actionable && !!onOpenScheduleStage;
+
+  const defaultLabel =
+    state.tone === "behind"
+      ? "Behind"
+      : state.tone === "needs"
+      ? "Needs schedule"
+      : state.label;
+
+  const hoverLabel = state.tone === "needs" ? "Schedule" : "Reschedule";
+
+  return (
+    <div className="min-w-0">
+      <button
+        type="button"
+        disabled={!canClick}
+        onClick={() => onOpenScheduleStage?.(job, stage)}
+        title={
+          canClick
+            ? `${hoverLabel} ${stageLabel(stage)}`
+            : `${stageLabel(stage)} ${state.label}`
+        }
+        className={cx(
+          "group inline-flex justify-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide transition",
+          state.tone === "needs" ? "w-[104px]" : "w-[82px]",
+          compact && "w-full min-w-0",
+          stagePillClasses(state.tone),
+          canClick && state.tone === "scheduled"
+            ? "cursor-pointer hover:border-[var(--color-accent-gold)]/35 hover:bg-[var(--color-accent-gold)]/12 hover:text-[var(--color-accent-gold)] hover:shadow-[0_0_0_1px_rgb(var(--color-primary-rgb)/0.10)]"
+            : "",
+          canClick && state.tone === "behind"
+            ? "cursor-pointer hover:border-[rgb(var(--color-border-rgb)/0.28)] hover:bg-[rgb(var(--color-text-rgb)/0.06)] hover:text-[var(--color-text)] hover:shadow-[0_0_0_2px_rgb(var(--color-text-rgb)/0.08)]"
+            : "",
+          canClick && state.tone === "needs"
+            ? "cursor-pointer hover:bg-[rgb(var(--pill-warning-rgb)/0.20)] hover:shadow-[0_0_0_2px_rgb(var(--pill-warning-rgb)/0.10)]"
+            : "",
+          !canClick ? "cursor-default" : ""
+        )}
+      >
+        <span className={canClick ? "group-hover:hidden" : ""}>
+          {defaultLabel}
+        </span>
+
+        {canClick && (
+          <span className="hidden group-hover:inline">{hoverLabel}</span>
+        )}
+      </button>
+
+      <div
+        className={cx(
+          "mt-1 truncate text-[11px]",
+          state.tone === "behind"
+            ? "font-medium text-red-300/80"
+            : state.tone === "needs"
+            ? "font-medium text-[rgb(var(--pill-warning-rgb)/0.78)]"
+            : "text-[rgb(var(--color-text-rgb)/0.56)]"
+        )}
+      >
+        {state.tone === "needs" ? "Not set" : state.dateLabel}
+      </div>
+    </div>
+  );
+}
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -351,7 +509,68 @@ export function DashboardJobsSection({
   JOBS_PER_PAGE,
 
   totalNet,
+  onOpenScheduleStage,
 }: DashboardJobsSectionProps) {
+  const { orgId } = useOrg();
+
+  const [localScheduleModal, setLocalScheduleModal] = useState<{
+    job: Job;
+    stage: RoofStage;
+  } | null>(null);
+  const [localScheduleDate, setLocalScheduleDate] = useState("");
+  const [localScheduleSaving, setLocalScheduleSaving] = useState(false);
+
+  function openStageSchedule(job: Job, stage: RoofStage) {
+    if (onOpenScheduleStage) {
+      onOpenScheduleStage(job, stage);
+      return;
+    }
+
+    const existingDate = ymdFromUnknown(
+      (job as any)[scheduledFieldForStage(stage)] ?? null
+    );
+
+    setLocalScheduleModal({ job, stage });
+    setLocalScheduleDate(existingDate || ymdFromUnknown(new Date()));
+  }
+
+  function closeLocalScheduleModal() {
+    if (localScheduleSaving) return;
+    setLocalScheduleModal(null);
+    setLocalScheduleDate("");
+  }
+
+  async function saveLocalScheduleDate() {
+    if (!localScheduleModal || !localScheduleDate) return;
+
+    if (!orgId) {
+      alert("No organization selected. Please refresh and try again.");
+      return;
+    }
+
+    try {
+      setLocalScheduleSaving(true);
+
+      await setDoc(
+        doc(db, "organizations", orgId, "jobs", localScheduleModal.job.id),
+        {
+          [scheduledFieldForStage(localScheduleModal.stage)]:
+            singleDateToDate(localScheduleDate),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      setLocalScheduleModal(null);
+      setLocalScheduleDate("");
+    } catch (error) {
+      console.error("Failed to save scheduled date", error);
+      alert("Failed to save scheduled date. Please try again.");
+    } finally {
+      setLocalScheduleSaving(false);
+    }
+  }
+
   // Local state for the employee search term.
   const [employeeSearch, setEmployeeSearch] = useState("");
 
@@ -375,7 +594,7 @@ export function DashboardJobsSection({
 
   return (
     <>
-      <section className=" hover:shadow-md overflow-hidden  mt-5">
+      <section className="mt-5 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]/60 hover:shadow-md">
         {/* Create Job modal */}
         <AnimatePresence>
           {openForm && (
@@ -667,10 +886,10 @@ export function DashboardJobsSection({
 
         {/* Content */}
         {jobsOpen && (
-          <div className="px-4 sm:px-6 py-5">
+          <div>
             {/* Status Filters row (only when expanded) */}
             {jobsOpen && (
-              <div className="my-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="border-b border-[var(--color-border)] px-4 py-3 sm:px-6 flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {filters.map((f) => {
                   const active = statusFilter === f;
                   return (
@@ -679,10 +898,10 @@ export function DashboardJobsSection({
                       type="button"
                       onClick={() => setStatusFilter(f)}
                       className={cx(
-                        "whitespace-nowrap cursor-pointer   px-3 py-1 text-xs md:text-md font-semibold uppercase tracking-wide transition hover:shadow-md",
+                        "whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide transition hover:shadow-md",
                         active
-                          ? " text-[var(--color-text)] "
-                          : " text-[var(--color-text)]/40 hover:text-[var(--color-text)]"
+                          ? "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]"
+                          : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.62)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[var(--color-text)]"
                       )}
                     >
                       {f}
@@ -691,9 +910,9 @@ export function DashboardJobsSection({
                 })}
               </div>
             )}
-            <div className="grid min-w-0 gap-4 xl:grid-cols-12 xl:items-start">
+            <div className="min-w-0">
               {/* Main list/table */}
-              <motion.div {...fadeUp(0.08)} className="xl:col-span-9 min-w-0">
+              <motion.div {...fadeUp(0.08)} className="min-w-0">
                 <div className=" overflow-hidden">
                   {/* Mobile cards */}
                   <div className="md:hidden overflow-hidden">
@@ -739,8 +958,42 @@ export function DashboardJobsSection({
                                   </span>
                                 </div>
 
-                                <div className="mt-3 text-[12px] text-[rgb(var(--color-text-rgb)/0.55)] truncate">
-                                  {pipelineNote(job)}
+                                <div className="mt-3 grid grid-cols-3 gap-2">
+                                  <div>
+                                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.45)]">
+                                      Dry in
+                                    </div>
+                                    <StagePill
+                                      job={job}
+                                      stage="dryIn"
+                                      compact
+                                      onOpenScheduleStage={openStageSchedule}
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.45)]">
+                                      Shingles
+                                    </div>
+                                    <StagePill
+                                      job={job}
+                                      stage="shingles"
+                                      compact
+                                      onOpenScheduleStage={openStageSchedule}
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.45)]">
+                                      Punch
+                                    </div>
+                                    <StagePill
+                                      job={job}
+                                      stage="punch"
+                                      compact
+                                      onOpenScheduleStage={openStageSchedule}
+                                    />
+                                  </div>
                                 </div>
                               </div>
 
@@ -836,33 +1089,34 @@ export function DashboardJobsSection({
                     initial="initial"
                     animate="animate"
                   >
-                    <div className="relative overflow-auto section-scroll lg:max-h-[650px]!">
-                      <table className="w-full table-fixed text-xs border-separate border-spacing-0">
-                        <thead className="sticky top-0 z-30 bg-[var(--color-background)] pb-4 backdrop-blur md:text-[12px] lg:text-[15px] font-poppins uppercase tracking-wide text-[var(--color-text)]">
-                          <tr>
-                            <th className="text-left px-4 py-3 font-light">
-                              Job
-                            </th>
-                            <th className="text-left px-4 py-3 whitespace-nowrap font-light">
-                              Status
-                            </th>
-                            <th className="text-left px-4 py-3 font-light">
-                              Note
-                            </th>
-                            <th className="text-right px-4 py-3 font-light">
-                              Profit
-                            </th>
-                            <th className="text-left px-4 py-3 whitespace-nowrap font-light">
-                              Last Updated
-                            </th>
-                            <th className="text-right px-4 py-3 whitespace-nowrap font-light">
-                              Actions
-                            </th>
+                    <div className="relative max-h-[650px] overflow-y-auto section-scroll">
+                      <table className="w-full table-fixed text-sm">
+                        <colgroup>
+                          <col className="w-[22%]" />
+                          <col className="w-[9%]" />
+                          <col className="w-[12%]" />
+                          <col className="w-[12%]" />
+                          <col className="w-[12%]" />
+                          <col className="w-[9%]" />
+                          <col className="w-[14%]" />
+                          <col className="w-[10%]" />
+                        </colgroup>
+
+                        <thead className="sticky top-0 z-10 border-b border-[var(--color-border)] bg-[var(--color-card)]/60 backdrop-blur">
+                          <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.70)]">
+                            <th className="px-4 py-3">Job</th>
+                            <th className="px-4 py-3">Status</th>
+                            <th className="px-4 py-3">Dry in</th>
+                            <th className="px-4 py-3">Shingles</th>
+                            <th className="px-4 py-3">Punch</th>
+                            <th className="px-4 py-3 text-right">Profit</th>
+                            <th className="px-4 py-3">Last updated</th>
+                            <th className="px-4 py-3 text-right">Action</th>
                           </tr>
                         </thead>
 
-                        <tbody>
-                          {pagedJobs.map((job, idx) => {
+                        <tbody className="divide-y divide-[rgb(var(--color-border-rgb)/0.12)]">
+                          {pagedJobs.map((job) => {
                             const a = addr(job.address);
                             const net = job.computed?.netProfitCents ?? 0;
 
@@ -870,37 +1124,27 @@ export function DashboardJobsSection({
                               <motion.tr
                                 key={job.id}
                                 variants={item}
-                                className={cx(
-                                  "transition",
-                                  idx % 2 === 0
-                                    ? "bg-[var(--color-card)]"
-                                    : "bg-[var(--color-card-alt)]",
-                                  "hover:bg-[var(--color-card-hover)]"
-                                )}
+                                className="rz-dashboard-table-row bg-[rgb(var(--color-surface-rgb)/0.42)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.68)]"
                               >
-                                <td className="px-4 py-3">
-                                  <div className="min-w-0">
-                                    <div className="max-w-[320px] font-semibold md:text-[12px] lg:text-[15px] text-[rgb(var(--color-text-rgb)/0.92)] leading-snug">
-                                      <Link
-                                        to={`/job/${job.id}`}
-                                        className="hover:underline block truncate"
-                                      >
-                                        {a.line1 || a.display || "—"}
-                                      </Link>
-                                    </div>
+                                <td className="px-4 py-3 align-middle">
+                                  <div className="truncate font-semibold text-[var(--color-text)]">
+                                    <Link
+                                      to={`/job/${job.id}`}
+                                      className="hover:underline"
+                                    >
+                                      {a.line1 || a.display || "Untitled job"}
+                                    </Link>
+                                  </div>
 
-                                    {a.cityStateZip && (
-                                      <div className="mt-1 text-[11px] md:text-[12px] text-[rgb(var(--color-text-rgb)/0.62)] truncate max-w-[320px]">
-                                        {a.cityStateZip}
-                                      </div>
-                                    )}
+                                  <div className="mt-0.5 truncate text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                                    {a.cityStateZip || "—"}
                                   </div>
                                 </td>
 
-                                <td className="px-4 py-3 whitespace-nowrap">
+                                <td className="px-4 py-3 align-middle">
                                   <span
                                     className={cx(
-                                      "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase",
+                                      "inline-flex max-w-full truncate text-[11px] font-bold uppercase tracking-wide",
                                       statusClasses(job.status)
                                     )}
                                   >
@@ -908,19 +1152,33 @@ export function DashboardJobsSection({
                                   </span>
                                 </td>
 
-                                <td className="px-4 py-3">
-                                  <div className="text-[rgb(var(--color-text-rgb)/0.72)] text-[12px] truncate max-w-[320px]">
-                                    {pipelineNote(job)}
-                                  </div>
-                                  <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
-                                    Created {fmtDateTime(job.createdAt)}
-                                  </div>
+                                <td className="px-4 py-3 align-middle">
+                                  <StagePill
+                                    job={job}
+                                    stage="dryIn"
+                                    onOpenScheduleStage={openStageSchedule}
+                                  />
                                 </td>
 
-                                <td className="px-4 py-3 text-right">
+                                <td className="px-4 py-3 align-middle">
+                                  <StagePill
+                                    job={job}
+                                    stage="shingles"
+                                    onOpenScheduleStage={openStageSchedule}
+                                  />
+                                </td>
+
+                                <td className="px-4 py-3 align-middle">
+                                  <StagePill
+                                    job={job}
+                                    stage="punch"
+                                    onOpenScheduleStage={openStageSchedule}
+                                  />
+                                </td>
+
+                                <td className="px-4 py-3 text-right align-middle font-semibold">
                                   <span
                                     className={cx(
-                                      "font-semibold",
                                       net >= 0
                                         ? "text-[rgb(var(--pill-success-rgb))]"
                                         : "text-[rgb(var(--pill-danger-rgb))]"
@@ -930,18 +1188,20 @@ export function DashboardJobsSection({
                                   </span>
                                 </td>
 
-                                <td className="px-4 py-3">
-                                  <div className="text-[rgb(var(--color-text-rgb)/0.78)]">
-                                    {fmtDateTime(job.updatedAt)}
+                                <td className="px-4 py-3 align-middle text-[12px] text-[rgb(var(--color-text-rgb)/0.72)]">
+                                  <div className="truncate">
+                                    {fmtDateTime(
+                                      job.updatedAt ?? job.createdAt
+                                    )}
                                   </div>
                                 </td>
 
-                                <td className="px-4 py-3 text-right whitespace-nowrap">
+                                <td className="px-4 py-3 text-right align-middle">
                                   <Link
                                     to={`/job/${job.id}`}
-                                    className="inline-flex items-center justify-center  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg border border-[rgb(var(--color-border-rgb)/0.28)] bg-[rgb(var(--color-background-rgb)/0.35)] px-3 py-1.5 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[var(--color-text)]"
                                   >
-                                    View job
+                                    View
                                   </Link>
                                 </td>
                               </motion.tr>
@@ -951,8 +1211,8 @@ export function DashboardJobsSection({
                           {pagedJobs.length === 0 && (
                             <tr>
                               <td
-                                colSpan={6}
-                                className="px-4 py-8 text-center text-[rgb(var(--color-text-rgb)/0.55)]"
+                                colSpan={8}
+                                className="px-4 py-10 text-center text-[rgb(var(--color-text-rgb)/0.55)]"
                               >
                                 No jobs match the current filters.
                               </td>
@@ -960,25 +1220,33 @@ export function DashboardJobsSection({
                           )}
                         </tbody>
 
-                        {/* Spacer so last row scrolls above sticky footer */}
                         <tbody aria-hidden>
                           <tr>
-                            <td colSpan={6} className="h-12 p-0" />
+                            <td colSpan={8} className="h-12 p-0" />
                           </tr>
                         </tbody>
                       </table>
 
                       {/* Sticky pagination footer */}
                       {filteredJobs.length > 0 && (
-                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-background)] px-4 py-2  text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
-                          <span>
-                            Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
-                            {Math.min(
-                              jobsPage * JOBS_PER_PAGE,
-                              filteredJobs.length
-                            )}{" "}
-                            of {filteredJobs.length}
-                          </span>
+                        <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 bg-[var(--color-background)] px-4 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>
+                              Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
+                              {Math.min(
+                                jobsPage * JOBS_PER_PAGE,
+                                filteredJobs.length
+                              )}{" "}
+                              of {filteredJobs.length}
+                            </span>
+
+                            <span className="hidden lg:inline-flex rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+                              Total profit:
+                              <span className="ml-1 text-[rgb(var(--pill-success-rgb))]">
+                                <CountMoney cents={totalNet} />
+                              </span>
+                            </span>
+                          </div>
 
                           <div className="flex items-center gap-2">
                             <button
@@ -987,13 +1255,15 @@ export function DashboardJobsSection({
                               onClick={() =>
                                 setJobsPage((p) => Math.max(1, p - 1))
                               }
-                              className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 disabled:opacity-40"
+                              className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] disabled:opacity-40"
                             >
                               Prev
                             </button>
+
                             <span>
                               Page {jobsPage} / {jobsTotalPages}
                             </span>
+
                             <button
                               type="button"
                               disabled={jobsPage === jobsTotalPages}
@@ -1002,7 +1272,7 @@ export function DashboardJobsSection({
                                   Math.min(jobsTotalPages, p + 1)
                                 )
                               }
-                              className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 disabled:opacity-40"
+                              className="rounded-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] disabled:opacity-40"
                             >
                               Next
                             </button>
@@ -1013,54 +1283,108 @@ export function DashboardJobsSection({
                   </motion.div>
                 </div>
               </motion.div>
-
-              {/* Right rail: totals / quick stats */}
-              <motion.aside
-                {...fadeUp(0.12)}
-                className="xl:col-span-3 min-w-0 w-full xl:justify-self-end"
-              >
-                <div className=" p-4">
-                  <div className="text-sm md:text-lg uppercase tracking-wider text-[var(--color-text)]">
-                    Total Profit
-                  </div>
-                  <div className="mt-1 text-2xl font-semibold text-[rgb(var(--pill-success-rgb))]">
-                    <CountMoney cents={totalNet} />
-                  </div>
-                  <div className="mt-1 text-[12px] text-[var(--color-text)]/70">
-                    Across {filteredJobs.length} job
-                    {filteredJobs.length === 1 ? "" : "s"}
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="p-3 text-sm md:text-md">
-                      <div className=" uppercase tracking-wider text-[var(--color-text)]/70">
-                        Viewing
-                      </div>
-                      <div className="mt-1  font-semibold text-[var(--color-text)]">
-                        {pagedJobs.length}
-                      </div>
-                      <div className="mt-1 text-[var(--color-text)]/70 text-xs">
-                        On this page
-                      </div>
-                    </div>
-
-                    <div className="text-sm md:text-md p-3">
-                      <div className="uppercase tracking-wider text-[var(--color-text)]/70">
-                        Filter
-                      </div>
-                      <div className="mt-1 text-xs font-semibold text-[var(--color-text)]">
-                        {statusFilter === "all" && "All"}
-                        {statusFilter === "pending" && "Pending"}
-                        {statusFilter === "completed" && "Completed"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.aside>
             </div>
           </div>
         )}
       </section>
+
+      <AnimatePresence>
+        {localScheduleModal && (
+          <motion.div
+            className="fixed inset-0 z-[140] grid place-items-center bg-black/60 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.98, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: 14, scale: 0.98, filter: "blur(8px)" }}
+              transition={{ duration: 0.22, ease: EASE }}
+              className="w-full max-w-[390px] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_30px_90px_rgba(0,0,0,0.65)]"
+            >
+              <div className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.35)] px-5 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-lg font-semibold text-[var(--color-text)]">
+                      {addr(localScheduleModal.job.address).line1 ||
+                        addr(localScheduleModal.job.address).display ||
+                        "Untitled job"}
+                    </h3>
+
+                    {addr(localScheduleModal.job.address).cityStateZip ? (
+                      <p className="mt-0.5 truncate text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                        {addr(localScheduleModal.job.address).cityStateZip}
+                      </p>
+                    ) : null}
+
+                    <p className="mt-4 text-sm font-semibold text-[var(--color-text)]">
+                      {ymdFromUnknown(
+                        (localScheduleModal.job as any)[
+                          scheduledFieldForStage(localScheduleModal.stage)
+                        ] ?? null
+                      )
+                        ? "Rescheduling"
+                        : "Scheduling"}{" "}
+                      {stageLabel(localScheduleModal.stage)}
+                    </p>
+
+                    <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                      Pick the scheduled date below. This updates the job
+                      schedule immediately after you save.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={closeLocalScheduleModal}
+                    disabled={localScheduleSaving}
+                    className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-sm font-semibold text-[var(--color-text)]/70 transition hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)] disabled:opacity-60"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4 p-5">
+                <label className="block">
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                    {stageLabel(localScheduleModal.stage)} date
+                  </span>
+
+                  <input
+                    type="date"
+                    value={localScheduleDate}
+                    onChange={(e) => setLocalScheduleDate(e.target.value)}
+                    disabled={localScheduleSaving}
+                    className="w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/35 disabled:opacity-60"
+                  />
+                </label>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={closeLocalScheduleModal}
+                    disabled={localScheduleSaving}
+                    className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.35)] px-4 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:text-[var(--color-text)] disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={saveLocalScheduleDate}
+                    disabled={localScheduleSaving || !localScheduleDate}
+                    className="rounded-xl border border-[var(--color-accent-gold)]/35 bg-[var(--color-accent-gold)]/12 px-4 py-2 text-xs font-semibold text-[var(--color-accent-gold)] transition hover:bg-[var(--color-accent-gold)]/18 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {localScheduleSaving ? "Saving…" : "Save schedule"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
