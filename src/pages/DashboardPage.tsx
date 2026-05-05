@@ -828,20 +828,34 @@ function JobTable({
     mode === "behindSchedule" ||
     mode === "unscheduled";
 
+  const showStatusColumn = mode !== "pendingCompletion";
+
   return (
     <div className="max-h-[420px] overflow-y-auto section-scroll">
       <table className="w-full table-fixed text-sm">
         {isStageTable ? (
-          <colgroup>
-            <col className="w-[22%]" />
-            <col className="w-[10%]" />
-            <col className="w-[13%]" />
-            <col className="w-[13%]" />
-            <col className="w-[13%]" />
-            <col className="w-[10%]" />
-            <col className="w-[12%]" />
-            <col className="w-[7%]" />
-          </colgroup>
+          showStatusColumn ? (
+            <colgroup>
+              <col className="w-[22%]" />
+              <col className="w-[10%]" />
+              <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[10%]" />
+              <col className="w-[12%]" />
+              <col className="w-[7%]" />
+            </colgroup>
+          ) : (
+            <colgroup>
+              <col className="w-[25%]" />
+              <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[10%]" />
+              <col className="w-[17%]" />
+              <col className="w-[9%]" />
+            </colgroup>
+          )
         ) : (
           <colgroup>
             <col className="w-[28%]" />
@@ -857,7 +871,9 @@ function JobTable({
           {isStageTable ? (
             <tr className="text-left text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.70)]">
               <th className="px-4 py-3">Job</th>
-              <th className="px-4 py-3">Status</th>
+
+              {showStatusColumn && <th className="px-4 py-3">Status</th>}
+
               <th className="px-4 py-3">Dry In</th>
               <th className="px-4 py-3">Shingles</th>
               <th className="px-4 py-3">Punch</th>
@@ -906,15 +922,17 @@ function JobTable({
                   </div>
                 </td>
 
-                <td className="px-4 py-3 align-middle">
-                  <span
-                    className={`inline-flex max-w-full truncate text-[11px] font-bold uppercase tracking-wide ${statusClasses(
-                      job.status
-                    )}`}
-                  >
-                    {job.status}
-                  </span>
-                </td>
+                {showStatusColumn && (
+                  <td className="px-4 py-3 align-middle">
+                    <span
+                      className={`inline-flex max-w-full truncate text-[11px] font-bold uppercase tracking-wide ${statusClasses(
+                        job.status
+                      )}`}
+                    >
+                      {job.status}
+                    </span>
+                  </td>
+                )}
 
                 {isStageTable ? (
                   <>
