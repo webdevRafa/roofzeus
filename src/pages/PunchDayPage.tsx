@@ -419,7 +419,7 @@ export default function PunchDayPage() {
                 <button
                   type="button"
                   onClick={() => navigate("/schedule")}
-                  className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                  className="inline-flex items-center gap-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card-hover)] px-3 py-2 text-xs font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back to calendar
@@ -428,7 +428,7 @@ export default function PunchDayPage() {
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard")}
-                  className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                  className="inline-flex items-center gap-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card-hover)] px-3 py-2 text-xs font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
                 >
                   <Home className="h-4 w-4" />
                   Jobs overview
@@ -437,7 +437,7 @@ export default function PunchDayPage() {
                 <button
                   type="button"
                   onClick={openCreateJobModal}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-3 py-2 text-xs font-semibold text-[var(--color-accent-gold)] transition hover:bg-[var(--color-accent-gold)]/15 hover:shadow-md"
+                  className="inline-flex items-center gap-2 border border-[var(--color-border)] rounded-xl bg-[var(--color-card-hover)] px-3 py-2 text-xs font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
                 >
                   <PlusCircle className="h-4 w-4" />
                   New job

@@ -179,19 +179,13 @@ export default function PunchCalendarPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)]">
-                    <span className="text-[11px] font-bold text-[var(--color-accent-gold)]">
-                      SC
-                    </span>
-                  </div>
-
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-semibold tracking-wide text-[var(--color-text)] sm:text-xl">
                         {monthLabel}
                       </h2>
 
-                      <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)]">
+                      <span className="rounded-full  px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)]">
                         Live schedule
                       </span>
                     </div>
@@ -226,7 +220,7 @@ export default function PunchCalendarPage() {
                 <button
                   type="button"
                   onClick={() => changeMonth(-1)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-hover)] text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[var(--color-card)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
                   aria-label="Previous month"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -235,7 +229,7 @@ export default function PunchCalendarPage() {
                 <button
                   type="button"
                   onClick={() => setMonth(new Date())}
-                  className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.85)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:shadow-md"
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.85)] transition hover:bg-[var(--color-card)] hover:shadow-md"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Today
@@ -244,7 +238,7 @@ export default function PunchCalendarPage() {
                 <button
                   type="button"
                   onClick={() => changeMonth(1)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-hover)] text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[var(--color-card)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
                   aria-label="Next month"
                 >
                   <ChevronRight className="h-4 w-4" />
