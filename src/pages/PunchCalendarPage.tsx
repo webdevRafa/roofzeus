@@ -138,205 +138,284 @@ export default function PunchCalendarPage() {
     return { felt, shingles, punch };
   }, [days, counts]);
 
+  const totalScheduledThisMonth =
+    monthTotals.felt + monthTotals.shingles + monthTotals.punch;
+
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
-      {/* Page content */}
-      <div className="mx-auto w-[min(1400px,94vw)] space-y-4 py-4">
-        {/* Month controls */}
-        <section className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm">
-          {/* subtle glow/gradient */}
-          <div className="pointer-events-none absolute inset-0 opacity-60 bg-[var(--color-card)] border border-[var(--color-border)]" />
-          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--color-muted)]">
-                Schedule overview
-              </p>
-              <h2 className="mt-1 text-lg font-semibold text-[var(--color-text)]">
+    <div className="rz-dashboard-shell min-h-screen w-full pb-10 text-[var(--color-text)]">
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6">
+        {/* Page heading */}
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-xl font-semibold tracking-wide text-[var(--color-text)] sm:text-2xl">
+              Schedule Center
+            </h1>
+            <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
+              Monthly view for dry-in, shingles, and punch scheduling.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-[11px]">
+            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
+              Jobs scheduled:{" "}
+              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
+                {totalScheduledThisMonth}
+              </span>
+            </span>
+
+            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
+              Month:{" "}
+              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
                 {monthLabel}
-              </h2>
-              <p className="text-xs text-[var(--color-muted)]">
-                Tap any day to jump into that date’s schedule view.
-              </p>
-
-              {/* summary pills */}
-              <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[var(--color-card)] px-2.5 py-1 text-[var(--color-muted)]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-sky-400/60" />
-                  <span className="font-medium text-[var(--color-text)]">
-                    {monthTotals.felt}
-                  </span>
-                  <span>Dry-ins</span>
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[var(--color-card)] px-2.5 py-1 text-[var(--color-muted)]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
-                  <span className="font-medium text-[var(--color-text)]">
-                    {monthTotals.shingles}
-                  </span>
-                  <span>Shingles</span>
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[var(--color-card)] px-2.5 py-1 text-[var(--color-muted)]">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-                  <span className="font-medium text-[var(--color-text)]">
-                    {monthTotals.punch}
-                  </span>
-                  <span>Punches</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setMonth(new Date())}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[var(--btn-bg)] px-3 py-2 text-xs font-semibold text-[var(--btn-text)] shadow-sm transition hover:-translate-y-0.5 hover:bg-[var(--btn-hover-bg)] hover:shadow-md active:translate-y-0"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Today
-              </button>
-
-              <button
-                type="button"
-                onClick={() => changeMonth(-1)}
-                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[var(--color-card)] px-2.5 py-2 text-xs text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)]"
-                aria-label="Previous month"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => changeMonth(1)}
-                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[var(--color-card)] px-2.5 py-2 text-xs text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card-hover)]"
-                aria-label="Next month"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+              </span>
+            </span>
           </div>
-        </section>
+        </div>
 
-        {/* Calendar grid */}
-        <section className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)] p-5 shadow-sm backdrop-blur">
-          <div className="grid grid-cols-7 gap-1 text-[11px] text-[var(--color-muted)]">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-              <div key={d} className="px-1 py-1 text-center font-medium">
-                {d}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-1 grid grid-cols-7 gap-1">
-            {/* leading blanks */}
-            {(() => {
-              const first = getMonthStart(month);
-              const blanks = first.getDay();
-              return Array.from({ length: blanks }).map((_, i) => (
-                <div key={`blank-${i}`} />
-              ));
-            })()}
-
-            {days.map((d) => {
-              const key = toYMD(d);
-              const dayCounts = counts.get(key) ?? makeEmptyDayCounts();
-              const isToday = toYMD(d) === toYMD(new Date());
-
-              const hasAnything =
-                dayCounts.felt + dayCounts.shingles + dayCounts.punch > 0;
-
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => navigate(`/schedule/${key}`)}
-                  className={[
-                    "group relative h-20 w-full rounded-xl border px-2 py-1 text-left text-xs transition hover:bg-[var(--color-surface)]",
-                    "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-gold)]/70",
-                    hasAnything
-                      ? "border-white/10 bg-[var(--color-surface)] hover:bg-[var(--color-card-hover)]"
-                      : "border-white/10 bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]",
-                    isToday ? "ring-2 ring-[var(--color-accent-gold)]/70" : "",
-                  ].join(" ")}
-                >
-                  {/* subtle inner highlight */}
-
-                  <div className="relative flex items-center justify-between">
-                    <span className="font-semibold text-[var(--color-text)]">
-                      {d.getDate()}
+        {/* Calendar shell */}
+        <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm hover:shadow-md">
+          {/* Header */}
+          <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)]">
+                    <span className="text-[11px] font-bold text-[var(--color-accent-gold)]">
+                      SC
                     </span>
-                    {isToday && (
-                      <span className="rounded-full bg-[var(--color-accent-gold)]/20 px-1.5 py-0.5 text-[9px] uppercase text-[var(--color-text)]">
-                        Today
-                      </span>
-                    )}
                   </div>
 
-                  {hasAnything && (
-                    <div className="relative">
-                      {/* Mobile: compact color-only badges with counts (no text labels) */}
-                      <div className="mt-2 flex items-center justify-center gap-1 text-[11px] font-semibold md:hidden">
-                        {dayCounts.felt > 0 && (
-                          <span
-                            className="inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-sky-400/15 text-[10px] font-semibold text-sky-200 ring-1 ring-sky-400/25"
-                            aria-label={`${dayCounts.felt} felt`}
-                          >
-                            {dayCounts.felt}
-                          </span>
-                        )}
-                        {dayCounts.shingles > 0 && (
-                          <span
-                            className="inline-flex h-4 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-400/15 text-[10px] font-semibold text-amber-200 ring-1 ring-amber-400/25"
-                            aria-label={`${dayCounts.shingles} shingles`}
-                          >
-                            {dayCounts.shingles}
-                          </span>
-                        )}
-                        {dayCounts.punch > 0 && (
-                          <span
-                            className="inline-flex h-4 min-w-[1.25rem] items-center justify-center rounded-full bg-emerald-400/15 text-[10px] font-semibold text-emerald-200 ring-1 ring-emerald-400/25"
-                            aria-label={`${dayCounts.punch} punches`}
-                          >
-                            {dayCounts.punch}
-                          </span>
-                        )}
-                      </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-lg font-semibold tracking-wide text-[var(--color-text)] sm:text-xl">
+                        {monthLabel}
+                      </h2>
 
-                      {/* md+ : keep the full pills with text labels */}
-                      <div className="mt-0 hidden flex-col items-center justify-center gap-1 text-[8px] font-semibold md:flex md:items-end lg:items-center md:mt-[-6px] lg:mt-[-10px]">
-                        {dayCounts.felt > 0 && (
-                          <span className="inline-flex items-center rounded-full border border-sky-400/25 bg-sky-400/10 px-2 py-0.5 text-sky-200">
-                            {dayCounts.felt} DRY
-                          </span>
-                        )}
-                        {dayCounts.shingles > 0 && (
-                          <span className="inline-flex items-center rounded-full border border-amber-400/25 bg-amber-400/10 px-2 py-0.5 text-amber-200">
-                            {dayCounts.shingles} SHINGLES
-                          </span>
-                        )}
-                        {dayCounts.punch > 0 && (
-                          <span className="inline-flex items-center rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-emerald-200">
-                            {dayCounts.punch} PUNCH
-                          </span>
-                        )}
-                      </div>
+                      <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)]">
+                        Live schedule
+                      </span>
                     </div>
-                  )}
+
+                    <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                      Select a day to view the jobs scheduled for that date.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Summary pills */}
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px]">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 font-semibold text-sky-300">
+                    <span className="h-2 w-2 rounded-full bg-sky-300" />
+                    Dry-in: {monthTotals.felt}
+                  </span>
+
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-3 py-1 font-semibold text-[var(--color-accent-gold)]">
+                    <span className="h-2 w-2 rounded-full bg-[var(--color-accent-gold)]" />
+                    Shingles: {monthTotals.shingles}
+                  </span>
+
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-success-rgb))]">
+                    <span className="h-2 w-2 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
+                    Punch: {monthTotals.punch}
+                  </span>
+                </div>
+              </div>
+
+              {/* Month controls */}
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => changeMonth(-1)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
-              );
-            })}
+
+                <button
+                  type="button"
+                  onClick={() => setMonth(new Date())}
+                  className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.85)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:shadow-md"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Today
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => changeMonth(1)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                  aria-label="Next month"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Mobile legend for colors */}
-          <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-[var(--color-muted)] md:hidden">
-            <div className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-full bg-sky-400/70" />
-              <span>Felt</span>
+          {/* Weekday header */}
+          <div className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.22)] px-3 pt-3 sm:px-4">
+            <div className="grid grid-cols-7 gap-2">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                <div
+                  key={d}
+                  className="rounded-xl px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] sm:text-[11px]"
+                >
+                  {d}
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400/80" />
-              <span>Shingles</span>
+          </div>
+
+          {/* Calendar grid */}
+          <div className="bg-[rgb(var(--color-surface-rgb)/0.22)] p-3 sm:p-4">
+            <div className="grid grid-cols-7 gap-2">
+              {/* Previous-month leading cells */}
+              {(() => {
+                const first = getMonthStart(month);
+                const leadingBlanks = first.getDay();
+                const previousMonthLastDay = new Date(
+                  month.getFullYear(),
+                  month.getMonth(),
+                  0
+                ).getDate();
+
+                return Array.from({ length: leadingBlanks }).map((_, i) => {
+                  const dayNumber =
+                    previousMonthLastDay - leadingBlanks + i + 1;
+
+                  return (
+                    <div
+                      key={`prev-${i}`}
+                      className="min-h-[82px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-2 text-left opacity-55 sm:min-h-[116px] sm:px-3 sm:py-3"
+                    >
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.26)]">
+                        {dayNumber}
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
+
+              {/* Current-month days */}
+              {days.map((d) => {
+                const key = toYMD(d);
+                const dayCounts = counts.get(key) ?? makeEmptyDayCounts();
+                const isToday = toYMD(d) === toYMD(new Date());
+
+                const dayTotal =
+                  dayCounts.felt + dayCounts.shingles + dayCounts.punch;
+
+                const hasAnything = dayTotal > 0;
+
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => navigate(`/schedule/${key}`)}
+                    className={[
+                      "group relative min-h-[82px] w-full overflow-hidden rounded-xl border px-2 py-2 text-left text-xs transition sm:min-h-[116px] sm:px-3 sm:py-3",
+                      "border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card)] shadow-[0_10px_24px_rgba(0,0,0,0.06)]",
+                      "hover:-translate-y-0.5 hover:border-[rgb(var(--color-border-rgb)/0.24)] hover:bg-[var(--color-card-hover)] hover:shadow-[0_16px_34px_rgba(0,0,0,0.14)]",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-gold)]/60",
+                      isToday
+                        ? "border-[var(--color-accent-gold)]/35 bg-[rgb(var(--color-surface-rgb)/0.48)]"
+                        : "",
+                      hasAnything
+                        ? "ring-1 ring-[rgb(var(--color-border-rgb)/0.08)]"
+                        : "",
+                    ].join(" ")}
+                  >
+                    {hasAnything && (
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-[var(--color-accent-gold)]/70" />
+                    )}
+
+                    <div className="relative flex items-start justify-between gap-2">
+                      <span
+                        className={[
+                          "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold transition",
+                          isToday
+                            ? "border border-[var(--color-accent-gold)]/45 bg-[var(--color-accent-gold)]/15 text-[var(--color-accent-gold)]"
+                            : "text-[rgb(var(--color-text-rgb)/0.90)] group-hover:bg-[rgb(var(--color-surface-rgb)/0.58)]",
+                        ].join(" ")}
+                      >
+                        {d.getDate()}
+                      </span>
+
+                      {hasAnything && (
+                        <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-0.5 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+                          {dayTotal}
+                        </span>
+                      )}
+                    </div>
+
+                    {hasAnything ? (
+                      <div className="mt-3 space-y-1.5">
+                        {dayCounts.felt > 0 && (
+                          <div className="flex items-center justify-between gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-2 py-1 text-[10px] font-semibold text-sky-300">
+                            <span className="truncate">Dry-in</span>
+                            <span>{dayCounts.felt}</span>
+                          </div>
+                        )}
+
+                        {dayCounts.shingles > 0 && (
+                          <div className="flex items-center justify-between gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2 py-1 text-[10px] font-semibold text-[var(--color-accent-gold)]">
+                            <span className="truncate">Shingles</span>
+                            <span>{dayCounts.shingles}</span>
+                          </div>
+                        )}
+
+                        {dayCounts.punch > 0 && (
+                          <div className="flex items-center justify-between gap-2 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-2 py-1 text-[10px] font-semibold text-[rgb(var(--pill-success-rgb))]">
+                            <span className="truncate">Punch</span>
+                            <span>{dayCounts.punch}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-3 hidden text-[11px] text-[rgb(var(--color-text-rgb)/0.34)] transition group-hover:text-[rgb(var(--color-text-rgb)/0.50)] sm:block">
+                        No scheduled work
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Next-month trailing cells */}
+              {(() => {
+                const first = getMonthStart(month);
+                const leadingBlanks = first.getDay();
+                const totalRendered = leadingBlanks + days.length;
+                const trailingBlanks = (7 - (totalRendered % 7)) % 7;
+
+                return Array.from({ length: trailingBlanks }).map((_, i) => {
+                  const dayNumber = i + 1;
+
+                  return (
+                    <div
+                      key={`next-${i}`}
+                      className="min-h-[82px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-2 text-left opacity-55 sm:min-h-[116px] sm:px-3 sm:py-3"
+                    >
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.26)]">
+                        {dayNumber}
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
             </div>
-            <div className="flex items-center gap-1">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/80" />
-              <span>Punch</span>
+          </div>
+          {/* Footer note */}
+          <div className="border-t border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.28)] px-4 py-3 sm:px-6">
+            <div className="flex flex-col gap-2 text-[11px] text-[rgb(var(--color-text-rgb)/0.55)] sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                Calendar counts are pulled from scheduled dry-in, shingles, and
+                punch dates.
+              </span>
+
+              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+                Click any day to open its schedule.
+              </span>
             </div>
           </div>
         </section>

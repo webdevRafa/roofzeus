@@ -2352,7 +2352,7 @@ export default function JobDetailPage({
 
   return (
     <>
-      <div className="w-full relative">
+      <div className="w-full relative  ">
         {/* ===== Global Toast ===== */}
         <AnimatePresence>
           {toast && (
@@ -2360,7 +2360,7 @@ export default function JobDetailPage({
               {...toastAnim}
               className="fixed max-w-[300px] right-6 top-6 lg:top-20 lg:right-20 z-[100]"
             >
-              <div className="flex items-start gap-3 bg-[var(--color-card)] px-4 py-4 text-sm shadow-xl border border-[var(--color-border)] backdrop-blur">
+              <div className="flex items-start gap-3 px-4 py-4 text-sm shadow-xl border border-[var(--color-border)] backdrop-blur">
                 <div className="mt-0.5">
                   {toast.status === "success" ? (
                     <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -2400,7 +2400,7 @@ export default function JobDetailPage({
         </AnimatePresence>
         <motion.div
           {...fadeUp(0)}
-          className="mt-10 sticky top-18 z-40 bg-[var(--color-background)] pt-4 pb-2"
+          className="mt-0 sticky top-18 z-40 bg-[var(--color-card)] pt-4 pb-2"
         >
           <div className="mx-auto w-full max-w-[1200px] px-4">
             <div className="flex flex-col gap-4">
@@ -2474,7 +2474,7 @@ export default function JobDetailPage({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Earnings
                   </div>
@@ -2483,7 +2483,7 @@ export default function JobDetailPage({
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Expenses
                   </div>
@@ -2492,7 +2492,7 @@ export default function JobDetailPage({
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Profit
                   </div>
@@ -2501,7 +2501,7 @@ export default function JobDetailPage({
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[var(--color-surface)]/35 ring-1 ring-white/10 p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Roof Size
                   </div>
