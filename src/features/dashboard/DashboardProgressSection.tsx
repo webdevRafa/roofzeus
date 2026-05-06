@@ -6,7 +6,13 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import { motion, type MotionProps } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+} from "lucide-react";
 
 import type { Job } from "../../types/types";
 
@@ -111,6 +117,212 @@ function matchesAddress(job: Job, term: string) {
     .toLowerCase();
 
   return haystack.includes(q);
+}
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+type StageKind = "dryIn" | "shingles" | "punch";
+
+function daysUntilLabel(ms: number | null) {
+  if (ms == null) return "Unscheduled";
+
+  const target = new Date(ms);
+  const now = new Date();
+
+  const targetStart = new Date(
+    target.getFullYear(),
+    target.getMonth(),
+    target.getDate()
+  ).getTime();
+
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  ).getTime();
+
+  const diffDays = Math.round((targetStart - todayStart) / 86_400_000);
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  return `In ${diffDays} days`;
+}
+
+function stageAccentClasses(stage: StageKind) {
+  if (stage === "punch") {
+    return {
+      bar: "bg-[rgb(var(--pill-success-rgb))]",
+      glow: "bg-[rgb(var(--pill-success-rgb)/0.14)]",
+      chip: "border-[rgb(var(--pill-success-rgb)/0.28)] bg-[rgb(var(--pill-success-rgb)/0.10)] text-[rgb(var(--pill-success-rgb))]",
+      date: "border-[rgb(var(--pill-success-rgb)/0.24)] bg-[rgb(var(--pill-success-rgb)/0.10)]",
+    };
+  }
+
+  return {
+    bar: "bg-[rgb(var(--pill-info-rgb))]",
+    glow: "bg-[rgb(var(--pill-info-rgb)/0.14)]",
+    chip: "border-[rgb(var(--pill-info-rgb)/0.28)] bg-[rgb(var(--pill-info-rgb)/0.10)] text-[rgb(var(--pill-info-rgb))]",
+    date: "border-[rgb(var(--pill-info-rgb)/0.24)] bg-[rgb(var(--pill-info-rgb)/0.10)]",
+  };
+}
+
+function StageScrollButtons({
+  onPrev,
+  onNext,
+}: {
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="hidden md:flex gap-1">
+      <button
+        type="button"
+        onClick={onPrev}
+        className="grid h-8 w-8 place-items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.52)] text-[rgb(var(--color-text-rgb)/0.72)] shadow-sm transition hover:-translate-y-0.5 hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:text-[rgb(var(--color-text-rgb)/0.95)] hover:shadow-md"
+        aria-label="Scroll left"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+
+      <button
+        type="button"
+        onClick={onNext}
+        className="grid h-8 w-8 place-items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.52)] text-[rgb(var(--color-text-rgb)/0.72)] shadow-sm transition hover:-translate-y-0.5 hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:text-[rgb(var(--color-text-rgb)/0.95)] hover:shadow-md"
+        aria-label="Scroll right"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+function StageHeader({
+  title,
+  count,
+  onPrev,
+  onNext,
+}: {
+  title: string;
+  count: number;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-text)]">
+            {title}
+          </h3>
+
+          {count > 0 && (
+            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.42)] px-2 py-0.5 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.58)]">
+              {count}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-0.5 h-px w-16 bg-gradient-to-r from-[var(--color-accent-gold)]/60 to-transparent" />
+      </div>
+
+      <StageScrollButtons onPrev={onPrev} onNext={onNext} />
+    </div>
+  );
+}
+
+function PipelineJobCard({
+  job,
+  stage,
+  label,
+  scheduledMs,
+}: {
+  job: Job;
+  stage: StageKind;
+  label: string;
+  scheduledMs: number | null;
+}) {
+  const a = addr(job.address);
+  const accent = stageAccentClasses(stage);
+
+  return (
+    <motion.div
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.22, ease: EASE }}
+      className="group relative flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px] overflow-hidden rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] shadow-sm transition hover:border-[rgb(var(--color-border-rgb)/0.26)] hover:bg-[var(--color-card-hover)] hover:shadow-[0_18px_40px_rgba(0,0,0,0.22)]"
+    >
+      {/* stage accent */}
+      <div className={cx("absolute inset-y-0 left-0 w-1", accent.bar)} />
+
+      {/* soft glow */}
+      <div
+        className={cx(
+          "pointer-events-none absolute -right-16 -top-20 h-40 w-40 rounded-full blur-3xl opacity-0 transition duration-300 group-hover:opacity-100",
+          accent.glow
+        )}
+      />
+
+      <div className="relative p-3 pl-4">
+        {/* date row */}
+        <div className="flex items-start justify-between gap-3">
+          <div
+            className={cx("min-w-0 rounded-lg border px-2.5 py-2", accent.date)}
+          >
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Scheduled
+            </div>
+
+            <div className="mt-1 truncate text-[15px] font-semibold leading-tight text-[var(--color-text)]">
+              {label || "—"}
+            </div>
+          </div>
+
+          <span
+            className={cx(
+              "shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold",
+              accent.chip
+            )}
+          >
+            {daysUntilLabel(scheduledMs)}
+          </span>
+        </div>
+
+        {/* address */}
+        <div className="mt-3 flex gap-2">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[rgb(var(--color-text-rgb)/0.42)]" />
+
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
+              {a.line1 || a.display || "—"}
+            </div>
+
+            {(a.city || a.state || a.zip) && (
+              <div className="mt-0.5 truncate text-[11px] font-medium text-[rgb(var(--color-text-rgb)/0.52)]">
+                {[a.city, a.state, a.zip].filter(Boolean).join(", ")}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* footer */}
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-[rgb(var(--color-border-rgb)/0.12)] pt-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.42)]">
+            Upcoming
+          </div>
+
+          <Link
+            to={`/job/${job.id}`}
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1.5 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.76)] transition hover:border-[rgb(var(--color-border-rgb)/0.28)] hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+          >
+            View job
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 export interface DashboardProgressSectionProps {
@@ -254,30 +466,15 @@ export function DashboardProgressSection({
       </div>
 
       {upcomingOpen && (
-        <div className="px-4 sm:px-6 py-5 space-y-10">
+        <div className="px-4 sm:px-6 py-5 space-y-9">
           {/* Dry In Section */}
           <motion.div {...fadeUp(0.05)}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-text)]">
-                Dry In
-              </h3>
-              <div className="hidden md:flex gap-1">
-                <button
-                  type="button"
-                  onClick={createScrollBy(dryRef, -1)}
-                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={createScrollBy(dryRef, 1)}
-                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <StageHeader
+              title="Dry In"
+              count={filteredDryInJobs.length}
+              onPrev={createScrollBy(dryRef, -1)}
+              onNext={createScrollBy(dryRef, 1)}
+            />
             {filteredDryInJobs.length === 0 ? (
               <div className="px-2 py-3 text-sm md:text-lg text-[rgb(var(--color-text-rgb)/0.55)]   bg-[rgb(var(--color-surface-rgb)/0.35)]">
                 {searchTerm.trim()
@@ -290,28 +487,17 @@ export function DashboardProgressSection({
                 className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
               >
                 {filteredDryInJobs.map((job) => {
-                  const a = addr(job.address);
                   const label = getDryLabel(job);
                   return (
-                    <div
+                    <PipelineJobCard
                       key={job.id}
-                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px]  bg-[var(--color-card)] hover:bg-[var(--color-card-hover)]  transition p-3 shadow-md"
-                    >
-                      <div className="text-lg text-[var(--color-text)] truncate">
-                        {label}
-                      </div>
-                      <div className="mt-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
-                        {a.display || "—"}
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <Link
-                          to={`/job/${job.id}`}
-                          className="inline-flex items-center justify-center rounded-md border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
-                        >
-                          View job
-                        </Link>
-                      </div>
-                    </div>
+                      job={job}
+                      stage="dryIn"
+                      label={label}
+                      scheduledMs={toMillis(
+                        (job as any).feltScheduledFor ?? null
+                      )}
+                    />
                   );
                 })}
               </div>
@@ -320,27 +506,13 @@ export function DashboardProgressSection({
 
           {/* Shingles Section */}
           <motion.div {...fadeUp(0.08)}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-text)]">
-                Shingles
-              </h3>
-              <div className="hidden md:flex gap-1">
-                <button
-                  type="button"
-                  onClick={createScrollBy(shinglesRef, -1)}
-                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={createScrollBy(shinglesRef, 1)}
-                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <StageHeader
+              title="Shingles"
+              count={filteredShinglesJobs.length}
+              onPrev={createScrollBy(shinglesRef, -1)}
+              onNext={createScrollBy(shinglesRef, 1)}
+            />
+
             {filteredShinglesJobs.length === 0 ? (
               <div className="px-2 py-3 text-sm md:text-lg text-[rgb(var(--color-text-rgb)/0.55)]   bg-[rgb(var(--color-surface-rgb)/0.35)]">
                 {searchTerm.trim()
@@ -353,28 +525,17 @@ export function DashboardProgressSection({
                 className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
               >
                 {filteredShinglesJobs.map((job) => {
-                  const a = addr(job.address);
                   const label = getShinglesLabel(job);
                   return (
-                    <div
+                    <PipelineJobCard
                       key={job.id}
-                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px]  bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-md  transition p-3"
-                    >
-                      <div className="text-lg text-[var(--color-text)] truncate">
-                        {label}
-                      </div>
-                      <div className="mt-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
-                        {a.display || "—"}
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <Link
-                          to={`/job/${job.id}`}
-                          className="inline-flex items-center justify-center rounded-md border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
-                        >
-                          View job
-                        </Link>
-                      </div>
-                    </div>
+                      job={job}
+                      stage="shingles"
+                      label={label}
+                      scheduledMs={toMillis(
+                        (job as any).shinglesScheduledFor ?? null
+                      )}
+                    />
                   );
                 })}
               </div>
@@ -383,27 +544,13 @@ export function DashboardProgressSection({
 
           {/* Punch Section */}
           <motion.div {...fadeUp(0.11)}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-text)]">
-                Punch
-              </h3>
-              <div className="hidden md:flex gap-1">
-                <button
-                  type="button"
-                  onClick={createScrollBy(punchRef, -1)}
-                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={createScrollBy(punchRef, 1)}
-                  className="p-1 rounded-full border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.60)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] text-[rgb(var(--color-text-rgb)/0.80)]"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            <StageHeader
+              title="Punch"
+              count={filteredPunchJobs.length}
+              onPrev={createScrollBy(punchRef, -1)}
+              onNext={createScrollBy(punchRef, 1)}
+            />
+
             {filteredPunchJobs.length === 0 ? (
               <div className="px-2 py-3 text-sm md:text-lg text-[rgb(var(--color-text-rgb)/0.55)]   bg-[rgb(var(--color-surface-rgb)/0.35)]">
                 {searchTerm.trim()
@@ -416,28 +563,17 @@ export function DashboardProgressSection({
                 className="flex gap-3 overflow-x-auto md:overflow-x-hidden scroll-smooth pb-1"
               >
                 {filteredPunchJobs.map((job) => {
-                  const a = addr(job.address);
                   const label = getPunchLabel(job);
                   return (
-                    <div
+                    <PipelineJobCard
                       key={job.id}
-                      className="flex-shrink-0 w-[230px] sm:w-[260px] md:w-[280px] lg:w-[300px]  bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] shadow-md  transition p-3"
-                    >
-                      <div className="text-lg text-[var(--color-text)] truncate">
-                        {label}
-                      </div>
-                      <div className="mt-1 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
-                        {a.display || "—"}
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <Link
-                          to={`/job/${job.id}`}
-                          className="inline-flex items-center justify-center rounded-md border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] transition"
-                        >
-                          View job
-                        </Link>
-                      </div>
-                    </div>
+                      job={job}
+                      stage="punch"
+                      label={label}
+                      scheduledMs={toMillis(
+                        (job as any).punchScheduledFor ?? null
+                      )}
+                    />
                   );
                 })}
               </div>
