@@ -626,7 +626,7 @@ export function DashboardJobsSection({
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="123 Main St"
-                      className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                      className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] hover:bg-[var(--color-card)] focus:bg-[var(--color-card)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                     />
 
                     <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -638,7 +638,7 @@ export function DashboardJobsSection({
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
                           placeholder="San Antonio"
-                          className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                          className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] hover:bg-[var(--color-card)] focus:bg-[var(--color-card)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                         />
                       </div>
                       <div>
@@ -653,7 +653,7 @@ export function DashboardJobsSection({
                             <select
                               value={state}
                               onChange={(e) => setState(e.target.value)}
-                              className="w-full appearance-none  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 pr-10 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[#0a90f0]/40 cursor-pointer"
+                              className="w-full appearance-none  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] hover:bg-[var(--color-card)] focus:bg-[var(--color-card)] px-3 py-2 pr-10 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[#0a90f0]/40 cursor-pointer"
                             >
                               <option value="">Select state</option>
 
@@ -692,7 +692,7 @@ export function DashboardJobsSection({
                           inputMode="numeric"
                           maxLength={10}
                           placeholder="78205"
-                          className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                          className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover))] hover:bg-[var(--color-card)] focus:bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                         />
                       </div>
                     </div>
@@ -809,13 +809,13 @@ export function DashboardJobsSection({
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3 w-full">
                     <div className="w-full">
                       <label className="mb-1 block text-[11px]  font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                        Felt
+                        Dry In
                       </label>
                       <input
                         type="date"
                         value={newFeltDate}
                         onChange={(e) => setNewFeltDate(e.target.value)}
-                        className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="w-full  border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] hover:bg-[var(--color-card)] focus:bg-[var(--color-card)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
 
@@ -827,7 +827,7 @@ export function DashboardJobsSection({
                         type="date"
                         value={newShinglesDate}
                         onChange={(e) => setNewShinglesDate(e.target.value)}
-                        className="w-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="w-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] hover:bg-[var(--color-card)] focus:bg-[var(--color-card)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
 
@@ -839,7 +839,7 @@ export function DashboardJobsSection({
                         type="date"
                         value={newPunchDate}
                         onChange={(e) => setNewPunchDate(e.target.value)}
-                        className="w-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
+                        className="w-full border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] hover:bg-[var(--color-card)] focus:bg-[var(--color-card)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)]"
                       />
                     </div>
                   </div>
@@ -849,7 +849,7 @@ export function DashboardJobsSection({
                   <div className="mt-3 text-xs text-red-300">{error}</div>
                 )}
 
-                <div className="mt-5 flex justify-end gap-2">
+                <div className="mt-15 flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -871,8 +871,9 @@ export function DashboardJobsSection({
                     onClick={() => void createJob()}
                     disabled={loading}
                     className={[
-                      " px-4 py-2 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer",
+                      "rounded-xl px-3 py-2 text-xs font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer",
                       " text-[var(--color-text)]/70 hover:text-[var(--color-text)]",
+                      "border border-[var(--color-border)] bg-[var(--color-card-hover)] hover:bg-[var(--color-card)] ",
                       "active:translate-y-[1px]",
                     ].join(" ")}
                   >

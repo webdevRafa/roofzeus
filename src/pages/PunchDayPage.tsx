@@ -295,6 +295,28 @@ export default function PunchDayPage() {
     ? new Date(date + "T00:00:00").toLocaleDateString()
     : "Unknown date";
 
+  const daySummary = useMemo(() => {
+    if (!date) return { felt: 0, shingles: 0, punch: 0, total: 0 };
+
+    let felt = 0;
+    let shingles = 0;
+    let punch = 0;
+
+    for (const job of jobsForDay) {
+      if (isScheduledOnDate((job as any).feltScheduledFor, date)) felt += 1;
+      if (isScheduledOnDate((job as any).shinglesScheduledFor, date))
+        shingles += 1;
+      if (isScheduledOnDate((job as any).punchScheduledFor, date)) punch += 1;
+    }
+
+    return {
+      felt,
+      shingles,
+      punch,
+      total: felt + shingles + punch,
+    };
+  }, [jobsForDay, date]);
+
   if (orgLoading)
     return (
       <div className="p-6 text-sm text-white/70">Loading organization…</div>
@@ -309,251 +331,447 @@ export default function PunchDayPage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#0b0e14] text-white">
-      {/* Subtle hero glow */}
-      <div className="pointer-events-none absolute inset-x-0 -top-32 h-80 bg-[radial-gradient(ellipse_at_top,rgba(252,181,0,0.14),transparent_55%)]" />
-
-      {/* Header */}
-      <div className="relative">
-        <div className="mx-auto flex max-w-[1100px] flex-col gap-4 px-4 py-10 md:flex-row md:items-center md:justify-between md:px-0">
+    <div className="rz-dashboard-shell min-h-screen w-full pb-10 text-[var(--color-text)]">
+      <motion.div
+        className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6"
+        {...fadeUp(0)}
+      >
+        {/* Page heading */}
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
-              Schedule
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold md:text-3xl">
+            <h1 className="text-xl font-semibold tracking-wide text-[var(--color-text)] sm:text-2xl">
               Schedule for {displayDate}
             </h1>
-            <p className="mt-1 text-sm text-white/60">
-              Shingles, felt, and punch jobs scheduled for this day.
+            <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
+              Dry-in, shingles, and punch jobs scheduled for this day.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigate("/schedule")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/75 backdrop-blur transition hover:bg-white/10"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to calendar
-            </button>
+          <div className="flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
+              Jobs:{" "}
+              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
+                {jobsForDay.length}
+              </span>
+            </span>
 
-            <button
-              type="button"
-              onClick={() => navigate("/dashboard")}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/75 backdrop-blur transition hover:bg-white/10"
-            >
-              <Home className="h-4 w-4" />
-              Jobs overview
-            </button>
-
-            {/* NEW: generalized create button */}
-            <button
-              type="button"
-              onClick={openCreateJobModal}
-              className="inline-flex items-center gap-2 rounded-full bg-[var(--btn-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--btn-text)] shadow-[0_18px_50px_rgba(0,0,0,0.55)] transition hover:bg-[var(--btn-hover-bg)]"
-            >
-              <PlusCircle className="h-4 w-4" />
-              New job
-            </button>
+            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
+              Scheduled items:{" "}
+              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
+                {daySummary.total}
+              </span>
+            </span>
           </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="relative mx-auto w-[min(1100px,94vw)] space-y-6 pb-10">
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_25px_70px_rgba(0,0,0,0.35)]">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-white">
-                Jobs scheduled for this day
-              </h2>
-              <p className="text-xs text-white/55">
-                {jobsForDay.length === 0
-                  ? "No jobs are currently scheduled on this date."
-                  : "Review everything scheduled for this day and jump into job details."}
-              </p>
-            </div>
+        {/* Main day shell */}
+        <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm hover:shadow-md">
+          {/* Header */}
+          <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)]">
+                    <CalendarDays className="h-4 w-4 text-[var(--color-accent-gold)]" />
+                  </div>
 
-            <div className="flex items-center gap-2">
-              {jobsForDay.length > 0 && (
-                <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] font-semibold text-white/70">
-                  {jobsForDay.length} job{jobsForDay.length === 1 ? "" : "s"}{" "}
-                  scheduled
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-lg font-semibold tracking-wide text-[var(--color-text)] sm:text-xl">
+                        Jobs scheduled for this day
+                      </h2>
+
+                      <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)]">
+                        {jobsForDay.length} job
+                        {jobsForDay.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                      {jobsForDay.length === 0
+                        ? "No jobs are currently scheduled on this date."
+                        : "Review the scheduled work and jump into job details."}
+                    </p>
+                  </div>
                 </div>
-              )}
+
+                {/* Summary pills */}
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px]">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 font-semibold text-sky-300">
+                    <span className="h-2 w-2 rounded-full bg-sky-300" />
+                    Dry-in: {daySummary.felt}
+                  </span>
+
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-3 py-1 font-semibold text-[var(--color-accent-gold)]">
+                    <span className="h-2 w-2 rounded-full bg-[var(--color-accent-gold)]" />
+                    Shingles: {daySummary.shingles}
+                  </span>
+
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-success-rgb))]">
+                    <span className="h-2 w-2 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
+                    Punch: {daySummary.punch}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate("/schedule")}
+                  className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to calendar
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard")}
+                  className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
+                >
+                  <Home className="h-4 w-4" />
+                  Jobs overview
+                </button>
+
+                <button
+                  type="button"
+                  onClick={openCreateJobModal}
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-3 py-2 text-xs font-semibold text-[var(--color-accent-gold)] transition hover:bg-[var(--color-accent-gold)]/15 hover:shadow-md"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  New job
+                </button>
+              </div>
             </div>
           </div>
 
-          {jobsForDay.length === 0 ? (
-            <div className="mt-6 flex flex-col items-center justify-center gap-3 py-10 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/30">
-                <CalendarDays className="h-6 w-6 text-white/70" />
+          {/* Content */}
+          <div className="bg-[rgb(var(--color-surface-rgb)/0.22)] p-3 sm:p-4">
+            {jobsForDay.length === 0 ? (
+              <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card)] px-4 py-12 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)]">
+                  <CalendarDays className="h-6 w-6 text-[var(--color-accent-gold)]" />
+                </div>
+
+                <h3 className="mt-4 text-sm font-semibold text-[var(--color-text)]">
+                  No jobs scheduled for this day
+                </h3>
+
+                <p className="mx-auto mt-1 max-w-sm text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
+                  Create a job from here. If you leave the schedule dates blank,
+                  Felt will default to this day.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={openCreateJobModal}
+                  className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-4 py-2 text-xs font-semibold text-[var(--color-accent-gold)] transition hover:bg-[var(--color-accent-gold)]/15 hover:shadow-md"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Create job
+                </button>
               </div>
-              <h3 className="text-sm font-semibold text-white">
-                No jobs scheduled for this day
-              </h3>
-              <p className="max-w-sm text-xs text-white/55">
-                Create a job from here. If you don’t set any schedule dates,
-                we’ll default{" "}
-                <span className="font-semibold text-white">Felt</span> to this
-                day.
-              </p>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card)]">
+                {/* Desktop table */}
+                <div className="hidden lg:block">
+                  <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
+                    <colgroup>
+                      <col className="w-[38%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[10%]" />
+                    </colgroup>
 
-              <button
-                type="button"
-                onClick={openCreateJobModal}
-                className="mt-1 inline-flex items-center gap-2 rounded-full bg-[var(--btn-bg)] px-4 py-2 text-xs font-semibold text-[var(--btn-text)] transition hover:bg-[var(--btn-hover-bg)]"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Create job
-              </button>
-            </div>
-          ) : (
-            <ul className="mt-4 space-y-3">
-              {jobsForDay.map((j) => {
-                const a = addr(j.address);
+                    <thead>
+                      <tr className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.35)] text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.58)]">
+                        <th className="border-b border-[var(--color-border)] px-4 py-3 text-left">
+                          Job
+                        </th>
+                        <th className="border-b border-[var(--color-border)] px-4 py-3 text-left">
+                          Scheduled
+                        </th>
+                        <th className="border-b border-[var(--color-border)] px-4 py-3 text-right">
+                          Profit
+                        </th>
+                        <th className="border-b border-[var(--color-border)] px-4 py-3 text-right">
+                          Last updated
+                        </th>
+                        <th className="border-b border-[var(--color-border)] px-4 py-3 text-right">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
 
-                const shinglesMs = toMillis((j as any).shinglesScheduledFor);
-                const feltMs = toMillis((j as any).feltScheduledFor);
-                const punchMs = toMillis((j as any).punchScheduledFor);
+                    <tbody>
+                      {jobsForDay.map((j) => {
+                        const a = addr(j.address);
 
-                const shinglesOnThisDay =
-                  shinglesMs != null && toYMD(new Date(shinglesMs)) === date;
-                const feltOnThisDay =
-                  feltMs != null && toYMD(new Date(feltMs)) === date;
-                const punchOnThisDay =
-                  punchMs != null && toYMD(new Date(punchMs)) === date;
+                        const shinglesOnThisDay = isScheduledOnDate(
+                          (j as any).shinglesScheduledFor,
+                          date ?? ""
+                        );
+                        const feltOnThisDay = isScheduledOnDate(
+                          (j as any).feltScheduledFor,
+                          date ?? ""
+                        );
+                        const punchOnThisDay = isScheduledOnDate(
+                          (j as any).punchScheduledFor,
+                          date ?? ""
+                        );
 
-                return (
-                  <li
-                    key={j.id}
-                    className="group flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm shadow-sm transition hover:-translate-y-0.5 hover:bg-white/5"
-                  >
-                    <div className="flex flex-1 gap-3">
-                      <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white">
-                        <Home className="h-4 w-4 opacity-80" />
-                      </div>
+                        const updatedLabel = j.updatedAt
+                          ? isFsTimestamp(j.updatedAt)
+                            ? j.updatedAt.toDate().toLocaleDateString()
+                            : new Date(String(j.updatedAt)).toLocaleDateString()
+                          : "—";
 
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-white">
-                          {a.display || "—"}
-                        </div>
+                        return (
+                          <tr
+                            key={j.id}
+                            className="group transition hover:bg-[rgb(var(--color-surface-rgb)/0.30)]"
+                          >
+                            <td className="border-b border-[var(--color-border)] px-4 py-4 align-middle">
+                              <div className="min-w-0">
+                                <div className="truncate font-semibold text-[var(--color-text)]">
+                                  {a.display || "—"}
+                                </div>
 
-                        {(a.city || a.state || a.zip) && (
-                          <div className="truncate text-[11px] text-white/55">
-                            {[a.city, a.state, a.zip]
-                              .filter(Boolean)
-                              .join(", ")}
+                                {(a.city || a.state || a.zip) && (
+                                  <div className="mt-0.5 truncate text-[11px] text-[rgb(var(--color-text-rgb)/0.55)]">
+                                    {[a.city, a.state, a.zip]
+                                      .filter(Boolean)
+                                      .join(", ")}
+                                  </div>
+                                )}
+
+                                <div className="mt-2">
+                                  <span
+                                    className={
+                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase " +
+                                      statusPillClasses(j.status)
+                                    }
+                                  >
+                                    {j.status}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="border-b border-[var(--color-border)] px-4 py-4 align-middle">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {feltOnThisDay && (
+                                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/25 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold text-sky-300">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-sky-300" />
+                                    Dry-in
+                                  </span>
+                                )}
+
+                                {shinglesOnThisDay && (
+                                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2.5 py-1 text-[10px] font-semibold text-[var(--color-accent-gold)]">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-gold)]" />
+                                    Shingles
+                                  </span>
+                                )}
+
+                                {punchOnThisDay && (
+                                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-2.5 py-1 text-[10px] font-semibold text-[rgb(var(--pill-success-rgb))]">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
+                                    Punch
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            <td className="border-b border-[var(--color-border)] px-4 py-4 text-right align-middle font-semibold text-[rgb(var(--pill-success-rgb))]">
+                              {money(
+                                j.computed?.netProfitCents ??
+                                  j.earnings?.totalEarningsCents
+                              )}
+                            </td>
+
+                            <td className="border-b border-[var(--color-border)] px-4 py-4 text-right align-middle text-xs text-[rgb(var(--color-text-rgb)/0.65)]">
+                              {updatedLabel}
+                            </td>
+
+                            <td className="border-b border-[var(--color-border)] px-4 py-4 text-right align-middle">
+                              <Link
+                                to={`/job/${j.id}`}
+                                className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.86)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:shadow-md"
+                              >
+                                View
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile cards */}
+                <div className="grid gap-3 p-3 lg:hidden">
+                  {jobsForDay.map((j) => {
+                    const a = addr(j.address);
+
+                    const shinglesOnThisDay = isScheduledOnDate(
+                      (j as any).shinglesScheduledFor,
+                      date ?? ""
+                    );
+                    const feltOnThisDay = isScheduledOnDate(
+                      (j as any).feltScheduledFor,
+                      date ?? ""
+                    );
+                    const punchOnThisDay = isScheduledOnDate(
+                      (j as any).punchScheduledFor,
+                      date ?? ""
+                    );
+
+                    const updatedLabel = j.updatedAt
+                      ? isFsTimestamp(j.updatedAt)
+                        ? j.updatedAt.toDate().toLocaleDateString()
+                        : new Date(String(j.updatedAt)).toLocaleDateString()
+                      : "—";
+
+                    return (
+                      <div
+                        key={j.id}
+                        className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.28)] p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="font-semibold text-[var(--color-text)]">
+                              {a.display || "—"}
+                            </div>
+
+                            {(a.city || a.state || a.zip) && (
+                              <div className="mt-0.5 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                                {[a.city, a.state, a.zip]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </div>
+                            )}
                           </div>
-                        )}
 
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/55">
                           <span
                             className={
-                              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase " +
+                              "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase " +
                               statusPillClasses(j.status)
                             }
                           >
                             {j.status}
                           </span>
+                        </div>
 
-                          {(shinglesOnThisDay ||
-                            feltOnThisDay ||
-                            punchOnThisDay) && (
-                            <span className="inline-flex flex-wrap items-center gap-1 rounded-full border border-white/10 bg-black/20 px-2 py-0.5">
-                              <span className="text-[10px] font-semibold uppercase text-white/45">
-                                Scheduled:
-                              </span>
-                              {shinglesOnThisDay && (
-                                <span className="inline-flex items-center rounded-full border border-amber-300/20 bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-200">
-                                  Shingles
-                                </span>
-                              )}
-                              {feltOnThisDay && (
-                                <span className="inline-flex items-center rounded-full border border-sky-300/20 bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-200">
-                                  Felt
-                                </span>
-                              )}
-                              {punchOnThisDay && (
-                                <span className="inline-flex items-center rounded-full border border-emerald-300/20 bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-200">
-                                  Punch
-                                </span>
-                              )}
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {feltOnThisDay && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/25 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold text-sky-300">
+                              <span className="h-1.5 w-1.5 rounded-full bg-sky-300" />
+                              Dry-in
                             </span>
                           )}
 
-                          {j.updatedAt && (
-                            <span className="rounded-full border border-white/10 bg-black/20 px-2 py-0.5">
-                              Updated{" "}
-                              {isFsTimestamp(j.updatedAt)
-                                ? j.updatedAt.toDate().toLocaleDateString()
-                                : new Date(
-                                    String(j.updatedAt)
-                                  ).toLocaleDateString()}
+                          {shinglesOnThisDay && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2.5 py-1 text-[10px] font-semibold text-[var(--color-accent-gold)]">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-gold)]" />
+                              Shingles
+                            </span>
+                          )}
+
+                          {punchOnThisDay && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-2.5 py-1 text-[10px] font-semibold text-[rgb(var(--pill-success-rgb))]">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
+                              Punch
                             </span>
                           )}
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex flex-col items-end gap-2">
-                      <div className="text-right">
-                        <div className="text-[11px] text-white/45">
-                          Job total
-                        </div>
-                        <div className="text-sm font-semibold text-white">
-                          {money(j.earnings?.totalEarningsCents)}
+                        <div className="mt-4 flex items-center justify-between gap-3 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-3">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.45)]">
+                              Profit
+                            </div>
+                            <div className="text-sm font-semibold text-[rgb(var(--pill-success-rgb))]">
+                              {money(
+                                j.computed?.netProfitCents ??
+                                  j.earnings?.totalEarningsCents
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.45)]">
+                              Updated
+                            </div>
+                            <div className="text-xs text-[rgb(var(--color-text-rgb)/0.65)]">
+                              {updatedLabel}
+                            </div>
+                          </div>
+
+                          <Link
+                            to={`/job/${j.id}`}
+                            className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.86)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
+                          >
+                            View
+                          </Link>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
 
-                      <Link
-                        to={`/job/${j.id}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/75 transition hover:bg-white/10"
-                      >
-                        View job
-                      </Link>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {/* Footer note */}
+          <div className="border-t border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.28)] px-4 py-3 sm:px-6">
+            <div className="flex flex-col gap-2 text-[11px] text-[rgb(var(--color-text-rgb)/0.55)] sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                This page only shows jobs with dry-in, shingles, or punch
+                scheduled on this date.
+              </span>
+
+              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+                Use “New job” to create and prefill this day.
+              </span>
+            </div>
+          </div>
         </section>
-      </div>
+      </motion.div>
 
-      {/* -------- Create Job Modal (copied styling/structure from DashboardJobsSection) -------- */}
+      {/* Create Job Modal */}
       <AnimatePresence>
         {openForm && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onMouseDown={(e) => {
-              // click outside closes
               if (e.target === e.currentTarget) resetModal();
             }}
           >
             <motion.div
-              className="w-full max-w-md rounded-2xl border border-white/10 bg-[#1f2430]/85 backdrop-blur p-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
+              className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.6)]"
               {...fadeUp(0.02)}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold text-white">
+                  <h3 className="text-base font-semibold text-[var(--color-text)]">
                     Create new job
                   </h3>
-                  <p className="mt-1 text-xs text-white/55">
+                  <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
                     Only the address is required. You can optionally schedule
-                    felt, shingles, and punch.
+                    dry-in, shingles, and punch.
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={resetModal}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 transition hover:bg-white/10"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[rgb(var(--color-text-rgb)/0.95)]"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -561,29 +779,29 @@ export default function PunchDayPage() {
               </div>
 
               <div className="mt-4 space-y-3">
-                {/* Address */}
                 <div>
-                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
+                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
                     Job address <span className="text-red-300">*</span>
                   </label>
                   <input
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="123 Main St, San Antonio, TX"
-                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white/90 outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40"
+                    className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                   />
                 </div>
 
-                {/* Assign workers */}
                 <div>
-                  <div className="text-sm font-semibold text-white">
+                  <div className="text-sm font-semibold text-[var(--color-text)]">
                     Assign workers{" "}
-                    <span className="text-white/50">(optional)</span>
+                    <span className="text-[rgb(var(--color-text-rgb)/0.55)]">
+                      (optional)
+                    </span>
                   </div>
 
-                  <div className="mt-2 max-h-40 overflow-auto rounded-xl border border-white/10 bg-black/20 p-2">
+                  <div className="section-scroll mt-2 max-h-40 overflow-auto rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-2">
                     {employees.length === 0 ? (
-                      <div className="text-sm text-white/60">
+                      <div className="text-sm text-[rgb(var(--color-text-rgb)/0.60)]">
                         No active employees found.
                       </div>
                     ) : (
@@ -592,13 +810,13 @@ export default function PunchDayPage() {
                         return (
                           <label
                             key={emp.id}
-                            className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-white/5"
+                            className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 transition hover:bg-[rgb(var(--color-surface-rgb)/0.55)]"
                           >
                             <div className="min-w-0">
-                              <div className="truncate text-sm font-medium text-white">
+                              <div className="truncate text-sm font-medium text-[var(--color-text)]">
                                 {emp.name}
                               </div>
-                              <div className="truncate text-xs text-white/50">
+                              <div className="truncate text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
                                 {emp.role ?? "crew"}
                               </div>
                             </div>
@@ -613,7 +831,7 @@ export default function PunchDayPage() {
                                     : [...prev, emp.id]
                                 );
                               }}
-                              className="h-4 w-4 accent-[var(--color-accent)]"
+                              className="h-4 w-4 accent-[var(--color-accent-gold)]"
                             />
                           </label>
                         );
@@ -622,12 +840,12 @@ export default function PunchDayPage() {
                   </div>
 
                   {assignedEmployeeIds.length > 0 && (
-                    <div className="mt-2 text-xs text-white/60">
+                    <div className="mt-2 text-xs text-[rgb(var(--color-text-rgb)/0.60)]">
                       Assigned: {assignedEmployeeIds.length}
                       <button
                         type="button"
                         onClick={() => setAssignedEmployeeIds([])}
-                        className="ml-2 underline hover:opacity-80"
+                        className="ml-2 font-semibold text-[var(--color-accent-gold)] hover:opacity-80"
                       >
                         Clear
                       </button>
@@ -635,68 +853,67 @@ export default function PunchDayPage() {
                   )}
                 </div>
 
-                {/* Schedule fields */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
-                      Schedule felt (optional)
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                      Schedule dry-in
                     </label>
                     <input
                       type="date"
                       value={newFeltDate}
                       onChange={(e) => setNewFeltDate(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
-                      Schedule shingles (optional)
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                      Schedule shingles
                     </label>
                     <input
                       type="date"
                       value={newShinglesDate}
                       onChange={(e) => setNewShinglesDate(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                     />
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-white/55">
-                      Schedule punch (optional)
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
+                      Schedule punch
                     </label>
                     <input
                       type="date"
                       value={newPunchDate}
                       onChange={(e) => setNewPunchDate(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-xs text-white/90"
+                      className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-2 text-xs text-[rgb(var(--color-text-rgb)/0.92)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                     />
                   </div>
                 </div>
 
-                {/* Helpful hint on this page */}
                 {date && (
-                  <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] text-white/60">
+                  <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.35)] px-3 py-2 text-[11px] text-[rgb(var(--color-text-rgb)/0.62)]">
                     Tip: You’re creating a job from{" "}
-                    <span className="font-semibold text-white/80">
+                    <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
                       {displayDate}
                     </span>
-                    . If you leave all schedule dates blank, we’ll default{" "}
-                    <span className="font-semibold text-white/80">Felt</span> to
-                    this day.
+                    . If you leave all schedule dates blank, dry-in will default
+                    to this day.
                   </div>
                 )}
               </div>
 
               {error && (
-                <div className="mt-3 text-xs text-red-300">{error}</div>
+                <div className="mt-3 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+                  {error}
+                </div>
               )}
 
               <div className="mt-5 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={resetModal}
-                  className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/10"
+                  className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
                 >
                   Cancel
                 </button>
@@ -704,7 +921,7 @@ export default function PunchDayPage() {
                   type="button"
                   onClick={() => void createJob()}
                   disabled={creating}
-                  className="rounded-xl bg-[var(--btn-bg)] px-4 py-2 text-xs font-semibold text-[var(--btn-text)] transition hover:bg-[var(--btn-hover-bg)] disabled:opacity-50"
+                  className="rounded-xl border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-4 py-2 text-xs font-semibold text-[var(--color-accent-gold)] transition hover:bg-[var(--color-accent-gold)]/15 disabled:opacity-50"
                 >
                   {creating ? "Creating…" : "Create job"}
                 </button>
