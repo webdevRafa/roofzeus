@@ -636,8 +636,8 @@ export default function OrganizationSettingsPage() {
             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           />
           <div className="mt-2 text-xs text-[var(--color-text)]/50">
-            Stored in cents on the org doc. This is not wired into job pricing
-            yet — this page sets the source of truth first.
+            Stored in cents on the org doc and used as the default fixed fee in
+            job pricing.
           </div>
         </label>
       </section>

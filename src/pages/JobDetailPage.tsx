@@ -233,6 +233,35 @@ function toYMD(x: unknown): string {
   return d.toISOString().slice(0, 10);
 }
 
+const FALLBACK_JOB_FEE_CENTS = 3500;
+
+function normalizeJobFeeCents(
+  value: unknown,
+  fallback = FALLBACK_JOB_FEE_CENTS
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.max(0, Math.round(value));
+}
+
+function calculateJobBasePayCents(
+  sqft: number,
+  ratePerSqFt: number,
+  feeCents: number
+): number {
+  const safeSqft = Math.max(0, Number(sqft) || 0);
+  const safeRate = Math.max(0, Number(ratePerSqFt) || 0);
+  const safeFeeCents = normalizeJobFeeCents(feeCents, 0);
+
+  return Math.round(safeSqft * safeRate * 100) + safeFeeCents;
+}
+
+function formatFeeLabel(feeCents: number): string {
+  return (normalizeJobFeeCents(feeCents, 0) / 100).toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+  });
+}
+
 function fmtLongDate(x: unknown): string {
   const ms = toMillis(x);
   if (ms == null) return "—";
@@ -522,6 +551,38 @@ export default function JobDetailPage({
     return collection(db, "organizations", orgId, "jobPhotos");
   }, [orgId]);
 
+  const [orgDefaultJobFeeCents, setOrgDefaultJobFeeCents] = useState(
+    FALLBACK_JOB_FEE_CENTS
+  );
+
+  useEffect(() => {
+    if (orgLoading || !orgId) {
+      setOrgDefaultJobFeeCents(FALLBACK_JOB_FEE_CENTS);
+      return;
+    }
+
+    const orgRef = doc(db, "organizations", orgId);
+
+    const unsub = onSnapshot(
+      orgRef,
+      (snap) => {
+        const rawFee = snap.data()?.defaultJobFeeCents;
+        setOrgDefaultJobFeeCents(
+          normalizeJobFeeCents(rawFee, FALLBACK_JOB_FEE_CENTS)
+        );
+      },
+      (err) => {
+        console.error("Failed to load organization pricing default", err);
+        setOrgDefaultJobFeeCents(FALLBACK_JOB_FEE_CENTS);
+      }
+    );
+
+    return () => unsub();
+  }, [orgId, orgLoading]);
+
+  const effectiveJobFeeCents = orgDefaultJobFeeCents;
+  const effectiveJobFeeLabel = formatFeeLabel(effectiveJobFeeCents);
+
   // When mounted as a modal/component, jobId may be passed via props.
   // When used as a route page, routeJobId comes from the URL.
   if (!resolvedJobId) {
@@ -799,7 +860,11 @@ export default function JobDetailPage({
     // base pay from CURRENT pricing on job
     const sqft = job.pricing?.sqft ?? 0;
     const rate = (job.pricing?.ratePerSqFt as 31 | 35) ?? 31;
-    const basePayCents = Math.round((sqft * rate + 35) * 100);
+    const basePayCents = calculateJobBasePayCents(
+      sqft,
+      rate,
+      effectiveJobFeeCents
+    );
 
     // If user zeros it out, treat as "clear"
     if (units <= 0 || unit <= 0) {
@@ -1130,7 +1195,11 @@ export default function JobDetailPage({
 
     const sqft = job.pricing?.sqft ?? 0;
     const rate = (job.pricing?.ratePerSqFt as 31 | 35) ?? 31;
-    const basePayCents = Math.round((sqft * rate + 35) * 100);
+    const basePayCents = calculateJobBasePayCents(
+      sqft,
+      rate,
+      effectiveJobFeeCents
+    );
 
     setFlashingUnits("1");
     setFlashingUnitPrice("0");
@@ -1350,10 +1419,15 @@ export default function JobDetailPage({
   const [rate, setRate] = useState<31 | 35>(31); // $31 or $35
   const totalJobPayCentsPreview = useMemo(() => {
     const nSqft = Math.max(0, Number(sqft) || 0);
-    const base = Math.round((nSqft * rate + 35) * 100);
+    const base = calculateJobBasePayCents(nSqft, rate, effectiveJobFeeCents);
     const flashingPayCents = job?.earnings?.flashingPay?.amountCents ?? 0;
     return base + flashingPayCents;
-  }, [sqft, rate, job?.earnings?.flashingPay?.amountCents]);
+  }, [
+    sqft,
+    rate,
+    effectiveJobFeeCents,
+    job?.earnings?.flashingPay?.amountCents,
+  ]);
 
   const [noteText, setNoteText] = useState("");
   useEffect(() => {
@@ -2339,10 +2413,64 @@ export default function JobDetailPage({
   const displayTotal = editingPricing
     ? totalJobPayCentsPreview
     : job.earnings?.totalEarningsCents ??
-      Math.round((displaySqft * displayRate + 35) * 100);
+      calculateJobBasePayCents(displaySqft, displayRate, effectiveJobFeeCents);
   const flashingSaved = job.earnings?.flashingPay;
   const flashingSavedCents = flashingSaved?.amountCents ?? 0;
   const hasFlashingPay = flashingSavedCents > 0;
+
+  const savedPricingSqft = job.pricing?.sqft ?? 0;
+  const savedPricingRate = (job.pricing?.ratePerSqFt as 31 | 35) ?? 31;
+
+  const explicitSavedFeeCents = (job.pricing as any)?.feeCents;
+
+  const inferredSavedFeeCents =
+    typeof job.earnings?.totalEarningsCents === "number"
+      ? Math.max(
+          0,
+          Math.round(
+            job.earnings.totalEarningsCents -
+              flashingSavedCents -
+              savedPricingSqft * savedPricingRate * 100
+          )
+        )
+      : null;
+
+  const savedJobFeeCents =
+    typeof explicitSavedFeeCents === "number" &&
+    Number.isFinite(explicitSavedFeeCents)
+      ? normalizeJobFeeCents(explicitSavedFeeCents, FALLBACK_JOB_FEE_CENTS)
+      : inferredSavedFeeCents != null
+      ? normalizeJobFeeCents(inferredSavedFeeCents, FALLBACK_JOB_FEE_CENTS)
+      : effectiveJobFeeCents;
+
+  const savedJobFeeLabel = formatFeeLabel(savedJobFeeCents);
+
+  const currentOrgDefaultTotalCents =
+    calculateJobBasePayCents(
+      savedPricingSqft,
+      savedPricingRate,
+      effectiveJobFeeCents
+    ) + flashingSavedCents;
+
+  const savedJobTotalCents =
+    job.earnings?.totalEarningsCents ??
+    calculateJobBasePayCents(
+      savedPricingSqft,
+      savedPricingRate,
+      savedJobFeeCents
+    ) + flashingSavedCents;
+
+  const pricingUsesHistoricalFee =
+    hasPricing && savedJobFeeCents !== effectiveJobFeeCents;
+
+  const pricingFeeDeltaCents = currentOrgDefaultTotalCents - savedJobTotalCents;
+
+  const pricingFeeDeltaLabel =
+    pricingFeeDeltaCents === 0
+      ? "$0.00"
+      : `${pricingFeeDeltaCents > 0 ? "+" : "-"}${formatFeeLabel(
+          Math.abs(pricingFeeDeltaCents)
+        )}`;
 
   const flashingSavedLabel = hasFlashingPay
     ? `${flashingSaved?.units ?? 0} × $${(
@@ -2967,9 +3095,42 @@ export default function JobDetailPage({
                     )}
 
                     {activeSection === "Pricing" && (
-                      <section className=" p-5">
-                        {/* Pricing (existing block kept as-is below) */}
-                        <div className="w-full max-w-[500px] ">
+                      <section className="p-5">
+                        <div className="w-full max-w-[560px]">
+                          {pricingUsesHistoricalFee && !editingPricing && (
+                            <div className="mb-4 rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 shadow-sm">
+                              <div className="flex items-start gap-3">
+                                <div className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-amber-300/25 bg-amber-300/10 text-amber-200">
+                                  <AlertTriangle className="h-4 w-4" />
+                                </div>
+
+                                <div className="min-w-0">
+                                  <div className="text-sm font-semibold text-[var(--color-text)]">
+                                    Historical pricing fee
+                                  </div>
+
+                                  <p className="mt-1 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.68)]">
+                                    This job is still using its saved fixed fee
+                                    of{" "}
+                                    <span className="font-semibold text-[var(--color-text)]">
+                                      {savedJobFeeLabel}
+                                    </span>
+                                    . Your current organization default is{" "}
+                                    <span className="font-semibold text-[var(--color-text)]">
+                                      {effectiveJobFeeLabel}
+                                    </span>
+                                    . Existing totals will stay unchanged unless
+                                    you edit pricing and click Apply.
+                                  </p>
+
+                                  <div className="mt-2 inline-flex rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-[11px] font-semibold text-amber-100">
+                                    Applying current fee would change job pay by{" "}
+                                    {pricingFeeDeltaLabel}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                           {!hasPricing || editingPricing ? (
                             <div className="rounded-2xl  shadow-sm px-5 py-6 text-left w-full">
                               <div className="mb-2 text-sm md:text-xl lg:text-2xl text-[var(--color-text)] text-right">
@@ -2995,6 +3156,26 @@ export default function JobDetailPage({
                                   ) : null}
                                 </div>
                               )}
+                              {pricingUsesHistoricalFee && (
+                                <div className="mt-4 rounded-2xl border border-sky-400/20 bg-sky-400/10 px-4 py-3 text-xs leading-5 text-[rgb(var(--color-text-rgb)/0.72)]">
+                                  <div className="font-semibold text-[var(--color-text)]">
+                                    Preview is using the current default fee
+                                  </div>
+                                  <div className="mt-1">
+                                    This job was originally priced with{" "}
+                                    <span className="font-semibold text-[var(--color-text)]">
+                                      {savedJobFeeLabel}
+                                    </span>
+                                    . This edit preview uses your current fixed
+                                    fee of{" "}
+                                    <span className="font-semibold text-[var(--color-text)]">
+                                      {effectiveJobFeeLabel}
+                                    </span>
+                                    . Click Apply only if you want this job
+                                    updated to the current pricing default.
+                                  </div>
+                                </div>
+                              )}
 
                               <div className="mt-3 flex flex-wrap items-center justify-end gap-2 text-xs">
                                 <input
@@ -3018,7 +3199,7 @@ export default function JobDetailPage({
                                   <option value={35}>$35</option>
                                 </select>
                                 <span className="text-[var(--color-muted)]">
-                                  + $35 fee
+                                  + {effectiveJobFeeLabel} fee
                                 </span>
                                 <button
                                   onClick={() => {
@@ -3029,10 +3210,13 @@ export default function JobDetailPage({
                                       Number(sqft) || 0
                                     );
 
-                                    // 1) base labor pay (sqft * rate + $35 fee)
-                                    const basePayCents = Math.round(
-                                      (nSqft * rate + 35) * 100
-                                    );
+                                    // 1) base labor pay (sqft * rate + org default fee)
+                                    const basePayCents =
+                                      calculateJobBasePayCents(
+                                        nSqft,
+                                        rate,
+                                        effectiveJobFeeCents
+                                      );
 
                                     // 2) material pay add-ons (optional)
                                     // IMPORTANT: this assumes you added job.earnings.materialPay: { amountCents: number }[]
@@ -3045,7 +3229,7 @@ export default function JobDetailPage({
                                       pricing: {
                                         sqft: nSqft,
                                         ratePerSqFt: rate,
-                                        feeCents: 3500,
+                                        feeCents: effectiveJobFeeCents,
                                       },
                                       earnings: {
                                         ...(job.earnings ?? {}),
@@ -3114,13 +3298,23 @@ export default function JobDetailPage({
                               >
                                 <div className="flex items-end justify-between gap-3">
                                   <div className="min-w-0">
-                                    <div className="mt-0.5 truncate text-sm md:text-lg font-medium text-[var(--color-text)]">
-                                      {Number(
-                                        displaySqft || 0
-                                      ).toLocaleString()}{" "}
-                                      sq @ ${displayRate}
-                                      /sq{" "}
-                                      <span className="opacity-70">+ $35</span>
+                                    <div className="mt-0.5 text-sm md:text-lg font-medium text-[var(--color-text)]">
+                                      <span className="truncate">
+                                        {Number(
+                                          displaySqft || 0
+                                        ).toLocaleString()}{" "}
+                                        sq @ $ {displayRate}
+                                        /sq.ft{" "}
+                                        <span className="opacity-70">
+                                          • + {savedJobFeeLabel}
+                                        </span>
+                                      </span>
+
+                                      {pricingUsesHistoricalFee && (
+                                        <span className="ml-2 inline-flex align-middle rounded-full border border-amber-300/25 bg-amber-300/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-100">
+                                          Historical fee
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
 
