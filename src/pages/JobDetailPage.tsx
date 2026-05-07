@@ -2480,7 +2480,7 @@ export default function JobDetailPage({
 
   return (
     <>
-      <div className="w-full relative  ">
+      <div className="w-full relative h-full  ">
         {/* ===== Global Toast ===== */}
         <AnimatePresence>
           {toast && (
@@ -2528,7 +2528,7 @@ export default function JobDetailPage({
         </AnimatePresence>
         <motion.div
           {...fadeUp(0)}
-          className="mt-0 sticky top-18 z-40 bg-[var(--color-card)] pt-4 pb-2"
+          className="mt-0 sticky top-18 z-40 bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)] pt-4 lg:pt-10 pb-2"
         >
           <div className="mx-auto w-full max-w-[1200px] px-4">
             <div className="flex flex-col gap-4">
@@ -2602,7 +2602,7 @@ export default function JobDetailPage({
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-card)]  p-1 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Earnings
                   </div>
@@ -2611,7 +2611,7 @@ export default function JobDetailPage({
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-card)]  p-1 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Expenses
                   </div>
@@ -2620,7 +2620,7 @@ export default function JobDetailPage({
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-card)]  p-1 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Profit
                   </div>
@@ -2629,7 +2629,7 @@ export default function JobDetailPage({
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-[var(--color-surface)]/35  p-3 text-center">
+                <div className="rounded-xl bg-[var(--color-card)]  p-1 text-center">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-muted)]">
                     Roof Size
                   </div>
@@ -2642,7 +2642,7 @@ export default function JobDetailPage({
           </div>
         </motion.div>
 
-        <div className="">
+        <div className="bg-[var(--color-card)] h-full w-full lg:pl-20">
           {/* new design */}
           <div className="mx-auto w-full py-6">
             {/* MOBILE-ONLY SECTION NAV */}
@@ -2694,10 +2694,10 @@ export default function JobDetailPage({
             <div className="grid min-h-0 grid-cols-1 gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
               {/* LEFT PANEL */}
               <aside className="hidden lg:block min-h-0">
-                <div className="xl:sticky xl:top-34 xl:self-start">
+                <div className="xl:sticky xl:top-71 xl:self-start">
                   <div className="overflow-hidden  ">
                     <Link to="/jobs">
-                      <div className="flex items-center gap-2 hover:bg-[var(--color-card-hover)] py-3 px-1 ">
+                      <div className="flex items-center gap-2  hover:bg-[var(--color-card-hover)]  py-3 px-4 ">
                         <MdArrowBackIos />
 
                         <h1 className="font-poppins  text-sm">Back to jobs</h1>
@@ -2742,14 +2742,14 @@ export default function JobDetailPage({
 
                   <div className="">
                     {activeSection === "Schedule" && (
-                      <section className="relative z-10 rounded-2xl p-5">
+                      <section className="relative z-10 rounded-2xl p-5 max-w-[1200px]">
                         {/* Scheduling controls */}
                         <div className="w-full  rounded-2xl  p-3 sm:p-4 ">
                           <div className="grid gap-5 md:grid-cols-3">
                             {/* DRY IN */}
                             <motion.div
                               {...scheduleCardMotion(0.06)}
-                              className="   p-6 shadow-sm "
+                              className="bg-[var(--color-card-hover)]  p-6 shadow-sm "
                             >
                               <div className="flex items-start justify-between gap-3 ">
                                 <div className="min-w-0 ">
@@ -2803,7 +2803,7 @@ export default function JobDetailPage({
                                         "px-2.5 py-1 text-xs lg:text-md font-medium transition  " +
                                         (jobIsLocked
                                           ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)]/70 hover:bg-[var(--color-card-hover)] ring-white/10")
+                                          : "bg-[var(--color-card)] cursor-pointer text-[var(--color-text)] ring-1 ring-white/10")
                                       }
                                     >
                                       {feltScheduledMs
@@ -2819,7 +2819,7 @@ export default function JobDetailPage({
                                         setConfirmFeltDoneOpen(true);
                                       }}
                                       className={
-                                        "px-2.5 py-1 text-xs lg:text-md font-semibold cursor-pointer transition ring-1 ring-white/10 hover:bg-[var(--color-card-hover)] " +
+                                        "px-2.5 py-1 text-xs lg:text-md font-semibold cursor-pointer transition ring-1 ring-white/10 bg-[var(--color-card)]  " +
                                         (jobIsLocked
                                           ? "text-[var(--color-text)] cursor-not-allowed "
                                           : "  text-[var(--color-text)]")
@@ -2853,7 +2853,7 @@ export default function JobDetailPage({
                             {/* Shingles */}
                             <motion.div
                               {...scheduleCardMotion(0.14)}
-                              className="   p-6 shadow-sm "
+                              className="bg-[var(--color-card-hover)]   p-6 shadow-sm "
                             >
                               <div className="flex items-start justify-between gap-3 ">
                                 <div className="min-w-0 ">
@@ -2909,7 +2909,7 @@ export default function JobDetailPage({
                                         "px-2.5 py-1 text-xs lg:text-md font-medium transition  " +
                                         (jobIsLocked
                                           ? "bg-white/10 text-white/40 cursor-not-allowed ring-white/10"
-                                          : "bg-[var(--color-surface)]/40 cursor-pointer text-[var(--color-text)]/70 hover:bg-[var(--color-card-hover)] ring-white/10")
+                                          : "bg-[var(--color-card)] cursor-pointer text-[var(--color-text)] ring-1 ring-white/10")
                                       }
                                     >
                                       {shinglesScheduledMs
@@ -2976,7 +2976,7 @@ export default function JobDetailPage({
                             {/* Punch */}
                             <motion.div
                               {...scheduleCardMotion(0.22)}
-                              className="p-6 shadow-sm"
+                              className="bg-[var(--color-card-hover)] p-6 shadow-sm"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
@@ -4237,6 +4237,116 @@ export default function JobDetailPage({
                 </div>
               </form>
             </ModalShell>
+
+            {/* Edit Payouts Modal */}
+            <ModalShell
+              open={editPayoutModalOpen}
+              title="Edit payout"
+              onClose={() => {
+                setEditPayoutModalOpen(false);
+                setEditingPayoutId(null);
+              }}
+            >
+              <div className="mb-3">
+                <div className="text-xs text-[var(--color-muted)]">
+                  Editing payout for
+                </div>
+                <div className="text-sm font-semibold text-[var(--color-text)]">
+                  {editingPayout?.payeeNickname ?? "—"}
+                </div>
+              </div>
+
+              <form
+                className="grid gap-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await saveEditedPayout();
+                }}
+              >
+                <div>
+                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                    Material labor
+                  </label>
+                  <select
+                    value={editPayoutCategory}
+                    onChange={(e) =>
+                      setEditPayoutCategory(
+                        e.target.value as "shingles" | "felt"
+                      )
+                    }
+                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  >
+                    <option value="shingles">Shingles</option>
+                    <option value="felt">Felt</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                    Sq
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editPayoutSqft}
+                    onChange={(e) => setEditPayoutSqft(e.target.value)}
+                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-xs text-[var(--color-muted)]">
+                    Rate per sq
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editPayoutRate}
+                    onChange={(e) => setEditPayoutRate(e.target.value)}
+                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                  />
+                </div>
+
+                <div className="mt-3 px-3 py-2">
+                  <div className="text-xs md:text-lg text-[var(--color-muted)]">
+                    Updated total
+                  </div>
+                  <div className="text-xs md:text-lg font-semibold text-[var(--color-text)]">
+                    $
+                    {(
+                      (Number(editPayoutSqft) || 0) *
+                      (Number(editPayoutRate) || 0)
+                    ).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditPayoutModalOpen(false);
+                      setEditingPayoutId(null);
+                    }}
+                    className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="bg-[var(--color-done)] cursor-pointer px-3 py-2 text-sm font-medium text-[var(--btn-text)] "
+                  >
+                    Save
+                  </button>
+                </div>
+              </form>
+            </ModalShell>
+
             {/* Add Materials Modal */}
             <ModalShell
               open={materialModalOpen}
@@ -5647,115 +5757,6 @@ export default function JobDetailPage({
                   </div>
                 </div>
               )}
-
-              {/* Edit Payouts Modal */}
-              <ModalShell
-                open={editPayoutModalOpen}
-                title="Edit payout"
-                onClose={() => {
-                  setEditPayoutModalOpen(false);
-                  setEditingPayoutId(null);
-                }}
-              >
-                <div className="mb-3">
-                  <div className="text-xs text-[var(--color-muted)]">
-                    Editing payout for
-                  </div>
-                  <div className="text-sm font-semibold text-[var(--color-text)]">
-                    {editingPayout?.payeeNickname ?? "—"}
-                  </div>
-                </div>
-
-                <form
-                  className="grid gap-3"
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    await saveEditedPayout();
-                  }}
-                >
-                  <div>
-                    <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                      Material labor
-                    </label>
-                    <select
-                      value={editPayoutCategory}
-                      onChange={(e) =>
-                        setEditPayoutCategory(
-                          e.target.value as "shingles" | "felt"
-                        )
-                      }
-                      className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    >
-                      <option value="shingles">Shingles</option>
-                      <option value="felt">Felt</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                      Sq
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={editPayoutSqft}
-                      onChange={(e) => setEditPayoutSqft(e.target.value)}
-                      className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs text-[var(--color-muted)]">
-                      Rate per sq
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={editPayoutRate}
-                      onChange={(e) => setEditPayoutRate(e.target.value)}
-                      className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                    />
-                  </div>
-
-                  <div className="mt-3 px-3 py-2">
-                    <div className="text-xs md:text-lg text-[var(--color-muted)]">
-                      Updated total
-                    </div>
-                    <div className="text-xs md:text-lg font-semibold text-[var(--color-text)]">
-                      $
-                      {(
-                        (Number(editPayoutSqft) || 0) *
-                        (Number(editPayoutRate) || 0)
-                      ).toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditPayoutModalOpen(false);
-                        setEditingPayoutId(null);
-                      }}
-                      className="cursor-pointer border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] hover:bg-[var(--color-card-hover)]"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      className="bg-[var(--color-done)] cursor-pointer px-3 py-2 text-sm font-medium text-[var(--btn-text)] "
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
-              </ModalShell>
 
               {/* Warranty packet preview */}
               {/* Warranty center */}

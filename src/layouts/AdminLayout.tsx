@@ -178,6 +178,10 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isJobDetailRoute =
+    /^\/job\/[^/]+$/.test(location.pathname) ||
+    /^\/jobs\/[^/]+$/.test(location.pathname);
+
   const [signingOut, setSigningOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
@@ -469,7 +473,13 @@ export default function AdminLayout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1700px] px-3 sm:px-4 lg:px-6 py-6 sm:py-8">
+      <main
+        className={
+          isJobDetailRoute
+            ? "w-full max-w-none px-0 py-0"
+            : "mx-auto w-full max-w-[1700px] px-3 sm:px-4 lg:px-6 py-6 sm:py-8"
+        }
+      >
         <Outlet />
       </main>
     </div>
