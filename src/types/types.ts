@@ -293,9 +293,29 @@ export type FlashingPay = {
 
 export type ContactInfo = {
   name?: string;
+  companyName?: string;
   phone?: string;
   email?: string;
+  mailingAddress?: Partial<Address> | null;
 };
+
+/**
+ * Defines who should receive invoices for a job. Roofing contractors typically
+ * invoice the party that hired them. For residential work this is usually
+ * the homeowner (client), while new construction or commercial projects may
+ * bill a builder/general contractor or another third‑party. If set to
+ * "custom", the billingContact on the Job will be used instead of the
+ * homeowner. When unspecified, "homeowner" is assumed.
+ */
+export type BillingRecipient =
+  | "homeowner"
+  | "builder"
+  | "insurance"
+  | "other";
+
+  export type BillingContactsByRecipient = Partial<
+  Record<Exclude<BillingRecipient, "homeowner">, ContactInfo>
+>;
 
 export type WarrantyAttachment = {
   id: ID;
@@ -661,6 +681,30 @@ export type Job = {
 
   /** Shared homeowner contact for this job. All warranty packets should read from here. */
   homeowner?: ContactInfo;
+
+  /**
+   * Defines who the invoice should be addressed to. A job may be billed to the
+   * homeowner (default), a builder/general contractor, or a custom contact.
+   * When "custom" is selected the billingContact below will be used instead of
+   * the homeowner. This field is optional for backwards compatibility; when
+   * absent, invoices will default to the homeowner contact.
+   */
+  billingRecipient?: BillingRecipient;
+
+   /**
+   * Active invoice contact snapshot for backwards compatibility and simple reads.
+   * When billingRecipient is homeowner, invoices should use homeowner.
+   * When billingRecipient is builder / insurance / other, this should mirror
+   * billingContacts[billingRecipient].
+   */
+   billingContact?: ContactInfo;
+
+   /**
+    * Stores billing details separately for each non-homeowner recipient type.
+    * This prevents Builder / GC info from being overwritten when the user saves
+    * Insurance / Adjuster or Other billing information.
+    */
+   billingContacts?: BillingContactsByRecipient;
 
   /** Final punch information (walkthrough / completion). */
   punchedAt?: Timestamp | Date | FieldValue | null;

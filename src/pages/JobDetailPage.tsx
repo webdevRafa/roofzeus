@@ -37,6 +37,7 @@ import {
   Layers3,
   Calculator,
   MapPin,
+  Building2,
 } from "lucide-react";
 import { MdArrowBackIos } from "react-icons/md";
 
@@ -64,6 +65,7 @@ import type {
   OrgMaterialOption,
   WarrantyTypeKey,
   ContactInfo,
+  BillingRecipient,
 } from "../types/types";
 
 import { jobConverter } from "../types/types";
@@ -73,6 +75,42 @@ import { useOrg } from "../contexts/OrgContext";
 
 // ---------- Animation helpers ----------
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+const BILLING_RECIPIENT_OPTIONS: Array<{
+  value: BillingRecipient;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "homeowner",
+    label: "Homeowner",
+    description: "Use the homeowner contact saved on this job.",
+  },
+  {
+    value: "builder",
+    label: "Builder / GC",
+    description:
+      "Use this for builder, general contractor, or company billing.",
+  },
+  {
+    value: "insurance",
+    label: "Insurance / Adjuster",
+    description: "Use this when billing an insurance contact or adjuster.",
+  },
+  {
+    value: "other",
+    label: "Other",
+    description:
+      "Use this for third-party, property manager, or custom billing.",
+  },
+];
+
+function billingRecipientLabel(value: BillingRecipient | undefined) {
+  if (value === "builder") return "Builder / GC";
+  if (value === "insurance") return "Insurance / Adjuster";
+  if (value === "other") return "Other";
+  return "Homeowner";
+}
 
 const fadeUp = (delay = 0): Partial<MotionProps> => ({
   initial: { opacity: 0, y: 12, filter: "blur(6px)" },
@@ -455,6 +493,24 @@ export default function JobDetailPage({
     name: "",
     phone: "",
     email: "",
+  });
+
+  const [billingOpen, setBillingOpen] = useState(false);
+  const [billingSaving, setBillingSaving] = useState(false);
+  const [billingRecipientDraft, setBillingRecipientDraft] =
+    useState<BillingRecipient>("homeowner");
+
+  const [billingContactDraft, setBillingContactDraft] = useState<ContactInfo>({
+    companyName: "",
+    name: "",
+    phone: "",
+    email: "",
+    mailingAddress: {
+      line1: "",
+      city: "",
+      state: "",
+      zip: "",
+    },
   });
 
   const [payoutDocs, setPayoutDocs] = useState<PayoutDoc[]>([]);
@@ -1021,6 +1077,111 @@ export default function JobDetailPage({
     };
   }
 
+  function toBillingContactOrDelete(contact?: ContactInfo | null) {
+    const companyName =
+      typeof contact?.companyName === "string"
+        ? contact.companyName.trim()
+        : "";
+
+    const name = typeof contact?.name === "string" ? contact.name.trim() : "";
+    const phone =
+      typeof contact?.phone === "string" ? cleanPhoneInput(contact.phone) : "";
+    const email =
+      typeof contact?.email === "string" ? contact.email.trim() : "";
+
+    const mailing = contact?.mailingAddress ?? null;
+
+    const line1 =
+      typeof mailing?.line1 === "string" ? mailing.line1.trim() : "";
+    const city = typeof mailing?.city === "string" ? mailing.city.trim() : "";
+    const state =
+      typeof mailing?.state === "string" ? mailing.state.trim() : "";
+    const zip = typeof mailing?.zip === "string" ? mailing.zip.trim() : "";
+
+    const hasMailingAddress = Boolean(line1 || city || state || zip);
+
+    if (!companyName && !name && !phone && !email && !hasMailingAddress) {
+      return deleteField();
+    }
+
+    return {
+      ...(companyName ? { companyName } : {}),
+      ...(name ? { name } : {}),
+      ...(phone ? { phone } : {}),
+      ...(email ? { email } : {}),
+      ...(hasMailingAddress
+        ? {
+            mailingAddress: {
+              ...(line1 ? { line1, fullLine: line1 } : {}),
+              ...(city ? { city } : {}),
+              ...(state ? { state } : {}),
+              ...(zip ? { zip } : {}),
+            },
+          }
+        : {}),
+    };
+  }
+
+  function contactDraftFromInfo(contact?: ContactInfo | null): ContactInfo {
+    return {
+      companyName: contact?.companyName ?? "",
+      name: contact?.name ?? "",
+      phone: contact?.phone ?? "",
+      email: contact?.email ?? "",
+      mailingAddress: {
+        line1: contact?.mailingAddress?.line1 ?? "",
+        city: contact?.mailingAddress?.city ?? "",
+        state: contact?.mailingAddress?.state ?? "",
+        zip: contact?.mailingAddress?.zip ?? "",
+      },
+    };
+  }
+
+  function billingContactForRecipient(
+    currentJob: Job,
+    recipient: BillingRecipient
+  ): ContactInfo | null {
+    if (recipient === "homeowner") {
+      return currentJob.homeowner ?? null;
+    }
+
+    const contactsByType = (currentJob as any).billingContacts as
+      | Partial<Record<Exclude<BillingRecipient, "homeowner">, ContactInfo>>
+      | undefined;
+
+    return contactsByType?.[recipient] ?? currentJob.billingContact ?? null;
+  }
+
+  function billingSummaryForJob(currentJob: Job) {
+    const recipient = currentJob.billingRecipient ?? "homeowner";
+
+    if (recipient === "homeowner") {
+      const display =
+        currentJob.homeowner?.name ||
+        currentJob.homeowner?.email ||
+        currentJob.homeowner?.phone ||
+        "Not set";
+
+      return {
+        label: "Homeowner",
+        value: display,
+      };
+    }
+
+    const contact = billingContactForRecipient(currentJob, recipient);
+    const display =
+      contact?.companyName ||
+      contact?.name ||
+      contact?.email ||
+      contact?.phone ||
+      "Not set";
+
+    return {
+      label: billingRecipientLabel(recipient),
+      value: display,
+    };
+  }
+
   function dateToTimestampOrDelete(d: any) {
     if (!d) return deleteField();
 
@@ -1142,6 +1303,65 @@ export default function JobDetailPage({
       });
     } finally {
       setHomeownerSaving(false);
+    }
+  }
+
+  async function saveBillingInformation() {
+    if (!jobDocRef) return;
+
+    setBillingSaving(true);
+
+    try {
+      const patch: Record<string, unknown> =
+        billingRecipientDraft === "homeowner"
+          ? {
+              billingRecipient: "homeowner" as BillingRecipient,
+              billingContact: deleteField(),
+              updatedAt: serverTimestamp(),
+            }
+          : (() => {
+              const nextContact = toBillingContactOrDelete(billingContactDraft);
+
+              return {
+                billingRecipient: billingRecipientDraft,
+                billingContact: nextContact,
+
+                // Important: store each non-homeowner type separately.
+                // This prevents Builder / GC from being overwritten when
+                // Insurance / Adjuster or Other is saved later.
+                [`billingContacts.${billingRecipientDraft}`]: nextContact,
+
+                updatedAt: serverTimestamp(),
+              };
+            })();
+
+      await setDoc(jobDocRef, patch, { merge: true });
+
+      const typedRef = jobDocRef.withConverter(jobConverter);
+      const snap = await getDoc(typedRef);
+      if (snap.exists()) setJob(snap.data());
+
+      setBillingOpen(false);
+
+      setToast({
+        status: "success",
+        title: "Billing recipient saved",
+        message:
+          billingRecipientDraft === "homeowner"
+            ? "Invoices will use the homeowner contact for this job."
+            : `${billingRecipientLabel(
+                billingRecipientDraft
+              )} billing details were saved for this job.`,
+      });
+    } catch (e) {
+      console.error("Failed to save billing recipient", e);
+      setToast({
+        status: "error",
+        title: "Billing save failed",
+        message: "Check console for details and try again.",
+      });
+    } finally {
+      setBillingSaving(false);
     }
   }
 
@@ -2468,6 +2688,8 @@ export default function JobDetailPage({
           .join(", ") ||
         "Untitled job";
 
+  const billingSummary = billingSummaryForJob(job);
+
   const roofSizeLabel =
     typeof job.pricing?.sqft === "number" && job.pricing.sqft > 0
       ? `${job.pricing.sqft.toLocaleString()} SQ`
@@ -2674,6 +2896,30 @@ export default function JobDetailPage({
                 >
                   <UserRound className="h-4 w-4 text-[var(--color-muted)]" />
                   {job.homeowner?.name ? "Homeowner" : "Add homeowner"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const recipient = job.billingRecipient ?? "homeowner";
+                    const contact = billingContactForRecipient(job, recipient);
+
+                    setBillingRecipientDraft(recipient);
+                    setBillingContactDraft(contactDraftFromInfo(contact));
+
+                    setBillingOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
+                  title="Set who invoices should be billed to for this job"
+                >
+                  <Building2 className="h-4 w-4 text-[var(--color-muted)]" />
+                  <span className="hidden sm:inline">Bill to:</span>
+                  <span>{billingSummary.label}</span>
+                  <span className="max-w-[150px] truncate text-[var(--color-muted)]">
+                    {billingSummary.value !== "Not set"
+                      ? `• ${billingSummary.value}`
+                      : "• Not set"}
+                  </span>
                 </button>
 
                 <button
@@ -4076,6 +4322,348 @@ export default function JobDetailPage({
                     className={`${UI.btnPrimary} h-9 px-5`}
                   >
                     {homeownerSaving ? "Saving…" : "Save homeowner"}
+                  </button>
+                </div>
+              </form>
+            </ModalShell>
+
+            {/* Billing Recipient Modal */}
+            <ModalShell
+              open={billingOpen}
+              title="Billing Recipient"
+              subtitle="Choose who invoices should be addressed to for this job."
+              width="lg"
+              bodyClassName="lg:overflow-y-auto"
+              onClose={() => setBillingOpen(false)}
+            >
+              <form
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void saveBillingInformation();
+                }}
+              >
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                        Job address
+                      </div>
+                      <div className="mt-0.5 text-sm font-semibold leading-snug text-[var(--color-text)] break-words">
+                        {headerAddress}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                    Invoice recipient type
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {BILLING_RECIPIENT_OPTIONS.map((option) => {
+                      const active = billingRecipientDraft === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            setBillingRecipientDraft(option.value);
+
+                            if (option.value !== "homeowner") {
+                              const contact = billingContactForRecipient(
+                                job,
+                                option.value
+                              );
+                              setBillingContactDraft(
+                                contactDraftFromInfo(contact)
+                              );
+                            }
+                          }}
+                          className={[
+                            "rounded-xl border px-3 py-3 text-left transition",
+                            active
+                              ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 shadow-sm"
+                              : "border-[var(--color-border)] bg-[var(--color-surface)]/35 hover:bg-[var(--color-card-hover)]",
+                          ].join(" ")}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-semibold text-[var(--color-text)]">
+                                {option.label}
+                              </div>
+                              <div className="mt-1 text-xs leading-relaxed text-[var(--color-muted)]">
+                                {option.description}
+                              </div>
+                            </div>
+
+                            <span
+                              className={[
+                                "mt-0.5 inline-flex h-4 w-4 shrink-0 rounded-full border",
+                                active
+                                  ? "border-[var(--color-primary)] bg-[var(--color-primary)]"
+                                  : "border-[var(--color-border)] bg-transparent",
+                              ].join(" ")}
+                            />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {billingRecipientDraft === "homeowner" ? (
+                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-4 py-3">
+                    <div className="flex items-start gap-3">
+                      <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-primary)]" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-[var(--color-text)]">
+                          Using homeowner contact
+                        </div>
+                        <div className="mt-1 text-xs leading-relaxed text-[var(--color-muted)]">
+                          Invoices for this job will use the homeowner info
+                          saved on the job. Update the Homeowner button in the
+                          header if the name, phone, or email needs to change.
+                        </div>
+
+                        <div className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-xs text-[var(--color-muted)]">
+                          <div>
+                            <span className="font-semibold text-[var(--color-text)]">
+                              Name:
+                            </span>{" "}
+                            {job.homeowner?.name || "Not set"}
+                          </div>
+                          <div className="mt-1">
+                            <span className="font-semibold text-[var(--color-text)]">
+                              Phone:
+                            </span>{" "}
+                            {job.homeowner?.phone
+                              ? formatPhoneInput(job.homeowner.phone)
+                              : "Not set"}
+                          </div>
+                          <div className="mt-1">
+                            <span className="font-semibold text-[var(--color-text)]">
+                              Email:
+                            </span>{" "}
+                            {job.homeowner?.email || "Not set"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/25 p-4">
+                    <div>
+                      <div className="text-sm font-semibold text-[var(--color-text)]">
+                        {billingRecipientLabel(billingRecipientDraft)} contact
+                      </div>
+                      <div className="mt-1 text-xs leading-relaxed text-[var(--color-muted)]">
+                        These details are saved separately for this recipient
+                        type and will prefill when this type is selected as the
+                        active invoice recipient for this job.
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block">
+                        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                          Company name
+                        </div>
+                        <input
+                          value={billingContactDraft.companyName ?? ""}
+                          onChange={(e) =>
+                            setBillingContactDraft((prev) => ({
+                              ...prev,
+                              companyName: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. ABC Homes"
+                          className={UI.input}
+                        />
+                      </label>
+
+                      <label className="block">
+                        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                          Contact name
+                        </div>
+                        <input
+                          value={billingContactDraft.name ?? ""}
+                          onChange={(e) =>
+                            setBillingContactDraft((prev) => ({
+                              ...prev,
+                              name: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. Maria Lopez"
+                          className={UI.input}
+                        />
+                      </label>
+
+                      <label className="block">
+                        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                          Email
+                        </div>
+                        <input
+                          type="email"
+                          value={billingContactDraft.email ?? ""}
+                          onChange={(e) =>
+                            setBillingContactDraft((prev) => ({
+                              ...prev,
+                              email: e.target.value,
+                            }))
+                          }
+                          placeholder="billing@example.com"
+                          className={UI.input}
+                        />
+                      </label>
+
+                      <label className="block">
+                        <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                          Phone
+                        </div>
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          value={formatPhoneInput(
+                            billingContactDraft.phone ?? ""
+                          )}
+                          onChange={(e) =>
+                            setBillingContactDraft((prev) => ({
+                              ...prev,
+                              phone: cleanPhoneInput(e.target.value),
+                            }))
+                          }
+                          placeholder="(210) 555-1234"
+                          className={UI.input}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+                      <div className="mb-3">
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                          Mailing address
+                        </div>
+                        <div className="mt-1 text-xs text-[var(--color-muted)]">
+                          Optional. Useful for printed invoices, insurance, or
+                          builder billing.
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="block sm:col-span-2">
+                          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                            Address line
+                          </div>
+                          <input
+                            value={
+                              billingContactDraft.mailingAddress?.line1 ?? ""
+                            }
+                            onChange={(e) =>
+                              setBillingContactDraft((prev) => ({
+                                ...prev,
+                                mailingAddress: {
+                                  ...(prev.mailingAddress ?? {}),
+                                  line1: e.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="Street / mailing address"
+                            className={UI.input}
+                          />
+                        </label>
+
+                        <label className="block">
+                          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                            City
+                          </div>
+                          <input
+                            value={
+                              billingContactDraft.mailingAddress?.city ?? ""
+                            }
+                            onChange={(e) =>
+                              setBillingContactDraft((prev) => ({
+                                ...prev,
+                                mailingAddress: {
+                                  ...(prev.mailingAddress ?? {}),
+                                  city: e.target.value,
+                                },
+                              }))
+                            }
+                            placeholder="City"
+                            className={UI.input}
+                          />
+                        </label>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <label className="block">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                              State
+                            </div>
+                            <input
+                              value={
+                                billingContactDraft.mailingAddress?.state ?? ""
+                              }
+                              onChange={(e) =>
+                                setBillingContactDraft((prev) => ({
+                                  ...prev,
+                                  mailingAddress: {
+                                    ...(prev.mailingAddress ?? {}),
+                                    state: e.target.value.toUpperCase(),
+                                  },
+                                }))
+                              }
+                              placeholder="TX"
+                              className={UI.input}
+                            />
+                          </label>
+
+                          <label className="block">
+                            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                              Zip
+                            </div>
+                            <input
+                              value={
+                                billingContactDraft.mailingAddress?.zip ?? ""
+                              }
+                              onChange={(e) =>
+                                setBillingContactDraft((prev) => ({
+                                  ...prev,
+                                  mailingAddress: {
+                                    ...(prev.mailingAddress ?? {}),
+                                    zip: e.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder="78245"
+                              className={UI.input}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setBillingOpen(false)}
+                    className={`${UI.btnSoft} h-9 px-4`}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={billingSaving}
+                    className={`${UI.btnPrimary} h-9 px-5`}
+                  >
+                    {billingSaving ? "Saving…" : "Save billing recipient"}
                   </button>
                 </div>
               </form>

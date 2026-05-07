@@ -120,6 +120,16 @@ function NewInvoiceModal({
   const [customerName, setCustomerName] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
+  /**
+   * Determine who the invoice should be billed to. When set to "job", the
+   * customer fields are automatically populated from the job's billing
+   * information (homeowner or billingContact) and disabled for editing. When
+   * set to "custom", the user can freely edit the customer fields for this
+   * invoice. This improves UX by encouraging sensible invoices that match
+   * industry practice — residential jobs bill the homeowner while
+   * commercial/new‑construction jobs bill a builder or other third‑party.
+   */
+  const [billTo, setBillTo] = useState<"job" | "custom">("job");
   const [description, setDescription] = useState<string>("");
   const [extras, setExtras] = useState<{ label: string; amount: string }[]>([]);
   const [saving, setSaving] = useState(false);
@@ -132,6 +142,132 @@ function NewInvoiceModal({
     () => jobs.find((j) => j.id === jobId) ?? null,
     [jobs, jobId]
   );
+
+  function getInvoiceCustomerFromJob(job: Job | null) {
+    if (!job) return { name: "", email: "", phone: "" };
+
+    const recipient = job.billingRecipient ?? "homeowner";
+
+    if (recipient === "homeowner") {
+      return {
+        name: job.homeowner?.name ?? "",
+        email: job.homeowner?.email ?? "",
+        phone: job.homeowner?.phone ?? "",
+      };
+    }
+
+    const contact = job.billingContact;
+
+    return {
+      name: contact?.companyName || contact?.name || "",
+      email: contact?.email ?? "",
+      phone: contact?.phone ?? "",
+    };
+  }
+
+  useEffect(() => {
+    const customer = getInvoiceCustomerFromJob(selectedJob);
+
+    setCustomerName(customer.name);
+    setCustomerEmail(customer.email);
+    setCustomerPhone(customer.phone);
+  }, [
+    selectedJob?.id,
+    selectedJob?.billingRecipient,
+    selectedJob?.billingContact,
+    selectedJob?.homeowner,
+  ]);
+
+  /**
+   * Compute the default billing contact for the selected job. If a job
+   * explicitly defines a billingRecipient of "builder" or "custom" and
+   * provides a billingContact, prefer that. Otherwise fall back to the
+   * homeowner contact when present. If no contact information exists the
+   * defaults will be empty strings.
+   */
+  const defaultBilling = useMemo(() => {
+    if (!selectedJob) {
+      return {
+        source: "none" as const,
+        sourceLabel: "No billing contact saved",
+        name: "",
+        email: "",
+        phone: "",
+      };
+    }
+
+    const billingRecipient = (selectedJob as any).billingRecipient as
+      | "homeowner"
+      | "builder"
+      | "custom"
+      | undefined;
+
+    const billingContact = (selectedJob as any).billingContact as
+      | { name?: string; email?: string; phone?: string }
+      | undefined;
+
+    const homeowner = (selectedJob as any).homeowner as
+      | { name?: string; email?: string; phone?: string }
+      | undefined;
+
+    if (billingRecipient === "builder" && billingContact) {
+      return {
+        source: "builder" as const,
+        sourceLabel: "Builder / GC",
+        name: billingContact.name ?? "",
+        email: billingContact.email ?? "",
+        phone: billingContact.phone ?? "",
+      };
+    }
+
+    if (billingRecipient === "custom" && billingContact) {
+      return {
+        source: "custom" as const,
+        sourceLabel: "Saved billing contact",
+        name: billingContact.name ?? "",
+        email: billingContact.email ?? "",
+        phone: billingContact.phone ?? "",
+      };
+    }
+
+    if (homeowner) {
+      return {
+        source: "homeowner" as const,
+        sourceLabel: "Homeowner",
+        name: homeowner.name ?? "",
+        email: homeowner.email ?? "",
+        phone: homeowner.phone ?? "",
+      };
+    }
+
+    return {
+      source: "none" as const,
+      sourceLabel: "No billing contact saved",
+      name: "",
+      email: "",
+      phone: "",
+    };
+  }, [selectedJob]);
+
+  const defaultContactLabel = useMemo(() => {
+    const contactValue =
+      defaultBilling.name || defaultBilling.email || defaultBilling.phone;
+
+    return contactValue
+      ? `${defaultBilling.sourceLabel} (${contactValue})`
+      : defaultBilling.sourceLabel;
+  }, [defaultBilling]);
+
+  // Whenever the selected job or billing mode changes, populate the
+  // customer fields when using job defaults. If the user switches to
+  // custom mode the current values are preserved to avoid surprise resets.
+  useEffect(() => {
+    if (billTo === "job") {
+      setCustomerName(defaultBilling.name);
+      setCustomerEmail(defaultBilling.email);
+      setCustomerPhone(defaultBilling.phone);
+    }
+  }, [defaultBilling, billTo]);
 
   function computeJobMaterialCostCents(job: Job | null): number {
     if (!job) return 0;
@@ -452,6 +588,30 @@ function NewInvoiceModal({
               </select>
             </div>
 
+            {/* Billing selection */}
+            <div className="sm:col-span-2">
+              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
+                Bill to
+              </label>
+              <select
+                value={billTo}
+                onChange={(e) => setBillTo(e.target.value as "job" | "custom")}
+                disabled={saving}
+                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
+              >
+                <option value="job">{`Use saved recipient: ${defaultContactLabel}`}</option>
+                <option value="custom">
+                  Enter a one-time custom recipient
+                </option>
+              </select>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">
+                Residential jobs usually bill the homeowner. Builder, GC,
+                insurance, or third-party invoices should be saved as the job
+                billing contact from the job detail page.
+              </p>
+            </div>
+
+            {/* Customer fields populated from job or custom */}
             <div>
               <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
                 Customer name
@@ -460,7 +620,7 @@ function NewInvoiceModal({
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                disabled={saving}
+                disabled={saving || billTo === "job"}
                 className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
                 placeholder="e.g. Jane Doe"
               />
@@ -474,7 +634,7 @@ function NewInvoiceModal({
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
-                disabled={saving}
+                disabled={saving || billTo === "job"}
                 className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
                 placeholder="email@example.com"
               />
@@ -488,7 +648,7 @@ function NewInvoiceModal({
                 type="tel"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
-                disabled={saving}
+                disabled={saving || billTo === "job"}
                 className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
                 placeholder="(555) 123-4567"
               />
