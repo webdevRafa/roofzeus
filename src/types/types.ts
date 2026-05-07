@@ -214,7 +214,7 @@ export type Org = {
 
   /** Common material options available when adding job material expenses */
   commonMaterials?: OrgMaterialOption[];
-
+  commonRatesPerSq?: number[];
   ownerUserId?: ID;
   createdByUserId?: ID;
 
@@ -486,7 +486,7 @@ export type MaterialExpense = {
 
 export type JobPricing = {
   sqft: number;                 // >= 0
-  ratePerSqFt: 31 | 35;         // your two allowed rates
+  ratePerSqFt: number;          // organization-defined rate per SQ
   feeCents?: number;            // default 3500 for the +$35 fee
 };
 export type Expenses = {

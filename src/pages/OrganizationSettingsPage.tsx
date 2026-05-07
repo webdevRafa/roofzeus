@@ -32,6 +32,18 @@ function centsToDollars(value?: number | null): string {
   return (value / 100).toFixed(2);
 }
 
+function normalizeCommonRatesPerSq(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+
+  return Array.from(
+    new Set(
+      value
+        .map((rate) => Number(rate))
+        .filter((rate) => Number.isFinite(rate) && rate > 0)
+    )
+  ).sort((a, b) => a - b);
+}
+
 function cleanAddressPart(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
@@ -150,6 +162,8 @@ export default function OrganizationSettingsPage() {
 
   const [defaultState, setDefaultState] = useState("");
   const [defaultJobFee, setDefaultJobFee] = useState("");
+  const [commonRatesPerSq, setCommonRatesPerSq] = useState<number[]>([]);
+  const [newCommonRate, setNewCommonRate] = useState("");
   const [commonMaterials, setCommonMaterials] = useState<OrgMaterialOption[]>(
     []
   );
@@ -184,6 +198,8 @@ export default function OrganizationSettingsPage() {
 
     setDefaultState((next?.defaultState ?? "").toUpperCase());
     setDefaultJobFee(centsToDollars(next?.defaultJobFeeCents));
+    setCommonRatesPerSq(normalizeCommonRatesPerSq(next?.commonRatesPerSq));
+    setNewCommonRate("");
     setCommonMaterials(
       [...(next?.commonMaterials ?? [])].sort(
         (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
@@ -300,6 +316,25 @@ export default function OrganizationSettingsPage() {
       )
     );
   }
+
+  function addCommonRate() {
+    const cleanRate = Number(newCommonRate);
+
+    if (!Number.isFinite(cleanRate) || cleanRate <= 0) return;
+
+    setCommonRatesPerSq((rates) =>
+      normalizeCommonRatesPerSq([...rates, cleanRate])
+    );
+
+    setNewCommonRate("");
+  }
+
+  function removeCommonRate(rateToRemove: number) {
+    setCommonRatesPerSq((rates) =>
+      rates.filter((rate) => rate !== rateToRemove)
+    );
+  }
+
   function resetSettings() {
     hydrateForm(orgDoc);
     setSaveMessage(null);
@@ -358,6 +393,7 @@ export default function OrganizationSettingsPage() {
           address: nextAddress,
           defaultState: defaultState.trim().toUpperCase() || null,
           defaultJobFeeCents: dollarsToCents(defaultJobFee),
+          commonRatesPerSq: normalizeCommonRatesPerSq(commonRatesPerSq),
           commonMaterials: cleanedMaterials,
           updatedAt: serverTimestamp(),
         },
@@ -642,6 +678,86 @@ export default function OrganizationSettingsPage() {
         </label>
       </section>
 
+      <section className="bg-[var(--color-background)] p-5 sm:p-6">
+        <div className="mb-5 flex items-center gap-2">
+          <BadgeDollarSign className="h-4 w-4 text-[var(--color-text)]/70" />
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text)]/80">
+            Common Rates Per SQ
+          </h2>
+        </div>
+
+        <div className="max-w-2xl">
+          <p className="mb-4 text-sm text-[rgb(var(--color-text-rgb)/0.6)]">
+            Add the SQ rates this organization commonly charges. When rates
+            exist here, job pricing will show a dropdown instead of a free-entry
+            rate input.
+          </p>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:max-w-[220px]">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.55)]">
+                $
+              </span>
+
+              <input
+                value={newCommonRate}
+                onChange={(e) => setNewCommonRate(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCommonRate();
+                  }
+                }}
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="31"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] py-2.5 pl-7 pr-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={addCommonRate}
+              disabled={!newCommonRate.trim()}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.5)] px-4 text-sm font-medium text-[var(--color-text)] transition hover:bg-[var(--color-card-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" />
+              Add rate
+            </button>
+          </div>
+
+          <div className="mt-5">
+            {commonRatesPerSq.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {commonRatesPerSq.map((rate) => (
+                  <div
+                    key={rate}
+                    className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.42)] px-3 py-1.5 text-sm text-[var(--color-text)]"
+                  >
+                    <span className="font-semibold">${rate}/SQ</span>
+
+                    <button
+                      type="button"
+                      onClick={() => removeCommonRate(rate)}
+                      className="rounded-full p-1 text-[rgb(var(--color-text-rgb)/0.55)] transition hover:bg-red-500/10 hover:text-red-300"
+                      aria-label={`Remove $${rate} per SQ rate`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.26)] p-4 text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
+                No common SQ rates have been added yet. Job pricing will allow
+                manual rate entry until at least one rate is saved here.
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       <section className={UI.section}>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
@@ -843,8 +959,8 @@ export default function OrganizationSettingsPage() {
               Save organization settings
             </div>
             <div className="text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
-              Changes to profile, defaults, branding, and materials save
-              together.
+              Changes to profile, pricing defaults, common rates, branding, and
+              materials save together.
             </div>
           </div>
 

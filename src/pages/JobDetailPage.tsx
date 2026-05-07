@@ -365,6 +365,19 @@ function materialLineTotal(d: MaterialDraft) {
 function materialLineCanSubmit(d: MaterialDraft) {
   return (Number(d.unitPrice) || 0) > 0 && (Number(d.quantity) || 0) > 0;
 }
+
+function normalizeCommonRatesPerSq(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+
+  return Array.from(
+    new Set(
+      value
+        .map((rate) => Number(rate))
+        .filter((rate) => Number.isFinite(rate) && rate > 0)
+    )
+  ).sort((a, b) => a - b);
+}
+
 function buildMaterialDraftPreview(
   draft: MaterialDraft,
   index: number,
@@ -550,6 +563,78 @@ export default function JobDetailPage({
     if (!orgId) return null;
     return collection(db, "organizations", orgId, "jobPhotos");
   }, [orgId]);
+
+  const [commonRatesPerSq, setCommonRatesPerSq] = useState<number[]>([]);
+  const [rateSavePrompt, setRateSavePrompt] = useState<number | null>(null);
+  const [savingCommonRate, setSavingCommonRate] = useState(false);
+
+  useEffect(() => {
+    if (orgLoading || !orgId) {
+      setCommonRatesPerSq([]);
+      return;
+    }
+
+    const orgRef = doc(db, "organizations", orgId);
+
+    const unsub = onSnapshot(
+      orgRef,
+      (snap) => {
+        const data = snap.data();
+        setCommonRatesPerSq(normalizeCommonRatesPerSq(data?.commonRatesPerSq));
+      },
+      (err) => {
+        console.error("Failed to load organization common rates", err);
+        setCommonRatesPerSq([]);
+      }
+    );
+
+    return () => unsub();
+  }, [orgId, orgLoading]);
+
+  async function saveRateToOrgSettings(rateToSave: number) {
+    if (!orgId) return;
+
+    const cleanRate = Number(rateToSave);
+
+    if (!Number.isFinite(cleanRate) || cleanRate <= 0) return;
+
+    const nextRates = normalizeCommonRatesPerSq([
+      ...commonRatesPerSq,
+      cleanRate,
+    ]);
+
+    try {
+      setSavingCommonRate(true);
+
+      await setDoc(
+        doc(db, "organizations", orgId),
+        {
+          commonRatesPerSq: nextRates,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      setRateSavePrompt(null);
+
+      setToast({
+        status: "success",
+        title: "Common rate saved",
+        message: `$${cleanRate}/SQ was added to this organization's pricing settings.`,
+      });
+    } catch (err) {
+      console.error("Failed to save common rate", err);
+
+      setToast({
+        status: "error",
+        title: "Could not save rate",
+        message:
+          "The rate was applied to this job, but it was not saved to organization settings.",
+      });
+    } finally {
+      setSavingCommonRate(false);
+    }
+  }
 
   const [orgDefaultJobFeeCents, setOrgDefaultJobFeeCents] = useState(
     FALLBACK_JOB_FEE_CENTS
@@ -1416,7 +1501,7 @@ export default function JobDetailPage({
 
   // --- Pricing calculator state (used only while editing/initial apply) ---
   const [sqft, setSqft] = useState<string>("");
-  const [rate, setRate] = useState<31 | 35>(31); // $31 or $35
+  const [rate, setRate] = useState<number>(31);
   const totalJobPayCentsPreview = useMemo(() => {
     const nSqft = Math.max(0, Number(sqft) || 0);
     const base = calculateJobBasePayCents(nSqft, rate, effectiveJobFeeCents);
@@ -1428,6 +1513,35 @@ export default function JobDetailPage({
     effectiveJobFeeCents,
     job?.earnings?.flashingPay?.amountCents,
   ]);
+
+  const hasOrgCommonRates = commonRatesPerSq.length > 0;
+
+  const pricingRateOptions = useMemo(() => {
+    const currentRate = Number(rate);
+    const baseRates = commonRatesPerSq;
+
+    if (
+      Number.isFinite(currentRate) &&
+      currentRate > 0 &&
+      !baseRates.includes(currentRate)
+    ) {
+      return [...baseRates, currentRate].sort((a, b) => a - b);
+    }
+
+    return baseRates;
+  }, [commonRatesPerSq, rate]);
+
+  function handleManualPricingRateChange(nextValue: string) {
+    const nextRate = Number(nextValue);
+
+    setRate(Number.isFinite(nextRate) ? nextRate : 0);
+
+    if (!hasOrgCommonRates && Number.isFinite(nextRate) && nextRate > 0) {
+      setRateSavePrompt(nextRate);
+    } else {
+      setRateSavePrompt(null);
+    }
+  }
 
   const [noteText, setNoteText] = useState("");
   useEffect(() => {
@@ -1700,7 +1814,7 @@ export default function JobDetailPage({
 
         if (data.pricing) {
           setSqft(String(data.pricing.sqft ?? ""));
-          setRate((data.pricing.ratePerSqFt as 31 | 35) ?? 31);
+          setRate(Number(data.pricing.ratePerSqFt) || 31);
         }
 
         setLoading(false);
@@ -2409,7 +2523,7 @@ export default function JobDetailPage({
     : job.pricing?.sqft ?? 0;
   const displayRate = editingPricing
     ? rate
-    : (job.pricing?.ratePerSqFt as 31 | 35) ?? 31;
+    : Number(job.pricing?.ratePerSqFt) || 31;
   const displayTotal = editingPricing
     ? totalJobPayCentsPreview
     : job.earnings?.totalEarningsCents ??
@@ -3184,20 +3298,88 @@ export default function JobDetailPage({
                                   type="number"
                                   min={0}
                                   step="1"
-                                  placeholder="Sq. ft"
+                                  placeholder="Sq"
                                   className="w-24  border border-[var(--color-border)]  px-2 py-2 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                                 />
-                                <select
-                                  value={rate}
-                                  onChange={(e) =>
-                                    setRate(Number(e.target.value) as 31 | 35)
-                                  }
-                                  className="w-20  border border-[var(--color-border)] cursor-pointer px-2 py-2 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-                                  title="Pay rate"
-                                >
-                                  <option value={31}>$31</option>
-                                  <option value={35}>$35</option>
-                                </select>
+                                {hasOrgCommonRates ? (
+                                  <select
+                                    value={rate}
+                                    onChange={(e) => {
+                                      setRate(Number(e.target.value));
+                                      setRateSavePrompt(null);
+                                    }}
+                                    className="w-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                    title="Pay rate"
+                                  >
+                                    {pricingRateOptions.map((optionRate) => (
+                                      <option
+                                        key={optionRate}
+                                        value={optionRate}
+                                      >
+                                        ${optionRate}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <div className="flex flex-col items-end gap-2">
+                                    <input
+                                      value={rate > 0 ? String(rate) : ""}
+                                      onChange={(e) =>
+                                        handleManualPricingRateChange(
+                                          e.target.value
+                                        )
+                                      }
+                                      type="number"
+                                      min={0}
+                                      step="0.01"
+                                      placeholder="Rate"
+                                      className="w-24 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-2 py-1 text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                                      title="Pay rate"
+                                    />
+
+                                    {rateSavePrompt !== null && (
+                                      <div className="w-[260px] rounded-2xl border border-amber-400/25 bg-amber-400/10 p-3 text-left shadow-sm">
+                                        <div className="text-xs font-semibold text-[var(--color-text)]">
+                                          Save ${rateSavePrompt}/SQ as a common
+                                          rate?
+                                        </div>
+
+                                        <p className="mt-1 text-[11px] leading-4 text-[rgb(var(--color-text-rgb)/0.65)]">
+                                          This will make it available in the
+                                          pricing dropdown for future jobs in
+                                          this organization.
+                                        </p>
+
+                                        <div className="mt-3 flex items-center gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              void saveRateToOrgSettings(
+                                                rateSavePrompt
+                                              )
+                                            }
+                                            disabled={savingCommonRate}
+                                            className="rounded-lg bg-[var(--btn-bg)] px-3 py-1.5 text-[11px] font-semibold text-[var(--btn-text)] transition hover:bg-[var(--btn-hover-bg)] disabled:cursor-not-allowed disabled:opacity-60"
+                                          >
+                                            {savingCommonRate
+                                              ? "Saving..."
+                                              : "Save rate"}
+                                          </button>
+
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              setRateSavePrompt(null)
+                                            }
+                                            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/35 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card-hover)]"
+                                          >
+                                            Not now
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                                 <span className="text-[var(--color-muted)]">
                                   + {effectiveJobFeeLabel} fee
                                 </span>
@@ -3250,9 +3432,9 @@ export default function JobDetailPage({
                                     onClick={() => {
                                       setSqft(String(job.pricing?.sqft ?? ""));
                                       setRate(
-                                        (job.pricing?.ratePerSqFt as 31 | 35) ??
-                                          31
+                                        Number(job.pricing?.ratePerSqFt) || 31
                                       );
+                                      setRateSavePrompt(null);
                                       setEditingPricing(false);
                                     }}
                                     className="cursor-pointer bg-[var(--color-surface)]/35 px-3 py-1"
