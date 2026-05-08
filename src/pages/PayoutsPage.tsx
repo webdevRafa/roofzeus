@@ -1139,7 +1139,7 @@ export default function PayoutsPage() {
         />
       </motion.section>
 
-      <div className="mt-5 grid min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_380px] xl:h-[calc(100vh-7.5rem)] xl:min-h-[720px] mb-8">
+      <div className="mt-5 grid min-h-0 gap-4 xl:grid-cols-[minmax(0,1fr)_380px] xl:h-[calc(100vh-7.5rem)] xl:min-h-[720px] mb-0">
         <motion.section
           {...fadeUp(0.05)}
           className={cx(

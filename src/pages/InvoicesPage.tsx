@@ -21,7 +21,6 @@ import {
   Loader2,
   X,
   FileText,
-  CheckCircle,
   Plus,
   Printer,
   Search,
@@ -34,14 +33,16 @@ import CountUp from "react-countup";
 import { useOrg } from "../contexts/OrgContext";
 import { db } from "../firebase/firebaseConfig";
 import type {
+  Address,
   InvoiceDoc,
   Job,
   InvoiceLine,
   InvoiceStatus,
+  Organization,
 } from "../types/types";
 import { jobConverter } from "../types/types";
 
-import logo from "../assets/rogers-roofing.webp";
+import fallbackLogo from "../assets/rogers-roofing.webp";
 
 // Helper to format money from cents to dollars
 function money(cents: number | null | undefined): string {
@@ -58,6 +59,45 @@ function orgCollection(orgId: string, sub: string) {
 }
 function orgDoc(orgId: string, sub: string, id: string) {
   return doc(db, "organizations", orgId, sub, id);
+}
+
+function formatOrgAddress(address: Address | null | undefined): string {
+  if (!address) return "";
+
+  const removeCountry = (value: string) =>
+    value
+      .replace(/,\s*(US|USA|United States|United States of America)\s*$/i, "")
+      .trim();
+
+  const fullLine = address.fullLine?.trim();
+  if (fullLine) return removeCountry(fullLine);
+
+  const line1 = address.line1 || address.street || "";
+
+  const cityStateZip = [
+    address.city,
+    [address.state, address.zip || address.postalCode]
+      .filter(Boolean)
+      .join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return removeCountry([line1, cityStateZip].filter(Boolean).join(" • "));
+}
+
+function invoiceStatusClasses(status: InvoiceDoc["status"]) {
+  switch (status) {
+    case "paid":
+      return "border-[rgb(var(--pill-success-rgb)/0.32)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]";
+    case "sent":
+      return "border-[rgb(var(--pill-warning-rgb)/0.34)] bg-[rgb(var(--pill-warning-rgb)/0.12)] text-[rgb(var(--pill-warning-rgb))]";
+    case "draft":
+      return "border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)]";
+    case "void":
+    default:
+      return "border-[rgb(var(--pill-danger-rgb)/0.34)] bg-[rgb(var(--pill-danger-rgb)/0.12)] text-[rgb(var(--pill-danger-rgb))]";
+  }
 }
 
 // Generate a human friendly invoice number like INV-2025-000123
@@ -871,7 +911,7 @@ function NewInvoiceModal({
 
 /**
  * Modal to preview and print an invoice.
- * (Printable document stays white; outer shell upgraded to match dark UI.)
+ * Uses organization branding dynamically and supports dark/light ROOFZEUS theme tokens.
  */
 function InvoicePreviewModal({
   invoice,
@@ -886,6 +926,47 @@ function InvoicePreviewModal({
   onMarkPaid: () => Promise<void>;
   saving: boolean;
 }) {
+  const { orgId } = useOrg();
+  const [org, setOrg] = useState<Organization | null>(null);
+
+  useEffect(() => {
+    if (!orgId) {
+      setOrg(null);
+      return;
+    }
+
+    const ref = doc(db, "organizations", orgId);
+
+    const unsub = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) {
+        setOrg(null);
+        return;
+      }
+
+      setOrg({
+        id: snap.id,
+        ...(snap.data() as Omit<Organization, "id">),
+      });
+    });
+
+    return () => unsub();
+  }, [orgId]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
+
   if (typeof document === "undefined") return null;
 
   function displayLineLabel(label: string) {
@@ -894,25 +975,61 @@ function InvoicePreviewModal({
     return label;
   }
 
+  const orgDisplayName = useMemo(() => {
+    return (
+      org?.legalName?.trim() || org?.name?.trim() || "Your Roofing Company"
+    );
+  }, [org]);
+
+  const orgAddress = useMemo(() => {
+    return formatOrgAddress(org?.address ?? null);
+  }, [org]);
+
+  const orgLogo = org?.logoUrl?.trim() || fallbackLogo;
+
   const jobAddr = useMemo(() => {
     if (!job) return { display: "", city: "", state: "", zip: "" };
+
     const a = job.address;
-    if (typeof a === "string")
+
+    if (typeof a === "string") {
       return { display: a, city: "", state: "", zip: "" };
+    }
+
     return {
-      display: a.fullLine ?? "",
+      display: a.fullLine ?? a.line1 ?? a.street ?? "",
       city: a.city ?? "",
       state: a.state ?? "",
-      zip: a.postalCode ?? "",
+      zip: a.zip ?? a.postalCode ?? "",
     };
   }, [job]);
+
+  const invoiceAddress = useMemo(() => {
+    const snapshot = invoice.addressSnapshot;
+
+    const display =
+      snapshot?.fullLine || snapshot?.line1 || jobAddr.display || "—";
+
+    const city = snapshot?.city || jobAddr.city;
+    const state = snapshot?.state || jobAddr.state;
+    const zip = snapshot?.zip || jobAddr.zip;
+
+    const cityStateZip = [city, [state, zip].filter(Boolean).join(" ")]
+      .filter(Boolean)
+      .join(", ");
+
+    return { display, cityStateZip };
+  }, [invoice.addressSnapshot, jobAddr]);
 
   const creationDate = useMemo(() => {
     let dt: Date | null = null;
     const anyDate = invoice.createdAt as any;
+
     if (anyDate?.toDate) dt = anyDate.toDate();
     else if (anyDate instanceof Date) dt = anyDate;
-    if (!dt) return "";
+
+    if (!dt) return "—";
+
     return dt.toLocaleDateString(undefined, {
       year: "numeric",
       month: "long",
@@ -926,159 +1043,287 @@ function InvoicePreviewModal({
 
   const content = (
     <div
-      className="paystub-print fixed inset-0 z-50 grid place-items-center bg-black/70 p-4
-      print:static print:bg-transparent print:p-0 print:m-0 print:w-auto print:z-auto"
+      className={[
+        "paystub-print fixed inset-0 z-[9999] bg-black/75 backdrop-blur-sm",
+        "print:static print:z-auto print:m-0 print:block print:bg-transparent print:p-0 print:backdrop-blur-0",
+      ].join(" ")}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.99 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.99 }}
-        transition={{ duration: 0.2 }}
-        className="paystub-print-inner w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl
-        print:max-w-none print:rounded-none print:shadow-none print:border-none print:p-0 print:w-full print:mx-0 print:m-0"
+      {/* Backdrop click target */}
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default print:hidden"
+        aria-label="Close invoice preview"
+      />
+
+      {/* Viewport-safe scroll layer */}
+      <div
+        className={[
+          "relative z-10 h-[100dvh] overflow-y-auto modal-scroll",
+          "px-3 py-3 sm:px-4 sm:py-5",
+          "print:h-auto print:overflow-visible print:p-0",
+        ].join(" ")}
       >
-        <div className="mb-4 flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div>
-            <div className="flex gap-2 items-center">
-              <img src={logo} className="max-w-[100px]" alt="Company Logo" />
-              <div>
-                <h2 className="text-2xl font-semibold">
-                  Roger&apos;s Roofing & Contracting LLC
-                </h2>
-                <h1 className="text-sm">3618 Angus Crossing</h1>
-                <p className="mt-0 text-xs">San Antonio, Texas 75245</p>
-              </div>
-            </div>
-
-            {invoice.customer && (
-              <div className="mt-4">
-                <h3 className="text-sm font-medium">Bill To:</h3>
-                {invoice.customer.name && (
-                  <p className="text-sm">{invoice.customer.name}</p>
-                )}
-                {invoice.customer.email && (
-                  <p className="text-sm">{invoice.customer.email}</p>
-                )}
-                {invoice.customer.phone && (
-                  <p className="text-sm">{invoice.customer.phone}</p>
-                )}
-              </div>
-            )}
-
-            {job && (
-              <div className="mt-3 text-sm">
-                <h3 className="font-medium">Job Address:</h3>
-                <p>{jobAddr.display}</p>
-                {jobAddr.city && (
-                  <p>
-                    {[jobAddr.city, jobAddr.state, jobAddr.zip]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="text-right text-sm">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-gray-300 px-3 py-2 text-[11px] text-gray-700 hover:bg-gray-100 print:hidden"
-            >
-              Close
-            </button>
-
-            <div className="mt-6">
-              <p className="text-xs text-gray-500">Invoice #</p>
-              <p className="text-base font-semibold">{invoice.number}</p>
-              <p className="mt-2 text-xs text-gray-500">Date</p>
-              <p className="text-base font-semibold">{creationDate}</p>
-            </div>
-          </div>
-        </div>
-
-        {invoice.description && (
-          <div className="mb-4 text-sm">
-            <p className="font-medium">Description</p>
-            <p>{invoice.description}</p>
-          </div>
-        )}
-
-        <div className="mt-4 overflow-hidden rounded-xl border border-gray-200">
-          <table className="min-w-full text-xs sm:text-sm">
-            <thead className="bg-gray-50 text-[11px] uppercase tracking-wide text-gray-500">
-              <tr>
-                <th className="px-3 py-2 text-left">Item</th>
-                <th className="px-3 py-2 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.lines.map((ln) => (
-                <tr key={ln.id} className="border-t border-gray-100">
-                  <td className="px-3 py-2 align-top text-sm text-gray-800">
-                    {displayLineLabel(ln.label)}
-                  </td>
-                  <td className="px-3 py-2 align-top text-right text-sm font-semibold text-gray-900">
-                    {money(ln.amountCents)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-4 flex flex-col items-end">
-          <div className="text-right text-sm">
-            <div className="flex justify-between gap-4">
-              <span className="text-gray-500">Subtotal</span>
-              <span className="font-medium text-gray-800">
-                {money(subtotal)}
-              </span>
-            </div>
-            <div className="flex justify-between gap-4 mt-1">
-              <span className="text-gray-500">Tax</span>
-              <span className="font-medium text-gray-800">{money(tax)}</span>
-            </div>
-            <div className="flex justify-between gap-4 mt-2 border-t border-gray-200 pt-2">
-              <span className="text-gray-500">Total</span>
-              <span className="font-semibold text-gray-900">
-                {money(total)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="rounded-xl border border-gray-300 px-3 py-2 text-xs text-gray-700 hover:bg-gray-100 print:hidden"
+        <div className="mx-auto flex min-h-full w-full max-w-3xl items-start justify-center print:block print:max-w-none">
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.99 }}
+            transition={{ duration: 0.2 }}
+            className={[
+              "paystub-print-inner relative flex w-full flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-text)] shadow-[0_24px_90px_rgba(0,0,0,0.55)]",
+              "max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2.5rem)]",
+              "print:m-0 print:block print:h-auto print:max-h-none print:w-full print:max-w-none print:overflow-visible print:rounded-none print:border-0 print:bg-white print:text-black print:shadow-none",
+            ].join(" ")}
+            onClick={(e) => e.stopPropagation()}
           >
-            <Printer className="inline-block h-4 w-4 mr-1" /> Print / Save PDF
-          </button>
+            {/* Header */}
+            <div className="relative shrink-0 border-b border-[var(--color-border)] px-5 py-5 print:border-gray-200">
+              <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[var(--color-accent-gold)]/10 blur-3xl print:hidden" />
+              <div className="pointer-events-none absolute -bottom-24 left-10 h-52 w-52 rounded-full bg-[rgb(var(--pill-success-rgb)/0.08)] blur-3xl print:hidden" />
 
-          {invoice.status !== "paid" && (
-            <button
-              type="button"
-              onClick={onMarkPaid}
-              disabled={saving}
-              className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-60 print:hidden"
-            >
-              {saving ? "Marking…" : "Mark as paid"}
-            </button>
-          )}
+              <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={orgLogo}
+                      className="h-16 w-16 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-white object-contain p-1 shadow-sm print:border-gray-200"
+                      alt={`${orgDisplayName} logo`}
+                    />
 
-          {invoice.status === "paid" && (
-            <span className="inline-flex items-center gap-1 rounded-xl bg-green-100 px-3 py-2 text-xs font-medium text-green-700">
-              <CheckCircle className="h-4 w-4" /> Paid
-            </span>
-          )}
+                    <div className="min-w-0">
+                      <div className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-gold)] print:border-gray-200 print:bg-gray-50 print:text-gray-600">
+                        {invoice.kind === "receipt" ? "Receipt" : "Invoice"}
+                      </div>
+
+                      <h2 className="mt-2 text-xl font-semibold leading-tight text-[var(--color-text)] print:text-black">
+                        {orgDisplayName}
+                      </h2>
+
+                      {orgAddress && (
+                        <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)] print:text-gray-600">
+                          {orgAddress}
+                        </p>
+                      )}
+
+                      {(org?.phone || org?.email) && (
+                        <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-600">
+                          {[org.phone, org.email].filter(Boolean).join(" • ")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 text-left sm:text-right">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] print:hidden"
+                  >
+                    Close
+                  </button>
+
+                  <div className="mt-5 space-y-3">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)] print:text-gray-500">
+                        Invoice #
+                      </p>
+                      <p className="text-base font-semibold text-[var(--color-text)] print:text-black">
+                        {invoice.number}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)] print:text-gray-500">
+                        Date
+                      </p>
+                      <p className="text-base font-semibold text-[var(--color-text)] print:text-black">
+                        {creationDate}
+                      </p>
+                    </div>
+
+                    <span
+                      className={[
+                        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold capitalize",
+                        "print:border-gray-200 print:bg-gray-50 print:text-gray-700",
+                        invoiceStatusClasses(invoice.status),
+                      ].join(" ")}
+                    >
+                      {invoice.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5 print:flex-none print:overflow-visible print:px-0 print:py-4">
+              <div className="grid gap-4 md:grid-cols-2 print:grid-cols-2">
+                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
+                    Bill To
+                  </h3>
+
+                  {invoice.customer ? (
+                    <div className="mt-3 space-y-1 text-sm text-[rgb(var(--color-text-rgb)/0.78)] print:text-gray-800">
+                      {invoice.customer.name && (
+                        <p className="font-semibold text-[var(--color-text)] print:text-black">
+                          {invoice.customer.name}
+                        </p>
+                      )}
+
+                      {invoice.customer.email && (
+                        <p>{invoice.customer.email}</p>
+                      )}
+                      {invoice.customer.phone && (
+                        <p>{invoice.customer.phone}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-[rgb(var(--color-text-rgb)/0.55)] print:text-gray-500">
+                      No customer information saved.
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
+                    Job Address
+                  </h3>
+
+                  <div className="mt-3 text-sm text-[rgb(var(--color-text-rgb)/0.78)] print:text-gray-800">
+                    <p className="font-medium text-[var(--color-text)] print:text-black">
+                      {invoiceAddress.display}
+                    </p>
+
+                    {invoiceAddress.cityStateZip && (
+                      <p className="mt-1">{invoiceAddress.cityStateZip}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {invoice.description && (
+                <div className="mt-4 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
+                    Description
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[rgb(var(--color-text-rgb)/0.78)] print:text-gray-800">
+                    {invoice.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Line items */}
+              <div className="mt-5 overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.18)] print:rounded-none print:border-gray-200">
+                <table className="min-w-full text-xs sm:text-sm">
+                  <thead className="bg-[rgb(var(--color-surface-rgb)/0.45)] text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] print:bg-gray-50 print:text-gray-600">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Item</th>
+                      <th className="px-4 py-3 text-right">Amount</th>
+                    </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-[rgb(var(--color-border-rgb)/0.12)] print:divide-gray-200">
+                    {invoice.lines.map((ln) => (
+                      <tr key={ln.id}>
+                        <td className="px-4 py-3 align-top text-sm text-[rgb(var(--color-text-rgb)/0.82)] print:text-gray-800">
+                          {displayLineLabel(ln.label)}
+                        </td>
+                        <td className="px-4 py-3 align-top text-right text-sm font-semibold text-[var(--color-text)] print:text-black">
+                          {money(ln.amountCents)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals */}
+              <div className="mt-5 flex justify-end">
+                <div className="w-full max-w-sm rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.30)] p-4 text-sm print:rounded-none print:border-gray-200 print:bg-white">
+                  <div className="flex justify-between gap-6">
+                    <span className="text-[rgb(var(--color-text-rgb)/0.58)] print:text-gray-600">
+                      Subtotal
+                    </span>
+                    <span className="font-medium text-[var(--color-text)] print:text-black">
+                      {money(subtotal)}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex justify-between gap-6">
+                    <span className="text-[rgb(var(--color-text-rgb)/0.58)] print:text-gray-600">
+                      Tax
+                    </span>
+                    <span className="font-medium text-[var(--color-text)] print:text-black">
+                      {money(tax)}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex justify-between gap-6 border-t border-[rgb(var(--color-border-rgb)/0.18)] pt-3 text-base print:border-gray-200">
+                    <span className="font-semibold text-[var(--color-text)] print:text-black">
+                      Total
+                    </span>
+                    <span className="font-semibold text-[var(--color-accent-gold)] print:text-black">
+                      {money(total)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 border-t border-[rgb(var(--color-border-rgb)/0.18)] pt-4 text-xs text-[rgb(var(--color-text-rgb)/0.52)] print:border-gray-200 print:text-gray-500">
+                Thank you for your business. If you have questions about this
+                invoice, please contact {orgDisplayName}.
+              </div>
+            </div>
+
+            {/* Fixed modal footer actions */}
+            <div className="shrink-0 border-t border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card)]/95 px-5 py-3 backdrop-blur print:hidden">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="text-[11px] text-[rgb(var(--color-text-rgb)/0.52)]">
+                  Invoice total:{" "}
+                  <span className="font-semibold text-[var(--color-accent-gold)]">
+                    {money(total)}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:shadow-md"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Print / Save PDF
+                  </button>
+
+                  {invoice.status !== "paid" && (
+                    <button
+                      type="button"
+                      onClick={onMarkPaid}
+                      disabled={saving}
+                      className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-4 py-2 text-xs font-semibold text-[rgb(var(--pill-success-rgb))] transition hover:bg-[rgb(var(--pill-success-rgb)/0.18)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {saving ? "Marking…" : "Mark as paid"}
+                    </button>
+                  )}
+
+                  {invoice.status === "paid" && (
+                    <span className="inline-flex items-center gap-2 rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-2 text-xs font-semibold text-[rgb(var(--pill-success-rgb))]">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Paid
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
-
   return createPortal(content, document.body);
 }
 
@@ -1374,61 +1619,88 @@ export default function InvoicesPage() {
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
       <div className="mx-auto w-[min(1180px,94vw)] space-y-6 py-8">
-        {/* Header */}
+        {/* Page Header */}
         <motion.div
           variants={stagger}
           initial="hidden"
           animate="show"
-          className="space-y-4"
+          className="space-y-5"
         >
-          <motion.div
+          <motion.header
             variants={fadeUp}
-            className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+            className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-5 shadow-md sm:px-6"
           >
-            <div>
-              <h1 className="text-2xl font-semibold text-[var(--color-text)]">
-                Invoices
-              </h1>
-              <p className="mt-1 text-sm text-[var(--color-muted)]">
-                Create, send, and track customer invoices for your jobs.
-              </p>
-            </div>
+            <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[var(--color-accent-gold)]/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-28 left-16 h-52 w-52 rounded-full bg-[rgb(var(--pill-success-rgb)/0.08)] blur-3xl" />
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setOpenForm(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent-gold)] px-4 py-2 text-sm font-semibold text-[var(--btn-text)] hover:bg-[var(--btn-hover-bg)]"
-              >
-                <Plus className="h-4 w-4" />
-                New Invoice
-              </button>
-            </div>
-          </motion.div>
+            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl border border-[var(--color-accent-gold)]/25 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]">
+                    <FileText className="h-5 w-5" />
+                  </div>
 
-          {/* Summary cards */}
+                  <div className="min-w-0">
+                    <h1 className="text-2xl font-semibold tracking-wide text-[var(--color-text)]">
+                      Invoices
+                    </h1>
+                    <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.62)]">
+                      Create, send, print, and track customer invoices for your
+                      jobs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.65)]">
+                  {filteredInvoices.length} visible
+                </span>
+
+                <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.65)]">
+                  {totalInvoices} total
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setOpenForm(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent-gold)] px-4 py-2 text-xs font-semibold text-[var(--btn-text)] shadow-sm transition hover:bg-[var(--btn-hover-bg)] hover:shadow-md"
+                >
+                  <Plus className="h-4 w-4" />
+                  New invoice
+                </button>
+              </div>
+            </div>
+          </motion.header>
+
+          {/* Overview */}
           <motion.section
             variants={fadeUp}
-            className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)]  p-4 shadow-md  backdrop-blur"
+            className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-md"
           >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                  Overview
-                </h2>
-                <p className="mt-1 text-xs text-[var(--color-muted)]">
-                  Live totals across your organization.
-                </p>
-              </div>
+            <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-[var(--color-text)]">
+                    Overview
+                  </h2>
+                  <p className="mt-1 text-xs text-[var(--color-accent-gold)]/70">
+                    Live invoice totals across your organization.
+                  </p>
+                </div>
 
-              <div className="text-xs text-[var(--color-muted)]">
-                {filteredInvoices.length} visible / {totalInvoices} total
+                <div className="inline-flex w-fit items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.62)]">
+                  Status:{" "}
+                  <span className="ml-1 font-semibold capitalize text-[rgb(var(--color-text-rgb)/0.9)]">
+                    {statusFilter === "all" ? "All" : statusFilter}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
-                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+            <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:p-5">
+              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Total invoices
                 </div>
                 <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
@@ -1436,8 +1708,8 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
-                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Total amount
                 </div>
                 <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
@@ -1451,11 +1723,11 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
-                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+              <div className="rounded-xl border border-[rgb(var(--pill-warning-rgb)/0.25)] bg-[rgb(var(--pill-warning-rgb)/0.10)] p-4 transition hover:bg-[rgb(var(--pill-warning-rgb)/0.14)] hover:shadow-md">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Outstanding
                 </div>
-                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                <div className="mt-2 text-2xl font-semibold text-[rgb(var(--pill-warning-rgb))]">
                   <CountUp
                     end={outstandingAmount / 100}
                     decimals={2}
@@ -1466,11 +1738,11 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--panel-bg)] p-4 hover:bg-[var(--panel-bg-hover)]">
-                <div className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+              <div className="rounded-xl border border-[rgb(var(--pill-success-rgb)/0.25)] bg-[rgb(var(--pill-success-rgb)/0.10)] p-4 transition hover:bg-[rgb(var(--pill-success-rgb)/0.14)] hover:shadow-md">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Paid
                 </div>
-                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                <div className="mt-2 text-2xl font-semibold text-[rgb(var(--pill-success-rgb))]">
                   <CountUp
                     end={paidAmount / 100}
                     decimals={2}
@@ -1490,22 +1762,22 @@ export default function InvoicesPage() {
           >
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgb(var(--color-text-rgb)/0.45)]" />
                 <input
                   type="text"
-                  placeholder="Search invoices… (number, customer, email)"
+                  placeholder="Search invoices by number, customer, or email…"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full min-w-[280px] rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] py-2 pl-9 pr-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[var(--color-muted)] focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                  className="w-full min-w-[280px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] py-2 pl-9 pr-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[rgb(var(--color-text-rgb)/0.42)] transition focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
                 />
               </div>
 
               <div className="relative">
-                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgb(var(--color-text-rgb)/0.45)]" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] py-2 pl-9 pr-8 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
+                  className="w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] py-2 pl-9 pr-8 text-sm text-[var(--color-text)] outline-none transition focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
                 >
                   <option value="all">All statuses</option>
                   <option value="draft">Draft</option>
@@ -1516,61 +1788,90 @@ export default function InvoicesPage() {
               </div>
             </div>
 
-            <div className="text-xs text-[var(--color-muted)]">
-              Tip: click <span className="text-[var(--color-text)]">View</span>{" "}
-              to print or mark as paid.
+            <div className="hidden text-xs text-[rgb(var(--color-text-rgb)/0.55)] md:block">
+              Click{" "}
+              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.85)]">
+                View
+              </span>{" "}
+              to print or mark an invoice paid.
             </div>
           </motion.section>
         </motion.div>
 
-        {/* Table */}
+        {/* Invoices Table */}
         <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 0.35, ease }}
-          className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-card)] p-4 shadow-md backdrop-blur"
+          className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-md"
         >
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div>
-              <h3 className="text-sm font-semibold text-[var(--color-text)]">
-                Invoices
-              </h3>
-              <p className="mt-1 text-xs text-[var(--color-muted)]">
-                Showing the most recent invoices first.
-              </p>
-            </div>
+          <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)]">
+                    <Printer className="h-4 w-4 text-[var(--color-accent-gold)]" />
+                  </div>
 
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--panel-bg)] px-3 py-2 text-xs text-[var(--color-muted)]">
-              Page{" "}
-              <span className="font-semibold text-[var(--color-text)]">
-                {invoicesPage}
-              </span>{" "}
-              / {invoicesTotalPages}
+                  <div>
+                    <h3 className="text-base font-semibold text-[var(--color-text)]">
+                      Invoice queue
+                    </h3>
+                    <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                      Most recent invoices first.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.62)]">
+                  Page{" "}
+                  <span className="mx-1 font-semibold text-[rgb(var(--color-text-rgb)/0.9)]">
+                    {invoicesPage}
+                  </span>
+                  / {invoicesTotalPages}
+                </span>
+
+                <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.62)]">
+                  Showing {pagedInvoices.length}
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="relative overflow-auto section-scroll-invoices">
-            <table className="min-w-full text-sm">
-              <thead className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--panel-bg)] text-[11px] uppercase tracking-wide text-[var(--color-muted)] backdrop-blur">
+            <table className="w-full min-w-[980px] table-fixed text-sm">
+              <colgroup>
+                <col className="w-[17%]" />
+                <col className="w-[28%]" />
+                <col className="w-[18%]" />
+                <col className="w-[11%]" />
+                <col className="w-[11%]" />
+                <col className="w-[9%]" />
+                <col className="w-[14%]" />
+              </colgroup>
+
+              <thead className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-card)]/95 text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)] backdrop-blur">
                 <tr>
-                  <th className="px-3 py-2 text-left">Number</th>
-                  <th className="px-3 py-2 text-left">Job</th>
-                  <th className="px-3 py-2 text-left">Customer</th>
-                  <th className="px-3 py-2 text-left">Date</th>
-                  <th className="px-3 py-2 text-left">Status</th>
-                  <th className="px-3 py-2 text-right">Total</th>
-                  <th className="px-3 py-2 text-right">Actions</th>
+                  <th className="px-4 py-3 text-left">Number</th>
+                  <th className="px-4 py-3 text-left">Job</th>
+                  <th className="px-4 py-3 text-left">Customer</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody className="divide-y divide-[rgb(var(--color-border-rgb)/0.12)]">
                 {filteredInvoices.length === 0 && (
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-3 py-8 text-center text-[var(--color-muted)]"
+                      className="px-4 py-12 text-center text-[rgb(var(--color-text-rgb)/0.55)]"
                     >
-                      No invoices found
+                      No invoices found.
                     </td>
                   </tr>
                 )}
@@ -1595,56 +1896,70 @@ export default function InvoicesPage() {
                       key={inv.id}
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25, ease }}
-                      className="border-t border-[var(--color-border)] hover:bg-[var(--panel-bg-hover)]"
+                      transition={{ duration: 0.22, ease }}
+                      className="group transition hover:bg-[rgb(var(--color-surface-rgb)/0.38)]"
                     >
-                      <td className="px-3 py-3 align-top text-[var(--color-text)]/90">
-                        {inv.number}
+                      <td className="px-4 py-4 align-top">
+                        <div className="font-semibold text-[var(--color-text)]">
+                          {inv.number}
+                        </div>
+                        <div className="mt-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.45)]">
+                          Invoice
+                        </div>
                       </td>
 
-                      <td className="px-3 py-3 align-top">
-                        <div className="font-medium text-[var(--color-text)]">
-                          {address}
+                      <td className="px-4 py-4 align-top">
+                        <div className="truncate font-semibold text-[var(--color-text)]">
+                          {address || "Unknown job"}
                         </div>
-                        <div className="mt-0.5 text-xs text-[var(--color-muted)]">
+                        <div className="mt-1 truncate text-[11px] text-[rgb(var(--color-text-rgb)/0.48)]">
                           Job ID: {inv.jobId}
                         </div>
                       </td>
 
-                      <td className="px-3 py-3 align-top text-[var(--color-text)]/85">
-                        {inv.customer?.name || inv.customer?.email || "—"}
+                      <td className="px-4 py-4 align-top">
+                        <div className="truncate font-medium text-[rgb(var(--color-text-rgb)/0.86)]">
+                          {inv.customer?.name || "—"}
+                        </div>
+                        {inv.customer?.email && (
+                          <div className="mt-1 truncate text-[11px] text-[rgb(var(--color-text-rgb)/0.48)]">
+                            {inv.customer.email}
+                          </div>
+                        )}
                       </td>
 
-                      <td className="px-3 py-3 align-top text-[var(--color-text)]/80">
+                      <td className="px-4 py-4 align-top text-[rgb(var(--color-text-rgb)/0.72)]">
                         {dateStr || "—"}
                       </td>
 
-                      <td className="px-3 py-3 align-top">
-                        <div className="flex items-center gap-2">
+                      <td className="px-4 py-4 align-top">
+                        <div className="flex flex-col items-start gap-1">
                           <StatusPill inv={inv} />
                           {inv.status === "sent" &&
                             inv.lastEmailError &&
                             !inv.lastEmailSentAt && (
                               <span
-                                className="text-[11px] text-red-200/80 cursor-help"
+                                className="cursor-help text-[11px] text-[rgb(var(--pill-danger-rgb)/0.85)]"
                                 title={inv.lastEmailError}
                               >
-                                (details)
+                                Email issue
                               </span>
                             )}
                         </div>
                       </td>
 
-                      <td className="px-3 py-3 align-top text-right font-semibold text-[var(--color-text)]">
-                        {money(inv.money?.totalCents)}
+                      <td className="px-4 py-4 align-top text-right">
+                        <div className="font-semibold text-[var(--color-accent-gold)]">
+                          {money(inv.money?.totalCents)}
+                        </div>
                       </td>
 
-                      <td className="px-3 py-3 align-top text-right">
+                      <td className="px-4 py-4 align-top">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
                             onClick={() => setSelectedInvoice(inv)}
-                            className="rounded-xl border border-[var(--color-border)] bg-[var(--panel-bg)] px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-[var(--panel-bg-hover)]"
+                            className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.25)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.9)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:shadow-md"
                           >
                             View
                           </button>
@@ -1654,17 +1969,7 @@ export default function InvoicesPage() {
                               type="button"
                               onClick={() => markInvoicePaid(inv)}
                               disabled={markingPaid}
-                              className="
-  rounded-xl
-  border border-black/10
-  bg-[rgb(var(--pill-success-rgb))]
-  px-3 py-2
-  text-[11px]
-  font-semibold
-  text-[rgb(var(--pill-success-text-rgb))]
-  hover:brightness-95
-  disabled:opacity-60
-"
+                              className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--pill-success-rgb))] transition hover:bg-[rgb(var(--pill-success-rgb)/0.18)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {markingPaid ? "Updating…" : "Mark paid"}
                             </button>
@@ -1676,17 +1981,14 @@ export default function InvoicesPage() {
                 })}
 
                 <tr aria-hidden="true">
-                  <td colSpan={7} className="h-14" />
+                  <td colSpan={7} className="h-12" />
                 </tr>
               </tbody>
             </table>
 
             {/* Sticky pagination footer */}
-            <div
-              className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)] bg-[var(--panel-bg)]
- px-3 py-2 backdrop-blur"
-            >
-              <div className="text-xs text-[var(--color-muted)]">
+            <div className="sticky bottom-0 z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)] bg-[var(--color-card)]/95 px-4 py-3 backdrop-blur">
+              <div className="text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
                 {filteredInvoices.length === 0 ? (
                   "0 results"
                 ) : (
@@ -1717,12 +2019,12 @@ export default function InvoicesPage() {
                   onClick={() =>
                     setInvoicesPage((p: number) => Math.max(1, p - 1))
                   }
-                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-black/30 disabled:opacity-50"
+                  className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.86)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.70)] disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   Prev
                 </button>
 
-                <div className="text-[11px] text-[var(--color-muted)]">
+                <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] px-3 py-2 text-[11px] text-[rgb(var(--color-text-rgb)/0.62)]">
                   Page{" "}
                   <span className="font-semibold text-[var(--color-text)]">
                     {invoicesPage}
@@ -1738,7 +2040,7 @@ export default function InvoicesPage() {
                       Math.min(invoicesTotalPages, p + 1)
                     )
                   }
-                  className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-[11px] font-semibold text-[var(--color-text)]/90 hover:bg-black/30 disabled:opacity-50"
+                  className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[rgb(var(--color-surface-rgb)/0.45)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.86)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.70)] disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   Next
                 </button>
