@@ -1035,7 +1035,7 @@ export default function PayoutsPage() {
   }
 
   return (
-    <div className="mx-auto w-[min(1450px,94vw)]">
+    <div className="mx-auto w-[min(1450px,94vw)] bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]">
       <motion.header {...fadeUp(0)} className="mb-3">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">

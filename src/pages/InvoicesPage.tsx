@@ -178,6 +178,24 @@ function NewInvoiceModal({
   const [billMaterialsSeparately, setBillMaterialsSeparately] = useState(false);
   const [materialsMarkupPct, setMaterialsMarkupPct] = useState<string>("0");
 
+  // --- Additional invoice metadata ---
+  // Due date for payment (ISO YYYY-MM-DD string). When empty, no due date is stored.
+  const [dueDate, setDueDate] = useState<string>("");
+  // Human‑readable payment terms (e.g. "Net 30", "50% up front").
+  const [terms, setTerms] = useState<string>("");
+  // Builder / GC specific field: purchase order or reference number.
+  const [builderPoNumber, setBuilderPoNumber] = useState<string>("");
+  // Insurance specific fields
+  const [insuranceCarrier, setInsuranceCarrier] = useState<string>("");
+  const [insuranceClaimNumber, setInsuranceClaimNumber] = useState<string>("");
+  const [insurancePolicyNumber, setInsurancePolicyNumber] =
+    useState<string>("");
+  const [insuranceAdjuster, setInsuranceAdjuster] = useState<string>("");
+  const [insuranceDateOfLoss, setInsuranceDateOfLoss] = useState<string>("");
+  const [insuranceDeductible, setInsuranceDeductible] = useState<string>("");
+  // Catch‑all reference field for "other" billing recipients
+  const [otherReference, setOtherReference] = useState<string>("");
+
   const selectedJob = useMemo(
     () => jobs.find((j) => j.id === jobId) ?? null,
     [jobs, jobId]
@@ -441,6 +459,46 @@ function NewInvoiceModal({
       const custPhone = customerPhone.trim();
       const desc = description.trim();
 
+      // Compute optional metadata fields for the invoice. Convert dates and amounts
+      // from user input to appropriate types.
+      const dueDateValue = dueDate ? new Date(dueDate) : undefined;
+      const termsValue = terms.trim();
+      const builderInfoObj =
+        selectedJob?.billingRecipient === "builder" && builderPoNumber.trim()
+          ? { poNumber: builderPoNumber.trim() }
+          : undefined;
+      const insuranceInfoObj =
+        selectedJob?.billingRecipient === "insurance"
+          ? {
+              ...(insuranceCarrier.trim()
+                ? { carrier: insuranceCarrier.trim() }
+                : {}),
+              ...(insuranceClaimNumber.trim()
+                ? { claimNumber: insuranceClaimNumber.trim() }
+                : {}),
+              ...(insurancePolicyNumber.trim()
+                ? { policyNumber: insurancePolicyNumber.trim() }
+                : {}),
+              ...(insuranceAdjuster.trim()
+                ? { adjuster: insuranceAdjuster.trim() }
+                : {}),
+              ...(insuranceDateOfLoss.trim()
+                ? { dateOfLoss: insuranceDateOfLoss.trim() }
+                : {}),
+              ...(insuranceDeductible && Number(insuranceDeductible) > 0
+                ? {
+                    deductibleCents: Math.round(
+                      parseFloat(insuranceDeductible) * 100
+                    ),
+                  }
+                : {}),
+            }
+          : undefined;
+      const otherInfoObj =
+        selectedJob?.billingRecipient === "other" && otherReference.trim()
+          ? { reference: otherReference.trim() }
+          : undefined;
+
       const customer =
         custName || custEmail || custPhone
           ? {
@@ -484,6 +542,11 @@ function NewInvoiceModal({
           taxCents,
           totalCents,
         },
+        ...(dueDateValue ? { dueDate: dueDateValue } : {}),
+        ...(termsValue ? { terms: termsValue } : {}),
+        ...(builderInfoObj ? { builderInfo: builderInfoObj } : {}),
+        ...(insuranceInfoObj ? { insuranceInfo: insuranceInfoObj } : {}),
+        ...(otherInfoObj ? { otherInfo: otherInfoObj } : {}),
         createdAt: serverTimestamp() as unknown as FieldValue,
         updatedAt: serverTimestamp() as unknown as FieldValue,
         ...(status === "sent"
@@ -568,7 +631,7 @@ function NewInvoiceModal({
     "w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2.5 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none transition placeholder:text-[rgb(var(--color-text-rgb)/0.35)] focus:border-[var(--color-accent-gold)]/40 focus:ring-2 focus:ring-[var(--color-accent-gold)]/20 disabled:cursor-not-allowed disabled:opacity-60";
 
   const panelClass =
-    "rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] shadow-sm";
+    "rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] shadow-sm";
 
   const content = (
     <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/65 p-3 backdrop-blur-sm sm:items-center sm:p-6">
@@ -589,12 +652,6 @@ function NewInvoiceModal({
         aria-modal="true"
         aria-label="Create invoice"
       >
-        {/* Ambient header glow */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-28 right-10 h-64 w-64 rounded-full bg-[var(--color-accent-gold)]/10 blur-3xl" />
-          <div className="absolute -bottom-32 left-8 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-        </div>
-
         {/* Header */}
         <div className="relative shrink-0 border-b border-[rgb(var(--color-border-rgb)/0.16)] px-5 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-4">
@@ -935,6 +992,156 @@ function NewInvoiceModal({
               </div>
             </section>
 
+            {/* Additional details */}
+            <section className={panelClass}>
+              <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] px-4 py-3">
+                <div className="text-sm font-semibold text-[var(--color-text)]">
+                  Additional invoice details
+                </div>
+                <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                  Provide billing metadata such as due dates, payment terms,
+                  claim numbers or PO numbers. These fields are optional and
+                  appear on the invoice when populated.
+                </p>
+              </div>
+
+              <div className="grid gap-3 p-4 sm:grid-cols-2">
+                {/* Due date */}
+                <div>
+                  <label className={labelClass}>Due date</label>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    disabled={saving}
+                    className={inputClass}
+                    placeholder="YYYY-MM-DD"
+                  />
+                </div>
+
+                {/* Payment terms */}
+                <div>
+                  <label className={labelClass}>Payment terms</label>
+                  <input
+                    type="text"
+                    value={terms}
+                    onChange={(e) => setTerms(e.target.value)}
+                    disabled={saving}
+                    className={inputClass}
+                    placeholder="e.g. Net 30"
+                  />
+                </div>
+
+                {/* Builder fields */}
+                {selectedJob?.billingRecipient === "builder" && (
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>PO / Reference number</label>
+                    <input
+                      type="text"
+                      value={builderPoNumber}
+                      onChange={(e) => setBuilderPoNumber(e.target.value)}
+                      disabled={saving}
+                      className={inputClass}
+                      placeholder="Builder PO or contract number"
+                    />
+                  </div>
+                )}
+
+                {/* Insurance fields */}
+                {selectedJob?.billingRecipient === "insurance" && (
+                  <>
+                    <div>
+                      <label className={labelClass}>Insurance carrier</label>
+                      <input
+                        type="text"
+                        value={insuranceCarrier}
+                        onChange={(e) => setInsuranceCarrier(e.target.value)}
+                        disabled={saving}
+                        className={inputClass}
+                        placeholder="e.g. State Farm"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Claim number</label>
+                      <input
+                        type="text"
+                        value={insuranceClaimNumber}
+                        onChange={(e) =>
+                          setInsuranceClaimNumber(e.target.value)
+                        }
+                        disabled={saving}
+                        className={inputClass}
+                        placeholder="Insurance claim number"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Policy number</label>
+                      <input
+                        type="text"
+                        value={insurancePolicyNumber}
+                        onChange={(e) =>
+                          setInsurancePolicyNumber(e.target.value)
+                        }
+                        disabled={saving}
+                        className={inputClass}
+                        placeholder="Policy number"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Adjuster</label>
+                      <input
+                        type="text"
+                        value={insuranceAdjuster}
+                        onChange={(e) => setInsuranceAdjuster(e.target.value)}
+                        disabled={saving}
+                        className={inputClass}
+                        placeholder="Adjuster or contact name"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Date of loss</label>
+                      <input
+                        type="date"
+                        value={insuranceDateOfLoss}
+                        onChange={(e) => setInsuranceDateOfLoss(e.target.value)}
+                        disabled={saving}
+                        className={inputClass}
+                        placeholder="YYYY-MM-DD"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Deductible ($)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={insuranceDeductible}
+                        onChange={(e) => setInsuranceDeductible(e.target.value)}
+                        disabled={saving}
+                        className={inputClass}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Other fields */}
+                {selectedJob?.billingRecipient === "other" && (
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Reference</label>
+                    <input
+                      type="text"
+                      value={otherReference}
+                      onChange={(e) => setOtherReference(e.target.value)}
+                      disabled={saving}
+                      className={inputClass}
+                      placeholder="Reference or job code"
+                    />
+                  </div>
+                )}
+              </div>
+            </section>
+
             {/* Totals */}
             <section className="rounded-2xl border border-[var(--color-accent-gold)]/20 bg-[var(--color-accent-gold)]/10 p-4">
               <div className="grid gap-3 sm:grid-cols-3">
@@ -1143,6 +1350,20 @@ function InvoicePreviewModal({
     });
   }, [invoice.createdAt]);
 
+  // Format the due date (if provided) similar to the creation date.
+  const dueDateDisplay = useMemo(() => {
+    const anyDate = invoice.dueDate as any;
+    let dt: Date | null = null;
+    if (anyDate?.toDate) dt = anyDate.toDate();
+    else if (anyDate instanceof Date) dt = anyDate;
+    if (!dt) return null;
+    return dt.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }, [invoice.dueDate]);
+
   const subtotal = invoice.money?.subtotalCents ?? 0;
   const tax = invoice.money?.taxCents ?? 0;
   const total = invoice.money?.totalCents ?? 0;
@@ -1185,9 +1406,6 @@ function InvoicePreviewModal({
           >
             {/* Header */}
             <div className="relative shrink-0 border-b border-[var(--color-border)] px-5 py-5 print:border-gray-200">
-              <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[var(--color-accent-gold)]/10 blur-3xl print:hidden" />
-              <div className="pointer-events-none absolute -bottom-24 left-10 h-52 w-52 rounded-full bg-[rgb(var(--pill-success-rgb)/0.08)] blur-3xl print:hidden" />
-
               <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <div className="flex items-center gap-4">
@@ -1198,8 +1416,17 @@ function InvoicePreviewModal({
                     />
 
                     <div className="min-w-0">
-                      <div className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-gold)] print:border-gray-200 print:bg-gray-50 print:text-gray-600">
+                      <div className="print:hidden inline-flex items-center gap-2   px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-accent-gold)] print:border-gray-200 print:bg-gray-50 print:text-gray-600">
                         {invoice.kind === "receipt" ? "Receipt" : "Invoice"}
+                        <span
+                          className={[
+                            "inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold capitalize",
+                            "print:border-gray-200 print:bg-gray-50 print:text-gray-700",
+                            invoiceStatusClasses(invoice.status),
+                          ].join(" ")}
+                        >
+                          {invoice.status}
+                        </span>
                       </div>
 
                       <h2 className="mt-2 text-xl font-semibold leading-tight text-[var(--color-text)] print:text-black">
@@ -1207,13 +1434,13 @@ function InvoicePreviewModal({
                       </h2>
 
                       {orgAddress && (
-                        <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)] print:text-gray-600">
+                        <p className="mt-1 text-xs text-[var(--color-text)] print:text-gray-600">
                           {orgAddress}
                         </p>
                       )}
 
                       {(org?.phone || org?.email) && (
-                        <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-600">
+                        <p className="mt-1 text-xs text-[var(--color-text)] print:text-gray-600">
                           {[org.phone, org.email].filter(Boolean).join(" • ")}
                         </p>
                       )}
@@ -1225,17 +1452,17 @@ function InvoicePreviewModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] print:hidden"
+                    className="rounded-xl cursor-pointer border border-[rgb(var(--color-border-rgb)/0.24)] bg-[var(--color-card-hover)] px-3 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)] transition hover:bg-[var(--color-card)] print:hidden"
                   >
                     Close
                   </button>
 
-                  <div className="mt-5 space-y-3">
+                  <div className="mt-1 space-y-1">
                     <div>
                       <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)] print:text-gray-500">
                         Invoice #
                       </p>
-                      <p className="text-base font-semibold text-[var(--color-text)] print:text-black">
+                      <p className="text-[11px] font-semibold text-[var(--color-text)] print:text-black">
                         {invoice.number}
                       </p>
                     </div>
@@ -1244,20 +1471,32 @@ function InvoicePreviewModal({
                       <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)] print:text-gray-500">
                         Date
                       </p>
-                      <p className="text-base font-semibold text-[var(--color-text)] print:text-black">
+                      <p className="text-[11px] font-semibold text-[var(--color-text)] print:text-black">
                         {creationDate}
                       </p>
                     </div>
 
-                    <span
-                      className={[
-                        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold capitalize",
-                        "print:border-gray-200 print:bg-gray-50 print:text-gray-700",
-                        invoiceStatusClasses(invoice.status),
-                      ].join(" ")}
-                    >
-                      {invoice.status}
-                    </span>
+                    {/* Optionally show due date and payment terms */}
+                    {dueDateDisplay && (
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)] print:text-gray-500">
+                          Due date
+                        </p>
+                        <p className="text-[11px] font-semibold text-[var(--color-text)] print:text-black">
+                          {dueDateDisplay}
+                        </p>
+                      </div>
+                    )}
+                    {invoice.terms && (
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.50)] print:text-gray-500">
+                          Terms
+                        </p>
+                        <p className="text-[11px] font-semibold text-[var(--color-text)] print:text-black">
+                          {invoice.terms}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1266,7 +1505,7 @@ function InvoicePreviewModal({
             {/* Body */}
             <div className="modal-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5 print:flex-none print:overflow-visible print:px-0 print:py-4">
               <div className="grid gap-4 md:grid-cols-2 print:grid-cols-2">
-                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                <div className="rounded-2xl  bg-[var(--color-card-hover)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
                   <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
                     Bill To
                   </h3>
@@ -1293,7 +1532,7 @@ function InvoicePreviewModal({
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                <div className="rounded-2xl  bg-[var(--color-card-hover)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
                   <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
                     Job Address
                   </h3>
@@ -1310,8 +1549,105 @@ function InvoicePreviewModal({
                 </div>
               </div>
 
-              {invoice.description && (
+              {/* Display additional billing metadata when provided */}
+              {invoice.builderInfo?.poNumber && (
                 <div className="mt-4 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
+                    Builder / GC
+                  </h3>
+                  <p className="mt-2 text-sm text-[rgb(var(--color-text-rgb)/0.78)] print:text-gray-800">
+                    <span className="font-semibold text-[var(--color-text)] print:text-black">
+                      PO / Reference:
+                    </span>
+                    <span className="ml-1">{invoice.builderInfo.poNumber}</span>
+                  </p>
+                </div>
+              )}
+
+              {invoice.insuranceInfo && (
+                <div className="mt-4 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
+                    Insurance Details
+                  </h3>
+                  <div className="mt-2 space-y-1 text-sm text-[rgb(var(--color-text-rgb)/0.78)] print:text-gray-800">
+                    {invoice.insuranceInfo.carrier && (
+                      <p>
+                        <span className="font-semibold text-[var(--color-text)] print:text-black">
+                          Carrier:
+                        </span>
+                        <span className="ml-1">
+                          {invoice.insuranceInfo.carrier}
+                        </span>
+                      </p>
+                    )}
+                    {invoice.insuranceInfo.claimNumber && (
+                      <p>
+                        <span className="font-semibold text-[var(--color-text)] print:text-black">
+                          Claim #:
+                        </span>
+                        <span className="ml-1">
+                          {invoice.insuranceInfo.claimNumber}
+                        </span>
+                      </p>
+                    )}
+                    {invoice.insuranceInfo.policyNumber && (
+                      <p>
+                        <span className="font-semibold text-[var(--color-text)] print:text-black">
+                          Policy #:
+                        </span>
+                        <span className="ml-1">
+                          {invoice.insuranceInfo.policyNumber}
+                        </span>
+                      </p>
+                    )}
+                    {invoice.insuranceInfo.adjuster && (
+                      <p>
+                        <span className="font-semibold text-[var(--color-text)] print:text-black">
+                          Adjuster:
+                        </span>
+                        <span className="ml-1">
+                          {invoice.insuranceInfo.adjuster}
+                        </span>
+                      </p>
+                    )}
+                    {invoice.insuranceInfo.dateOfLoss && (
+                      <p>
+                        <span className="font-semibold text-[var(--color-text)] print:text-black">
+                          Date of loss:
+                        </span>
+                        <span className="ml-1">
+                          {invoice.insuranceInfo.dateOfLoss}
+                        </span>
+                      </p>
+                    )}
+                    {typeof invoice.insuranceInfo.deductibleCents ===
+                      "number" && (
+                      <p>
+                        <span className="font-semibold text-[var(--color-text)] print:text-black">
+                          Deductible:
+                        </span>
+                        <span className="ml-1">
+                          {money(invoice.insuranceInfo.deductibleCents)}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {invoice.otherInfo?.reference && (
+                <div className="mt-4 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] p-4 print:rounded-none print:border-gray-200 print:bg-white">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
+                    Reference
+                  </h3>
+                  <p className="mt-2 text-sm text-[rgb(var(--color-text-rgb)/0.78)] print:text-gray-800">
+                    {invoice.otherInfo.reference}
+                  </p>
+                </div>
+              )}
+
+              {invoice.description && (
+                <div className="mt-4 rounded-2xl  p-4 print:rounded-none print:border-gray-200 print:bg-white">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)] print:text-gray-500">
                     Description
                   </p>
@@ -1322,9 +1658,9 @@ function InvoicePreviewModal({
               )}
 
               {/* Line items */}
-              <div className="mt-5 overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.18)] print:rounded-none print:border-gray-200">
+              <div className="mt-5 overflow-hidden  print:rounded-none print:border-gray-200">
                 <table className="min-w-full text-xs sm:text-sm">
-                  <thead className="bg-[rgb(var(--color-surface-rgb)/0.45)] text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] print:bg-gray-50 print:text-gray-600">
+                  <thead className="bg-[var(--color-card-hover)] text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] print:bg-gray-50 print:text-gray-600">
                     <tr>
                       <th className="px-4 py-3 text-left">Item</th>
                       <th className="px-4 py-3 text-right">Amount</th>
@@ -1348,7 +1684,7 @@ function InvoicePreviewModal({
 
               {/* Totals */}
               <div className="mt-5 flex justify-end">
-                <div className="w-full max-w-sm rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.30)] p-4 text-sm print:rounded-none print:border-gray-200 print:bg-white">
+                <div className="w-full max-w-sm rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] p-4 text-sm print:rounded-none print:border-gray-200 print:bg-white">
                   <div className="flex justify-between gap-6">
                     <span className="text-[rgb(var(--color-text-rgb)/0.58)] print:text-gray-600">
                       Subtotal
@@ -1871,7 +2207,7 @@ export default function InvoicesPage() {
                   placeholder="Search invoices by number, customer, or email…"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full min-w-[280px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)]  py-2 pl-9 pr-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[rgb(var(--color-text-rgb)/0.42)] transition focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
+                  className="w-full min-w-[280px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[var(--color-card)] hover:bg-transparent focus:bg-transparent py-2 pl-9 pr-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[rgb(var(--color-text-rgb)/0.42)] transition focus:ring-1 focus:ring-[var(--color-accent-gold)]/35"
                 />
               </div>
 

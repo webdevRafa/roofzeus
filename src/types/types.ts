@@ -317,6 +317,45 @@ export type BillingRecipient =
   Record<Exclude<BillingRecipient, "homeowner">, ContactInfo>
 >;
 
+/**
+ * Additional billing fields when invoicing a builder or general contractor.
+ * The PO or reference number can be used by your client’s accounting team
+ * to match your invoice to their internal project or contract.
+ */
+export interface BuilderInfo {
+  /** Optional purchase order or reference number provided by the builder/GC. */
+  poNumber?: string;
+}
+
+/**
+ * Additional billing fields when invoicing an insurance carrier or adjuster.
+ * These values help the adjuster match the invoice to a specific claim and policy.
+ */
+export interface InsuranceInfo {
+  /** Name of the insurance carrier (e.g., "State Farm", "Allstate"). */
+  carrier?: string;
+  /** Claim number associated with the roof damage. */
+  claimNumber?: string;
+  /** Policy number for the insured property. */
+  policyNumber?: string;
+  /** Adjuster name or point of contact at the insurance company. */
+  adjuster?: string;
+  /** Date of loss reported to the carrier (YYYY-MM-DD). */
+  dateOfLoss?: string;
+  /** Deductible amount in cents, if known. */
+  deductibleCents?: MoneyCents;
+}
+
+/**
+ * Additional billing fields when invoicing a third‑party other than a homeowner,
+ * builder, or insurance carrier. This can be used for property managers or
+ * custom billing situations to capture any reference numbers.
+ */
+export interface OtherBillingInfo {
+  /** Freeform reference or job code to appear on the invoice. */
+  reference?: string;
+}
+
 export type WarrantyAttachment = {
   id: ID;
   label?: string; // "Invoice", "Warranty Cert", "Before photo", etc
@@ -640,6 +679,21 @@ lastEmailErrorAt?: any; // Timestamp | Date | null
   status: InvoiceStatus;
   // For receipts, store how it was paid if you want:
   paymentNote?: string;    // e.g. "Paid by check #1023"
+
+  /** Optional date when payment is due. Use a JavaScript Date or Firestore Timestamp. */
+  dueDate?: Timestamp | Date | FieldValue | null;
+
+  /** Optional human‑readable payment terms (e.g., "Net 30", "50% deposit, balance due on completion"). */
+  terms?: string;
+
+  /** Additional billing details when invoicing a builder/general contractor. */
+  builderInfo?: BuilderInfo;
+
+  /** Additional billing details when invoicing an insurance carrier/adjuster. */
+  insuranceInfo?: InsuranceInfo;
+
+  /** Additional billing details when invoicing a third‑party other than homeowner/builder/insurance. */
+  otherInfo?: OtherBillingInfo;
 
   /** Owning organization for this invoice. Optional for backward compatibility. */
   orgId?: ID;
