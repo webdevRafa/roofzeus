@@ -338,7 +338,7 @@ export default function EmployeesPage() {
       variants={pageIn}
       initial="hidden"
       animate="show"
-      className="min-h-screen"
+      className="min-h-screen bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]"
     >
       <div className="mx-auto max-w-[1200px] py-10 px-4 md:px-0">
         {/* Header */}
