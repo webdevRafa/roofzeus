@@ -2398,7 +2398,7 @@ export default function InvoicesPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedInvoice(inv)}
-                            className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.25)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.9)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:shadow-md"
+                            className="inline-flex items-center  justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.25)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.9)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:shadow-md"
                           >
                             View
                           </button>
@@ -2408,7 +2408,7 @@ export default function InvoicesPage() {
                               type="button"
                               onClick={() => markInvoicePaid(inv)}
                               disabled={markingPaid}
-                              className="inline-flex items-center justify-center rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--pill-success-rgb))] transition hover:bg-[rgb(var(--pill-success-rgb)/0.18)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                              className="inline-flex items-center w-full justify-center rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--pill-success-rgb))] transition hover:bg-[rgb(var(--pill-success-rgb)/0.18)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {markingPaid ? "Updating…" : "Mark paid"}
                             </button>
