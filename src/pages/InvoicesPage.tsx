@@ -553,8 +553,25 @@ function NewInvoiceModal({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  const selectedJobAddressLabel = selectedJob
+    ? typeof selectedJob.address === "string"
+      ? selectedJob.address
+      : selectedJob.address?.fullLine ||
+        selectedJob.address?.line1 ||
+        "Selected job"
+    : "No job selected";
+
+  const labelClass =
+    "mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.52)]";
+
+  const inputClass =
+    "w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2.5 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none transition placeholder:text-[rgb(var(--color-text-rgb)/0.35)] focus:border-[var(--color-accent-gold)]/40 focus:ring-2 focus:ring-[var(--color-accent-gold)]/20 disabled:cursor-not-allowed disabled:opacity-60";
+
+  const panelClass =
+    "rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-surface-rgb)/0.35)] shadow-sm";
+
   const content = (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 p-3 sm:items-center">
+    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/65 p-3 backdrop-blur-sm sm:items-center sm:p-6">
       <button
         type="button"
         onClick={onClose}
@@ -563,343 +580,432 @@ function NewInvoiceModal({
       />
 
       <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.98 }}
-        transition={{ duration: 0.2 }}
-        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-surface)] shadow-2xl
-           max-h-[calc(100vh-2rem)] flex flex-col"
+        initial={{ opacity: 0, y: 14, scale: 0.985, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+        exit={{ opacity: 0, y: 14, scale: 0.985, filter: "blur(6px)" }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] shadow-[0_30px_120px_rgba(0,0,0,0.65)]"
         role="dialog"
         aria-modal="true"
         aria-label="Create invoice"
       >
+        {/* Ambient header glow */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-28 right-10 h-64 w-64 rounded-full bg-[var(--color-accent-gold)]/10 blur-3xl" />
+          <div className="absolute -bottom-32 left-8 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border)]/60 px-6 py-5">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--color-accent-gold)]/15 text-[var(--color-accent-gold)]">
-              <FileText className="h-5 w-5" />
+        <div className="relative shrink-0 border-b border-[rgb(var(--color-border-rgb)/0.16)] px-5 py-4 sm:px-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[var(--color-accent-gold)]/25 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)] shadow-sm">
+                <FileText className="h-5 w-5" />
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-semibold tracking-tight text-[var(--color-text)]">
+                    Create invoice
+                  </h2>
+
+                  <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)]">
+                    New
+                  </span>
+                </div>
+
+                <p className="mt-1 max-w-xl text-xs leading-relaxed text-[rgb(var(--color-text-rgb)/0.58)]">
+                  Generate a clean customer invoice from job revenue, optional
+                  reimbursable materials, and extras.
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-[var(--color-text)]">
-                Create invoice
-              </h2>
-              <p className="mt-1 text-xs text-[var(--color-muted)]">
-                Generate an invoice from a job.
-              </p>
-            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.72)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] hover:text-[var(--color-text)] disabled:opacity-60"
+              aria-label="Close invoice modal"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-2 py-1 text-[11px] text-[var(--color-text)]/80 hover:bg-[var(--color-card-hover)]"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {/* Compact job + total preview */}
+          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="min-w-0 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.35)] px-3 py-2">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.45)]">
+                Selected job
+              </div>
+              <div className="mt-0.5 truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.9)]">
+                {selectedJobAddressLabel}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--color-accent-gold)]/25 bg-[var(--color-accent-gold)]/10 px-4 py-2 text-right">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-gold)]/70">
+                Invoice total
+              </div>
+              <div className="mt-0.5 text-lg font-semibold text-[var(--color-text)]">
+                {money(totalCents)}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 overflow-y-auto">
+        <div className="relative flex-1 overflow-y-auto px-5 py-5 section-scroll sm:px-6">
           {formError && (
-            <div className="mb-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-200">
-              {formError}
+            <div className="mb-4 flex items-start gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-3 py-3 text-xs text-red-200">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{formError}</span>
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                Job
-              </label>
-              <select
-                value={jobId}
-                onChange={(e) => setJobId(e.target.value)}
-                disabled={saving || jobs.length === 0}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-              >
-                {jobs.length === 0 && <option>No jobs available</option>}
-                {jobs.map((j) => (
-                  <option key={j.id} value={j.id}>
-                    {typeof j.address === "string"
-                      ? j.address
-                      : j.address.fullLine}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Billing selection */}
-            <div className="sm:col-span-2">
-              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                Bill to
-              </label>
-              <select
-                value={billTo}
-                onChange={(e) => setBillTo(e.target.value as "job" | "custom")}
-                disabled={saving}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-              >
-                <option value="job">{`Use saved recipient: ${defaultContactLabel}`}</option>
-                <option value="custom">
-                  Enter a one-time custom recipient
-                </option>
-              </select>
-              <p className="mt-1 text-[11px] leading-relaxed text-[var(--color-muted)]">
-                Residential jobs usually bill the homeowner. Builder, GC,
-                insurance, or third-party invoices should be saved as the job
-                billing contact from the job detail page.
-              </p>
-            </div>
-
-            {/* Customer fields populated from job or custom */}
-            <div>
-              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                Customer name
-              </label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                disabled={saving || billTo === "job"}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                placeholder="e.g. Jane Doe"
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                Customer email
-              </label>
-              <input
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                disabled={saving || billTo === "job"}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                placeholder="email@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                Customer phone
-              </label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                disabled={saving || billTo === "job"}
-                className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                placeholder="(555) 123-4567"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                disabled={saving}
-                rows={2}
-                placeholder="Describe the work performed"
-                className="mt-1 w-full resize-none rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-              />
-            </div>
-            <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-3">
-              <label className="flex items-center gap-2 text-xs text-[var(--color-text)]/85">
-                <input
-                  type="checkbox"
-                  checked={billMaterialsSeparately}
-                  onChange={(e) => setBillMaterialsSeparately(e.target.checked)}
-                  disabled={saving}
-                  className="h-4 w-4 accent-[var(--color-accent-gold)]"
-                />
-                Bill materials separately (reimbursable)
-              </label>
-
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-[var(--color-muted)]">
-                  Markup %
-                </span>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={materialsMarkupPct}
-                  onChange={(e) => setMaterialsMarkupPct(e.target.value)}
-                  disabled={saving || !billMaterialsSeparately}
-                  className="w-20 rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Labor Cost
+          <div className="space-y-4">
+            {/* Job + recipient */}
+            <section className={panelClass}>
+              <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] px-4 py-3">
+                <div className="text-sm font-semibold text-[var(--color-text)]">
+                  Job & billing recipient
                 </div>
-                <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
-                  {money(laborCents)}
+                <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                  Pick the job and decide whether to use the saved billing
+                  contact or enter a custom recipient.
+                </p>
+              </div>
+
+              <div className="grid gap-3 p-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className={labelClass}>Job</label>
+                  <select
+                    value={jobId}
+                    onChange={(e) => setJobId(e.target.value)}
+                    disabled={saving || jobs.length === 0}
+                    className={inputClass}
+                  >
+                    {jobs.length === 0 && <option>No jobs available</option>}
+                    {jobs.map((j) => (
+                      <option key={j.id} value={j.id}>
+                        {typeof j.address === "string"
+                          ? j.address
+                          : j.address.fullLine}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className={labelClass}>Bill to</label>
+                  <select
+                    value={billTo}
+                    onChange={(e) =>
+                      setBillTo(e.target.value as "job" | "custom")
+                    }
+                    disabled={saving}
+                    className={inputClass}
+                  >
+                    <option value="job">{`Use saved recipient: ${defaultContactLabel}`}</option>
+                    <option value="custom">
+                      Enter a one-time custom recipient
+                    </option>
+                  </select>
+
+                  <p className="mt-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-2 text-[11px] leading-relaxed text-[rgb(var(--color-text-rgb)/0.55)]">
+                    Residential jobs usually bill the homeowner. Builder, GC,
+                    insurance, or third-party invoices should be saved as the
+                    job billing contact from the job detail page.
+                  </p>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Customer name</label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    disabled={saving || billTo === "job"}
+                    className={inputClass}
+                    placeholder="e.g. Jane Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>Customer email</label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    disabled={saving || billTo === "job"}
+                    className={inputClass}
+                    placeholder="email@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>Customer phone</label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    disabled={saving || billTo === "job"}
+                    className={inputClass}
+                    placeholder="(555) 123-4567"
+                  />
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div>
-              <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Material Cost
+            {/* Work description + invoice amounts */}
+            <section className={panelClass}>
+              <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] px-4 py-3">
+                <div className="text-sm font-semibold text-[var(--color-text)]">
+                  Invoice details
                 </div>
-                <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
-                  {money(materialsCents)}
+                <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                  Labor is pulled from the selected job. Materials stay optional
+                  so internal costs are not accidentally billed.
+                </p>
+              </div>
+
+              <div className="grid gap-3 p-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className={labelClass}>Description</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    disabled={saving}
+                    rows={3}
+                    placeholder="Describe the work performed"
+                    className={`${inputClass} resize-none leading-6`}
+                  />
+                </div>
+
+                <div className="sm:col-span-2 flex flex-col gap-3 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-background-rgb)/0.18)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <label className="flex items-center gap-3 text-xs font-medium text-[rgb(var(--color-text-rgb)/0.84)]">
+                    <input
+                      type="checkbox"
+                      checked={billMaterialsSeparately}
+                      onChange={(e) =>
+                        setBillMaterialsSeparately(e.target.checked)
+                      }
+                      disabled={saving}
+                      className="h-4 w-4 accent-[var(--color-accent-gold)]"
+                    />
+                    <span>
+                      Bill materials separately{" "}
+                      <span className="text-[rgb(var(--color-text-rgb)/0.48)]">
+                        (reimbursable)
+                      </span>
+                    </span>
+                  </label>
+
+                  <div className="flex items-center gap-2 sm:justify-end">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[rgb(var(--color-text-rgb)/0.48)]">
+                      Markup %
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={materialsMarkupPct}
+                      onChange={(e) => setMaterialsMarkupPct(e.target.value)}
+                      disabled={saving || !billMaterialsSeparately}
+                      className="w-24 rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/20 disabled:opacity-60"
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.48)]">
+                    Labor cost
+                  </div>
+                  <div className="mt-2 text-xl font-semibold text-[var(--color-text)]">
+                    {money(laborCents)}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.48)]">
+                    Material cost
+                  </div>
+                  <div className="mt-2 text-xl font-semibold text-[var(--color-text)]">
+                    {money(materialsCents)}
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div className="sm:col-span-2">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Extras
-                </label>
+            {/* Extras */}
+            <section className={panelClass}>
+              <div className="flex items-center justify-between gap-3 border-b border-[rgb(var(--color-border-rgb)/0.12)] px-4 py-3">
+                <div>
+                  <div className="text-sm font-semibold text-[var(--color-text)]">
+                    Extras
+                  </div>
+                  <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.55)]">
+                    Add change orders, upgrades, repairs, or one-off billable
+                    items.
+                  </p>
+                </div>
+
                 <button
                   type="button"
                   onClick={addExtra}
                   disabled={saving}
-                  className="flex items-center gap-1 text-xs text-[var(--color-text)]/80 hover:text-[var(--color-text)] disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1.5 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] disabled:opacity-60"
                 >
-                  <Plus className="h-4 w-4" /> Add
+                  <Plus className="h-4 w-4" />
+                  Add
                 </button>
               </div>
 
-              {extras.length === 0 && (
-                <p className="mt-1 text-xs text-[var(--color-muted)]">
-                  No extras added
-                </p>
-              )}
-
-              <div
-                className={
-                  extras.length > 3
-                    ? "mt-2 max-h-56 overflow-y-auto pr-1"
-                    : "mt-2"
-                }
-              >
-                {extras.map((ex, idx) => (
-                  <div
-                    key={idx}
-                    className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end"
-                  >
-                    <div className="flex-1">
-                      <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                        Label
-                      </label>
-                      <input
-                        type="text"
-                        value={ex.label}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setExtras((prev) =>
-                            prev.map((item, i) =>
-                              i === idx ? { ...item, label: v } : item
-                            )
-                          );
-                        }}
-                        disabled={saving}
-                        className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                        placeholder="e.g. Dumpster rental"
-                      />
-                    </div>
-
-                    <div className="w-32">
-                      <label className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                        Amount ($)
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        step={0.01}
-                        value={ex.amount}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setExtras((prev) =>
-                            prev.map((item, i) =>
-                              i === idx ? { ...item, amount: v } : item
-                            )
-                          );
-                        }}
-                        disabled={saving}
-                        className="mt-1 w-full rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40 disabled:opacity-60"
-                        placeholder="0.00"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-center sm:justify-start">
-                      <button
-                        type="button"
-                        onClick={() => removeExtra(idx)}
-                        disabled={saving}
-                        className="ml-2 inline-flex items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-2 py-2 text-xs text-red-200 hover:bg-red-500/15 disabled:opacity-60"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
+              <div className="p-4">
+                {extras.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.16)] px-4 py-4 text-center text-xs text-[rgb(var(--color-text-rgb)/0.52)]">
+                    No extras added yet.
                   </div>
-                ))}
-              </div>
-            </div>
+                ) : (
+                  <div
+                    className={
+                      extras.length > 3
+                        ? "max-h-60 space-y-2 overflow-y-auto pr-1 section-scroll"
+                        : "space-y-2"
+                    }
+                  >
+                    {extras.map((ex, idx) => (
+                      <div
+                        key={idx}
+                        className="grid gap-2 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[rgb(var(--color-background-rgb)/0.16)] p-3 sm:grid-cols-[1fr_140px_auto] sm:items-end"
+                      >
+                        <div>
+                          <label className={labelClass}>Label</label>
+                          <input
+                            type="text"
+                            value={ex.label}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setExtras((prev) =>
+                                prev.map((item, i) =>
+                                  i === idx ? { ...item, label: v } : item
+                                )
+                              );
+                            }}
+                            disabled={saving}
+                            className={inputClass}
+                            placeholder="e.g. Dumpster rental"
+                          />
+                        </div>
 
-            <div className="sm:col-span-2 mt-3">
-              <div className="rounded-xl border border-[var(--color-border)]/70 bg-[var(--color-card)] px-3 py-2">
-                <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)]">
-                  Subtotal
-                </div>
-                <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
-                  {money(subtotalCents)}
-                </div>
-                {extraCents > 0 && (
-                  <div className="mt-0.5 text-[11px] text-[var(--color-muted)]">
-                    Extras: {money(extraCents)}
+                        <div>
+                          <label className={labelClass}>Amount ($)</label>
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            value={ex.amount}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setExtras((prev) =>
+                                prev.map((item, i) =>
+                                  i === idx ? { ...item, amount: v } : item
+                                )
+                              );
+                            }}
+                            disabled={saving}
+                            className={inputClass}
+                            placeholder="0.00"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeExtra(idx)}
+                          disabled={saving}
+                          className="inline-flex h-10 items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 px-3 text-xs font-semibold text-red-200 transition hover:bg-red-500/15 disabled:opacity-60"
+                          aria-label="Remove extra"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            </div>
+            </section>
+
+            {/* Totals */}
+            <section className="rounded-2xl border border-[var(--color-accent-gold)]/20 bg-[var(--color-accent-gold)]/10 p-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-gold)]/70">
+                    Subtotal
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
+                    {money(subtotalCents)}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-gold)]/70">
+                    Extras
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-[var(--color-text)]">
+                    {money(extraCents)}
+                  </div>
+                </div>
+
+                <div className="sm:text-right">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-gold)]/70">
+                    Total
+                  </div>
+                  <div className="mt-1 text-2xl font-semibold text-[var(--color-text)]">
+                    {money(totalCents)}
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 
         {/* Footer */}
-        <div
-          className="flex flex-col-reverse gap-2 border-t border-[var(--color-border)]/60 px-6 py-4
-                sm:flex-row sm:items-center sm:justify-between
-                bg-[var(--color-surface)]/85 backdrop-blur"
-        >
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-4 py-2 text-sm text-[var(--color-text)]/85 hover:bg-[var(--color-card-hover)] disabled:opacity-60"
-          >
-            Cancel
-          </button>
-
-          <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative shrink-0 border-t border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-card-rgb)/0.92)] px-5 py-4 backdrop-blur sm:px-6">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
-              onClick={() => submit("draft")}
+              onClick={onClose}
               disabled={saving}
-              className="rounded-xl border border-[var(--color-border)]/80 bg-[var(--color-card)] px-4 py-2 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-card-hover)] disabled:opacity-60"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] disabled:opacity-60"
             >
-              {saving && savingMode === "draft" ? "Saving…" : "Save draft"}
+              Cancel
             </button>
 
-            <button
-              type="button"
-              onClick={() => submit("sent")}
-              disabled={saving}
-              className="rounded-xl bg-[var(--color-accent-gold)] px-4 py-2 text-sm font-semibold text-[var(--btn-text)] hover:bg-[var(--btn-hover-bg)] disabled:opacity-60"
-            >
-              {saving && savingMode === "sent" ? "Sending…" : "Save & Send"}
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => submit("draft")}
+                disabled={saving}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] disabled:opacity-60"
+              >
+                {saving && savingMode === "draft" && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {saving && savingMode === "draft" ? "Saving…" : "Save draft"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => submit("sent")}
+                disabled={saving}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--color-accent-gold)] px-4 text-sm font-semibold text-[var(--btn-text)] shadow-sm transition hover:bg-[var(--btn-hover-bg)] disabled:opacity-60"
+              >
+                {saving && savingMode === "sent" && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {saving && savingMode === "sent" ? "Sending…" : "Save & Send"}
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -1617,7 +1723,7 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
+    <div className="min-h-screen bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]">
       <div className="mx-auto w-[min(1180px,94vw)] space-y-6 py-8">
         {/* Page Header */}
         <motion.div
@@ -1628,11 +1734,8 @@ export default function InvoicesPage() {
         >
           <motion.header
             variants={fadeUp}
-            className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-5 shadow-md sm:px-6"
+            className="relative overflow-hidden rounded-2xl  bg-[var(--color-background)] px-4 py-1 shadow-md sm:px-6"
           >
-            <div className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[var(--color-accent-gold)]/10 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-28 left-16 h-52 w-52 rounded-full bg-[rgb(var(--pill-success-rgb)/0.08)] blur-3xl" />
-
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <div className="flex items-center gap-3">
@@ -1653,18 +1756,18 @@ export default function InvoicesPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.65)]">
-                  {filteredInvoices.length} visible
+                <span className="inline-flex items-center rounded-full  bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.65)]">
+                  viewing {filteredInvoices.length}
                 </span>
 
-                <span className="inline-flex items-center rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.65)]">
+                <span className="inline-flex items-center rounded-full  bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.65)]">
                   {totalInvoices} total
                 </span>
 
                 <button
                   type="button"
                   onClick={() => setOpenForm(true)}
-                  className="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent-gold)] px-4 py-2 text-xs font-semibold text-[var(--btn-text)] shadow-sm transition hover:bg-[var(--btn-hover-bg)] hover:shadow-md"
+                  className="inline-flex items-center gap-2 rounded-md cursor-pointer bg-[var(--color-card)]  px-4 py-2 text-xs font-semibold text-[var(--btn-text)] shadow-sm transition hover:bg-[var(--color-card-hover)] hover:shadow-md"
                 >
                   <Plus className="h-4 w-4" />
                   New invoice
@@ -1676,9 +1779,9 @@ export default function InvoicesPage() {
           {/* Overview */}
           <motion.section
             variants={fadeUp}
-            className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-md"
+            className="overflow-hidden rounded-2xl  shadow-md"
           >
-            <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
+            <div className=" px-4 py-1 sm:px-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-sm font-semibold text-[var(--color-text)]">
@@ -1698,21 +1801,21 @@ export default function InvoicesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 sm:p-5">
-              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
+            <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4 py-1">
+              <div className="rounded-xl  px-4 py-1 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Total invoices
                 </div>
-                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                <div className="mt-2 text-md font-semibold text-[var(--color-text)]">
                   <CountUp end={totalInvoices} duration={0.7} />
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
+              <div className="rounded-xl  px-4 py-2 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Total amount
                 </div>
-                <div className="mt-2 text-2xl font-semibold text-[var(--color-text)]">
+                <div className="mt-2 text-md font-semibold text-[var(--color-text)]">
                   <CountUp
                     end={totalAmount / 100}
                     decimals={2}
@@ -1723,11 +1826,11 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[rgb(var(--pill-warning-rgb)/0.25)] bg-[rgb(var(--pill-warning-rgb)/0.10)] p-4 transition hover:bg-[rgb(var(--pill-warning-rgb)/0.14)] hover:shadow-md">
+              <div className="rounded-xl  px-4 py-2 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Outstanding
                 </div>
-                <div className="mt-2 text-2xl font-semibold text-[rgb(var(--pill-warning-rgb))]">
+                <div className="mt-2 text-md font-semibold text-[var(--color-text)]">
                   <CountUp
                     end={outstandingAmount / 100}
                     decimals={2}
@@ -1738,11 +1841,11 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[rgb(var(--pill-success-rgb)/0.25)] bg-[rgb(var(--pill-success-rgb)/0.10)] p-4 transition hover:bg-[rgb(var(--pill-success-rgb)/0.14)] hover:shadow-md">
+              <div className="rounded-xl  px-4 py-2 transition hover:bg-[rgb(var(--color-surface-rgb)/0.65)] hover:shadow-md">
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.52)]">
                   Paid
                 </div>
-                <div className="mt-2 text-2xl font-semibold text-[rgb(var(--pill-success-rgb))]">
+                <div className="mt-2 text-md font-semibold text-[var(--color-text)]">
                   <CountUp
                     end={paidAmount / 100}
                     decimals={2}
@@ -1768,7 +1871,7 @@ export default function InvoicesPage() {
                   placeholder="Search invoices by number, customer, or email…"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full min-w-[280px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] py-2 pl-9 pr-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[rgb(var(--color-text-rgb)/0.42)] transition focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
+                  className="w-full min-w-[280px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)]  py-2 pl-9 pr-3 text-sm text-[var(--color-text)] outline-none placeholder:text-[rgb(var(--color-text-rgb)/0.42)] transition focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
                 />
               </div>
 
@@ -1803,7 +1906,7 @@ export default function InvoicesPage() {
           initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 0.35, ease }}
-          className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-md"
+          className="overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-card)] shadow-md"
         >
           <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

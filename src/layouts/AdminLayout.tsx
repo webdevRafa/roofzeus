@@ -360,7 +360,7 @@ export default function AdminLayout() {
               </div>
 
               {/* CENTER: scrollable desktop nav */}
-              <div className="hidden min-w-0 flex-1 md:block">
+              <div className="hidden min-w-0 flex-1 md:block lg:ml-10 xl:ml-20">
                 <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <nav className="flex min-w-max items-center gap-1.5 pl-1 ">
                     {NAV_ITEMS.map((item) => {
