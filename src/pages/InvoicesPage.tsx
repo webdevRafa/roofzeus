@@ -13,8 +13,9 @@ import {
   updateDoc,
   serverTimestamp,
   getDocs,
+  deleteField,
 } from "firebase/firestore";
-import type { FieldValue } from "firebase/firestore";
+import type { DocumentData, FieldValue, UpdateData } from "firebase/firestore";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -1231,12 +1232,14 @@ function InvoicePreviewModal({
   job,
   onClose,
   onMarkPaid,
+  onChangeStatus,
   saving,
 }: {
   invoice: InvoiceDoc;
   job: Job | null;
   onClose: () => void;
   onMarkPaid: () => Promise<void>;
+  onChangeStatus: (status: InvoiceStatus) => Promise<void>;
   saving: boolean;
 }) {
   const { orgId } = useOrg();
@@ -1731,6 +1734,29 @@ function InvoicePreviewModal({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={invoice.status}
+                    disabled={saving}
+                    onChange={(e) =>
+                      onChangeStatus(e.target.value as InvoiceStatus)
+                    }
+                    className="h-9 rounded-xl border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 text-xs font-semibold capitalize text-[rgb(var(--color-text-rgb)/0.82)] outline-none transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] focus:ring-2 focus:ring-[var(--color-accent-gold)]/30 disabled:cursor-not-allowed disabled:opacity-60"
+                    title="Change invoice status"
+                  >
+                    <option value="draft" className="text-black">
+                      Draft
+                    </option>
+                    <option value="sent" className="text-black">
+                      Sent
+                    </option>
+                    <option value="paid" className="text-black">
+                      Paid
+                    </option>
+                    <option value="void" className="text-black">
+                      Void
+                    </option>
+                  </select>
+
                   <button
                     type="button"
                     onClick={() => window.print()}
@@ -1785,7 +1811,9 @@ export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDoc | null>(
     null
   );
-  const [markingPaid, setMarkingPaid] = useState(false);
+  const [updatingInvoiceId, setUpdatingInvoiceId] = useState<string | null>(
+    null
+  );
 
   // ---- Pagination (UI only) ----
   const INVOICES_PER_PAGE = 10;
@@ -1850,15 +1878,19 @@ export default function InvoicesPage() {
 
   // Derived stats
   const totalInvoices = invoices.length;
-  const totalAmount = invoices.reduce(
-    (sum, inv) => sum + (inv.money?.totalCents ?? 0),
-    0
-  );
+
+  const totalAmount = invoices.reduce((sum, inv) => {
+    // Voided invoices stay in the record, but should not inflate invoice totals.
+    if (inv.status === "void") return sum;
+    return sum + (inv.money?.totalCents ?? 0);
+  }, 0);
+
   const outstandingAmount = invoices.reduce((sum, inv) => {
-    if (inv.status === "draft" || inv.status === "sent")
-      return sum + (inv.money?.totalCents ?? 0);
+    // Drafts are not customer-facing yet, so they should not count as outstanding.
+    if (inv.status === "sent") return sum + (inv.money?.totalCents ?? 0);
     return sum;
   }, 0);
+
   const paidAmount = invoices.reduce((sum, inv) => {
     if (inv.status === "paid") return sum + (inv.money?.totalCents ?? 0);
     return sum;
@@ -1907,25 +1939,70 @@ export default function InvoicesPage() {
     return jobs.find((j) => j.id === selectedInvoice.jobId) ?? null;
   }, [selectedInvoice, jobs]);
 
-  async function markInvoicePaid(inv: InvoiceDoc) {
+  async function updateInvoiceStatus(
+    inv: InvoiceDoc,
+    nextStatus: InvoiceStatus
+  ) {
     if (!orgId) return;
-    setMarkingPaid(true);
+    if (inv.status === nextStatus) return;
+
+    setUpdatingInvoiceId(inv.id);
+
     try {
       const ref = orgDoc(orgId, "invoices", inv.id);
-      await updateDoc(ref, {
-        status: "paid",
-        paidAt: serverTimestamp() as unknown as FieldValue,
-        updatedAt: serverTimestamp() as unknown as FieldValue,
+
+      const patch: UpdateData<DocumentData> = {
+        status: nextStatus,
+        updatedAt: serverTimestamp() as FieldValue,
+      };
+
+      if (nextStatus === "paid") {
+        patch.paidAt = serverTimestamp() as FieldValue;
+      } else {
+        // If a paid invoice is moved back to sent/draft/void, remove the paid timestamp.
+        patch.paidAt = deleteField();
+      }
+
+      if (nextStatus === "sent" && inv.status !== "sent") {
+        patch.sentAt = serverTimestamp() as FieldValue;
+      }
+
+      if (nextStatus === "draft") {
+        // Draft means it is no longer considered issued.
+        patch.sentAt = deleteField();
+        patch.lastEmailSentAt = deleteField();
+        patch.lastEmailResendId = deleteField();
+        patch.lastEmailError = deleteField();
+        patch.lastEmailErrorAt = deleteField();
+        patch.emailSendInFlightAt = deleteField();
+      }
+
+      await updateDoc(ref, patch);
+
+      pushToast({
+        status: "success",
+        title: "Invoice status updated",
+        message: `${inv.number} is now marked as ${nextStatus}.`,
       });
-    } catch (e) {
-      // eslint-disable-next-line no-console
+
+      if (selectedInvoice?.id === inv.id) {
+        setSelectedInvoice(null);
+      }
+    } catch (e: any) {
       console.error(e);
+      pushToast({
+        status: "error",
+        title: "Status update failed",
+        message: e?.message ?? "Could not update invoice status.",
+      });
     } finally {
-      setMarkingPaid(false);
-      setSelectedInvoice(null);
+      setUpdatingInvoiceId(null);
     }
   }
 
+  async function markInvoicePaid(inv: InvoiceDoc) {
+    await updateInvoiceStatus(inv, "paid");
+  }
   if (orgLoading) {
     return (
       <div className="min-h-screen bg-[var(--color-background)] p-6 text-[var(--color-text)]">
@@ -2055,6 +2132,35 @@ export default function InvoicesPage() {
         <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-danger-rgb))]" />
         {status}
       </span>
+    );
+  }
+
+  function InvoiceStatusSelect({ inv }: { inv: InvoiceDoc }) {
+    const disabled = updatingInvoiceId === inv.id;
+
+    return (
+      <select
+        value={inv.status}
+        disabled={disabled}
+        onChange={(e) =>
+          updateInvoiceStatus(inv, e.target.value as InvoiceStatus)
+        }
+        className="mt-2 h-8 w-full min-w-[118px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 text-[11px] font-semibold capitalize text-[rgb(var(--color-text-rgb)/0.82)] outline-none transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] focus:ring-2 focus:ring-[var(--color-accent-gold)]/30 disabled:cursor-not-allowed disabled:opacity-55"
+        title="Change invoice status"
+      >
+        <option value="draft" className="text-black">
+          Draft
+        </option>
+        <option value="sent" className="text-black">
+          Sent
+        </option>
+        <option value="paid" className="text-black">
+          Paid
+        </option>
+        <option value="void" className="text-black">
+          Void
+        </option>
+      </select>
     );
   }
 
@@ -2282,13 +2388,13 @@ export default function InvoicesPage() {
           <div className="relative overflow-auto section-scroll-invoices">
             <table className="w-full min-w-[980px] table-fixed text-sm">
               <colgroup>
+                <col className="w-[16%]" />
+                <col className="w-[25%]" />
                 <col className="w-[17%]" />
-                <col className="w-[28%]" />
-                <col className="w-[18%]" />
-                <col className="w-[11%]" />
-                <col className="w-[11%]" />
+                <col className="w-[10%]" />
+                <col className="w-[13%]" />
                 <col className="w-[9%]" />
-                <col className="w-[14%]" />
+                <col className="w-[10%]" />
               </colgroup>
 
               <thead className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-card)]/95 text-[11px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)] backdrop-blur">
@@ -2372,8 +2478,9 @@ export default function InvoicesPage() {
                       </td>
 
                       <td className="px-4 py-4 align-top">
-                        <div className="flex flex-col items-start gap-1">
+                        <div className="flex max-w-[150px] flex-col items-start gap-1">
                           <StatusPill inv={inv} />
+
                           {inv.status === "sent" &&
                             inv.lastEmailError &&
                             !inv.lastEmailSentAt && (
@@ -2384,6 +2491,8 @@ export default function InvoicesPage() {
                                 Email issue
                               </span>
                             )}
+
+                          <InvoiceStatusSelect inv={inv} />
                         </div>
                       </td>
 
@@ -2394,25 +2503,14 @@ export default function InvoicesPage() {
                       </td>
 
                       <td className="px-4 py-4 align-top">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setSelectedInvoice(inv)}
-                            className="inline-flex items-center  justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.25)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.9)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:shadow-md"
+                            className="inline-flex shrink-0 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.25)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.9)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.78)] hover:shadow-md"
                           >
                             View
                           </button>
-
-                          {inv.status !== "paid" && (
-                            <button
-                              type="button"
-                              onClick={() => markInvoicePaid(inv)}
-                              disabled={markingPaid}
-                              className="inline-flex items-center w-full justify-center rounded-xl border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-2 text-[11px] font-semibold text-[rgb(var(--pill-success-rgb))] transition hover:bg-[rgb(var(--pill-success-rgb)/0.18)] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              {markingPaid ? "Updating…" : "Mark paid"}
-                            </button>
-                          )}
                         </div>
                       </td>
                     </motion.tr>
@@ -2514,7 +2612,10 @@ export default function InvoicesPage() {
             onMarkPaid={async () => {
               await markInvoicePaid(selectedInvoice);
             }}
-            saving={markingPaid}
+            onChangeStatus={async (status) => {
+              await updateInvoiceStatus(selectedInvoice, status);
+            }}
+            saving={updatingInvoiceId === selectedInvoice.id}
           />
         )}
       </AnimatePresence>
