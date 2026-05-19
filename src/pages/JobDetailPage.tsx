@@ -1129,12 +1129,32 @@ export default function JobDetailPage({
       phone: contact?.phone ?? "",
       email: contact?.email ?? "",
       mailingAddress: {
-        line1: contact?.mailingAddress?.line1 ?? "",
+        line1:
+          contact?.mailingAddress?.line1 ??
+          contact?.mailingAddress?.fullLine ??
+          "",
         city: contact?.mailingAddress?.city ?? "",
         state: contact?.mailingAddress?.state ?? "",
         zip: contact?.mailingAddress?.zip ?? "",
       },
     };
+  }
+
+  function billingContactDraftHasValue(contact?: ContactInfo | null) {
+    const companyName = contact?.companyName?.trim() ?? "";
+    const name = contact?.name?.trim() ?? "";
+    const phone = cleanPhoneInput(contact?.phone ?? "");
+    const email = contact?.email?.trim() ?? "";
+
+    const mailing = contact?.mailingAddress ?? null;
+    const line1 = mailing?.line1?.trim() ?? "";
+    const city = mailing?.city?.trim() ?? "";
+    const state = mailing?.state?.trim() ?? "";
+    const zip = mailing?.zip?.trim() ?? "";
+
+    return Boolean(
+      companyName || name || phone || email || line1 || city || state || zip
+    );
   }
 
   function billingContactForRecipient(
@@ -1149,7 +1169,71 @@ export default function JobDetailPage({
       | Partial<Record<Exclude<BillingRecipient, "homeowner">, ContactInfo>>
       | undefined;
 
-    return contactsByType?.[recipient] ?? currentJob.billingContact ?? null;
+    // Normal nested shape:
+    // billingContacts: { builder: {...}, insurance: {...}, other: {...} }
+    const nestedContact = contactsByType?.[recipient];
+    if (nestedContact) return nestedContact;
+
+    // Defensive fallback in case any previous save created a literal dotted field:
+    // { "billingContacts.builder": {...} }
+    const dottedContact = (currentJob as any)[
+      `billingContacts.${recipient}`
+    ] as ContactInfo | undefined;
+
+    if (dottedContact) return dottedContact;
+
+    // Legacy fallback only when the active recipient matches.
+    if (
+      currentJob.billingRecipient === recipient &&
+      currentJob.billingContact
+    ) {
+      return currentJob.billingContact;
+    }
+
+    return null;
+  }
+
+  async function getFreshJobForBilling(): Promise<Job | null> {
+    if (!jobDocRef) return job;
+
+    try {
+      const typedRef = jobDocRef.withConverter(jobConverter);
+      const snap = await getDoc(typedRef);
+
+      if (!snap.exists()) return job;
+
+      const freshJob = snap.data();
+      setJob(freshJob);
+      return freshJob;
+    } catch (e) {
+      console.warn("Failed to refresh job before billing hydrate", e);
+      return job;
+    }
+  }
+
+  async function openBillingRecipientModal() {
+    const freshJob = await getFreshJobForBilling();
+    if (!freshJob) return;
+
+    const recipient = freshJob.billingRecipient ?? "homeowner";
+    const contact = billingContactForRecipient(freshJob, recipient);
+
+    setBillingRecipientDraft(recipient);
+    setBillingContactDraft(contactDraftFromInfo(contact));
+    setBillingOpen(true);
+  }
+
+  async function selectBillingRecipientType(recipient: BillingRecipient) {
+    setBillingRecipientDraft(recipient);
+
+    const freshJob = await getFreshJobForBilling();
+    if (!freshJob) {
+      setBillingContactDraft(contactDraftFromInfo(null));
+      return;
+    }
+
+    const contact = billingContactForRecipient(freshJob, recipient);
+    setBillingContactDraft(contactDraftFromInfo(contact));
   }
 
   function billingSummaryForJob(currentJob: Job) {
@@ -1307,7 +1391,7 @@ export default function JobDetailPage({
   }
 
   async function saveBillingInformation() {
-    if (!jobDocRef) return;
+    if (!jobDocRef || !job) return;
 
     setBillingSaving(true);
 
@@ -1320,16 +1404,32 @@ export default function JobDetailPage({
               updatedAt: serverTimestamp(),
             }
           : (() => {
-              const nextContact = toBillingContactOrDelete(billingContactDraft);
+              const hasContact =
+                billingContactDraftHasValue(billingContactDraft);
+              const nextContact = hasContact
+                ? toBillingContactOrDelete(billingContactDraft)
+                : deleteField();
 
               return {
                 billingRecipient: billingRecipientDraft,
+
+                /**
+                 * billingContact is only the active invoice snapshot.
+                 * The permanent per-type data lives inside billingContacts.
+                 */
                 billingContact: nextContact,
 
-                // Important: store each non-homeowner type separately.
-                // This prevents Builder / GC from being overwritten when
-                // Insurance / Adjuster or Other is saved later.
-                [`billingContacts.${billingRecipientDraft}`]: nextContact,
+                /**
+                 * Critical:
+                 * Write as a nested map, not as a dotted string key.
+                 * Firestore merge will preserve sibling contacts:
+                 * billingContacts.builder
+                 * billingContacts.insurance
+                 * billingContacts.other
+                 */
+                billingContacts: {
+                  [billingRecipientDraft]: nextContact,
+                },
 
                 updatedAt: serverTimestamp(),
               };
@@ -1364,7 +1464,6 @@ export default function JobDetailPage({
       setBillingSaving(false);
     }
   }
-
   async function saveWarranty(
     nextWarranty: WarrantyDraft,
     nextHomeowner: ContactInfo
@@ -2901,13 +3000,7 @@ export default function JobDetailPage({
                 <button
                   type="button"
                   onClick={() => {
-                    const recipient = job.billingRecipient ?? "homeowner";
-                    const contact = billingContactForRecipient(job, recipient);
-
-                    setBillingRecipientDraft(recipient);
-                    setBillingContactDraft(contactDraftFromInfo(contact));
-
-                    setBillingOpen(true);
+                    void openBillingRecipientModal();
                   }}
                   className="inline-flex items-center gap-2 cursor-pointer bg-[var(--color-card)] hover:bg-[var(--color-card-hover)] transition px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm ring-1 ring-white/10"
                   title="Set who invoices should be billed to for this job"
@@ -4371,17 +4464,7 @@ export default function JobDetailPage({
                           key={option.value}
                           type="button"
                           onClick={() => {
-                            setBillingRecipientDraft(option.value);
-
-                            if (option.value !== "homeowner") {
-                              const contact = billingContactForRecipient(
-                                job,
-                                option.value
-                              );
-                              setBillingContactDraft(
-                                contactDraftFromInfo(contact)
-                              );
-                            }
+                            void selectBillingRecipientType(option.value);
                           }}
                           className={[
                             "rounded-xl border px-3 py-3 text-left transition",
