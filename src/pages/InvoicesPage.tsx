@@ -2,7 +2,7 @@
 // Upgraded to ROOFZEUS dark command-center theme + Framer Motion + CountUp.
 // Preserves all existing helper functions, listeners, Firestore mappings, and modal logic.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   collection,
   doc,
@@ -26,6 +26,7 @@ import {
   Printer,
   Search,
   Filter,
+  ChevronDown,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -629,7 +630,7 @@ function NewInvoiceModal({
     "mb-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.52)]";
 
   const inputClass =
-    "w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2.5 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none transition placeholder:text-[rgb(var(--color-text-rgb)/0.35)] focus:border-[var(--color-accent-gold)]/40 focus:ring-2 focus:ring-[var(--color-accent-gold)]/20 disabled:cursor-not-allowed disabled:opacity-60";
+    "w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[var(--color-card-hover)] px-3 py-2.5 text-sm text-[rgb(var(--color-text-rgb)/0.92)] outline-none transition placeholder:text-[rgb(var(--color-text-rgb)/0.35)] focus:border-[var(--color-accent-gold)]/40 focus:ring-0 focus:ring-[var(--color-accent-gold)]/20 disabled:cursor-not-allowed disabled:opacity-60";
 
   const panelClass =
     "rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] shadow-sm";
@@ -657,19 +658,11 @@ function NewInvoiceModal({
         <div className="relative shrink-0 border-b border-[rgb(var(--color-border-rgb)/0.16)] px-5 py-4 sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-start gap-3">
-              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[var(--color-accent-gold)]/25 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)] shadow-sm">
-                <FileText className="h-5 w-5" />
-              </div>
-
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-semibold tracking-tight text-[var(--color-text)]">
                     Create invoice
                   </h2>
-
-                  <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.58)]">
-                    New
-                  </span>
                 </div>
 
                 <p className="mt-1 max-w-xl text-xs leading-relaxed text-[rgb(var(--color-text-rgb)/0.58)]">
@@ -692,7 +685,7 @@ function NewInvoiceModal({
 
           {/* Compact job + total preview */}
           <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
-            <div className="min-w-0 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.35)] px-3 py-2">
+            <div className="min-w-0 rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-3 py-2">
               <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.45)]">
                 Selected job
               </div>
@@ -701,7 +694,7 @@ function NewInvoiceModal({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[var(--color-accent-gold)]/25 bg-[var(--color-accent-gold)]/10 px-4 py-2 text-right">
+            <div className="rounded-2xl   px-4 py-2 text-right">
               <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-gold)]/70">
                 Invoice total
               </div>
@@ -765,15 +758,13 @@ function NewInvoiceModal({
                     className={inputClass}
                   >
                     <option value="job">{`Use saved recipient: ${defaultContactLabel}`}</option>
-                    <option value="custom">
-                      Enter a one-time custom recipient
-                    </option>
+                    <option value="custom">Custom recipient</option>
                   </select>
 
-                  <p className="mt-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[rgb(var(--color-background-rgb)/0.18)] px-3 py-2 text-[11px] leading-relaxed text-[rgb(var(--color-text-rgb)/0.55)]">
+                  <p className="mt-2 rounded-xl   px-3 py-2 text-[11px] leading-relaxed text-[rgb(var(--color-text-rgb)/0.55)]">
                     Residential jobs usually bill the homeowner. Builder, GC,
                     insurance, or third-party invoices should be saved as the
-                    job billing contact from the job detail page.
+                    job billing contact on the job itself.
                   </p>
                 </div>
 
@@ -836,11 +827,11 @@ function NewInvoiceModal({
                     disabled={saving}
                     rows={3}
                     placeholder="Describe the work performed"
-                    className={`${inputClass} resize-none leading-6`}
+                    className={`${inputClass} resize-none leading-6 ring-transparent! focus:bg-[var(--color-card)] focus:ring-0!`}
                   />
                 </div>
 
-                <div className="sm:col-span-2 flex flex-col gap-3 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-background-rgb)/0.18)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="sm:col-span-2 flex flex-col gap-3 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)]  p-3 sm:flex-row sm:items-center sm:justify-between">
                   <label className="flex items-center gap-3 text-xs font-medium text-[rgb(var(--color-text-rgb)/0.84)]">
                     <input
                       type="checkbox"
@@ -875,7 +866,7 @@ function NewInvoiceModal({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4">
+                <div className=" p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.48)]">
                     Labor cost
                   </div>
@@ -884,7 +875,7 @@ function NewInvoiceModal({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-[rgb(var(--color-border-rgb)/0.14)] bg-[rgb(var(--color-surface-rgb)/0.45)] p-4">
+                <div className=" p-4">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.48)]">
                     Material cost
                   </div>
@@ -921,7 +912,7 @@ function NewInvoiceModal({
 
               <div className="p-4">
                 {extras.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-background-rgb)/0.16)] px-4 py-4 text-center text-xs text-[rgb(var(--color-text-rgb)/0.52)]">
+                  <div className="rounded-2xl border border-dashed border-[rgb(var(--color-border-rgb)/0.20)]  px-4 py-4 text-center text-xs text-[rgb(var(--color-text-rgb)/0.52)]">
                     No extras added yet.
                   </div>
                 ) : (
@@ -935,7 +926,7 @@ function NewInvoiceModal({
                     {extras.map((ex, idx) => (
                       <div
                         key={idx}
-                        className="grid gap-2 rounded-2xl border border-[rgb(var(--color-border-rgb)/0.12)] bg-[rgb(var(--color-background-rgb)/0.16)] p-3 sm:grid-cols-[1fr_140px_auto] sm:items-end"
+                        className="grid gap-2 rounded-2xl   p-3 sm:grid-cols-[1fr_140px_auto] sm:items-end"
                       >
                         <div>
                           <label className={labelClass}>Label</label>
@@ -2029,10 +2020,40 @@ export default function InvoicesPage() {
   };
 
   function StatusPill({ inv }: { inv: InvoiceDoc }) {
-    const status = inv.status;
+    const [open, setOpen] = useState(false);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-    const base =
-      "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold capitalize";
+    const status = inv.status;
+    const disabled = updatingInvoiceId === inv.id;
+
+    const options: Array<{ value: InvoiceStatus; label: string }> = [
+      { value: "draft", label: "Draft" },
+      { value: "sent", label: "Sent" },
+      { value: "paid", label: "Paid" },
+      { value: "void", label: "Void" },
+    ];
+
+    useEffect(() => {
+      if (!open) return;
+
+      function onClick(e: MouseEvent) {
+        if (!buttonRef.current?.parentElement?.contains(e.target as Node)) {
+          setOpen(false);
+        }
+      }
+
+      function onKey(e: KeyboardEvent) {
+        if (e.key === "Escape") setOpen(false);
+      }
+
+      window.addEventListener("mousedown", onClick);
+      window.addEventListener("keydown", onKey);
+
+      return () => {
+        window.removeEventListener("mousedown", onClick);
+        window.removeEventListener("keydown", onKey);
+      };
+    }, [open]);
 
     const hasEmailFailure =
       status === "sent" && !!inv.lastEmailError && !inv.lastEmailSentAt;
@@ -2040,127 +2061,224 @@ export default function InvoicesPage() {
     const inFlight =
       status === "sent" && !!inv.emailSendInFlightAt && !inv.lastEmailSentAt;
 
-    if (hasEmailFailure) {
-      return (
-        <span
-          className={[
-            base,
-            "border-[rgb(var(--pill-danger-rgb)/0.25)]",
-            "bg-[rgb(var(--pill-danger-rgb)/0.12)]",
-            "text-[rgb(var(--pill-danger-rgb))]",
-          ].join(" ")}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-danger-rgb))]" />
-          email failed
-        </span>
-      );
-    }
+    const visual = (() => {
+      if (hasEmailFailure) {
+        return {
+          label: "email failed",
+          pill: "border-[rgb(var(--pill-danger-rgb)/0.25)] bg-[rgb(var(--pill-danger-rgb)/0.12)] text-[rgb(var(--pill-danger-rgb))]",
+          dot: "bg-[rgb(var(--pill-danger-rgb))]",
+        };
+      }
 
-    if (inFlight) {
-      return (
-        <span
-          className={[
-            base,
-            "border-[rgb(var(--color-text-rgb)/0.12)]",
-            "bg-[rgb(var(--color-text-rgb)/0.06)]",
-            "text-[rgb(var(--color-text-rgb)/0.75)]",
-          ].join(" ")}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--color-text-rgb)/0.35)]" />
-          sending…
-        </span>
-      );
-    }
+      if (inFlight) {
+        return {
+          label: "sending…",
+          pill: "border-[rgb(var(--color-text-rgb)/0.12)] bg-[rgb(var(--color-text-rgb)/0.06)] text-[rgb(var(--color-text-rgb)/0.75)]",
+          dot: "bg-[rgb(var(--color-text-rgb)/0.35)]",
+        };
+      }
 
-    if (status === "paid") {
-      return (
-        <span
-          className={[
-            base,
-            "border-[rgb(var(--pill-success-rgb)/0.25)]",
-            "bg-[rgb(var(--pill-success-rgb)/0.12)]",
-            "text-[rgb(var(--pill-success-rgb))]",
-          ].join(" ")}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
-          paid
-        </span>
-      );
-    }
+      if (status === "paid") {
+        return {
+          label: "paid",
+          pill: "border-[rgb(var(--pill-success-rgb)/0.25)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]",
+          dot: "bg-[rgb(var(--pill-success-rgb))]",
+        };
+      }
 
-    if (status === "sent") {
-      return (
-        <span
-          className={[
-            base,
-            "border-[rgb(var(--color-primary-rgb)/0.25)]",
-            "bg-[rgb(var(--color-primary-rgb)/0.12)]",
-            "text-[rgb(var(--color-text-rgb)/0.9)]",
-          ].join(" ")}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--color-primary-rgb))]" />
-          sent
-        </span>
-      );
-    }
+      if (status === "sent") {
+        return {
+          label: "sent",
+          pill: "border-[rgb(var(--color-primary-rgb)/0.25)] bg-[rgb(var(--color-primary-rgb)/0.12)] text-[rgb(var(--color-text-rgb)/0.9)]",
+          dot: "bg-[rgb(var(--color-primary-rgb))]",
+        };
+      }
 
-    if (status === "draft") {
-      return (
-        <span
-          className={[
-            base,
-            "border-[rgb(var(--color-text-rgb)/0.12)]",
-            "bg-[rgb(var(--color-text-rgb)/0.06)]",
-            "text-[rgb(var(--color-text-rgb)/0.75)]",
-          ].join(" ")}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--color-text-rgb)/0.35)]" />
-          draft
-        </span>
-      );
-    }
+      if (status === "draft") {
+        return {
+          label: "draft",
+          pill: "border-[rgb(var(--color-text-rgb)/0.12)] bg-[rgb(var(--color-text-rgb)/0.06)] text-[rgb(var(--color-text-rgb)/0.75)]",
+          dot: "bg-[rgb(var(--color-text-rgb)/0.35)]",
+        };
+      }
+
+      return {
+        label: "void",
+        pill: "border-[rgb(var(--pill-danger-rgb)/0.25)] bg-[rgb(var(--pill-danger-rgb)/0.12)] text-[rgb(var(--pill-danger-rgb))]",
+        dot: "bg-[rgb(var(--pill-danger-rgb))]",
+      };
+    })();
 
     return (
-      <span
-        className={[
-          base,
-          "border-[rgb(var(--pill-danger-rgb)/0.25)]",
-          "bg-[rgb(var(--pill-danger-rgb)/0.12)]",
-          "text-[rgb(var(--pill-danger-rgb))]",
-        ].join(" ")}
-      >
-        <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-danger-rgb))]" />
-        {status}
-      </span>
+      <div className="relative inline-flex">
+        <button
+          ref={buttonRef}
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((v) => !v)}
+          className={[
+            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60",
+            visual.pill,
+          ].join(" ")}
+          title="Change invoice status"
+          aria-label={`Change status for ${inv.number}`}
+        >
+          <span
+            className={["h-1.5 w-1.5 rounded-full", visual.dot].join(" ")}
+          />
+          {disabled ? "updating…" : visual.label}
+          <ChevronDown
+            className={[
+              "h-3 w-3 shrink-0 opacity-70 transition",
+              open ? "rotate-180" : "",
+            ].join(" ")}
+          />
+        </button>
+
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: 6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.98 }}
+              transition={{ duration: 0.14, ease }}
+              className="absolute left-0 top-[calc(100%+0.35rem)] z-50 min-w-[132px] overflow-hidden rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] p-1 shadow-[0_18px_45px_rgba(0,0,0,0.35)] section-scroll-ui"
+            >
+              {options.map((option) => {
+                const active = option.value === status;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      void updateInvoiceStatus(inv, option.value);
+                    }}
+                    className={[
+                      "mt-1 flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-semibold transition first:mt-0",
+                      active
+                        ? "bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)]"
+                        : "text-[rgb(var(--color-text-rgb)/0.82)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]",
+                    ].join(" ")}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   }
 
-  function InvoiceStatusSelect({ inv }: { inv: InvoiceDoc }) {
-    const disabled = updatingInvoiceId === inv.id;
+  function StatusFilterDropdown() {
+    const [open, setOpen] = useState(false);
+    const wrapRef = useRef<HTMLDivElement | null>(null);
+
+    const options: Array<{ value: "all" | InvoiceStatus; label: string }> = [
+      { value: "all", label: "All statuses" },
+      { value: "draft", label: "Draft" },
+      { value: "sent", label: "Sent" },
+      { value: "paid", label: "Paid" },
+      { value: "void", label: "Void" },
+    ];
+
+    const activeLabel =
+      options.find((option) => option.value === statusFilter)?.label ??
+      "All statuses";
+
+    useEffect(() => {
+      if (!open) return;
+
+      function onClick(e: MouseEvent) {
+        if (!wrapRef.current?.contains(e.target as Node)) {
+          setOpen(false);
+        }
+      }
+
+      function onKey(e: KeyboardEvent) {
+        if (e.key === "Escape") setOpen(false);
+      }
+
+      window.addEventListener("mousedown", onClick);
+      window.addEventListener("keydown", onKey);
+
+      return () => {
+        window.removeEventListener("mousedown", onClick);
+        window.removeEventListener("keydown", onKey);
+      };
+    }, [open]);
 
     return (
-      <select
-        value={inv.status}
-        disabled={disabled}
-        onChange={(e) =>
-          updateInvoiceStatus(inv, e.target.value as InvoiceStatus)
-        }
-        className="mt-2 h-8 w-full min-w-[118px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 text-[11px] font-semibold capitalize text-[rgb(var(--color-text-rgb)/0.82)] outline-none transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] focus:ring-2 focus:ring-[var(--color-accent-gold)]/30 disabled:cursor-not-allowed disabled:opacity-55"
-        title="Change invoice status"
-      >
-        <option value="draft" className="text-black">
-          Draft
-        </option>
-        <option value="sent" className="text-black">
-          Sent
-        </option>
-        <option value="paid" className="text-black">
-          Paid
-        </option>
-        <option value="void" className="text-black">
-          Void
-        </option>
-      </select>
+      <div ref={wrapRef} className="relative z-50 w-full sm:w-[180px]">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className={[
+            "flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm font-semibold transition hover:shadow-md",
+            open
+              ? "border-[var(--color-accent-gold)]/45 bg-[rgb(var(--color-surface-rgb)/0.72)] ring-2 ring-[var(--color-accent-gold)]/15"
+              : "border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]",
+          ].join(" ")}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <Filter className="h-4 w-4 shrink-0 text-[rgb(var(--color-text-rgb)/0.45)]" />
+            <span className="truncate text-[var(--color-text)]">
+              {activeLabel}
+            </span>
+          </span>
+
+          <ChevronDown
+            className={[
+              "h-4 w-4 shrink-0 text-[rgb(var(--color-text-rgb)/0.65)] transition",
+              open ? "rotate-180" : "",
+            ].join(" ")}
+          />
+        </button>
+
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: 6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.98 }}
+              transition={{ duration: 0.14, ease }}
+              className="absolute left-0 top-[calc(100%+0.35rem)] z-[80] w-full overflow-hidden rounded-xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] p-1 shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
+              role="listbox"
+            >
+              {options.map((option) => {
+                const active = option.value === statusFilter;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter(option.value);
+                      setInvoicesPage(1);
+                      setOpen(false);
+                    }}
+                    className={[
+                      "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-semibold transition",
+                      active
+                        ? "bg-[rgb(var(--color-primary-rgb)/0.14)] text-[var(--color-primary)]"
+                        : "text-[rgb(var(--color-text-rgb)/0.82)] hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)]",
+                    ].join(" ")}
+                    role="option"
+                    aria-selected={active}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   }
 
@@ -2317,28 +2435,11 @@ export default function InvoicesPage() {
                 />
               </div>
 
-              <div className="relative">
-                <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgb(var(--color-text-rgb)/0.45)]" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] py-2 pl-9 pr-8 text-sm text-[var(--color-text)] outline-none transition focus:ring-2 focus:ring-[var(--color-accent-gold)]/35"
-                >
-                  <option value="all">All statuses</option>
-                  <option value="draft">Draft</option>
-                  <option value="sent">Sent</option>
-                  <option value="paid">Paid</option>
-                  <option value="void">Void</option>
-                </select>
-              </div>
+              <StatusFilterDropdown />
             </div>
 
             <div className="hidden text-xs text-[rgb(var(--color-text-rgb)/0.55)] md:block">
-              Click{" "}
-              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.85)]">
-                View
-              </span>{" "}
-              to print or mark an invoice paid.
+              View invoices and update statuses.
             </div>
           </motion.section>
         </motion.div>
@@ -2478,7 +2579,7 @@ export default function InvoicesPage() {
                       </td>
 
                       <td className="px-4 py-4 align-top">
-                        <div className="flex max-w-[150px] flex-col items-start gap-1">
+                        <div className="flex max-w-[132px] flex-col items-start gap-1">
                           <StatusPill inv={inv} />
 
                           {inv.status === "sent" &&
@@ -2491,8 +2592,6 @@ export default function InvoicesPage() {
                                 Email issue
                               </span>
                             )}
-
-                          <InvoiceStatusSelect inv={inv} />
                         </div>
                       </td>
 
