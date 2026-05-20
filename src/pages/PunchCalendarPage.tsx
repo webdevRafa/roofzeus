@@ -141,11 +141,23 @@ export default function PunchCalendarPage() {
   const totalScheduledThisMonth =
     monthTotals.felt + monthTotals.shingles + monthTotals.punch;
 
+  const leadingBlankCount = getMonthStart(month).getDay();
+  const previousMonthLastDay = new Date(
+    month.getFullYear(),
+    month.getMonth(),
+    0
+  ).getDate();
+  const totalRenderedBeforeTrailing = leadingBlankCount + days.length;
+  const trailingBlankCount = (7 - (totalRenderedBeforeTrailing % 7)) % 7;
+  const calendarWeeks = Math.ceil(
+    (totalRenderedBeforeTrailing + trailingBlankCount) / 7
+  );
+
   return (
-    <div className="rz-dashboard-shell min-h-screen w-full pb-10 text-[var(--color-text)] bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]">
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6">
+    <div className="rz-dashboard-shell h-[calc(100dvh-72px-3rem)] w-full overflow-hidden text-[var(--color-text)] bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)] sm:h-[calc(100dvh-72px-4rem)]">
+      <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col px-4 sm:px-6">
         {/* Page heading */}
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-3 flex shrink-0 flex-col gap-2 sm:mb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-xl font-semibold tracking-wide text-[var(--color-text)] sm:text-2xl">
               Schedule Center
@@ -173,10 +185,10 @@ export default function PunchCalendarPage() {
         </div>
 
         {/* Calendar shell */}
-        <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm hover:shadow-md">
+        <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm hover:shadow-md">
           {/* Header */}
-          <div className="border-b border-[var(--color-border)] px-4 py-4 sm:px-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="shrink-0 border-b border-[var(--color-border)] px-4 py-3 sm:px-6 sm:py-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="min-w-0">
@@ -185,7 +197,7 @@ export default function PunchCalendarPage() {
                         {monthLabel}
                       </h2>
 
-                      <span className="rounded-full  px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)]">
+                      <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)]">
                         Live schedule
                       </span>
                     </div>
@@ -197,7 +209,7 @@ export default function PunchCalendarPage() {
                 </div>
 
                 {/* Summary pills */}
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px]">
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
                   <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 font-semibold text-sky-300">
                     <span className="h-2 w-2 rounded-full bg-sky-300" />
                     Dry-in: {monthTotals.felt}
@@ -248,12 +260,12 @@ export default function PunchCalendarPage() {
           </div>
 
           {/* Weekday header */}
-          <div className="border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.22)] px-3 pt-3 sm:px-4">
-            <div className="grid grid-cols-7 gap-2">
+          <div className="shrink-0 border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.22)] px-3 py-2 sm:px-4">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                 <div
                   key={d}
-                  className="rounded-xl px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] sm:text-[11px]"
+                  className="rounded-lg px-1 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] sm:text-[11px]"
                 >
                   {d}
                 </div>
@@ -262,34 +274,28 @@ export default function PunchCalendarPage() {
           </div>
 
           {/* Calendar grid */}
-          <div className="bg-[rgb(var(--color-surface-rgb)/0.22)] p-3 sm:p-4">
-            <div className="grid grid-cols-7 gap-2">
+          <div className="min-h-0 flex-1 bg-[rgb(var(--color-surface-rgb)/0.22)] p-2 sm:p-3">
+            <div
+              className="grid h-full grid-cols-7 gap-1.5 sm:gap-2"
+              style={{
+                gridTemplateRows: `repeat(${calendarWeeks}, minmax(0, 1fr))`,
+              }}
+            >
               {/* Previous-month leading cells */}
-              {(() => {
-                const first = getMonthStart(month);
-                const leadingBlanks = first.getDay();
-                const previousMonthLastDay = new Date(
-                  month.getFullYear(),
-                  month.getMonth(),
-                  0
-                ).getDate();
+              {Array.from({ length: leadingBlankCount }).map((_, i) => {
+                const dayNumber = previousMonthLastDay - leadingBlankCount + i + 1;
 
-                return Array.from({ length: leadingBlanks }).map((_, i) => {
-                  const dayNumber =
-                    previousMonthLastDay - leadingBlanks + i + 1;
-
-                  return (
-                    <div
-                      key={`prev-${i}`}
-                      className="min-h-[82px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-2 text-left opacity-55 sm:min-h-[116px] sm:px-3 sm:py-3"
-                    >
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.26)]">
-                        {dayNumber}
-                      </span>
-                    </div>
-                  );
-                });
-              })()}
+                return (
+                  <div
+                    key={`prev-${i}`}
+                    className="h-full min-h-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-1.5 text-left opacity-55 sm:px-3 sm:py-2"
+                  >
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.26)] sm:h-7 sm:w-7 sm:text-sm">
+                      {dayNumber}
+                    </span>
+                  </div>
+                );
+              })}
 
               {/* Current-month days */}
               {days.map((d) => {
@@ -308,7 +314,7 @@ export default function PunchCalendarPage() {
                     type="button"
                     onClick={() => navigate(`/schedule/${key}`)}
                     className={[
-                      "group relative min-h-[82px] w-full overflow-hidden rounded-xl border px-2 py-2 text-left text-xs transition sm:min-h-[116px] sm:px-3 sm:py-3",
+                      "group relative h-full min-h-0 w-full overflow-hidden rounded-xl border px-2 py-1.5 text-left text-xs transition sm:px-3 sm:py-2",
                       "border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card)] shadow-[0_10px_24px_rgba(0,0,0,0.06)]",
                       "hover:-translate-y-0.5 hover:border-[rgb(var(--color-border-rgb)/0.24)] hover:bg-[var(--color-card-hover)] hover:shadow-[0_16px_34px_rgba(0,0,0,0.14)]",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-gold)]/60",
@@ -327,7 +333,7 @@ export default function PunchCalendarPage() {
                     <div className="relative flex items-start justify-between gap-2">
                       <span
                         className={[
-                          "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold transition",
+                          "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition sm:h-7 sm:w-7 sm:text-sm",
                           isToday
                             ? "border border-[var(--color-accent-gold)]/45 bg-[var(--color-accent-gold)]/15 text-[var(--color-accent-gold)]"
                             : "text-[rgb(var(--color-text-rgb)/0.90)] group-hover:bg-[rgb(var(--color-surface-rgb)/0.58)]",
@@ -344,30 +350,30 @@ export default function PunchCalendarPage() {
                     </div>
 
                     {hasAnything ? (
-                      <div className="mt-3 space-y-1.5">
+                      <div className="mt-2 space-y-1 overflow-hidden">
                         {dayCounts.felt > 0 && (
-                          <div className="flex items-center justify-between gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-2 py-1 text-[10px] font-semibold text-sky-300">
+                          <div className="flex items-center justify-between gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-2 py-0.5 text-[10px] font-semibold text-sky-300">
                             <span className="truncate">Dry-in</span>
                             <span>{dayCounts.felt}</span>
                           </div>
                         )}
 
                         {dayCounts.shingles > 0 && (
-                          <div className="flex items-center justify-between gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2 py-1 text-[10px] font-semibold text-[var(--color-accent-gold)]">
+                          <div className="flex items-center justify-between gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-accent-gold)]">
                             <span className="truncate">Shingles</span>
                             <span>{dayCounts.shingles}</span>
                           </div>
                         )}
 
                         {dayCounts.punch > 0 && (
-                          <div className="flex items-center justify-between gap-2 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-2 py-1 text-[10px] font-semibold text-[rgb(var(--pill-success-rgb))]">
+                          <div className="flex items-center justify-between gap-2 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-2 py-0.5 text-[10px] font-semibold text-[rgb(var(--pill-success-rgb))]">
                             <span className="truncate">Punch</span>
                             <span>{dayCounts.punch}</span>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="mt-3 hidden text-[11px] text-[rgb(var(--color-text-rgb)/0.34)] transition group-hover:text-[rgb(var(--color-text-rgb)/0.50)] sm:block">
+                      <div className="mt-2 hidden text-[10px] text-[rgb(var(--color-text-rgb)/0.34)] transition group-hover:text-[rgb(var(--color-text-rgb)/0.50)] xl:block">
                         No scheduled work
                       </div>
                     )}
@@ -376,40 +382,20 @@ export default function PunchCalendarPage() {
               })}
 
               {/* Next-month trailing cells */}
-              {(() => {
-                const first = getMonthStart(month);
-                const leadingBlanks = first.getDay();
-                const totalRendered = leadingBlanks + days.length;
-                const trailingBlanks = (7 - (totalRendered % 7)) % 7;
+              {Array.from({ length: trailingBlankCount }).map((_, i) => {
+                const dayNumber = i + 1;
 
-                return Array.from({ length: trailingBlanks }).map((_, i) => {
-                  const dayNumber = i + 1;
-
-                  return (
-                    <div
-                      key={`next-${i}`}
-                      className="min-h-[82px] rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-2 text-left opacity-55 sm:min-h-[116px] sm:px-3 sm:py-3"
-                    >
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.26)]">
-                        {dayNumber}
-                      </span>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
-          </div>
-          {/* Footer note */}
-          <div className="border-t border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.28)] px-4 py-3 sm:px-6">
-            <div className="flex flex-col gap-2 text-[11px] text-[rgb(var(--color-text-rgb)/0.55)] sm:flex-row sm:items-center sm:justify-between">
-              <span>
-                Calendar counts are pulled from scheduled dry-in, shingles, and
-                punch dates.
-              </span>
-
-              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
-                Click any day to open its schedule.
-              </span>
+                return (
+                  <div
+                    key={`next-${i}`}
+                    className="h-full min-h-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-1.5 text-left opacity-55 sm:px-3 sm:py-2"
+                  >
+                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.26)] sm:h-7 sm:w-7 sm:text-sm">
+                      {dayNumber}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
