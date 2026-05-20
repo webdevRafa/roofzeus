@@ -60,6 +60,7 @@ function getScheduleRows(dayCounts: DayCounts) {
     {
       key: "felt",
       label: "Dry-in",
+      shortLabel: "D",
       count: dayCounts.felt,
       className: "border-sky-400/25 bg-sky-400/10 text-sky-300",
       dotClassName: "bg-sky-300",
@@ -67,6 +68,7 @@ function getScheduleRows(dayCounts: DayCounts) {
     {
       key: "shingles",
       label: "Shingles",
+      shortLabel: "S",
       count: dayCounts.shingles,
       className:
         "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]",
@@ -75,6 +77,7 @@ function getScheduleRows(dayCounts: DayCounts) {
     {
       key: "punch",
       label: "Punch",
+      shortLabel: "P",
       count: dayCounts.punch,
       className:
         "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]",
@@ -309,7 +312,7 @@ export default function PunchCalendarPage() {
                     type="button"
                     onClick={() => navigate(`/schedule/${key}`)}
                     className={[
-                      "group relative h-full min-h-0 w-full overflow-hidden rounded-xl border px-2 py-1.5 text-left text-xs transition sm:px-3 sm:py-2",
+                      "group relative flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl border px-2 py-1.5 text-left text-xs transition sm:px-3 sm:py-2",
                       "border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card)] shadow-[0_10px_24px_rgba(0,0,0,0.06)]",
                       "hover:-translate-y-0.5 hover:border-[rgb(var(--color-border-rgb)/0.24)] hover:bg-[var(--color-card-hover)] hover:shadow-[0_16px_34px_rgba(0,0,0,0.14)]",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-gold)]/60",
@@ -345,40 +348,46 @@ export default function PunchCalendarPage() {
                     </div>
 
                     {hasAnything ? (
-                      <div className="mt-1.5 grid gap-0.5 overflow-hidden">
+                      <div className="mt-auto grid grid-cols-3 gap-1 pt-1.5">
                         {scheduleRows.map((row) => (
                           <div
                             key={row.key}
-                            className={`flex h-[17px] items-center justify-between gap-1 rounded-full border px-1.5 text-[9px] font-semibold leading-none sm:h-[18px] sm:px-2 sm:text-[10px] ${row.className}`}
+                            className={`flex h-[22px] min-w-0 items-center justify-center gap-1 rounded-md border px-1 text-[10px] font-bold leading-none sm:h-[24px] ${row.className}`}
+                            title={`${row.label}: ${row.count}`}
                           >
-                            <span className="truncate">{row.label}</span>
-                            <span>{row.count}</span>
+                            <span
+                              className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.dotClassName}`}
+                            />
+                            <span className="shrink-0">{row.shortLabel}</span>
+                            <span className="shrink-0 opacity-90">{row.count}</span>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="mt-2 hidden text-[10px] text-[rgb(var(--color-text-rgb)/0.34)] transition group-hover:text-[rgb(var(--color-text-rgb)/0.50)] xl:block">
+                      <div className="mt-auto hidden text-[10px] text-[rgb(var(--color-text-rgb)/0.34)] transition group-hover:text-[rgb(var(--color-text-rgb)/0.50)] xl:block">
                         No scheduled work
                       </div>
                     )}
 
                     {hasAnything && (
-                      <div className="pointer-events-none absolute inset-1.5 z-20 flex flex-col justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card-hover)] p-2 opacity-0 shadow-xl transition duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
-                        <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.88)]">
+                      <div className="pointer-events-none absolute inset-1 z-20 flex flex-col rounded-lg border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-card-rgb)/0.98)] p-1.5 opacity-0 shadow-xl ring-1 ring-black/10 transition duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <div className="flex h-3.5 shrink-0 items-center justify-between gap-2 text-[9px] font-bold leading-none text-[rgb(var(--color-text-rgb)/0.88)]">
                           <span className="truncate">
                             {d.toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
                             })}
                           </span>
-                          <span>{dayTotal} total</span>
+                          <span className="shrink-0 text-[rgb(var(--color-text-rgb)/0.62)]">
+                            {dayTotal} total
+                          </span>
                         </div>
 
-                        <div className="grid gap-1">
+                        <div className="mt-1 grid min-h-0 flex-1 gap-0.5">
                           {scheduleRows.map((row) => (
                             <div
                               key={`preview-${row.key}`}
-                              className="flex items-center justify-between gap-2 rounded-md bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-1 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.86)]"
+                              className="flex min-h-0 items-center justify-between gap-2 rounded-md bg-[rgb(var(--color-surface-rgb)/0.56)] px-1.5 py-0.5 text-[9px] font-semibold text-[rgb(var(--color-text-rgb)/0.88)] sm:text-[10px]"
                             >
                               <span className="inline-flex min-w-0 items-center gap-1.5">
                                 <span
@@ -386,7 +395,7 @@ export default function PunchCalendarPage() {
                                 />
                                 <span className="truncate">{row.label}</span>
                               </span>
-                              <span>{row.count}</span>
+                              <span className="shrink-0">{row.count}</span>
                             </div>
                           ))}
                         </div>
