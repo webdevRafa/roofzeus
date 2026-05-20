@@ -72,7 +72,7 @@ function getScheduleRows(dayCounts: DayCounts) {
       count: dayCounts.shingles,
       className:
         "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]",
-      dotClassName: "bg-[var(--color-accent-gold)]",
+      dotClassName: "bg-white",
     },
     {
       key: "punch",
@@ -215,7 +215,7 @@ export default function PunchCalendarPage() {
                   </span>
 
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2.5 py-0.5 font-semibold text-[var(--color-accent-gold)]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-gold)]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
                     Shingles: {monthTotals.shingles}
                   </span>
 
@@ -370,7 +370,7 @@ export default function PunchCalendarPage() {
                     )}
 
                     {hasAnything && (
-                      <div className="pointer-events-none absolute inset-1 z-20 flex flex-col rounded-lg border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-card-rgb)/0.98)] p-1.5 opacity-0 shadow-xl ring-1 ring-black/10 transition duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+                      <div className="pointer-events-none absolute inset-1 z-20 flex flex-col rounded-lg border border-[rgb(var(--color-border-rgb)/0.24)] bg-[rgb(var(--color-background-rgb)/0.94)] p-1.5 opacity-0 shadow-xl ring-1 ring-black/10 transition duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
                         <div className="flex h-3.5 shrink-0 items-center justify-between gap-2 text-[9px] font-bold leading-none text-[rgb(var(--color-text-rgb)/0.88)]">
                           <span className="truncate">
                             {d.toLocaleDateString(undefined, {
@@ -387,7 +387,7 @@ export default function PunchCalendarPage() {
                           {scheduleRows.map((row) => (
                             <div
                               key={`preview-${row.key}`}
-                              className="flex min-h-0 items-center justify-between gap-2 rounded-md bg-[rgb(var(--color-surface-rgb)/0.56)] px-1.5 py-0.5 text-[9px] font-semibold text-[rgb(var(--color-text-rgb)/0.88)] sm:text-[10px]"
+                              className="flex min-h-0 items-center justify-between gap-2 rounded-md bg-[rgb(var(--color-surface-rgb)/0.32)] px-1.5 py-0.5 text-[9px] font-semibold text-[rgb(var(--color-text-rgb)/0.88)] sm:text-[10px]"
                             >
                               <span className="inline-flex min-w-0 items-center gap-1.5">
                                 <span
