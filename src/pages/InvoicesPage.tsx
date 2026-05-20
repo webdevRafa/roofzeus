@@ -636,7 +636,7 @@ function NewInvoiceModal({
     "rounded-2xl border border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)] shadow-sm";
 
   const content = (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto bg-black/65 p-3 backdrop-blur-sm sm:items-center sm:p-6">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black/65 p-3 backdrop-blur-sm sm:p-6">
       <button
         type="button"
         onClick={onClose}
@@ -649,7 +649,7 @@ function NewInvoiceModal({
         animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
         exit={{ opacity: 0, y: 14, scale: 0.985, filter: "blur(6px)" }}
         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-        className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] shadow-[0_30px_120px_rgba(0,0,0,0.65)]"
+        className="relative grid h-[calc(100dvh-1.5rem)] max-h-[860px] w-full max-w-3xl grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card)] shadow-[0_30px_120px_rgba(0,0,0,0.65)] sm:h-[calc(100dvh-3rem)]"
         role="dialog"
         aria-modal="true"
         aria-label="Create invoice"
@@ -684,7 +684,7 @@ function NewInvoiceModal({
           </div>
 
           {/* Compact job + total preview */}
-          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="mt-1 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center ">
             <div className="min-w-0 rounded-lg border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-card-hover)] px-3 py-2">
               <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[rgb(var(--color-text-rgb)/0.45)]">
                 Selected job
@@ -706,18 +706,18 @@ function NewInvoiceModal({
         </div>
 
         {/* Body */}
-        <div className="relative flex-1 overflow-y-auto px-5 py-5 section-scroll sm:px-6">
+        <div className="modal-scroll relative min-h-0 overflow-y-auto px-5 pt-5 pb-5 sm:px-6">
+          {" "}
           {formError && (
             <div className="mb-4 flex items-start gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-3 py-3 text-xs text-red-200">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{formError}</span>
             </div>
           )}
-
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {/* Job + recipient */}
             <section className={panelClass}>
-              <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] px-4 py-3">
+              <div className="border-b border-[rgb(var(--color-border-rgb)/0.12)] px-4 py-3 mx-auto">
                 <div className="text-sm font-semibold text-[var(--color-text)]">
                   Job & billing recipient
                 </div>
@@ -1135,7 +1135,7 @@ function NewInvoiceModal({
             </section>
 
             {/* Totals */}
-            <section className="rounded-2xl border border-[var(--color-accent-gold)]/20 bg-[var(--color-accent-gold)]/10 p-4">
+            <section className="rounded-2xl p-4">
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-accent-gold)]/70">
@@ -1169,13 +1169,14 @@ function NewInvoiceModal({
         </div>
 
         {/* Footer */}
-        <div className="relative shrink-0 border-t border-[rgb(var(--color-border-rgb)/0.16)] bg-[rgb(var(--color-card-rgb)/0.92)] px-5 py-4 backdrop-blur sm:px-6">
+        <div className="relative shrink-0 border-t border-[rgb(var(--color-border-rgb)/0.16)] bg-[var(--color-card)]/95 px-5 py-3 backdrop-blur sm:px-6">
+          {" "}
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="inline-flex h-10 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] disabled:opacity-60"
+              className="inline-flex h-9 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[var(--color-card)] disabled:opacity-60"
             >
               Cancel
             </button>
@@ -1185,7 +1186,7 @@ function NewInvoiceModal({
                 type="button"
                 onClick={() => submit("draft")}
                 disabled={saving}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[rgb(var(--color-border-rgb)/0.20)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-4 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] disabled:opacity-60"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 text-xs font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-card)] disabled:opacity-60"
               >
                 {saving && savingMode === "draft" && (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -1197,7 +1198,7 @@ function NewInvoiceModal({
                 type="button"
                 onClick={() => submit("sent")}
                 disabled={saving}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[var(--color-accent-gold)] px-4 text-sm font-semibold text-[var(--btn-text)] shadow-sm transition hover:bg-[var(--btn-hover-bg)] disabled:opacity-60"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card-hover)] px-3 text-xs font-semibold text-[var(--color-text)] shadow-sm transition hover:bg-[var(--color-card)] disabled:opacity-60"
               >
                 {saving && savingMode === "sent" && (
                   <Loader2 className="h-4 w-4 animate-spin" />
