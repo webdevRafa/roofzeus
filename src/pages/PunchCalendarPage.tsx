@@ -55,6 +55,34 @@ function getMonthDays(base: Date): Date[] {
   return out;
 }
 
+function getScheduleRows(dayCounts: DayCounts) {
+  return [
+    {
+      key: "felt",
+      label: "Dry-in",
+      count: dayCounts.felt,
+      className: "border-sky-400/25 bg-sky-400/10 text-sky-300",
+      dotClassName: "bg-sky-300",
+    },
+    {
+      key: "shingles",
+      label: "Shingles",
+      count: dayCounts.shingles,
+      className:
+        "border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 text-[var(--color-accent-gold)]",
+      dotClassName: "bg-[var(--color-accent-gold)]",
+    },
+    {
+      key: "punch",
+      label: "Punch",
+      count: dayCounts.punch,
+      className:
+        "border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] text-[rgb(var(--pill-success-rgb))]",
+      dotClassName: "bg-[rgb(var(--pill-success-rgb))]",
+    },
+  ].filter((row) => row.count > 0);
+}
+
 export default function PunchCalendarPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [month, setMonth] = useState<Date>(new Date());
@@ -155,73 +183,41 @@ export default function PunchCalendarPage() {
 
   return (
     <div className="rz-dashboard-shell h-[calc(100dvh-72px-3rem)] w-full overflow-hidden text-[var(--color-text)] bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)] sm:h-[calc(100dvh-72px-4rem)]">
-      <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col px-4 sm:px-6">
-        {/* Page heading */}
-        <div className="mb-3 flex shrink-0 flex-col gap-2 sm:mb-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-xl font-semibold tracking-wide text-[var(--color-text)] sm:text-2xl">
-              Schedule Center
-            </h1>
-            <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
-              Monthly view for dry-in, shingles, and punch scheduling.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2 text-[11px]">
-            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
-              Jobs scheduled:{" "}
-              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
-                {totalScheduledThisMonth}
-              </span>
-            </span>
-
-            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
-              Month:{" "}
-              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
-                {monthLabel}
-              </span>
-            </span>
-          </div>
-        </div>
-
+      <div className="mx-auto flex h-full w-full max-w-[1280px] flex-col px-3 sm:px-5 lg:px-6">
         {/* Calendar shell */}
         <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm hover:shadow-md">
           {/* Header */}
-          <div className="shrink-0 border-b border-[var(--color-border)] px-4 py-3 sm:px-6 sm:py-4">
+          <div className="shrink-0 border-b border-[var(--color-border)] px-4 py-3 sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-semibold tracking-wide text-[var(--color-text)] sm:text-xl">
-                        {monthLabel}
-                      </h2>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="text-lg font-semibold tracking-wide text-[var(--color-text)] sm:text-xl">
+                    {monthLabel}
+                  </h1>
 
-                      <span className="rounded-full px-2.5 py-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)]">
-                        Live schedule
-                      </span>
-                    </div>
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.66)] sm:text-[11px]">
+                    Live schedule
+                  </span>
 
-                    <p className="mt-1 text-xs text-[rgb(var(--color-text-rgb)/0.58)]">
-                      Select a day to view the jobs scheduled for that date.
-                    </p>
-                  </div>
+                  <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2.5 py-0.5 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] sm:text-[11px]">
+                    {totalScheduledThisMonth} jobs
+                  </span>
                 </div>
 
                 {/* Summary pills */}
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 font-semibold text-sky-300">
-                    <span className="h-2 w-2 rounded-full bg-sky-300" />
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px]">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/25 bg-sky-400/10 px-2.5 py-0.5 font-semibold text-sky-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-sky-300" />
                     Dry-in: {monthTotals.felt}
                   </span>
 
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-3 py-1 font-semibold text-[var(--color-accent-gold)]">
-                    <span className="h-2 w-2 rounded-full bg-[var(--color-accent-gold)]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2.5 py-0.5 font-semibold text-[var(--color-accent-gold)]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent-gold)]" />
                     Shingles: {monthTotals.shingles}
                   </span>
 
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-3 py-1 font-semibold text-[rgb(var(--pill-success-rgb))]">
-                    <span className="h-2 w-2 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-2.5 py-0.5 font-semibold text-[rgb(var(--pill-success-rgb))]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--pill-success-rgb))]" />
                     Punch: {monthTotals.punch}
                   </span>
                 </div>
@@ -260,12 +256,12 @@ export default function PunchCalendarPage() {
           </div>
 
           {/* Weekday header */}
-          <div className="shrink-0 border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.22)] px-3 py-2 sm:px-4">
+          <div className="shrink-0 border-b border-[var(--color-border)] bg-[rgb(var(--color-surface-rgb)/0.22)] px-2 py-1.5 sm:px-3">
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                 <div
                   key={d}
-                  className="rounded-lg px-1 py-1.5 text-center text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] sm:text-[11px]"
+                  className="rounded-lg px-1 py-1 text-center text-[10px] font-bold uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.54)] sm:text-[11px]"
                 >
                   {d}
                 </div>
@@ -290,7 +286,7 @@ export default function PunchCalendarPage() {
                     key={`prev-${i}`}
                     className="h-full min-h-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-1.5 text-left opacity-55 sm:px-3 sm:py-2"
                   >
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.26)] sm:h-7 sm:w-7 sm:text-sm">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.26)] sm:h-6 sm:w-6 sm:text-xs">
                       {dayNumber}
                     </span>
                   </div>
@@ -302,11 +298,10 @@ export default function PunchCalendarPage() {
                 const key = toYMD(d);
                 const dayCounts = counts.get(key) ?? makeEmptyDayCounts();
                 const isToday = toYMD(d) === toYMD(new Date());
-
                 const dayTotal =
                   dayCounts.felt + dayCounts.shingles + dayCounts.punch;
-
                 const hasAnything = dayTotal > 0;
+                const scheduleRows = getScheduleRows(dayCounts);
 
                 return (
                   <button
@@ -333,7 +328,7 @@ export default function PunchCalendarPage() {
                     <div className="relative flex items-start justify-between gap-2">
                       <span
                         className={[
-                          "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition sm:h-7 sm:w-7 sm:text-sm",
+                          "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold transition sm:h-6 sm:w-6 sm:text-xs",
                           isToday
                             ? "border border-[var(--color-accent-gold)]/45 bg-[var(--color-accent-gold)]/15 text-[var(--color-accent-gold)]"
                             : "text-[rgb(var(--color-text-rgb)/0.90)] group-hover:bg-[rgb(var(--color-surface-rgb)/0.58)]",
@@ -343,38 +338,58 @@ export default function PunchCalendarPage() {
                       </span>
 
                       {hasAnything && (
-                        <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-0.5 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+                        <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-1.5 py-0 text-[9px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)] sm:text-[10px]">
                           {dayTotal}
                         </span>
                       )}
                     </div>
 
                     {hasAnything ? (
-                      <div className="mt-2 space-y-1 overflow-hidden">
-                        {dayCounts.felt > 0 && (
-                          <div className="flex items-center justify-between gap-2 rounded-full border border-sky-400/25 bg-sky-400/10 px-2 py-0.5 text-[10px] font-semibold text-sky-300">
-                            <span className="truncate">Dry-in</span>
-                            <span>{dayCounts.felt}</span>
+                      <div className="mt-1.5 grid gap-0.5 overflow-hidden">
+                        {scheduleRows.map((row) => (
+                          <div
+                            key={row.key}
+                            className={`flex h-[17px] items-center justify-between gap-1 rounded-full border px-1.5 text-[9px] font-semibold leading-none sm:h-[18px] sm:px-2 sm:text-[10px] ${row.className}`}
+                          >
+                            <span className="truncate">{row.label}</span>
+                            <span>{row.count}</span>
                           </div>
-                        )}
-
-                        {dayCounts.shingles > 0 && (
-                          <div className="flex items-center justify-between gap-2 rounded-full border border-[var(--color-accent-gold)]/30 bg-[var(--color-accent-gold)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-accent-gold)]">
-                            <span className="truncate">Shingles</span>
-                            <span>{dayCounts.shingles}</span>
-                          </div>
-                        )}
-
-                        {dayCounts.punch > 0 && (
-                          <div className="flex items-center justify-between gap-2 rounded-full border border-[rgb(var(--pill-success-rgb)/0.30)] bg-[rgb(var(--pill-success-rgb)/0.12)] px-2 py-0.5 text-[10px] font-semibold text-[rgb(var(--pill-success-rgb))]">
-                            <span className="truncate">Punch</span>
-                            <span>{dayCounts.punch}</span>
-                          </div>
-                        )}
+                        ))}
                       </div>
                     ) : (
                       <div className="mt-2 hidden text-[10px] text-[rgb(var(--color-text-rgb)/0.34)] transition group-hover:text-[rgb(var(--color-text-rgb)/0.50)] xl:block">
                         No scheduled work
+                      </div>
+                    )}
+
+                    {hasAnything && (
+                      <div className="pointer-events-none absolute inset-1.5 z-20 flex flex-col justify-center rounded-lg border border-[rgb(var(--color-border-rgb)/0.22)] bg-[var(--color-card-hover)] p-2 opacity-0 shadow-xl transition duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <div className="mb-1.5 flex items-center justify-between gap-2 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.88)]">
+                          <span className="truncate">
+                            {d.toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                          <span>{dayTotal} total</span>
+                        </div>
+
+                        <div className="grid gap-1">
+                          {scheduleRows.map((row) => (
+                            <div
+                              key={`preview-${row.key}`}
+                              className="flex items-center justify-between gap-2 rounded-md bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-1 text-[10px] font-semibold text-[rgb(var(--color-text-rgb)/0.86)]"
+                            >
+                              <span className="inline-flex min-w-0 items-center gap-1.5">
+                                <span
+                                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.dotClassName}`}
+                                />
+                                <span className="truncate">{row.label}</span>
+                              </span>
+                              <span>{row.count}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </button>
@@ -390,7 +405,7 @@ export default function PunchCalendarPage() {
                     key={`next-${i}`}
                     className="h-full min-h-0 rounded-xl border border-[rgb(var(--color-border-rgb)/0.08)] bg-[rgb(var(--color-background-rgb)/0.18)] px-2 py-1.5 text-left opacity-55 sm:px-3 sm:py-2"
                   >
-                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.26)] sm:h-7 sm:w-7 sm:text-sm">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.26)] sm:h-6 sm:w-6 sm:text-xs">
                       {dayNumber}
                     </span>
                   </div>
