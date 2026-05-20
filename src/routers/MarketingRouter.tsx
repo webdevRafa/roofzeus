@@ -19,8 +19,8 @@ function appOrigin() {
   // local dev
   if (host === "localhost") return "http://app.localhost:5173";
 
-  // vercel preview/prod on vercelapp
-  if (host.endsWith(".vercel.app")) return "https://app.roofzeus.vercel.app";
+  // Keep Vercel branch previews self-contained so auth/app links preview the same commit.
+  if (host.endsWith(".vercel.app")) return window.location.origin;
 
   // custom domain
   return "https://app.roofzeus.com";
