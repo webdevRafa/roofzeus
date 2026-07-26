@@ -1,257 +1,128 @@
-// src/pages/FaqPage.tsx
-
-import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
+import {
+  Eyebrow,
+  FinalCta,
+  TrialActions,
+} from "../components/marketing/MarketingPrimitives";
 
-const ease = [0.16, 1, 0.3, 1] as const;
-
-const stagger: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
-};
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 14, filter: "blur(6px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.7, ease },
+const faqs = [
+  {
+    question: "Who is Roof Zeus built for?",
+    answer:
+      "Roof Zeus is designed specifically for roofing contractors—from owners starting their first crew to growing companies that need a clearer way to run jobs, people, money, and documents.",
   },
-};
-
-const cardIn: Variants = {
-  hidden: { opacity: 0, y: 10, scale: 0.99, filter: "blur(6px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: { duration: 0.65, ease },
+  {
+    question: "Is the trial really free? Do I need a card?",
+    answer:
+      "The trial is free for 30 days and no card is required. You get full access during the trial. Add payment details only if you decide to continue.",
   },
-};
-
-function FaqItem({
-  q,
-  a,
-  defaultOpen = false,
-}: {
-  q: string;
-  a: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div
-      className={` mb-4  overflow-hidden group py-3 ${
-        open ? "bg-[#14223b]" : "bg-[#14223b]/50"
-      }`}
-    >
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full px-4 sm:px-5 py-4 flex items-start justify-between gap-4 text-left"
-        aria-expanded={open}
-      >
-        <div className="min-w-0 ">
-          <div
-            className={`text-md  text-[#fae2a4] leading-snug ${
-              open
-                ? "text-[#e5c26a]"
-                : "text-white/50 group-hover:text-white cursor-pointer"
-            }`}
-          >
-            {q}
-          </div>
-        </div>
-
-        <div className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition">
-          {open ? (
-            <Minus className="h-4 w-4 text-white/80" />
-          ) : (
-            <Plus className="h-4 w-4 text-white/80" />
-          )}
-        </div>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease }}
-            className="overflow-hidden"
-          >
-            <div className="px-4 sm:px-5 pb-5 text-lg text-white/80 leading-relaxed">
-              {a}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+  {
+    question: "What can my crew see and update?",
+    answer:
+      "Crew members focus on the jobs assigned to them. They can review the work, add notes and photos, and access their own pay stubs without seeing the owner's full company financial picture.",
+  },
+  {
+    question: "How does production scheduling work?",
+    answer:
+      "Roof Zeus tracks the stages roofing companies actually use, including dry-in, shingles, and punch. You can see what is scheduled, what is complete, and what needs the next move.",
+  },
+  {
+    question: "Can I track materials, payouts, and profit per job?",
+    answer:
+      "Yes. Each job can hold its pricing, material expenses, crew payouts, and other records so you can understand the job's actual cost and net profit.",
+  },
+  {
+    question: "Does Roof Zeus create pay stubs and invoices?",
+    answer:
+      "Yes. Roof Zeus supports payout history and professional pay stubs, invoices, warranty reports, and job reports so records are easier to create and revisit.",
+  },
+  {
+    question: "Can crews add photos from the field?",
+    answer:
+      "Yes. Team members can capture photos and notes from the job workflow, keeping the update attached to the right property instead of buried in a camera roll or text thread.",
+  },
+  {
+    question: "Is each company's data kept separate?",
+    answer:
+      "Yes. Workspaces are scoped by organization membership. Roles determine which parts of the workspace a person can access, helping keep company and crew data separated appropriately.",
+  },
+  {
+    question: "Does Roof Zeus work on mobile?",
+    answer:
+      "Yes. The experience supports field-friendly updates and quick job checks on mobile, while desktop gives owners more room for reporting, payouts, documents, and administration.",
+  },
+  {
+    question: "Can I cancel at any time?",
+    answer:
+      "Yes. You can cancel whenever you choose. During a paid period, access generally continues through the end of that billing period.",
+  },
+];
 
 export default function FaqPage() {
-  const faqs = useMemo(
-    () => [
-      {
-        q: "Who is ROOFZEUS built for?",
-        a: (
-          <>
-            ROOFZEUS is designed specifically for roofing contractors — whether
-            you're just getting started or already running a growing roofing
-            company.
-          </>
-        ),
-        defaultOpen: true,
-      },
-      {
-        q: "Is the trial really free — do I need a card to get started?",
-        a: (
-          <>
-            No card is needed to start. The trial is{" "}
-            <span className="text-white/80 font-semibold">30 days</span> with
-            full access. After the trial, you’ll be prompted to add payment
-            details if you want to continue using ROOFZEUS.
-          </>
-        ),
-      },
-
-      {
-        q: "Can my crew use it? What can they see?",
-        a: (
-          <>
-            While adding your crew is optional, crew members can only see jobs
-            they have been assigned and are allowed to add notes & photos. Crew
-            members will also have access to their own paystubs.{" "}
-          </>
-        ),
-      },
-      {
-        q: "How does scheduling work?",
-        a: (
-          <>
-            ROOFZEUS provides scheduling for the key phases like
-            <span className="text-white/80 font-semibold"> dry-in</span>,
-            <span className="text-white/80 font-semibold"> shingles</span>, and
-            <span className="text-white/80 font-semibold"> punch</span>, so your
-            pipeline is clear and you always know what's next.
-          </>
-        ),
-      },
-      {
-        q: "Can I track materials, expenses, and profit per job?",
-        a: (
-          <>
-            Yes. ROOFZEUS allows you to track everything about the job such as
-            sq's, rate per sq, material expenses, payouts, notes, photos and
-            reports.
-          </>
-        ),
-      },
-      {
-        q: "Do you handle payouts and pay stubs?",
-        a: (
-          <>
-            Yes. ROOFZEUS supports payout tracking and pay stub history so you
-            can keep a clean record of who got paid, what it was for, and when.
-            This is especially helpful when you need to look back later.
-          </>
-        ),
-      },
-      {
-        q: "Can I attach photos and notes to jobs?",
-        a: (
-          <>
-            Yes. You and your crew members are able to attach photos and notes
-            to jobs. No need to involve your camera roll. Take photos directly
-            from the app.
-          </>
-        ),
-      },
-
-      {
-        q: "Is my company’s data separated from other companies?",
-        a: (
-          <>
-            Yes. ROOFZEUS is built as a multi-tenant SaaS with org-scoped
-            access. Your workspace is isolated by organization membership so
-            your jobs and records don’t mix with anyone else.
-          </>
-        ),
-      },
-      {
-        q: "Can I cancel any time?",
-        a: (
-          <>
-            Yes. You can cancel whenever you want. If you cancel during a paid
-            period, you keep access through the end of that period.
-          </>
-        ),
-      },
-      {
-        q: "Will this work on mobile?",
-        a: (
-          <>
-            Yes — the experience is designed to work well on mobile for field
-            updates (photos/notes) and quick job checks. Desktop is ideal for
-            deeper admin work (payouts, stubs, reporting).
-          </>
-        ),
-      },
-      {
-        q: "Can I export my records?",
-        a: (
-          <>
-            Export and reporting are part of a healthy business system. ROOFZEUS
-            is structured so your data stays clean for reporting and future
-            export options (PDF/CSV) as the platform expands.
-          </>
-        ),
-      },
-    ],
-    []
-  );
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <main className="min-h-[calc(100vh-64px)] text-[#f5f6f8] overflow-x-hidden">
-      {/* HERO */}
-      <section className="max-w-5xl mx-auto px-6 pt-14 pb-10">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          animate="show"
-          className="space-y-6"
-        >
-          <motion.h1
-            variants={fadeUp}
-            className="text-3xl  tracking-tight leading-[1.05] mt-20 text-white"
-          >
-            Frequently asked questions
-          </motion.h1>
-        </motion.div>
-      </section>
+    <main className="rz-page">
+      <section className="rz-container rz-page-section">
+        <div className="rz-faq-layout">
+          <aside className="rz-faq-layout__aside">
+            <Eyebrow>Frequently asked</Eyebrow>
+            <h1>Clear answers before you start.</h1>
+            <p>
+              Learn how the free trial, crew access, roofing schedule, financial
+              tracking, and subscription work.
+            </p>
+            <TrialActions
+              secondaryTo="/pricing"
+              secondaryLabel="View pricing"
+            />
+          </aside>
 
-      {/* FAQ LIST */}
-      <section className="max-w-5xl mx-auto px-6 pb-14">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.25 }}
-          className="grid gap-3"
-        >
-          {faqs.map((f) => (
-            <motion.div key={f.q} variants={cardIn}>
-              <FaqItem q={f.q} a={f.a} defaultOpen={f.defaultOpen} />
-            </motion.div>
-          ))}
-        </motion.div>
+          <div className="rz-faq-list">
+            {faqs.map((faq, index) => {
+              const open = openIndex === index;
+              const answerId = `faq-answer-${index}`;
+              return (
+                <article className="rz-faq-item" key={faq.question}>
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    aria-controls={answerId}
+                    onClick={() => setOpenIndex(open ? null : index)}
+                  >
+                    <span>{faq.question}</span>
+                    {open ? (
+                      <Minus aria-hidden="true" />
+                    ) : (
+                      <Plus aria-hidden="true" />
+                    )}
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {open ? (
+                      <motion.div
+                        id={answerId}
+                        className="rz-faq-item__answer"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div>{faq.answer}</div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </article>
+              );
+            })}
+          </div>
+        </div>
       </section>
+      <FinalCta
+        title="The easiest way to answer the rest is to see it on your jobs."
+        copy="Try the complete platform for 30 days with no card required."
+      />
     </main>
   );
 }

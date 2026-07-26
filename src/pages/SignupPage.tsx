@@ -1,57 +1,128 @@
-// src/pages/SignupPage.tsx
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
-  Check,
-  Loader2,
-  X,
+  CheckCircle2,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
-import { signupContractorWithEmail } from "../firebase/signupContractor";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
 import logo from "../assets/rz-modern-white.svg";
-const ease = [0.16, 1, 0.3, 1] as const;
+import { auth } from "../firebase/firebaseConfig";
+import { signupContractorWithEmail } from "../firebase/signupContractor";
 
-const stagger: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.06 } },
+type Draft = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  userPhone: string;
+  companyName: string;
+  companyLegalName: string;
+  companyPhone: string;
+  companyState: string;
 };
 
-const cardIn: Variants = {
-  hidden: { opacity: 0, y: 10, scale: 0.99, filter: "blur(6px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: { duration: 0.65, ease },
+const STATE_OPTIONS = [
+  ["AL", "Alabama"],
+  ["AK", "Alaska"],
+  ["AZ", "Arizona"],
+  ["AR", "Arkansas"],
+  ["CA", "California"],
+  ["CO", "Colorado"],
+  ["CT", "Connecticut"],
+  ["DE", "Delaware"],
+  ["FL", "Florida"],
+  ["GA", "Georgia"],
+  ["HI", "Hawaii"],
+  ["ID", "Idaho"],
+  ["IL", "Illinois"],
+  ["IN", "Indiana"],
+  ["IA", "Iowa"],
+  ["KS", "Kansas"],
+  ["KY", "Kentucky"],
+  ["LA", "Louisiana"],
+  ["ME", "Maine"],
+  ["MD", "Maryland"],
+  ["MA", "Massachusetts"],
+  ["MI", "Michigan"],
+  ["MN", "Minnesota"],
+  ["MS", "Mississippi"],
+  ["MO", "Missouri"],
+  ["MT", "Montana"],
+  ["NE", "Nebraska"],
+  ["NV", "Nevada"],
+  ["NH", "New Hampshire"],
+  ["NJ", "New Jersey"],
+  ["NM", "New Mexico"],
+  ["NY", "New York"],
+  ["NC", "North Carolina"],
+  ["ND", "North Dakota"],
+  ["OH", "Ohio"],
+  ["OK", "Oklahoma"],
+  ["OR", "Oregon"],
+  ["PA", "Pennsylvania"],
+  ["RI", "Rhode Island"],
+  ["SC", "South Carolina"],
+  ["SD", "South Dakota"],
+  ["TN", "Tennessee"],
+  ["TX", "Texas"],
+  ["UT", "Utah"],
+  ["VT", "Vermont"],
+  ["VA", "Virginia"],
+  ["WA", "Washington"],
+  ["WV", "West Virginia"],
+  ["WI", "Wisconsin"],
+  ["WY", "Wyoming"],
+] as const;
+
+const steps = [
+  {
+    label: "Your details",
+    title: "Let’s start with you.",
+    copy: "Use the name and work email you want connected to your company.",
   },
-};
+  {
+    label: "Secure access",
+    title: "Create a strong password.",
+    copy: "A strong password protects the operational and financial data in your workspace.",
+  },
+  {
+    label: "Your company",
+    title: "Set up the business.",
+    copy: "These details create the company workspace your team will use.",
+  },
+  {
+    label: "Review",
+    title: "Your workspace is ready to create.",
+    copy: "Check the details below, then begin your 30-day trial.",
+  },
+] as const;
 
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
+function marketingOrigin() {
+  const host = window.location.hostname.toLowerCase();
+  if (host === "app.localhost") return "http://localhost:5173";
+  if (host.endsWith(".vercel.app")) return "https://roofzeus.vercel.app";
+  return "https://www.roofzeus.com";
 }
 
-// Same scoring concept as CompleteSignupPage: 0..4
-function passwordScore(pw: string) {
-  let score = 0;
-  if (pw.length >= 8) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
-  return score;
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-function strengthLabel(score: number) {
-  if (score <= 1) return "Weak";
-  if (score === 2) return "Fair";
-  if (score === 3) return "Good";
-  return "Strong";
+function passwordScore(password: string) {
+  return [
+    password.length >= 8,
+    /[A-Z]/.test(password),
+    /[0-9]/.test(password),
+    /[^A-Za-z0-9]/.test(password),
+  ].filter(Boolean).length;
 }
 
 function Field({
@@ -61,29 +132,31 @@ function Field({
   type = "text",
   placeholder,
   autoComplete,
-  hint,
+  className = "",
+  optional = false,
 }: {
   label: string;
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
   type?: string;
   placeholder?: string;
   autoComplete?: string;
-  hint?: string;
+  className?: string;
+  optional?: boolean;
 }) {
   return (
-    <label className="block">
-      <div className="mb-1 flex items-center justify-between">
-        <div className="text-[12px] text-white/70">{label}</div>
-        {hint ? <div className="text-[11px] text-white/35">{hint}</div> : null}
-      </div>
+    <label className={`rz-auth-field ${className}`}>
+      <span className="rz-auth-field__label">
+        {label}
+        {optional ? " · Optional" : ""}
+      </span>
       <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        className="rz-auth-input"
         type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="w-full   bg-[#14223b] px-3 py-2 text-sm text-[#f5f6f8] placeholder:text-white/35 outline-none  focus:ring-2 focus:ring-[#0a90f0]/40"
       />
     </label>
   );
@@ -93,352 +166,125 @@ function PasswordField({
   label,
   value,
   onChange,
-  show,
-  onToggleShow,
+  visible,
+  onToggle,
   placeholder,
-  hint,
 }: {
   label: string;
   value: string;
-  onChange: (v: string) => void;
-  show: boolean;
-  onToggleShow: () => void;
-  placeholder?: string;
-  hint?: string;
+  onChange: (value: string) => void;
+  visible: boolean;
+  onToggle: () => void;
+  placeholder: string;
 }) {
   return (
-    <label className="block">
-      <div className="mb-1 flex items-center justify-between">
-        <div className="text-[12px] text-white/70">{label}</div>
-        {hint ? <div className="text-[11px] text-white/35">{hint}</div> : null}
-      </div>
-
-      <div className="relative">
+    <label className="rz-auth-field rz-signup-fields__full">
+      <span className="rz-auth-field__label">{label}</span>
+      <span className="rz-auth-input-wrap">
         <input
+          className="rz-auth-input"
+          type={visible ? "text" : "password"}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          type={show ? "text" : "password"}
+          onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           autoComplete="new-password"
-          className="w-full  bg-[#14223b] px-3 py-2 pr-10 text-sm text-[#f5f6f8] placeholder:text-white/35 outline-none focus:border-[#cfae5d]/45 focus:ring-2 focus:ring-[#0a90f0]/40"
+          style={{ paddingLeft: 14, paddingRight: 46 }}
         />
         <button
+          className="rz-password-toggle"
           type="button"
-          onClick={onToggleShow}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-white/60 hover:bg-white/5 hover:text-white/80"
-          aria-label={show ? "Hide password" : "Show password"}
+          onClick={onToggle}
+          aria-label={visible ? "Hide password" : "Show password"}
         >
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
         </button>
-      </div>
+      </span>
     </label>
   );
 }
-function formatPhone(value: string) {
-  const digits = value.replace(/\D/g, "").slice(0, 10);
-
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-  }
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-}
-
-function phoneDigits(value: string) {
-  return value.replace(/\D/g, "");
-}
-const STATE_OPTIONS = [
-  { value: "AL", label: "Alabama" },
-  { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" },
-  { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" },
-  { value: "DE", label: "Delaware" },
-  { value: "FL", label: "Florida" },
-  { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" },
-  { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" },
-  { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" },
-  { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" },
-  { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" },
-  { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" },
-  { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" },
-  { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" },
-  { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" },
-  { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" },
-  { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" },
-  { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" },
-  { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" },
-  { value: "WY", label: "Wyoming" },
-] as const;
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 14, filter: "blur(6px)" },
-  show: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.7, ease },
-  },
-};
-const stepPanel: Variants = {
-  enter: { opacity: 0, x: 20, filter: "blur(6px)" },
-  center: {
-    opacity: 1,
-    x: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.28, ease },
-  },
-  exit: {
-    opacity: 0,
-    x: -20,
-    filter: "blur(6px)",
-    transition: { duration: 0.22, ease },
-  },
-};
-
-const SIGNUP_STEPS = [
-  {
-    id: 1,
-    eyebrow: "Step 1 of 4",
-    title: "Let's start with you",
-    desc: "Your name and work email.",
-  },
-  {
-    id: 2,
-    eyebrow: "Step 2 of 4",
-    title: "Secure your account",
-    desc: "Create a strong password.",
-  },
-  {
-    id: 3,
-    eyebrow: "Step 3 of 4",
-    title: "Tell us about your company",
-    desc: "Basic business details for your workspace.",
-  },
-  {
-    id: 4,
-    eyebrow: "Step 4 of 4",
-    title: "Finish setup",
-    desc: "Optional phone and quick review before creating your account.",
-  },
-] as const;
 
 export default function SignupPage() {
-  function marketingOrigin() {
-    const host = window.location.hostname.toLowerCase();
-
-    // local dev from app.localhost -> marketing localhost
-    if (host === "app.localhost") return "http://localhost:5173";
-
-    // vercel preview/prod on vercelapp
-    if (host.endsWith(".vercel.app")) return "https://roofzeus.vercel.app";
-
-    // custom domain
-    return "https://www.roofzeus.com";
-  }
-
   const navigate = useNavigate();
-
-  const [draft, setDraft] = useState({
+  const [step, setStep] = useState(0);
+  const [draft, setDraft] = useState<Draft>({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
     userPhone: "",
-
     companyName: "",
     companyLegalName: "",
     companyPhone: "",
     companyState: "",
   });
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [showPw, setShowPw] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  function set<K extends keyof typeof draft>(key: K, value: (typeof draft)[K]) {
-    setDraft((d) => ({ ...d, [key]: value }));
+  function update<K extends keyof Draft>(key: K, value: Draft[K]) {
+    setDraft((current) => ({ ...current, [key]: value }));
   }
 
-  const score = useMemo(() => passwordScore(draft.password), [draft.password]);
-
-  const pwReq = useMemo(() => {
-    const pw = draft.password;
-    return {
-      len: pw.length >= 8,
-      upper: /[A-Z]/.test(pw),
-      number: /[0-9]/.test(pw),
-      symbol: /[^A-Za-z0-9]/.test(pw),
-    };
-  }, [draft.password]);
-
-  const passwordsMatch = useMemo(() => {
-    if (!draft.confirmPassword) return true; // don’t scream until they start typing
-    return draft.password === draft.confirmPassword;
-  }, [draft.password, draft.confirmPassword]);
-
-  const emailOk = useMemo(
-    () => draft.email.trim().includes("@"),
-    [draft.email]
+  const score = useMemo(
+    () => passwordScore(draft.password),
+    [draft.password]
   );
-  const nameOk = useMemo(
-    () => draft.fullName.trim().length >= 2,
-    [draft.fullName]
-  );
-  const orgOk = useMemo(
-    () => draft.companyName.trim().length >= 2,
-    [draft.companyName]
-  );
+  const phoneValid = (value: string) => {
+    const length = value.replace(/\D/g, "").length;
+    return length === 0 || length === 10;
+  };
 
-  const companyStateOk = useMemo(
-    () => draft.companyState.trim().length === 2,
-    [draft.companyState]
-  );
+  const stepValid = useMemo(() => {
+    if (step === 0) {
+      return (
+        draft.fullName.trim().length >= 2 &&
+        /^\S+@\S+\.\S+$/.test(draft.email.trim())
+      );
+    }
+    if (step === 1) {
+      return (
+        score === 4 &&
+        draft.confirmPassword.length > 0 &&
+        draft.password === draft.confirmPassword
+      );
+    }
+    if (step === 2) {
+      return (
+        draft.companyName.trim().length >= 2 &&
+        draft.companyState.length === 2 &&
+        phoneValid(draft.companyPhone)
+      );
+    }
+    return phoneValid(draft.userPhone);
+  }, [draft, score, step]);
 
-  // ✅ Require strong password + match
-  const pwOk = useMemo(() => score === 4, [score]);
-
-  const userPhoneOk = useMemo(() => {
-    const digits = phoneDigits(draft.userPhone);
-    return digits.length === 0 || digits.length === 10;
-  }, [draft.userPhone]);
-
-  const companyPhoneOk = useMemo(() => {
-    const digits = phoneDigits(draft.companyPhone);
-    return digits.length === 0 || digits.length === 10;
-  }, [draft.companyPhone]);
-
-  const canSubmit = useMemo(() => {
-    return (
-      emailOk &&
-      nameOk &&
-      orgOk &&
-      companyStateOk &&
-      pwOk &&
-      userPhoneOk &&
-      companyPhoneOk &&
-      draft.password === draft.confirmPassword &&
-      !submitting
-    );
-  }, [
-    emailOk,
-    nameOk,
-    orgOk,
-    companyStateOk,
-    pwOk,
-    userPhoneOk,
-    companyPhoneOk,
-    draft.password,
-    draft.confirmPassword,
-    submitting,
-  ]);
-
-  const step1Ok = useMemo(() => nameOk && emailOk, [nameOk, emailOk]);
-  const step2Ok = useMemo(
-    () => pwOk && draft.password === draft.confirmPassword,
-    [pwOk, draft.password, draft.confirmPassword]
-  );
-  const step3Ok = useMemo(
-    () => orgOk && companyPhoneOk && companyStateOk,
-    [orgOk, companyPhoneOk, companyStateOk]
-  );
-  const progressPercent = useMemo(() => (step / 4) * 100, [step]);
-
-  const currentStepMeta = SIGNUP_STEPS[step - 1];
-
-  function goBackStep() {
+  function nextStep() {
     setError(null);
-    setStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4);
-  }
-
-  function goNextStep() {
-    setError(null);
-
-    if (step === 1 && !step1Ok) {
-      setError("Please enter your full name and a valid work email.");
+    if (!stepValid) {
+      const message =
+        step === 0
+          ? "Enter your full name and a valid work email."
+          : step === 1
+          ? "Use a password with 8+ characters, uppercase, number, and symbol. Both passwords must match."
+          : step === 2
+          ? "Enter your company name, state, and a valid phone number if provided."
+          : "Enter a valid 10-digit phone number or leave it blank.";
+      setError(message);
       return;
     }
-
-    if (step === 2 && !step2Ok) {
-      if (!pwOk) {
-        setError("Please use a stronger password before continuing.");
-      } else {
-        setError("Passwords do not match.");
-      }
-      return;
-    }
-
-    if (step === 3 && !step3Ok) {
-      if (!orgOk) {
-        setError("Please enter your company name.");
-      } else if (!companyStateOk) {
-        setError("Please select your primary company state.");
-      } else if (!companyPhoneOk) {
-        setError("Please enter a valid 10-digit company phone number.");
-      }
-      return;
-    }
-
-    setStep((prev) => Math.min(4, prev + 1) as 1 | 2 | 3 | 4);
+    setStep((current) => Math.min(3, current + 1));
   }
 
-  function strongPasswordMessage() {
-    // only show guidance once they interact
-    if (!draft.password)
-      return "A strong password consists of 8+ characters with at least one uppercase, one number, symbol.";
-    if (score === 4) return "Strong password.";
-    return "Make it stronger: add missing requirements below.";
-  }
-
-  async function onSubmit() {
+  async function createAccount() {
     setError(null);
-    if (!canSubmit) {
-      if (!pwOk) {
-        setError("Please use a stronger password before continuing.");
-      } else if (draft.password !== draft.confirmPassword) {
-        setError("Passwords do not match.");
-      } else if (!userPhoneOk) {
-        setError("Please enter a valid 10-digit phone number.");
-      } else if (!companyPhoneOk) {
-        setError("Please enter a valid 10-digit company phone number.");
-      }
+    if (!stepValid) {
+      setError("Check the optional phone number before creating your account.");
       return;
     }
 
     setSubmitting(true);
     try {
-      // If someone is already signed in, clear session + org selection before creating a new account
       if (auth.currentUser) {
         localStorage.removeItem("rr_activeOrgId");
         await signOut(auth);
@@ -449,473 +295,290 @@ export default function SignupPage() {
         email: draft.email,
         password: draft.password,
         userPhone: draft.userPhone,
-
         companyName: draft.companyName,
         companyLegalName: draft.companyLegalName,
         companyPhone: draft.companyPhone,
         companyState: draft.companyState,
       });
-
       navigate("/verify-email", { replace: true });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+    } catch (caughtError: unknown) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "We could not create the account. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
+  const current = steps[step];
+  const strengthLabel = ["Start typing", "Weak", "Fair", "Good", "Strong"][
+    score
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0c1527] text-[#f5f6f8]">
-      <img className="w-[220px] mx-auto mt-20" src={logo} alt="" />
-      <motion.h1
-        variants={fadeUp}
-        initial="hidden"
-        animate="show"
-        className="text-white/90 text-center mx-auto block max-w-[540px] my-10 text-md px-4 text-sm md:text-md"
-      >
-        <span className="font-orbitron uppercase text-white">
-          ROOF ZEUS &nbsp;
-        </span>
-        allows you to easily manage jobs, track where your money goes and create
-        professional documents.
-      </motion.h1>
+    <main className="rz-auth-page rz-signup-page">
+      <div className="rz-auth-shell">
+        <section className="rz-auth-story">
+          <a href={marketingOrigin()} aria-label="Visit the Roof Zeus website">
+            <img className="rz-auth-story__logo" src={logo} alt="Roof Zeus" />
+          </a>
+          <div>
+            <h1>See every job and every dollar more clearly.</h1>
+            <p>
+              Start with the full Roof Zeus workspace. Add your crew and real
+              jobs when you are ready—there is no card required today.
+            </p>
+            <div className="rz-auth-story__proof">
+              <span>
+                <CheckCircle2 aria-hidden="true" />
+                30 days free
+              </span>
+              <span>
+                <CheckCircle2 aria-hidden="true" />
+                Every feature included
+              </span>
+              <span>
+                <CheckCircle2 aria-hidden="true" />
+                Cancel anytime
+              </span>
+            </div>
+          </div>
+        </section>
 
-      <div className="relative mx-auto w-full py-10 px-4">
-        <motion.div variants={stagger} initial="hidden" animate="show">
-          {/* header */}
-
-          {/* body */}
-          <div className="max-w-2xl mx-auto ">
-            <a
-              href={marketingOrigin()}
-              className="inline-flex items-center text-sm text-white/65 hover:text-white mb-3 ml-3"
-            >
-              Back to home
+        <section className="rz-auth-form-panel">
+          <div className="rz-auth-form-panel__head">
+            <div>
+              <h2>{current.title}</h2>
+              <p>{current.copy}</p>
+            </div>
+            <a className="rz-auth-back" href={marketingOrigin()}>
+              Website
             </a>
-            {/* form */}
-            <motion.div
-              variants={cardIn}
-              className="md:col-span-3   bg-[#0c1527] px-6 py-6 md:px-6 md:py-10 "
+          </div>
+
+          <div className="rz-signup-progress">
+            <div className="rz-signup-progress__meta">
+              <span>{current.label}</span>
+              <strong>Step {step + 1} of 4</strong>
+            </div>
+            <div
+              className="rz-signup-progress__track"
+              role="progressbar"
+              aria-label="Account setup progress"
+              aria-valuemin={1}
+              aria-valuemax={4}
+              aria-valuenow={step + 1}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <motion.h2
-                    variants={fadeUp}
-                    initial="hidden"
-                    animate="show"
-                    className="text-white/90  mx-auto block max-w-[540px] mb-5 text-xs md:text-md"
-                  >
-                    To start using ROOFZEUS, please fill out the form below to
-                    create your account and start your 30 day trial.
-                  </motion.h2>
-                  <div className="text-lg font-semibold">
-                    Create your account
-                  </div>
-                  <div className="mt-1 text-[12px] text-white/60">
-                    No card is needed to get started.
-                  </div>
-                </div>
+              <motion.div
+                className="rz-signup-progress__bar"
+                animate={{ width: `${((step + 1) / 4) * 100}%` }}
+              />
+            </div>
+          </div>
 
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#3a3f4b] bg-white/5 hover:bg-white/10"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4 text-white/70" />
-                </button>
-              </div>
-
-              <div className="mt-5">
-                {/* step header */}
-                <div className="mb-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] uppercase tracking-[0.18em] text-[#cfae5d]/85">
-                        {currentStepMeta.eyebrow}
-                      </div>
-                      <div className="mt-1 text-base font-semibold text-white">
-                        {currentStepMeta.title}
-                      </div>
-                      <div className="mt-1 text-[12px] text-white/55">
-                        {currentStepMeta.desc}
-                      </div>
-                    </div>
-
-                    <div className="hidden sm:flex items-center gap-2">
-                      {SIGNUP_STEPS.map((s) => {
-                        const active = s.id === step;
-                        const complete = s.id < step;
-
-                        return (
-                          <div
-                            key={s.id}
-                            className={cx(
-                              "flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition",
-                              complete &&
-                                "border-[#cfae5d]/50 bg-[#cfae5d]/15 text-[#f5e2a4]",
-                              active &&
-                                "border-[#cfae5d] bg-[#cfae5d]/20 text-white",
-                              !complete &&
-                                !active &&
-                                "border-white/10 bg-white/5 text-white/45"
-                            )}
-                          >
-                            {complete ? <Check className="h-4 w-4" /> : s.id}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/5">
-                    <motion.div
-                      initial={false}
-                      animate={{ width: `${progressPercent}%` }}
-                      transition={{ duration: 0.28, ease }}
-                      className="h-full rounded-full bg-[#cfae5d]"
-                    />
-                  </div>
-                </div>
-
-                {/* step body */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={step}
-                    variants={stepPanel}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    className="grid gap-3 sm:grid-cols-2"
-                  >
-                    {step === 1 && (
-                      <>
-                        <Field
-                          label="Your full name"
-                          value={draft.fullName}
-                          onChange={(v) => set("fullName", v)}
-                          placeholder="e.g. Rafael Castro"
-                          autoComplete="name"
-                        />
-
-                        <Field
-                          label="Work email"
-                          value={draft.email}
-                          onChange={(v) => set("email", v)}
-                          type="email"
-                          placeholder="you@company.com"
-                          autoComplete="email"
-                        />
-                      </>
-                    )}
-
-                    {step === 2 && (
-                      <>
-                        <div className="sm:col-span-2">
-                          <PasswordField
-                            label="Password"
-                            value={draft.password}
-                            onChange={(v) => set("password", v)}
-                            show={showPw}
-                            onToggleShow={() => setShowPw((v) => !v)}
-                            placeholder="8+ chars, uppercase, number, symbol"
-                            hint={draft.password ? strengthLabel(score) : ""}
-                          />
-
-                          <motion.div
-                            initial={false}
-                            animate={{ opacity: draft.password ? 1 : 0.95 }}
-                            className="mt-6   p-3"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] text-white/50">
-                                Password strength
-                              </span>
-                              <span className="text-[11px] text-white/70">
-                                {strengthLabel(score)}
-                              </span>
-                            </div>
-
-                            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/5">
-                              <div
-                                className={cx(
-                                  "h-full rounded-full transition-all duration-300",
-                                  score === 0 && "w-[5%] bg-red-500/35",
-                                  score === 1 && "w-[25%] bg-red-500/45",
-                                  score === 2 && "w-[50%] bg-amber-500/55",
-                                  score === 3 && "w-[75%] bg-emerald-500/45",
-                                  score === 4 && "w-[100%] bg-emerald-500/65"
-                                )}
-                              />
-                            </div>
-
-                            <div className="mt-2 text-[11px] text-white">
-                              {strongPasswordMessage()}
-                            </div>
-
-                            <ul className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/45 max-w-[200px]">
-                              <li className={cx(pwReq.len && "text-white/80")}>
-                                • 8+ characters
-                              </li>
-                              <li
-                                className={cx(pwReq.upper && "text-white/80")}
-                              >
-                                • 1 uppercase
-                              </li>
-                              <li
-                                className={cx(pwReq.number && "text-white/80")}
-                              >
-                                • 1 number
-                              </li>
-                              <li
-                                className={cx(pwReq.symbol && "text-white/80")}
-                              >
-                                • 1 symbol
-                              </li>
-                            </ul>
-                          </motion.div>
-                        </div>
-
-                        <div className="sm:col-span-2">
-                          <PasswordField
-                            label="Confirm password"
-                            value={draft.confirmPassword}
-                            onChange={(v) => set("confirmPassword", v)}
-                            show={showConfirm}
-                            onToggleShow={() => setShowConfirm((v) => !v)}
-                            placeholder="Re-enter your password"
-                            hint={
-                              draft.confirmPassword
-                                ? passwordsMatch
-                                  ? "Matches"
-                                  : "Doesn’t match"
-                                : undefined
-                            }
-                          />
-                          {!passwordsMatch &&
-                          draft.confirmPassword.length > 0 ? (
-                            <div className="mt-2 text-[12px] text-red-200">
-                              Passwords don’t match.
-                            </div>
-                          ) : null}
-                        </div>
-                      </>
-                    )}
-
-                    {step === 3 && (
-                      <>
-                        <Field
-                          label="Company name"
-                          value={draft.companyName}
-                          onChange={(v) => set("companyName", v)}
-                          placeholder="e.g. Roger’s Roofing"
-                          autoComplete="organization"
-                        />
-
-                        <div>
-                          <label className="block">
-                            <div className="mb-1 flex items-center justify-between">
-                              <div className="text-[12px] text-white/70">
-                                Primary company state
-                              </div>
-                            </div>
-
-                            <select
-                              value={draft.companyState}
-                              onChange={(e) =>
-                                set("companyState", e.target.value)
-                              }
-                              className="w-full bg-[#14223b] px-3 py-2 text-sm text-[#f5f6f8] outline-none focus:ring-2 focus:ring-[#0a90f0]/40"
-                            >
-                              <option value="">Select state</option>
-                              {STATE_OPTIONS.map((s) => (
-                                <option key={s.value} value={s.value}>
-                                  {s.label}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-
-                        <div>
-                          <Field
-                            label="Company phone (optional)"
-                            value={draft.companyPhone}
-                            onChange={(v) =>
-                              set("companyPhone", formatPhone(v))
-                            }
-                            placeholder="(210) 555-0456"
-                            autoComplete="tel"
-                          />
-                          {draft.companyPhone && !companyPhoneOk ? (
-                            <div className="mt-2 text-[12px] text-red-200">
-                              Enter a full 10-digit phone number.
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="sm:col-span-2">
-                          <Field
-                            label="Company legal name (optional)"
-                            value={draft.companyLegalName}
-                            onChange={(v) => set("companyLegalName", v)}
-                            placeholder="If different from company name"
-                            autoComplete="organization"
-                            hint="For invoices/stubs"
-                          />
-                        </div>
-                      </>
-                    )}
-
-                    {step === 4 && (
-                      <>
-                        <div>
-                          <Field
-                            label="Your phone (optional)"
-                            value={draft.userPhone}
-                            onChange={(v) => set("userPhone", formatPhone(v))}
-                            placeholder="(210) 555-0123"
-                            autoComplete="tel"
-                          />
-                          {draft.userPhone && !userPhoneOk ? (
-                            <div className="mt-2 text-[12px] text-red-200">
-                              Enter a full 10-digit phone number.
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="sm:col-span-2  p-4">
-                          <div className="text-sm md:text-lg font-semibold text-white">
-                            Review your workspace
-                          </div>
-
-                          <div className="mt-3 grid gap-3 sm:grid-cols-2 text-[13px]">
-                            <div>
-                              <div className="text-white/45">Full name</div>
-                              <div className="mt-1 text-white/85">
-                                {draft.fullName || "—"}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-white/45">Work email</div>
-                              <div className="mt-1 text-white/85">
-                                {draft.email || "—"}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-white/45">Company name</div>
-                              <div className="mt-1 text-white/85">
-                                {draft.companyName || "—"}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-white/45">
-                                Company legal name
-                              </div>
-                              <div className="mt-1 text-white/85">
-                                {draft.companyLegalName ||
-                                  "Same as company name"}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-white/45">Your phone</div>
-                              <div className="mt-1 text-white/85">
-                                {draft.userPhone || "Not provided"}
-                              </div>
-                            </div>
-                            <div>
-                              <div className="text-white/45">
-                                Primary company state
-                              </div>
-                              <div className="mt-1 text-white/85">
-                                {draft.companyState || "—"}
-                              </div>
-                            </div>
-
-                            <div>
-                              <div className="text-white/45">Company phone</div>
-                              <div className="mt-1 text-white/85">
-                                {draft.companyPhone || "Not provided"}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {error ? (
-                <div className="mt-4  border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-100 max-w-[400px]">
-                  {error}
-                </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              className="rz-signup-fields"
+              key={step}
+              initial={{ opacity: 0, x: 14 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -14 }}
+              transition={{ duration: 0.18 }}
+            >
+              {step === 0 ? (
+                <>
+                  <Field
+                    className="rz-signup-fields__full"
+                    label="Full name"
+                    value={draft.fullName}
+                    onChange={(value) => update("fullName", value)}
+                    placeholder="Your full name"
+                    autoComplete="name"
+                  />
+                  <Field
+                    className="rz-signup-fields__full"
+                    label="Work email"
+                    value={draft.email}
+                    onChange={(value) => update("email", value)}
+                    type="email"
+                    placeholder="you@company.com"
+                    autoComplete="email"
+                  />
+                </>
               ) : null}
 
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-[11px] text-white/45 leading-relaxed">
-                  By continuing, you agree to the{" "}
-                  <span className="text-white/80 cursor-pointer hover:text-white">
-                    terms & conditions
-                  </span>
-                  .
-                </div>
+              {step === 1 ? (
+                <>
+                  <PasswordField
+                    label="Password"
+                    value={draft.password}
+                    onChange={(value) => update("password", value)}
+                    visible={showPassword}
+                    onToggle={() => setShowPassword((value) => !value)}
+                    placeholder="Create a strong password"
+                  />
+                  <div className="rz-password-strength rz-signup-fields__full">
+                    <span>Password strength: {strengthLabel}</span>
+                    <div className="rz-password-strength__bar">
+                      <span style={{ width: `${Math.max(4, score * 25)}%` }} />
+                    </div>
+                    <span>
+                      8+ characters with an uppercase letter, number, and
+                      symbol.
+                    </span>
+                  </div>
+                  <PasswordField
+                    label="Confirm password"
+                    value={draft.confirmPassword}
+                    onChange={(value) => update("confirmPassword", value)}
+                    visible={showConfirm}
+                    onToggle={() => setShowConfirm((value) => !value)}
+                    placeholder="Enter it again"
+                  />
+                </>
+              ) : null}
 
-                <div className="flex items-center gap-2 self-end">
-                  {step > 1 && (
-                    <button
-                      type="button"
-                      onClick={goBackStep}
-                      className="inline-flex items-center justify-center gap-2   px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer "
+              {step === 2 ? (
+                <>
+                  <Field
+                    label="Company name"
+                    value={draft.companyName}
+                    onChange={(value) => update("companyName", value)}
+                    placeholder="Your roofing company"
+                    autoComplete="organization"
+                  />
+                  <label className="rz-auth-field">
+                    <span className="rz-auth-field__label">
+                      Primary company state
+                    </span>
+                    <select
+                      className="rz-auth-select"
+                      value={draft.companyState}
+                      onChange={(event) =>
+                        update("companyState", event.target.value)
+                      }
                     >
-                      <ArrowLeft className="h-4 w-4" />
-                      Back
-                    </button>
-                  )}
+                      <option value="">Select a state</option>
+                      {STATE_OPTIONS.map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <Field
+                    label="Company phone"
+                    value={draft.companyPhone}
+                    onChange={(value) =>
+                      update("companyPhone", formatPhone(value))
+                    }
+                    placeholder="(210) 555-0456"
+                    autoComplete="tel"
+                    optional
+                  />
+                  <Field
+                    label="Company legal name"
+                    value={draft.companyLegalName}
+                    onChange={(value) => update("companyLegalName", value)}
+                    placeholder="If different from company name"
+                    autoComplete="organization"
+                    optional
+                  />
+                </>
+              ) : null}
 
-                  {step < 4 ? (
-                    <button
-                      type="button"
-                      onClick={goNextStep}
-                      className="inline-flex items-center justify-center gap-2 bg-[#0a90f0]/30 hover:bg-[#0a90f0]/40 transition! duration-300 ease-in-out px-4 py-2.5 text-sm font-semibold text-white/70 hover:text-white cursor-pointer hover:brightness-95"
-                    >
-                      Continue
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={onSubmit}
-                      disabled={!canSubmit}
-                      className={[
-                        "inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold",
-                        " bg-[#0a90f0]/30 hover:bg-[#0a90f0]/40 transition! duration-300 ease-in-out text-white/70 hover:text-white cursor-pointer ",
-                        "disabled:opacity-50 disabled:cursor-not-allowed",
-                      ].join(" ")}
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Creating…
-                        </>
-                      ) : (
-                        <>
-                          Create account
-                          <ArrowRight className="h-4 w-4" />
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
+              {step === 3 ? (
+                <>
+                  <Field
+                    className="rz-signup-fields__full"
+                    label="Your phone"
+                    value={draft.userPhone}
+                    onChange={(value) =>
+                      update("userPhone", formatPhone(value))
+                    }
+                    placeholder="(210) 555-0123"
+                    autoComplete="tel"
+                    optional
+                  />
+                  <div className="rz-signup-review">
+                    {[
+                      ["Name", draft.fullName],
+                      ["Work email", draft.email],
+                      ["Company", draft.companyName],
+                      ["Primary state", draft.companyState],
+                      ["Company phone", draft.companyPhone || "Not provided"],
+                      ["Your phone", draft.userPhone || "Not provided"],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <span>{label}</span>
+                        <strong>{value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : null}
             </motion.div>
+          </AnimatePresence>
+
+          {error ? (
+            <div className="rz-auth-error" role="alert">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="rz-signup-controls">
+            {step > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setStep((currentStep) => Math.max(0, currentStep - 1));
+                }}
+              >
+                <ArrowLeft aria-hidden="true" />
+                Back
+              </button>
+            ) : (
+              <span />
+            )}
+
+            {step < 3 ? (
+              <button type="button" onClick={nextStep}>
+                Continue
+                <ArrowRight aria-hidden="true" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={createAccount}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="animate-spin" aria-hidden="true" />
+                    Creating account…
+                  </>
+                ) : (
+                  <>
+                    Create account
+                    <ArrowRight aria-hidden="true" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
-        </motion.div>
+
+          <p className="rz-auth-terms">
+            By creating an account, you agree to the{" "}
+            <a href={`${marketingOrigin()}/terms`}>terms of service</a> and{" "}
+            <a href={`${marketingOrigin()}/privacy`}>privacy policy</a>. Already
+            have an account?{" "}
+            <Link to="/login">Sign in</Link>.
+          </p>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
