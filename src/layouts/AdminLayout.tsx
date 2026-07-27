@@ -1,172 +1,134 @@
-// src/layouts/AdminLayout.tsx
-import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useMemo, useState, useEffect, useRef } from "react";
-import { getAuth, signOut } from "firebase/auth";
 import {
-  CalendarDays,
-  LayoutDashboard,
-  Users,
-  FileText,
-  LogOut,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { getAuth, signOut } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
+import {
   BarChart3,
   BriefcaseBusiness,
-  Wallet,
-  ChevronDown,
+  CalendarDays,
+  CalendarRange,
+  ChevronRight,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MoreHorizontal,
+  Plus,
+  Settings,
+  Users,
+  WalletCards,
+  X,
 } from "lucide-react";
 
-/**
- * A small animated hamburger icon.  When `open` is true the three bars
- * gracefully morph into an ×.  We rely on inline styles for the
- * transitions because browser support for CSS transforms on SVG
- * elements can vary across build pipelines (Tailwind’s `transition-*`
- * utilities don’t always apply to inline SVG paths/rects).  The
- * `transform-origin` of each bar is set to its center so that
- * rotations occur around the middle of the line, and both the
- * translation and rotation animate together over 300ms.  The middle
- * bar simply fades out.  Because we use plain `<rect>` elements and
- * avoid dynamic class names, the animation runs reliably across
- * environments without requiring any additional libraries.
- */
-function HamburgerIcon({
-  open,
-  className = "",
-}: {
-  open: boolean;
-  className?: string;
-}) {
-  const transition = "260ms cubic-bezier(0.16, 1, 0.3, 1)";
-
-  const barStyle: React.CSSProperties = {
-    transformBox: "fill-box",
-    transformOrigin: "center",
-    transition: `transform ${transition}, opacity ${transition}`,
-  };
-
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      className={className}
-      fill="none"
-    >
-      {/* top */}
-      <rect
-        x="4.5"
-        y="6.75"
-        width="15"
-        height="1.5"
-        rx="0.75"
-        fill="currentColor"
-        style={{
-          ...barStyle,
-          transform: open
-            ? "translateY(4.9px) rotate(45deg)"
-            : "translateY(0px) rotate(0deg)",
-        }}
-      />
-
-      {/* middle */}
-      <rect
-        x="4.5"
-        y="11.25"
-        width="15"
-        height="1.5"
-        rx="0.75"
-        fill="currentColor"
-        style={{
-          ...barStyle,
-          opacity: open ? 0 : 1,
-          transform: open ? "scaleX(0.7)" : "scaleX(1)",
-        }}
-      />
-
-      {/* bottom */}
-      <rect
-        x="4.5"
-        y="15.75"
-        width="15"
-        height="1.5"
-        rx="0.75"
-        fill="currentColor"
-        style={{
-          ...barStyle,
-          transform: open
-            ? "translateY(-4.9px) rotate(-45deg)"
-            : "translateY(0px) rotate(0deg)",
-        }}
-      />
-    </svg>
-  );
-}
+import { db } from "../firebase/firebaseConfig";
 import { ThemeToggleButton } from "../theme/ThemeToggleButton";
 import { useOrg } from "../contexts/OrgContext";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-
 import logo from "../assets/rz-modern-white.svg";
 
 type AppNavItem = {
   to: string;
   label: string;
+  shortLabel?: string;
+  description: string;
   icon: React.ComponentType<{ className?: string }>;
   exact?: boolean;
 };
 
-const NAV_ITEMS: AppNavItem[] = [
+type NavGroup = {
+  label: string;
+  items: AppNavItem[];
+};
+
+const OVERVIEW_ITEM: AppNavItem = {
+  to: "/dashboard",
+  label: "Overview",
+  description: "What needs attention",
+  icon: LayoutDashboard,
+  exact: true,
+};
+
+const JOBS_ITEM: AppNavItem = {
+  to: "/jobs",
+  label: "Jobs",
+  description: "Every roofing job",
+  icon: BriefcaseBusiness,
+};
+
+const SCHEDULE_ITEM: AppNavItem = {
+  to: "/pipeline",
+  label: "Schedule",
+  description: "Production pipeline",
+  icon: CalendarRange,
+};
+
+const PAYOUTS_ITEM: AppNavItem = {
+  to: "/payouts",
+  label: "Payouts",
+  description: "Crew pay and records",
+  icon: WalletCards,
+};
+
+const NAV_GROUPS: NavGroup[] = [
   {
-    to: "/dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    exact: true,
+    label: "Work",
+    items: [
+      OVERVIEW_ITEM,
+      JOBS_ITEM,
+      SCHEDULE_ITEM,
+      {
+        to: "/schedule",
+        label: "Calendar",
+        description: "Monthly production view",
+        icon: CalendarDays,
+      },
+    ],
   },
   {
-    to: "/jobs",
-    label: "Jobs",
-    icon: BriefcaseBusiness,
+    label: "Money",
+    items: [
+      {
+        to: "/financial-overview",
+        label: "Financials",
+        description: "Profit and expenses",
+        icon: BarChart3,
+      },
+      PAYOUTS_ITEM,
+      {
+        to: "/invoices-page",
+        label: "Invoices",
+        description: "Customer billing",
+        icon: FileText,
+      },
+    ],
   },
   {
-    to: "/pipeline",
-    label: "Schedule",
-    icon: CalendarDays,
+    label: "People",
+    items: [
+      {
+        to: "/employees",
+        label: "Team",
+        description: "Members and access",
+        icon: Users,
+      },
+    ],
   },
-  {
-    to: "/payouts",
-    label: "Payouts",
-    icon: Wallet,
-  },
-  {
-    to: "/financial-overview",
-    label: "Financial",
-    icon: BarChart3,
-  },
-  {
-    to: "/schedule",
-    label: "Calendar",
-    icon: CalendarDays,
-  },
-  {
-    to: "/employees",
-    label: "Members",
-    icon: Users,
-  },
-  {
-    to: "/invoices-page",
-    label: "Invoices",
-    icon: FileText,
-  },
+];
+
+const ALL_NAV_ITEMS = NAV_GROUPS.flatMap((group) => group.items);
+const MOBILE_PRIMARY_ITEMS = [
+  OVERVIEW_ITEM,
+  JOBS_ITEM,
+  SCHEDULE_ITEM,
+  PAYOUTS_ITEM,
 ];
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
-}
-
-function navLinkBase(isActive: boolean) {
-  return cx(
-    "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm transition-colors",
-    isActive
-      ? " text-[var(--color-text)] "
-      : "text-[var(--color-text)]/70 hover:text-[var(--color-text)]"
-  );
 }
 
 function isActivePath(pathname: string, item: AppNavItem) {
@@ -174,20 +136,88 @@ function isActivePath(pathname: string, item: AppNavItem) {
   return pathname === item.to || pathname.startsWith(`${item.to}/`);
 }
 
+function pageMeta(pathname: string) {
+  if (/^\/job\/[^/]+$/.test(pathname)) {
+    return { label: "Job details", section: "Jobs" };
+  }
+  if (/^\/employees\/[^/]+$/.test(pathname)) {
+    return { label: "Team member", section: "Team" };
+  }
+
+  const current = ALL_NAV_ITEMS.find((item) =>
+    isActivePath(pathname, item)
+  );
+
+  if (current) {
+    return { label: current.label, section: current.description };
+  }
+
+  if (pathname === "/organization-settings") {
+    return { label: "Company settings", section: "Workspace" };
+  }
+
+  return { label: "Roof Zeus", section: "Workspace" };
+}
+
+function SidebarNavItem({
+  item,
+  pathname,
+}: {
+  item: AppNavItem;
+  pathname: string;
+}) {
+  const Icon = item.icon;
+  const active = isActivePath(pathname, item);
+
+  return (
+    <NavLink
+      to={item.to}
+      className={cx(
+        "group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 transition",
+        active
+          ? "bg-[var(--rz-nav-active)] text-[var(--color-text)] shadow-[inset_0_0_0_1px_rgb(var(--color-border-rgb)/0.12)]"
+          : "text-[rgb(var(--color-text-rgb)/0.66)] hover:bg-[var(--rz-nav-hover)] hover:text-[var(--color-text)]"
+      )}
+    >
+      <span
+        className={cx(
+          "grid h-8 w-8 shrink-0 place-items-center rounded-lg transition",
+          active
+            ? "bg-[rgb(var(--color-blue-rgb)/0.14)] text-[var(--color-blue)]"
+            : "text-[rgb(var(--color-text-rgb)/0.52)] group-hover:text-[var(--color-text)]"
+        )}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13px] font-semibold leading-4">
+          {item.label}
+        </span>
+        <span className="mt-0.5 block truncate text-[10px] leading-4 text-[rgb(var(--color-text-rgb)/0.42)]">
+          {item.description}
+        </span>
+      </span>
+
+      <ChevronRight
+        className={cx(
+          "h-3.5 w-3.5 shrink-0 transition",
+          active
+            ? "text-[var(--color-blue)]"
+            : "text-transparent group-hover:text-[rgb(var(--color-text-rgb)/0.35)]"
+        )}
+      />
+    </NavLink>
+  );
+}
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isJobDetailRoute =
-    /^\/job\/[^/]+$/.test(location.pathname) ||
-    /^\/jobs\/[^/]+$/.test(location.pathname);
-
   const [signingOut, setSigningOut] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [orgMenuOpen, setOrgMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
-
-  const orgMenuRef = useRef<HTMLDivElement>(null);
 
   const {
     orgId: activeOrgId,
@@ -197,6 +227,15 @@ export default function AdminLayout() {
     loading: membershipLoading,
   } = useOrg();
 
+  const meta = useMemo(
+    () => pageMeta(location.pathname),
+    [location.pathname]
+  );
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   useEffect(() => {
     if (!activeOrgId) {
       setOrgLogoUrl(null);
@@ -204,33 +243,11 @@ export default function AdminLayout() {
     }
 
     const orgRef = doc(db, "organizations", activeOrgId);
-    const unsub = onSnapshot(orgRef, (snap) => {
+    return onSnapshot(orgRef, (snap) => {
       const data = snap.data() as { logoUrl?: string | null } | undefined;
       setOrgLogoUrl(data?.logoUrl ?? null);
     });
-
-    return () => unsub();
   }, [activeOrgId]);
-
-  useEffect(() => {
-    if (!orgMenuOpen) return;
-
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        orgMenuRef.current &&
-        !orgMenuRef.current.contains(event.target as Node)
-      ) {
-        setOrgMenuOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [orgMenuOpen]);
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [location.pathname]);
 
   async function handleLogout() {
     try {
@@ -242,246 +259,310 @@ export default function AdminLayout() {
     }
   }
 
-  const activeNavLabel = useMemo(() => {
-    const current = NAV_ITEMS.find((item) =>
-      isActivePath(location.pathname, item)
-    );
-    return current?.label ?? "Dashboard";
-  }, [location.pathname]);
+  function startNewJob() {
+    navigate("/jobs", { state: { openNewJob: true } });
+    setMobileMenuOpen(false);
+  }
+
+  const isDetailRoute =
+    /^\/job\/[^/]+$/.test(location.pathname) ||
+    /^\/employees\/[^/]+$/.test(location.pathname);
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
-      <header className="sticky top-0 z-100 select-none">
-        <div className="border-b border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-background)]/70 backdrop-blur-xl">
-          <div className="mx-auto w-full max-w-[1700px] px-3 sm:px-4 lg:px-6">
-            <div className="flex h-[72px] items-center gap-3">
-              {/* LEFT: brand / org */}
-              <div className="flex min-w-0 shrink-0 items-center gap-3">
-                <button
-                  onClick={() => navigate("/dashboard")}
-                  className="shrink-0"
-                  aria-label="Go to dashboard"
-                >
-                  <img
-                    src={logo}
-                    alt="RoofZeus logo"
-                    className="w-[70px] brand-logo mr-6 lg:mr-20"
-                  />
-                </button>
-                {/* MOBILE: org row */}
-                <div className=" py-2 md:hidden">
-                  <div className="flex min-w-0 items-center gap-2">
-                    {orgLogoUrl && (
-                      <div className="h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-white/95 shadow-sm">
-                        <img
-                          src={orgLogoUrl}
-                          alt={`${activeOrgName || "Organization"} logo`}
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
-                    )}
+    <div className="rz-app-shell min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
+      <aside className="rz-app-sidebar fixed inset-y-0 left-0 z-40 hidden w-[252px] flex-col border-r border-[var(--color-border)] bg-[var(--rz-sidebar)] md:flex">
+        <div className="flex h-17 items-center border-b border-[var(--color-border)] px-5">
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard")}
+            className="inline-flex items-center"
+            aria-label="Go to overview"
+          >
+            <img
+              src={logo}
+              alt="Roof Zeus"
+              className="brand-logo h-auto w-[118px]"
+            />
+          </button>
+        </div>
 
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)]">
-                        {activeOrgName || activeNavLabel}
-                      </div>
-                    </div>
-                  </div>
+        <div className="border-b border-[var(--color-border)] p-4">
+          <button
+            type="button"
+            onClick={startNewJob}
+            className="rz-primary-action flex w-full items-center justify-between rounded-xl px-3.5 py-3 text-left"
+          >
+            <span>
+              <span className="block text-[13px] font-semibold">Add a job</span>
+              <span className="mt-0.5 block text-[10px] opacity-65">
+                Start a new roof record
+              </span>
+            </span>
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+          <nav className="space-y-5" aria-label="Main navigation">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label}>
+                <div className="mb-1.5 px-3 text-[9px] font-semibold uppercase tracking-[0.18em] text-[rgb(var(--color-text-rgb)/0.34)]">
+                  {group.label}
                 </div>
-                <div className="hidden min-w-0 md:flex md:items-center md:gap-3">
-                  {orgLogoUrl && (
-                    <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-white/95 shadow-sm">
-                      <img
-                        src={orgLogoUrl}
-                        alt={`${activeOrgName || "Organization"} logo`}
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
-                  )}
-
-                  <div className="min-w-0">
-                    {!membershipLoading && memberships.length > 1 && (
-                      <div className="mb-1 flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.5)]">
-                          Org
-                        </span>
-
-                        <select
-                          value={activeOrgId ?? ""}
-                          onChange={(e) => setActiveOrgId(e.target.value)}
-                          className="rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-2 py-1 text-[11px] text-[rgb(var(--color-text-rgb)/0.85)] outline-none hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                        >
-                          {memberships.map((m) => (
-                            <option
-                              key={m.id}
-                              value={m.orgId}
-                              className="text-black"
-                            >
-                              {m.orgId}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <div className="relative" ref={orgMenuRef}>
-                      <button
-                        type="button"
-                        onClick={() => setOrgMenuOpen((v) => !v)}
-                        className="inline-flex max-w-[220px] items-center gap-1 rounded-lg text-left text-sm font-semibold text-[rgb(var(--color-text-rgb)/0.92)] outline-none hover:text-[rgb(var(--color-text-rgb)/1)]"
-                      >
-                        <span className="truncate">
-                          {activeOrgName || activeNavLabel}
-                        </span>
-                        <ChevronDown
-                          className={cx(
-                            "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
-                            orgMenuOpen && "rotate-180"
-                          )}
-                        />
-                      </button>
-
-                      {orgMenuOpen && (
-                        <div className="absolute left-0 top-full z-50 mt-2 min-w-[13rem] rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.98)] p-2 shadow-xl">
-                          <button
-                            onClick={() => {
-                              setOrgMenuOpen(false);
-                              navigate("/organization-settings");
-                            }}
-                            className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[rgb(var(--color-text-rgb)/0.88)] hover:bg-[rgb(var(--color-surface-rgb)/0.75)]"
-                          >
-                            Organization Settings
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                <div className="space-y-1">
+                  {group.items.map((item) => (
+                    <SidebarNavItem
+                      key={item.to}
+                      item={item}
+                      pathname={location.pathname}
+                    />
+                  ))}
                 </div>
               </div>
+            ))}
+          </nav>
+        </div>
 
-              {/* CENTER: scrollable desktop nav */}
-              <div className="hidden min-w-0 flex-1 md:block lg:ml-10 xl:ml-20">
-                <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  <nav className="flex min-w-max items-center gap-1.5 pl-1 ">
-                    {NAV_ITEMS.map((item) => {
-                      const Icon = item.icon;
-                      const active = isActivePath(location.pathname, item);
+        <div className="border-t border-[var(--color-border)] p-3">
+          <NavLink
+            to="/organization-settings"
+            className={({ isActive }) =>
+              cx(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[12px] font-semibold transition",
+                isActive
+                  ? "bg-[var(--rz-nav-active)] text-[var(--color-text)]"
+                  : "text-[rgb(var(--color-text-rgb)/0.58)] hover:bg-[var(--rz-nav-hover)] hover:text-[var(--color-text)]"
+              )
+            }
+          >
+            <Settings className="h-4 w-4" />
+            Company settings
+          </NavLink>
+        </div>
+      </aside>
 
-                      return (
-                        <NavLink
-                          key={item.to}
-                          to={item.to}
-                          className={() => navLinkBase(active)}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{item.label}</span>
-                        </NavLink>
-                      );
-                    })}
-                  </nav>
-                </div>
+      <div className="min-h-screen md:pl-[252px]">
+        <header className="rz-app-topbar sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--rz-topbar)] backdrop-blur-xl">
+          <div className="flex h-17 items-center gap-3 px-4 sm:px-6 lg:px-8">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard")}
+              className="mr-1 md:hidden"
+              aria-label="Go to overview"
+            >
+              <img
+                src={logo}
+                alt="Roof Zeus"
+                className="brand-logo w-[88px]"
+              />
+            </button>
+
+            <div className="hidden min-w-0 md:block">
+              <div className="truncate text-sm font-semibold text-[var(--color-text)]">
+                {meta.label}
               </div>
-
-              {/* RIGHT: actions */}
-              <div className="ml-auto flex shrink-0 items-center gap-2">
-                <ThemeToggleButton />
-
-                <button
-                  onClick={handleLogout}
-                  disabled={signingOut}
-                  className="inline-flex p-2 items-center justify-center  text-red-400  transition hover:bg-red-500/50 cursor-pointer disabled:opacity-60 mr-4 md:mr-0"
-                  aria-label="Sign out"
-                  title={signingOut ? "Signing out..." : "Sign out"}
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-
-                <button
-                  type="button"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] text-[rgb(var(--color-text-rgb)/0.85)] transition hover:bg-[rgb(var(--color-surface-rgb)/0.75)] md:hidden"
-                  onClick={() => setMobileOpen((v) => !v)}
-                  aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                  aria-expanded={mobileOpen}
-                  aria-controls="mobile-admin-nav"
-                >
-                  <HamburgerIcon open={mobileOpen} className="h-5 w-5" />
-                </button>
+              <div className="mt-0.5 truncate text-[10px] text-[rgb(var(--color-text-rgb)/0.44)]">
+                {meta.section}
               </div>
             </div>
 
-            {/* MOBILE nav panel */}
-            {mobileOpen && (
-              <div id="mobile-admin-nav" className="pb-3 md:hidden">
-                <div className="border border-[rgb(var(--color-border-rgb)/0.14)] bg-[var(--color-background)]  backdrop-blur">
-                  {!membershipLoading && memberships.length > 1 && (
-                    <div className="mb-2 px-2 pt-1">
-                      <label className="mb-1 block text-[10px] uppercase tracking-wide text-[rgb(var(--color-text-rgb)/0.55)]">
-                        Organization
-                      </label>
-                      <select
-                        value={activeOrgId ?? ""}
-                        onChange={(e) => setActiveOrgId(e.target.value)}
-                        className="w-full rounded-lg border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-2 text-sm text-[rgb(var(--color-text-rgb)/0.9)] outline-none"
-                      >
-                        {memberships.map((m) => (
-                          <option
-                            key={m.id}
-                            value={m.orgId}
-                            className="text-black"
-                          >
-                            {m.orgId}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  <div className="grid gap-1">
-                    {NAV_ITEMS.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <NavLink
-                          key={item.to}
-                          to={item.to}
-                          onClick={() => setMobileOpen(false)}
-                          className={() =>
-                            navLinkBase(isActivePath(location.pathname, item))
-                          }
-                        >
-                          <Icon className="h-4 w-4" />
-                          {item.label}
-                        </NavLink>
-                      );
-                    })}
+            <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
+              <div className="hidden min-w-0 items-center gap-2 sm:flex">
+                {orgLogoUrl ? (
+                  <div className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg border border-[var(--color-border)] bg-white">
+                    <img
+                      src={orgLogoUrl}
+                      alt=""
+                      className="h-full w-full object-contain p-0.5"
+                    />
                   </div>
+                ) : null}
 
-                  <div className="mt-2 border-t border-[rgb(var(--color-border-rgb)/0.12)] pt-2">
-                    <button
-                      onClick={() => {
-                        setMobileOpen(false);
-                        navigate("/organization-settings");
-                      }}
-                      className="block w-full rounded-xl px-3 py-2 text-left text-sm text-[rgb(var(--color-text-rgb)/0.82)] transition hover:bg-[rgb(var(--color-text-rgb)/0.04)]"
+                {!membershipLoading && memberships.length > 1 ? (
+                  <label className="relative">
+                    <span className="sr-only">Active company</span>
+                    <select
+                      value={activeOrgId ?? ""}
+                      onChange={(event) => setActiveOrgId(event.target.value)}
+                      className="rz-compact-select max-w-[190px]"
                     >
-                      Organization Settings
-                    </button>
+                      {memberships.map((membership) => (
+                        <option key={membership.id} value={membership.orgId}>
+                          {membership.orgId}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <div className="max-w-[180px] truncate text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.72)]">
+                    {activeOrgName || "Company workspace"}
                   </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={startNewJob}
+                className="rz-topbar-add inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[11px] font-semibold md:hidden"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden min-[390px]:inline">Job</span>
+              </button>
+
+              <ThemeToggleButton />
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className="rz-icon-button hidden h-9 w-9 items-center justify-center sm:inline-flex"
+                aria-label={signingOut ? "Signing out" : "Sign out"}
+                title={signingOut ? "Signing out…" : "Sign out"}
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+
+              <button
+                type="button"
+                className="rz-icon-button inline-flex h-9 w-9 items-center justify-center md:hidden"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <Menu className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <main
+          className={cx(
+            "rz-app-main min-w-0 pb-24 md:pb-8",
+            isDetailRoute
+              ? "w-full"
+              : "mx-auto w-full max-w-[1560px] px-3 py-4 sm:px-5 sm:py-6 lg:px-8"
+          )}
+        >
+          <Outlet />
+        </main>
+      </div>
+
+      {mobileMenuOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close menu"
+          />
+
+          <div className="absolute inset-x-3 bottom-[84px] max-h-[calc(100dvh-110px)] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-2xl">
+            <div className="flex items-center justify-between px-2 pb-3 pt-1">
+              <div>
+                <div className="text-sm font-semibold">
+                  {activeOrgName || "Company workspace"}
+                </div>
+                <div className="mt-0.5 text-[10px] text-[var(--color-muted)]">
+                  All tools
                 </div>
               </div>
-            )}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rz-icon-button inline-flex h-9 w-9 items-center justify-center"
+                aria-label="Close menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {ALL_NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const active = isActivePath(location.pathname, item);
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={cx(
+                      "flex min-h-[74px] flex-col justify-between rounded-xl border p-3 transition",
+                      active
+                        ? "border-[rgb(var(--color-blue-rgb)/0.3)] bg-[rgb(var(--color-blue-rgb)/0.1)] text-[var(--color-text)]"
+                        : "border-[var(--color-border)] bg-[var(--color-card-alt)] text-[rgb(var(--color-text-rgb)/0.68)]"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="text-[12px] font-semibold">
+                      {item.label}
+                    </span>
+                  </NavLink>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 grid gap-2 border-t border-[var(--color-border)] pt-3">
+              <NavLink
+                to="/organization-settings"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-[12px] font-semibold text-[rgb(var(--color-text-rgb)/0.7)] hover:bg-[var(--color-card-alt)]"
+              >
+                <Settings className="h-4 w-4" />
+                Company settings
+              </NavLink>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-left text-[12px] font-semibold text-red-300 hover:bg-red-500/10"
+              >
+                <LogOut className="h-4 w-4" />
+                {signingOut ? "Signing out…" : "Sign out"}
+              </button>
+            </div>
           </div>
         </div>
-      </header>
+      ) : null}
 
-      <main
-        className={
-          isJobDetailRoute
-            ? "w-full max-w-none px-0 py-0"
-            : "mx-auto w-full max-w-[1700px] px-3 sm:px-4 lg:px-6 py-6 sm:py-8"
-        }
-      >
-        <Outlet />
-      </main>
+      <nav className="rz-mobile-nav fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--rz-mobile-nav)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl md:hidden">
+        <div className="grid grid-cols-5">
+          {MOBILE_PRIMARY_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const active = isActivePath(location.pathname, item);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={cx(
+                  "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-semibold transition",
+                  active
+                    ? "text-[var(--color-blue)]"
+                    : "text-[rgb(var(--color-text-rgb)/0.48)]"
+                )}
+              >
+                <Icon className="h-[18px] w-[18px]" />
+                {item.shortLabel || item.label}
+              </NavLink>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className={cx(
+              "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-semibold transition",
+              mobileMenuOpen
+                ? "text-[var(--color-blue)]"
+                : "text-[rgb(var(--color-text-rgb)/0.48)]"
+            )}
+          >
+            <MoreHorizontal className="h-[18px] w-[18px]" />
+            More
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

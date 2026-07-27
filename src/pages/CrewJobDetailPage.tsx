@@ -100,7 +100,7 @@ function MotionCard({
   return (
     <motion.section
       {...fadeUp(delay)}
-      className="rounded-2xl bg-white/50 hover:bg-white transition duration-300 ease-in-out p-6 shadow ring-1 ring-black/5"
+      className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm sm:p-5"
     >
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-[var(--color-text)]">
@@ -127,7 +127,7 @@ function ModalShell({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-xl rounded-2xl bg-white p-5 shadow-xl">
+      <div className="w-full max-w-xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 shadow-xl">
         <div className="flex items-center justify-between gap-3">
           <div className="text-lg font-semibold text-[var(--color-text)]">
             {title}
@@ -135,7 +135,7 @@ function ModalShell({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/80 hover:bg-[var(--color-card-hover)] transition"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-alt)] hover:bg-[var(--color-card-hover)] transition"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -411,7 +411,7 @@ export default function CrewJobDetailPage() {
   }
 
   if (loading) {
-    return <div className="py-10 text-center text-gray-500">Loading job…</div>;
+    return <div className="py-10 text-center text-[var(--color-muted)]">Loading job…</div>;
   }
   if (error || !job) {
     return (
@@ -456,8 +456,8 @@ export default function CrewJobDetailPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Job Details</h1>
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <h2 className="text-xl font-medium text-gray-900">
+      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm sm:p-5">
+        <h2 className="text-xl font-semibold text-[var(--color-text)]">
           {address || "Unassigned address"}
         </h2>
         <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
@@ -469,14 +469,14 @@ export default function CrewJobDetailPage() {
             {feltCompleted ? (
               <span className="text-emerald-700">Completed</span>
             ) : feltScheduled ? (
-              <span className="text-yellow-700">Scheduled</span>
+              <span className="text-amber-300">Scheduled</span>
             ) : (
-              <span className="text-gray-600">Not scheduled</span>
+              <span className="text-[var(--color-muted)]">Not scheduled</span>
             )}
             {!feltCompleted && feltScheduled && canCompleteTasks && (
               <button
                 onClick={() => markCompleted("feltCompletedAt")}
-                className="ml-2 text-xs text-blue-600 underline"
+                className="ml-2 text-xs font-semibold text-[var(--color-blue)]"
               >
                 Mark complete
               </button>
@@ -487,14 +487,14 @@ export default function CrewJobDetailPage() {
             {shinglesCompleted ? (
               <span className="text-emerald-700">Completed</span>
             ) : shinglesScheduled ? (
-              <span className="text-yellow-700">Scheduled</span>
+              <span className="text-amber-300">Scheduled</span>
             ) : (
-              <span className="text-gray-600">Not scheduled</span>
+              <span className="text-[var(--color-muted)]">Not scheduled</span>
             )}
             {!shinglesCompleted && shinglesScheduled && canCompleteTasks && (
               <button
                 onClick={() => markCompleted("shinglesCompletedAt")}
-                className="ml-2 text-xs text-blue-600 underline"
+                className="ml-2 text-xs font-semibold text-[var(--color-blue)]"
               >
                 Mark complete
               </button>
@@ -505,14 +505,14 @@ export default function CrewJobDetailPage() {
             {punchCompleted ? (
               <span className="text-emerald-700">Completed</span>
             ) : punchScheduled ? (
-              <span className="text-yellow-700">Scheduled</span>
+              <span className="text-amber-300">Scheduled</span>
             ) : (
-              <span className="text-gray-600">Not scheduled</span>
+              <span className="text-[var(--color-muted)]">Not scheduled</span>
             )}
             {!punchCompleted && punchScheduled && canCompleteTasks && (
               <button
                 onClick={() => markCompleted("punchedAt")}
-                className="ml-2 text-xs text-blue-600 underline"
+                className="ml-2 text-xs font-semibold text-[var(--color-blue)]"
               >
                 Mark complete
               </button>
@@ -529,7 +529,7 @@ export default function CrewJobDetailPage() {
             <button
               type="button"
               onClick={() => setNoteModalOpen(true)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/80 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-alt)] text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
               title="Add note"
             >
               <Plus className="h-4 w-4" />
@@ -547,7 +547,7 @@ export default function CrewJobDetailPage() {
               .map((n) => (
                 <motion.li
                   key={n.id}
-                  className="mb-2 flex items-start gap-3 rounded-xl bg-white/70 p-3 ring-1 ring-black/5 hover:bg-white transition"
+                  className="mb-2 flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] p-3 transition hover:bg-[var(--color-card-hover)]"
                   variants={item}
                   initial="initial"
                   animate="animate"
@@ -579,7 +579,7 @@ export default function CrewJobDetailPage() {
             <button
               type="button"
               onClick={() => setPhotoModalOpen(true)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-white/80 text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-card-alt)] text-[var(--color-text)] hover:bg-[var(--color-card-hover)] transition"
               title="Add photo"
             >
               <Plus className="h-4 w-4" />
@@ -645,13 +645,13 @@ export default function CrewJobDetailPage() {
           onChange={(e) => setNoteText(e.target.value)}
           rows={6}
           placeholder="Type your note…"
-          className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm"
+          className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] px-3 py-2 text-sm text-[var(--color-text)]"
         />
         <div className="mt-4 flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={() => setNoteModalOpen(false)}
-            className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-2 text-sm hover:bg-[var(--color-card-hover)]"
+            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] px-4 py-2 text-sm hover:bg-[var(--color-card-hover)]"
           >
             Cancel
           </button>
@@ -713,7 +713,7 @@ export default function CrewJobDetailPage() {
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--color-text)] shadow-sm hover:bg-[var(--color-card-hover)]"
+                className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-alt)] px-3 py-2 text-sm font-medium text-[var(--color-text)] shadow-sm hover:bg-[var(--color-card-hover)]"
               >
                 <Camera className="h-4 w-4 text-[var(--color-primary)]" />
                 <span>Camera</span>
@@ -721,7 +721,7 @@ export default function CrewJobDetailPage() {
               <button
                 type="button"
                 onClick={() => galleryInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm font-medium text-[var(--color-text)] shadow-sm hover:bg-[var(--color-card-hover)]"
+                className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-alt)] px-3 py-2 text-sm font-medium text-[var(--color-text)] shadow-sm hover:bg-[var(--color-card-hover)]"
               >
                 <ImageIcon className="h-4 w-4 text-[var(--color-primary)]" />
                 <span>Gallery</span>
@@ -748,7 +748,7 @@ export default function CrewJobDetailPage() {
               value={photoCaption}
               onChange={(e) => setPhotoCaption(e.target.value)}
               placeholder="Optional caption"
-              className="h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-white/80 px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--color-accent)] shadow-sm"
+              className="h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-alt)] px-3 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)] shadow-sm"
             />
           </div>
           <div className="max-w-[80px] sm:w-auto">
@@ -766,7 +766,7 @@ export default function CrewJobDetailPage() {
       {/* ===== Global Toast ===== */}
       {toast && (
         <div className="fixed right-4 top-20 z-50">
-          <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-white/95 px-4 py-3 text-sm shadow-lg">
+          <div className="flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3 text-sm shadow-lg">
             <div className="mt-0.5">
               {toast.status === "success" ? (
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />

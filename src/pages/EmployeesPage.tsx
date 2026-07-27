@@ -338,9 +338,9 @@ export default function EmployeesPage() {
       variants={pageIn}
       initial="hidden"
       animate="show"
-      className="min-h-screen bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]"
+      className="w-full"
     >
-      <div className="mx-auto max-w-[1200px] py-10 px-4 md:px-0">
+      <div className="mx-auto max-w-[1200px]">
         {/* Header */}
         <motion.div variants={fadeUp} className="mb-6">
           <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -354,7 +354,7 @@ export default function EmployeesPage() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-sm md:text-lg font-semibold tracking-tight">
-                    Members
+                    Team
                   </h1>
                   <p
                     className="mt-1 text-sm"
@@ -397,9 +397,9 @@ export default function EmployeesPage() {
         {/* Add employee */}
         <motion.section
           variants={fadeUp}
-          className="relative z-30 mb-6  p-4 md:p-5  "
+          className="relative z-30 mb-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm md:p-5"
         >
-          <div className="flex items-center justify-between gap-3 flex-wrap mt-20">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
               <div className="h-9 w-9  flex items-center justify-center">
                 <UserPlus
@@ -423,7 +423,7 @@ export default function EmployeesPage() {
 
           <div className="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-3">
             <div className="lg:col-span-4">
-              <label className="text-[12px] text-white/55">Member name</label>
+              <label className="text-[12px] text-[var(--color-muted)]">Member name</label>
               <div className="mt-1 relative">
                 <input
                   value={name}
@@ -435,7 +435,7 @@ export default function EmployeesPage() {
             </div>
 
             <div className="lg:col-span-4">
-              <label className="text-[12px] text-white/55">
+              <label className="text-[12px] text-[var(--color-muted)]">
                 Email (optional)
               </label>
               <div className="mt-1 relative">
@@ -454,7 +454,7 @@ export default function EmployeesPage() {
 
             {/* ✅ Styled dropdown (matches JobsPage SortMenu) */}
             <div className="lg:col-span-3">
-              <label className="text-[12px] text-white/55">Role</label>
+              <label className="text-[12px] text-[var(--color-muted)]">Role</label>
               <div className="mt-1 relative">
                 <Shield
                   className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
@@ -480,9 +480,9 @@ export default function EmployeesPage() {
                     : "cursor-pointer"
                 )}
                 style={{
-                  backgroundColor: "var(--btn-bg)",
-                  color: "var(--btn-text)",
-                  borderColor: "rgba(0,0,0,0.25)",
+                  backgroundColor: "rgb(var(--color-blue-rgb) / 0.16)",
+                  color: "var(--color-text)",
+                  borderColor: "rgb(var(--color-blue-rgb) / 0.34)",
                 }}
               >
                 {creating ? "Saving…" : "Add"}
@@ -527,7 +527,7 @@ export default function EmployeesPage() {
         {/* List */}
         <motion.section
           variants={fadeUp}
-          className="relative z-0    hover:shadow-md overflow-hidden"
+          className="relative z-0 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-sm"
         >
           <div className="px-5 py-4 border-b border-b-[var(--color-text)]/20 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>
@@ -544,8 +544,8 @@ export default function EmployeesPage() {
               <div
                 className="rounded-2xl border p-6 text-center"
                 style={{
-                  borderColor: "rgba(255,255,255,0.10)",
-                  backgroundColor: "rgba(11,14,20,0.45)",
+                  borderColor: "var(--color-border)",
+                  backgroundColor: "var(--color-card-alt)",
                 }}
               >
                 <div className="text-sm font-semibold">No employees yet.</div>
@@ -584,7 +584,7 @@ export default function EmployeesPage() {
                         }
                       }}
                       className={cx(
-                        "group  p-4 cursor-pointer transition bg-[var(--color-card)] mb-3",
+                        "group mb-2 cursor-pointer rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] p-4 transition hover:bg-[var(--color-card-hover)]",
                         "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)]/40"
                       )}
                     >

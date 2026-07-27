@@ -246,47 +246,30 @@ function StatCard({
       ? "ring-[rgba(16,185,129,0.22)]"
       : "ring-white/10";
 
-  const toneGlow =
-    tone === "gold"
-      ? "from-[rgba(207,174,93,0.22)]"
-      : tone === "blue"
-      ? "from-[rgba(106,169,255,0.22)]"
-      : tone === "green"
-      ? "from-[rgba(16,185,129,0.22)]"
-      : "from-white/10";
-
   return (
     <motion.div
       variants={cardIn}
       className={cx(
-        "relative overflow-hidden rounded-2xl bg-[var(--color-surface)]/25 backdrop-blur-md",
+        "relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]",
         "ring-1 shadow-sm",
         toneRing
       )}
     >
-      <div
-        className={cx(
-          "pointer-events-none absolute -inset-24 opacity-60 blur-2xl",
-          "bg-gradient-to-br",
-          toneGlow,
-          "to-transparent"
-        )}
-      />
       <div className="relative p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-sm font-semibold text-white/85">{title}</div>
+            <div className="text-sm font-semibold text-[var(--color-text)]">{title}</div>
             {subtitle ? (
-              <div className="mt-0.5 text-xs text-white/55">{subtitle}</div>
+              <div className="mt-0.5 text-xs text-[var(--color-muted)]">{subtitle}</div>
             ) : null}
           </div>
           {icon ? (
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/5 ring-1 ring-white/10">
+            <div className="grid h-9 w-9 place-items-center rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)]">
               {icon}
             </div>
           ) : null}
         </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-white">
+        <div className="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text)]">
           {value}
         </div>
       </div>
@@ -1002,8 +985,8 @@ export default function FinancialOverviewPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl">
+    <div className="rz-financial-page">
+      <div className="mx-auto max-w-[1320px]">
         {/* Header */}
         <motion.div
           variants={stagger}
@@ -1014,25 +997,25 @@ export default function FinancialOverviewPage() {
           <motion.div variants={fadeUp} className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
+                <div className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--color-text)]">
                   Financial Overview
                 </div>
-                <div className="mt-1 text-sm text-white/60">
+                <div className="mt-1 text-sm text-[var(--color-muted)]">
                   Earnings, expenses, payouts, and invoicing — in one place.
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <label className="text-xs text-white/60">Range</label>
+                <label className="text-xs text-[var(--color-muted)]">Range</label>
                 <select
                   value={rangeOption}
                   onChange={(e) =>
                     setRangeOption(e.target.value as RangeOption)
                   }
                   className={cx(
-                    "rounded-xl bg-white/5 px-3 py-2 text-sm text-white",
-                    "ring-1 ring-white/10 outline-none",
-                    "hover:bg-white/10 focus:ring-white/20"
+                    "rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] px-3 py-2 text-sm text-[var(--color-text)]",
+                    "outline-none",
+                    "hover:bg-[var(--color-card-hover)]"
                   )}
                 >
                   <option value="6months">Last 6 months</option>

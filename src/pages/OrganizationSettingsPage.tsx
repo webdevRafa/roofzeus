@@ -452,7 +452,7 @@ export default function OrganizationSettingsPage() {
         ) : null}
       </div>
 
-      <section className="  bg-[var(--color-background)] p-5 sm:p-6">
+      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 sm:p-6">
         <div className="mb-5 flex items-center gap-2">
           <Building2 className="h-4 w-4 text-[var(--color-text)]/70" />
           <h2 className="text-sm font-semibold uppercase tracking-wide text-[var(--color-text)]/80">

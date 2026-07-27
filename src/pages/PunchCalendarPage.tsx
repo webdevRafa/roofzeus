@@ -142,13 +142,13 @@ export default function PunchCalendarPage() {
     monthTotals.felt + monthTotals.shingles + monthTotals.punch;
 
   return (
-    <div className="rz-dashboard-shell min-h-screen w-full pb-10 text-[var(--color-text)] bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]">
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6">
+    <div className="rz-dashboard-shell w-full pb-10 text-[var(--color-text)]">
+      <div className="mx-auto w-full max-w-[1400px]">
         {/* Page heading */}
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-xl font-semibold tracking-wide text-[var(--color-text)] sm:text-2xl">
-              Schedule Center
+            <h1 className="text-xl font-semibold text-[var(--color-text)] sm:text-2xl">
+              Production calendar
             </h1>
             <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
               Monthly view for dry-in, shingles, and punch scheduling.
