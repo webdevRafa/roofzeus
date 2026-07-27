@@ -16,7 +16,6 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
-  Menu,
   MoreHorizontal,
   Plus,
   Settings,
@@ -126,12 +125,27 @@ const MOBILE_PRIMARY_ITEMS = [
   SCHEDULE_ITEM,
   PAYOUTS_ITEM,
 ];
+const MOBILE_PRIMARY_PATHS = new Set(
+  MOBILE_PRIMARY_ITEMS.map((item) => item.to)
+);
+const MOBILE_MORE_ITEMS = ALL_NAV_ITEMS.filter(
+  (item) => !MOBILE_PRIMARY_PATHS.has(item.to)
+);
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
 function isActivePath(pathname: string, item: AppNavItem) {
+  if (item.to === "/jobs" && /^\/job\/[^/]+$/.test(pathname)) {
+    return true;
+  }
+  if (item.to === "/employees" && /^\/employees\/[^/]+$/.test(pathname)) {
+    return true;
+  }
+  if (item.to === "/invoices-page" && /^\/invoices\/[^/]+$/.test(pathname)) {
+    return true;
+  }
   if (item.exact) return pathname === item.to;
   return pathname === item.to || pathname.startsWith(`${item.to}/`);
 }
@@ -142,6 +156,9 @@ function pageMeta(pathname: string) {
   }
   if (/^\/employees\/[^/]+$/.test(pathname)) {
     return { label: "Team member", section: "Team" };
+  }
+  if (/^\/invoices\/[^/]+$/.test(pathname)) {
+    return { label: "Invoice", section: "Customer billing" };
   }
 
   const current = ALL_NAV_ITEMS.find((item) =>
@@ -237,6 +254,23 @@ export default function AdminLayout() {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
     if (!activeOrgId) {
       setOrgLogoUrl(null);
       return;
@@ -267,6 +301,12 @@ export default function AdminLayout() {
   const isDetailRoute =
     /^\/job\/[^/]+$/.test(location.pathname) ||
     /^\/employees\/[^/]+$/.test(location.pathname);
+  const mobileMoreActive =
+    mobileMenuOpen ||
+    location.pathname === "/organization-settings" ||
+    MOBILE_MORE_ITEMS.some((item) =>
+      isActivePath(location.pathname, item)
+    );
 
   return (
     <div className="rz-app-shell min-h-screen bg-[var(--color-background)] text-[var(--color-text)]">
@@ -353,9 +393,18 @@ export default function AdminLayout() {
               <img
                 src={logo}
                 alt="Roof Zeus"
-                className="brand-logo w-[88px]"
+                className="brand-logo w-[80px] min-[390px]:w-[88px]"
               />
             </button>
+
+            <div className="min-w-0 flex-1 md:hidden">
+              <div className="truncate text-[12px] font-semibold leading-4 text-[var(--color-text)]">
+                {meta.label}
+              </div>
+              <div className="truncate text-[9px] leading-4 text-[rgb(var(--color-text-rgb)/0.45)]">
+                {meta.section}
+              </div>
+            </div>
 
             <div className="hidden min-w-0 md:block">
               <div className="truncate text-sm font-semibold text-[var(--color-text)]">
@@ -366,8 +415,8 @@ export default function AdminLayout() {
               </div>
             </div>
 
-            <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2">
-              <div className="hidden min-w-0 items-center gap-2 sm:flex">
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <div className="hidden min-w-0 items-center gap-2 md:flex">
                 {orgLogoUrl ? (
                   <div className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-lg border border-[var(--color-border)] bg-white">
                     <img
@@ -415,26 +464,13 @@ export default function AdminLayout() {
                 type="button"
                 onClick={handleLogout}
                 disabled={signingOut}
-                className="rz-icon-button hidden h-9 w-9 items-center justify-center sm:inline-flex"
+                className="rz-icon-button hidden h-9 w-9 items-center justify-center md:inline-flex"
                 aria-label={signingOut ? "Signing out" : "Sign out"}
                 title={signingOut ? "Signing out…" : "Sign out"}
               >
                 <LogOut className="h-4 w-4" />
               </button>
 
-              <button
-                type="button"
-                className="rz-icon-button inline-flex h-9 w-9 items-center justify-center md:hidden"
-                onClick={() => setMobileMenuOpen((open) => !open)}
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileMenuOpen}
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-4 w-4" />
-                ) : (
-                  <Menu className="h-4 w-4" />
-                )}
-              </button>
             </div>
           </div>
         </header>
@@ -455,19 +491,29 @@ export default function AdminLayout() {
         <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/45"
             onClick={() => setMobileMenuOpen(false)}
             aria-label="Close menu"
           />
 
-          <div className="absolute inset-x-3 bottom-[84px] max-h-[calc(100dvh-110px)] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-2xl">
+          <section
+            id="rz-app-mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rz-app-mobile-menu-title"
+            className="rz-app-mobile-sheet absolute inset-x-2 overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-3 shadow-2xl min-[390px]:inset-x-3"
+          >
+            <div className="mx-auto mb-2 h-1 w-9 rounded-full bg-[rgb(var(--color-text-rgb)/0.18)]" />
             <div className="flex items-center justify-between px-2 pb-3 pt-1">
-              <div>
-                <div className="text-sm font-semibold">
+              <div className="min-w-0">
+                <div
+                  id="rz-app-mobile-menu-title"
+                  className="truncate text-sm font-semibold"
+                >
                   {activeOrgName || "Company workspace"}
                 </div>
                 <div className="mt-0.5 text-[10px] text-[var(--color-muted)]">
-                  All tools
+                  More tools
                 </div>
               </div>
               <button
@@ -475,13 +521,33 @@ export default function AdminLayout() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="rz-icon-button inline-flex h-9 w-9 items-center justify-center"
                 aria-label="Close menu"
+                autoFocus
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
+            {!membershipLoading && memberships.length > 1 ? (
+              <label className="mb-3 block px-2">
+                <span className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[0.14em] text-[rgb(var(--color-text-rgb)/0.42)]">
+                  Active company
+                </span>
+                <select
+                  value={activeOrgId ?? ""}
+                  onChange={(event) => setActiveOrgId(event.target.value)}
+                  className="rz-compact-select w-full"
+                >
+                  {memberships.map((membership) => (
+                    <option key={membership.id} value={membership.orgId}>
+                      {membership.orgId}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
             <div className="grid grid-cols-2 gap-2">
-              {ALL_NAV_ITEMS.map((item) => {
+              {MOBILE_MORE_ITEMS.map((item) => {
                 const Icon = item.icon;
                 const active = isActivePath(location.pathname, item);
                 return (
@@ -489,7 +555,7 @@ export default function AdminLayout() {
                     key={item.to}
                     to={item.to}
                     className={cx(
-                      "flex min-h-[74px] flex-col justify-between rounded-xl border p-3 transition",
+                      "flex min-h-[76px] flex-col justify-between rounded-xl border p-3 transition active:scale-[0.98]",
                       active
                         ? "border-[rgb(var(--color-blue-rgb)/0.3)] bg-[rgb(var(--color-blue-rgb)/0.1)] text-[var(--color-text)]"
                         : "border-[var(--color-border)] bg-[var(--color-card-alt)] text-[rgb(var(--color-text-rgb)/0.68)]"
@@ -522,11 +588,14 @@ export default function AdminLayout() {
                 {signingOut ? "Signing out…" : "Sign out"}
               </button>
             </div>
-          </div>
+          </section>
         </div>
       ) : null}
 
-      <nav className="rz-mobile-nav fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--rz-mobile-nav)] px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl md:hidden">
+      <nav
+        className="rz-app-mobile-dock fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-border)] bg-[var(--rz-app-mobile-dock)] px-2 pt-2 backdrop-blur-xl md:hidden"
+        aria-label="Primary app navigation"
+      >
         <div className="grid grid-cols-5">
           {MOBILE_PRIMARY_ITEMS.map((item) => {
             const Icon = item.icon;
@@ -535,10 +604,11 @@ export default function AdminLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                aria-current={active ? "page" : undefined}
                 className={cx(
-                  "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-semibold transition",
+                  "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-semibold transition active:scale-95",
                   active
-                    ? "text-[var(--color-blue)]"
+                    ? "bg-[rgb(var(--color-blue-rgb)/0.08)] text-[var(--color-blue)]"
                     : "text-[rgb(var(--color-text-rgb)/0.48)]"
                 )}
               >
@@ -551,10 +621,12 @@ export default function AdminLayout() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="rz-app-mobile-menu"
             className={cx(
-              "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-semibold transition",
-              mobileMenuOpen
-                ? "text-[var(--color-blue)]"
+              "flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-semibold transition active:scale-95",
+              mobileMoreActive
+                ? "bg-[rgb(var(--color-blue-rgb)/0.08)] text-[var(--color-blue)]"
                 : "text-[rgb(var(--color-text-rgb)/0.48)]"
             )}
           >
