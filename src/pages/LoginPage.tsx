@@ -197,9 +197,6 @@ export default function LoginPage() {
               <h2>Welcome back</h2>
               <p>Sign in to your Roof Zeus workspace.</p>
             </div>
-            <a className="rz-auth-back" href={marketingOrigin()}>
-              Website
-            </a>
           </div>
 
           {error ? (
