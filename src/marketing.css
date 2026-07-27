@@ -13,6 +13,7 @@
   --rz-paper: #f0ede5;
   --rz-paper-ink: #111b27;
   --rz-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+  --rz-display: "Manrope", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -56,10 +57,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: var(--rz-gold);
+  color: var(--rz-blue-bright);
   font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -69,7 +70,7 @@ body {
   width: 22px;
   height: 1px;
   background: currentColor;
-  box-shadow: 8px 0 18px currentColor;
+  box-shadow: none;
 }
 
 .rz-section-heading {
@@ -89,19 +90,20 @@ body {
 .rz-final-cta h2 {
   margin: 20px 0 0;
   color: var(--rz-text);
-  font-size: clamp(1.9rem, 3.6vw, 3.05rem);
-  font-weight: 550;
-  letter-spacing: -0.035em;
-  line-height: 1.08;
+  font-family: var(--rz-display);
+  font-size: clamp(1.85rem, 3.2vw, 2.7rem);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.14;
 }
 
 .rz-section-heading p,
 .rz-final-cta p {
   max-width: 620px;
-  margin: 24px 0 0;
+  margin: 18px 0 0;
   color: var(--rz-muted);
   font-size: 1rem;
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 .rz-section-heading--center p {
@@ -131,7 +133,7 @@ body {
   padding: 0 20px;
   font-size: 0.86rem;
   font-weight: 650;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   text-decoration: none;
   transition: transform 180ms ease, border-color 180ms ease,
     background-color 180ms ease, box-shadow 180ms ease !important;
@@ -355,23 +357,24 @@ body {
 .rz-page-hero h1 {
   margin: 22px 0 0;
   color: #f7f9fc;
-  font-size: clamp(2.9rem, 5vw, 4.65rem);
-  font-weight: 550;
-  letter-spacing: -0.05em;
-  line-height: 1.02;
+  font-family: var(--rz-display);
+  font-size: clamp(2.7rem, 4.4vw, 4.05rem);
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  line-height: 1.08;
 }
 
 .rz-hero h1 span,
 .rz-page-hero h1 span {
-  color: var(--rz-gold);
+  color: inherit;
 }
 
 .rz-hero__copy {
   max-width: 590px;
-  margin: 26px 0 0;
+  margin: 22px 0 0;
   color: #aebaca;
   font-size: 1rem;
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
 .rz-trial-note {
@@ -518,7 +521,7 @@ body {
 
 .rz-bento-card {
   min-height: 230px;
-  grid-column: span 4;
+  grid-column: span 3;
   display: flex;
   flex-direction: column;
   border-radius: 4px;
@@ -556,9 +559,10 @@ body {
 .rz-walkthrough-card h3 {
   margin: auto 0 0;
   color: #f0f5fb;
-  font-size: 1.12rem;
+  font-family: var(--rz-display);
+  font-size: 1.04rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.006em;
 }
 
 .rz-bento-card p,
@@ -642,7 +646,7 @@ body {
 }
 
 .rz-section-band--paper .rz-eyebrow {
-  color: #9a6e16;
+  color: #356a8a;
 }
 
 .rz-section-band--paper .rz-bento-card {
@@ -673,7 +677,8 @@ body {
 
 .rz-operations-board,
 .rz-lifecycle-board,
-.rz-profit-equation {
+.rz-profit-equation,
+.rz-documents-board {
   overflow: hidden;
   border: 1px solid rgba(221, 229, 238, 0.2);
   border-radius: 4px;
@@ -683,7 +688,8 @@ body {
 
 .rz-operations-board__header,
 .rz-lifecycle-board__header,
-.rz-profit-equation__header {
+.rz-profit-equation__header,
+.rz-documents-board__header {
   min-height: 54px;
   display: flex;
   align-items: center;
@@ -713,32 +719,47 @@ body {
 }
 
 .rz-operations-board__body {
-  padding: 20px;
+  padding: 24px;
 }
 
-.rz-operations-board__row {
-  min-height: 76px;
-  display: grid;
-  grid-template-columns: 38px 1fr auto;
-  align-items: center;
-  gap: 16px;
-  border: 1px solid var(--rz-line);
-  border-bottom: 0;
-  padding: 12px 15px;
-}
-
-.rz-operations-board__row:last-child {
-  border-bottom: 1px solid var(--rz-line);
-}
-
-.rz-operations-board__number {
-  color: var(--rz-gold);
-  font-size: 0.68rem;
-  font-weight: 700;
+.rz-operations-board__job span {
+  display: block;
+  color: #718398;
+  font-size: 0.66rem;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.rz-operations-board__row small,
+.rz-operations-board__job strong {
+  display: block;
+  margin-top: 7px;
+  color: var(--rz-text);
+  font-family: var(--rz-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.rz-operations-board__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 22px;
+}
+
+.rz-operations-board__metrics > div {
+  min-height: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid var(--rz-line);
+  border-right: 0;
+  padding: 13px;
+}
+
+.rz-operations-board__metrics > div:last-child {
+  border-right: 1px solid var(--rz-line);
+}
+
+.rz-operations-board__metrics small,
 .rz-profit-equation__formula span {
   display: block;
   color: #718398;
@@ -747,19 +768,31 @@ body {
   text-transform: uppercase;
 }
 
-.rz-operations-board__row strong {
+.rz-operations-board__metrics strong {
   display: block;
-  margin-top: 4px;
+  margin-top: 7px;
   color: var(--rz-text);
-  font-size: 0.82rem;
-  font-weight: 550;
+  font-family: var(--rz-display);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
-.rz-operations-board__tag {
-  border: 1px solid rgba(122, 201, 173, 0.25);
-  padding: 6px 8px;
+.rz-operations-board__metrics > div:last-child strong {
   color: var(--rz-green);
-  font-size: 0.6rem;
+}
+
+.rz-operations-board__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.rz-operations-board__links span {
+  border: 1px solid var(--rz-line);
+  padding: 7px 9px;
+  color: #9aabba;
+  font-size: 0.61rem;
 }
 
 .rz-operations-board__footer {
@@ -769,7 +802,7 @@ body {
   gap: 20px;
   border-top: 1px solid var(--rz-line);
   padding: 16px 20px;
-  color: var(--rz-gold);
+  color: var(--rz-blue-bright);
   font-size: 0.68rem;
   font-weight: 650;
 }
@@ -799,7 +832,7 @@ body {
 }
 
 .rz-lifecycle-board__steps span {
-  color: var(--rz-gold);
+  color: var(--rz-blue-bright);
   font-size: 0.68rem;
   font-weight: 700;
 }
@@ -807,8 +840,9 @@ body {
 .rz-lifecycle-board__steps strong {
   margin-top: auto;
   color: var(--rz-text);
+  font-family: var(--rz-display);
   font-size: 0.82rem;
-  font-weight: 550;
+  font-weight: 600;
 }
 
 .rz-lifecycle-board__steps small {
@@ -838,12 +872,13 @@ body {
 .rz-profit-equation__formula strong {
   margin-top: 8px;
   color: var(--rz-text);
+  font-family: var(--rz-display);
   font-size: 0.9rem;
-  font-weight: 550;
+  font-weight: 600;
 }
 
 .rz-profit-equation__formula b {
-  color: var(--rz-gold);
+  color: #65778c;
   font-size: 1.15rem;
   font-weight: 400;
 }
@@ -869,6 +904,54 @@ body {
   font-weight: 600;
 }
 
+.rz-documents-board__header span:last-child {
+  color: var(--rz-green);
+}
+
+.rz-documents-board__body {
+  padding: 20px;
+}
+
+.rz-documents-board__row {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--rz-line);
+  border-bottom: 0;
+  padding: 12px 15px;
+}
+
+.rz-documents-board__row:last-child {
+  border-bottom: 1px solid var(--rz-line);
+}
+
+.rz-documents-board__row > span {
+  color: var(--rz-blue-bright);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.rz-documents-board__row strong {
+  color: var(--rz-text);
+  font-family: var(--rz-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.rz-documents-board__row small {
+  color: var(--rz-green);
+  font-size: 0.64rem;
+}
+
+.rz-documents-board__footer {
+  border-top: 1px solid var(--rz-line);
+  padding: 16px 20px;
+  color: #7f91a5;
+  font-size: 0.68rem;
+}
+
 .rz-feature-split {
   display: grid;
   grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
@@ -885,16 +968,17 @@ body {
 .rz-feature-split h3 {
   margin: 18px 0 0;
   color: #f1f5fa;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+  font-family: var(--rz-display);
+  font-size: clamp(1.75rem, 2.7vw, 2.35rem);
   font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1.08;
+  letter-spacing: -0.012em;
+  line-height: 1.14;
 }
 
 .rz-feature-split p {
   margin: 18px 0 0;
   color: var(--rz-muted);
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 .rz-check-list {
@@ -931,7 +1015,7 @@ body {
 .rz-page-hero h1 {
   max-width: 900px;
   margin-inline: auto;
-  font-size: clamp(2.7rem, 5vw, 4.4rem);
+  font-size: clamp(2.55rem, 4.2vw, 3.7rem);
 }
 
 .rz-page-hero p {
@@ -939,7 +1023,7 @@ body {
   margin: 26px auto 0;
   color: var(--rz-muted);
   font-size: 1.02rem;
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 .rz-page-hero .rz-eyebrow {
@@ -993,14 +1077,15 @@ body {
 
 .rz-pricing-intro h1 {
   margin: 22px 0 0;
-  font-size: clamp(2.7rem, 5vw, 4.4rem);
-  font-weight: 550;
-  letter-spacing: -0.05em;
-  line-height: 1.02;
+  font-family: var(--rz-display);
+  font-size: clamp(2.55rem, 4.2vw, 3.7rem);
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  line-height: 1.08;
 }
 
 .rz-pricing-intro h1 span {
-  color: var(--rz-gold);
+  color: inherit;
 }
 
 .rz-pricing-intro > p {
@@ -1073,9 +1158,10 @@ body {
 }
 
 .rz-price-card__price strong {
-  font-size: clamp(3rem, 5vw, 4.35rem);
-  font-weight: 550;
-  letter-spacing: -0.055em;
+  font-family: var(--rz-display);
+  font-size: clamp(2.9rem, 4.5vw, 3.9rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   line-height: 0.95;
 }
 
@@ -1158,10 +1244,11 @@ body {
 
 .rz-faq-layout__aside h1 {
   margin: 20px 0 0;
-  font-size: clamp(2.4rem, 4vw, 3.7rem);
-  font-weight: 550;
-  letter-spacing: -0.045em;
-  line-height: 1.04;
+  font-family: var(--rz-display);
+  font-size: clamp(2.3rem, 3.8vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.014em;
+  line-height: 1.1;
 }
 
 .rz-faq-layout__aside p {
@@ -1255,10 +1342,11 @@ body {
 
 .rz-legal__aside h1 {
   margin: 19px 0 0;
-  font-size: 2.8rem;
+  font-family: var(--rz-display);
+  font-size: 2.45rem;
   font-weight: 600;
-  letter-spacing: -0.05em;
-  line-height: 1;
+  letter-spacing: -0.012em;
+  line-height: 1.1;
 }
 
 .rz-legal__aside p {
@@ -1322,7 +1410,7 @@ body {
 
 .rz-final-cta h2 {
   max-width: 720px;
-  font-size: clamp(1.9rem, 3.5vw, 3rem);
+  font-size: clamp(1.85rem, 3vw, 2.65rem);
 }
 
 .rz-final-cta .rz-actions {
@@ -1433,10 +1521,11 @@ body {
   max-width: 480px;
   margin: 0;
   color: #f5f8fc;
-  font-size: clamp(2.2rem, 3.4vw, 3.15rem);
-  font-weight: 550;
-  letter-spacing: -0.045em;
-  line-height: 1.04;
+  font-family: var(--rz-display);
+  font-size: clamp(2.05rem, 3vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.1;
 }
 
 .rz-auth-story p {
@@ -1485,9 +1574,10 @@ body {
 .rz-auth-form-panel h2 {
   margin: 0;
   color: white;
-  font-size: 1.7rem;
+  font-family: var(--rz-display);
+  font-size: 1.55rem;
   font-weight: 600;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.01em;
 }
 
 .rz-auth-form-panel__head p {
@@ -1884,19 +1974,27 @@ body {
   }
 
   .rz-hero h1 {
-    font-size: clamp(2.65rem, 12vw, 3.55rem);
+    font-size: clamp(2.45rem, 10.5vw, 3.2rem);
   }
 
   .rz-hero__copy {
     font-size: 0.94rem;
   }
 
-  .rz-operations-board__row {
-    grid-template-columns: 30px 1fr;
+  .rz-operations-board__body {
+    padding: 16px;
   }
 
-  .rz-operations-board__tag {
-    display: none;
+  .rz-operations-board__metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rz-operations-board__metrics > div:nth-child(2) {
+    border-right: 1px solid var(--rz-line);
+  }
+
+  .rz-operations-board__metrics > div:nth-child(n + 3) {
+    border-top: 0;
   }
 
   .rz-operations-board__footer {
@@ -1915,6 +2013,14 @@ body {
 
   .rz-lifecycle-board__steps > div:nth-child(n + 3) {
     border-top: 0;
+  }
+
+  .rz-documents-board__row {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .rz-documents-board__row small {
+    grid-column: 2;
   }
 
   .rz-profit-equation__formula {
@@ -1978,7 +2084,7 @@ body {
 
   .rz-page-hero h1,
   .rz-pricing-intro h1 {
-    font-size: clamp(2.5rem, 11vw, 3.6rem);
+    font-size: clamp(2.35rem, 10vw, 3.2rem);
   }
 
   .rz-price-card {
@@ -2040,7 +2146,7 @@ body {
   }
 
   .rz-auth-story h1 {
-    font-size: 2.25rem;
+    font-size: 2.05rem;
   }
 
   .rz-auth-form-panel {

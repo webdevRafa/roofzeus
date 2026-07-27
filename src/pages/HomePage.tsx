@@ -2,15 +2,13 @@ import { motion } from "framer-motion";
 import {
   BarChart3,
   BriefcaseBusiness,
-  CalendarDays,
-  Camera,
   CheckCircle2,
   FileText,
-  ReceiptText,
   Users,
 } from "lucide-react";
 import {
   CheckList,
+  DocumentsBoard,
   Eyebrow,
   FinalCta,
   OperationsBoard,
@@ -27,9 +25,9 @@ const reveal = {
 };
 
 const outcomes = [
-  ["Every job in one place", "Schedules, notes, photos, pricing, and progress"],
-  ["Know the real profit", "Earnings, materials, payouts, and net"],
-  ["Paperwork ready to send", "Invoices, pay stubs, and warranty reports"],
+  ["Jobs", "Pricing, costs, progress, and records"],
+  ["People", "Optional assignments and focused access"],
+  ["Money", "Payouts, profit, and reports"],
 ];
 
 export default function HomePage() {
@@ -43,13 +41,11 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Eyebrow>Built for roofing contractors</Eyebrow>
-            <h1>
-              A clearer way to run your <span>roofing business.</span>
-            </h1>
+            <Eyebrow>Roofing operations, simplified</Eyebrow>
+            <h1>Run every roofing job with less guesswork.</h1>
             <p className="rz-hero__copy">
-              Roof Zeus keeps jobs, schedules, crew activity, costs, payouts,
-              and documents organized from the first visit to final closeout.
+              Keep pricing, expenses, payouts, crews, and job documents
+              organized in one place.
             </p>
             <TrialActions />
             <div className="rz-trial-note" aria-label="Trial details">
@@ -96,78 +92,50 @@ export default function HomePage() {
         <div className="rz-container rz-page-section">
           <motion.div {...reveal}>
             <SectionHeading
-              eyebrow="One operating system"
-              title="Less chasing. More control."
-              copy="A roofing company is hard enough to run. Roof Zeus keeps the field, office, and financial picture connected without turning your day into data entry."
+              eyebrow="What Roof Zeus does"
+              title="The essentials stay connected."
+              copy="A simple system for the work, money, people, and paperwork behind every roof."
             />
           </motion.div>
 
           <div className="rz-bento">
-          <motion.article
-            className="rz-bento-card rz-bento-card--wide"
-            {...reveal}
-          >
-            <div className="rz-bento-card__visual">
-              <div className="rz-mini-pipeline" aria-hidden="true">
-                <div>Dry-in · Tue</div>
-                <div>Shingles · Thu</div>
-                <div>Punch · Ready</div>
-              </div>
-            </div>
-            <div className="rz-bento-card__icon">
-              <CalendarDays aria-hidden="true" />
-            </div>
-            <h3>A schedule built around how roofs actually move</h3>
-            <p>
-              Track dry-in, shingles, and punch stages without forcing roofing
-              work into a generic calendar.
-            </p>
-          </motion.article>
-
-          <motion.article className="rz-bento-card" {...reveal}>
-            <div className="rz-bento-card__icon">
-              <Users aria-hidden="true" />
-            </div>
-            <h3>Give crews exactly what they need</h3>
-            <p>
-              Assign work, collect job notes and photos, and keep owners in
-              control of the full financial view.
-            </p>
-          </motion.article>
-
-          <motion.article className="rz-bento-card" {...reveal}>
-            <div className="rz-bento-card__icon">
-              <BriefcaseBusiness aria-hidden="true" />
-            </div>
-            <h3>One source of truth per job</h3>
-            <p>
-              Pricing, stages, activity, materials, payouts, and documents stay
-              attached to the work they belong to.
-            </p>
-          </motion.article>
-
-          <motion.article
-            className="rz-bento-card rz-bento-card--wide"
-            {...reveal}
-          >
-            <div className="rz-bento-card__visual">
-              <div className="rz-mini-bars" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
-            </div>
-            <div className="rz-bento-card__icon">
-              <BarChart3 aria-hidden="true" />
-            </div>
-            <h3>See where the money went—and what is left</h3>
-            <p>
-              Follow earnings, material expenses, crew payouts, and net profit
-              across the date range that matters.
-            </p>
-          </motion.article>
+            {[
+              [
+                BriefcaseBusiness,
+                "Complete job records",
+                "Pricing, costs, activity, invoices, and warranties stay together.",
+              ],
+              [
+                Users,
+                "Optional crew access",
+                "Assign work when needed. Workers only see what helps them do it.",
+              ],
+              [
+                BarChart3,
+                "Financial clarity",
+                "See expenses, payouts, materials, revenue, and profit.",
+              ],
+              [
+                FileText,
+                "Easy documents",
+                "Create invoices, warranty packets, pay stubs, and reports.",
+              ],
+            ].map(([Icon, title, copy]) => {
+              const CardIcon = Icon as typeof BriefcaseBusiness;
+              return (
+                <motion.article
+                  className="rz-bento-card"
+                  {...reveal}
+                  key={title as string}
+                >
+                  <div className="rz-bento-card__icon">
+                    <CardIcon aria-hidden="true" />
+                  </div>
+                  <h3>{title as string}</h3>
+                  <p>{copy as string}</p>
+                </motion.article>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -175,31 +143,31 @@ export default function HomePage() {
       <section className="rz-container">
         <motion.article className="rz-feature-split" {...reveal}>
           <div>
-            <Eyebrow>Job command center</Eyebrow>
-            <h3>The whole story of a job, without the scavenger hunt.</h3>
+            <Eyebrow>Job records</Eyebrow>
+            <h3>One job. One complete history.</h3>
             <p>
-              Open one job and see its production stages, pricing, latest
-              activity, expenses, payout totals, and profit.
+              Pricing, expenses, payouts, activity, invoices, and warranties
+              remain tied to the property.
             </p>
             <CheckList
               items={[
-                "Dry-in, shingles, and punch status",
-                "Notes, photos, activity, and reports",
-                "Job-level payout and material totals",
+                "See the full financial picture",
+                "Reopen historical records anytime",
+                "Assign a worker only when needed",
               ]}
             />
           </div>
           <div className="rz-lifecycle-board">
             <div className="rz-lifecycle-board__header">
-              <span>One job / one source of truth</span>
-              <span>From won to closed</span>
+              <span>One job record</span>
+              <span>From start to history</span>
             </div>
             <div className="rz-lifecycle-board__steps">
               {[
-                ["01", "Scheduled", "The plan is visible"],
-                ["02", "In progress", "The field stays connected"],
-                ["03", "Ready for punch", "The next move is clear"],
-                ["04", "Closed", "Costs and records are complete"],
+                ["01", "Add the job", "Enter pricing and scope"],
+                ["02", "Track the work", "Record costs and payouts"],
+                ["03", "Create documents", "Invoice and warranty"],
+                ["04", "Keep the record", "Nothing gets separated"],
               ].map(([number, title, copy]) => (
                 <div key={number}>
                   <span>{number}</span>
@@ -213,17 +181,17 @@ export default function HomePage() {
 
         <motion.article className="rz-feature-split" {...reveal}>
           <div>
-            <Eyebrow>Financial clarity</Eyebrow>
-            <h3>Make decisions from the numbers, not from a hunch.</h3>
+            <Eyebrow>Financial reporting</Eyebrow>
+            <h3>Know the business. Simplify tax time.</h3>
             <p>
-              Choose a date range and see how revenue, payouts, materials, and
-              net profit are moving together.
+              Every recorded cost and payout rolls into a financial view you
+              can filter and report on.
             </p>
             <CheckList
               items={[
-                "Profit and expense trend at a glance",
-                "Payout and material breakdowns",
-                "Average profit per completed job",
+                "Expenses, materials, payouts, and profit",
+                "Charts and date-range breakdowns",
+                "Reports ready when tax season arrives",
               ]}
             />
           </div>
@@ -232,38 +200,21 @@ export default function HomePage() {
 
         <motion.article className="rz-feature-split" {...reveal}>
           <div>
-            <Eyebrow>Field to office</Eyebrow>
-            <h3>Capture the work once. Use it everywhere.</h3>
+            <Eyebrow>Professional documents</Eyebrow>
+            <h3>Paperwork that is easy to create and easy to find.</h3>
             <p>
-              Crews add updates where the job happens. The office gets the
-              records it needs to pay, report, invoice, and keep moving.
+              Create invoices, warranty packets, and pay stubs from records
+              already inside Roof Zeus.
             </p>
             <CheckList
               items={[
-                "Photos and notes captured from the field",
-                "Clean payout history and pay stubs",
-                "Professional invoices and warranty reports",
+                "Invoices stay with the job",
+                "Warranty packets stay with the job",
+                "Pay stubs stay with payout history",
               ]}
             />
           </div>
-          <div className="rz-feature-grid">
-            {[
-              [Camera, "Field updates", "Photos and notes stay with the job."],
-              [ReceiptText, "Payout records", "Track who was paid and why."],
-              [FileText, "Documents", "Create professional records in less time."],
-            ].map(([Icon, title, copy]) => {
-              const CardIcon = Icon as typeof Camera;
-              return (
-                <article className="rz-feature-card" key={title as string}>
-                  <div className="rz-feature-card__icon">
-                    <CardIcon aria-hidden="true" />
-                  </div>
-                  <h3>{title as string}</h3>
-                  <p>{copy as string}</p>
-                </article>
-              );
-            })}
-          </div>
+          <DocumentsBoard />
         </motion.article>
       </section>
 

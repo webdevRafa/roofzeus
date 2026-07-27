@@ -82,23 +82,23 @@ const STATE_OPTIONS = [
 const steps = [
   {
     label: "Your details",
-    title: "Let’s start with you.",
-    copy: "Use the name and work email you want connected to your company.",
+    title: "Start with you.",
+    copy: "Add your name and work email.",
   },
   {
     label: "Secure access",
     title: "Create a strong password.",
-    copy: "A strong password protects the operational and financial data in your workspace.",
+    copy: "Protect your company workspace.",
   },
   {
     label: "Your company",
-    title: "Set up the business.",
-    copy: "These details create the company workspace your team will use.",
+    title: "Add your company.",
+    copy: "Create the workspace your business will use.",
   },
   {
     label: "Review",
-    title: "Your workspace is ready to create.",
-    copy: "Check the details below, then begin your 30-day trial.",
+    title: "Review and create.",
+    copy: "Check the details, then start your trial.",
   },
 ] as const;
 
@@ -325,10 +325,9 @@ export default function SignupPage() {
             <img className="rz-auth-story__logo" src={logo} alt="Roof Zeus" />
           </a>
           <div>
-            <h1>See every job and every dollar more clearly.</h1>
+            <h1>Start with one clear workspace.</h1>
             <p>
-              Start with the full Roof Zeus workspace. Add your crew and real
-              jobs when you are ready—there is no card required today.
+              Add your jobs and team when you are ready. No card required.
             </p>
             <div className="rz-auth-story__proof">
               <span>

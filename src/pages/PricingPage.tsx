@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { ArrowRight, CalendarDays, FileText, LineChart, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -9,36 +10,43 @@ import {
 } from "../components/marketing/MarketingPrimitives";
 
 const included = [
-  "Unlimited jobs, notes, photos, and documents",
-  "Dry-in, shingles, and punch scheduling",
-  "Crew invitations and job assignments",
-  "Job-level payouts, materials, and profit",
-  "Invoices, pay stubs, and warranty reports",
-  "Financial overview and date-range reporting",
+  "Complete job records",
+  "Optional crew assignments",
+  "Pricing, expenses, payouts, and profit",
+  "Invoices and warranty packets",
+  "Payout history and pay stubs",
+  "Financial reports and charts",
 ];
 
 const featureGroups = [
   {
     icon: CalendarDays,
-    title: "Job operations",
-    copy: "Jobs, production stages, schedules, notes, photos, and reports.",
+    title: "Jobs",
+    copy: "Pricing, costs, progress, people, and history.",
   },
   {
     icon: Users,
-    title: "Crew workflow",
-    copy: "Assigned work, field updates, payout records, and pay stubs.",
+    title: "Crew",
+    copy: "Optional assignments and focused worker access.",
   },
   {
     icon: LineChart,
-    title: "Financial clarity",
-    copy: "Earnings, expenses, payouts, materials, and profit by date range.",
+    title: "Finances",
+    copy: "Expenses, payouts, materials, profit, and reports.",
   },
   {
     icon: FileText,
-    title: "Professional records",
-    copy: "Invoices, warranty reports, pay stubs, and job documentation.",
+    title: "Documents",
+    copy: "Invoices, warranty packets, reports, and pay stubs.",
   },
 ];
+
+const reveal = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.16 },
+  transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+};
 
 export default function PricingPage() {
   const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
@@ -47,18 +55,13 @@ export default function PricingPage() {
   return (
     <main className="rz-page">
       <section className="rz-container rz-page-section">
-        <div className="rz-pricing-layout">
+        <motion.div className="rz-pricing-layout" {...reveal}>
           <div className="rz-pricing-intro">
-            <Eyebrow>Simple, honest pricing</Eyebrow>
-            <h1>
-              One plan.
-              <br />
-              <span>Every feature.</span>
-            </h1>
+            <Eyebrow>Simple pricing</Eyebrow>
+            <h1>One plan. Every core tool.</h1>
             <p>
-              No feature maze and no card required to try it. Start with the
-              full Roof Zeus experience, then choose monthly or annual billing
-              when your trial ends.
+              Use the complete platform free for 30 days. Choose monthly or
+              annual billing only if you keep it.
             </p>
             <div className="rz-trial-note">
               <span>30-day free trial</span>
@@ -98,7 +101,7 @@ export default function PricingPage() {
             </div>
             <div className="rz-price-card__saving">
               {annual
-                ? "About $42/month — save $100 each year."
+                ? "About $42/month. Save $100 each year."
                 : "Flat-rate access to the complete platform."}
             </div>
 
@@ -109,52 +112,33 @@ export default function PricingPage() {
 
             <CheckList items={included} />
             <p className="rz-price-card__fine-print">
-              No payment method is required to begin. After 30 days, add payment
-              details to keep using your workspace.
+              No payment method is required to begin.
             </p>
           </article>
-        </div>
+        </motion.div>
       </section>
 
       <section className="rz-container rz-page-section--tight">
-        <SectionHeading
-          eyebrow="Everything included"
-          title="The tools a roofing operation needs to stay clear."
-          copy="Roof Zeus connects the work happening on the roof with the decisions happening in the office."
-        />
+        <motion.div {...reveal}>
+          <SectionHeading
+            eyebrow="Everything included"
+            title="The whole workflow is covered."
+          />
+        </motion.div>
         <div className="rz-price-features">
           {featureGroups.map(({ icon: Icon, title, copy }) => (
-            <article key={title}>
+            <motion.article key={title} {...reveal}>
               <Icon aria-hidden="true" />
               <h3>{title}</h3>
               <p>{copy}</p>
-            </article>
+            </motion.article>
           ))}
         </div>
       </section>
 
-      <section className="rz-container rz-page-section--tight">
-        <div className="rz-final-cta__inner">
-          <div>
-            <Eyebrow>Questions before you start?</Eyebrow>
-            <h2>Get the straight answers.</h2>
-            <p>
-              Learn how the trial, crew access, mobile workflow, scheduling, and
-              cancellations work.
-            </p>
-          </div>
-          <div className="rz-actions">
-            <Link className="rz-button rz-button--secondary" to="/faq">
-              Read the FAQ
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
       <FinalCta
-        title="One month to see what a clearer roofing operation feels like."
-        copy="Every feature is included during your trial. No card required."
+        title="See if Roof Zeus fits your business."
+        copy="Try every feature for 30 days. No card required."
       />
     </main>
   );

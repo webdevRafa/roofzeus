@@ -1,9 +1,8 @@
+import { motion } from "framer-motion";
 import {
   ClipboardCheck,
   Database,
-  FileDown,
   KeyRound,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import {
@@ -16,114 +15,76 @@ import {
 const trustCards = [
   {
     icon: Database,
-    title: "Company-scoped workspaces",
-    copy: "Jobs, photos, records, and financials are organized around organization membership.",
-    bullets: [
-      "Organization membership gates access",
-      "Company records stay in their workspace",
-      "Structured for multi-company operations",
-    ],
+    title: "Company workspace",
+    copy: "Jobs, records, and financials stay inside the company account.",
   },
   {
     icon: Users,
-    title: "Role-aware team access",
-    copy: "Owners control the broader operation while crew members focus on assigned work.",
-    bullets: [
-      "Owner, admin, manager, and crew contexts",
-      "Assigned job workflows for crews",
-      "Financial visibility stays intentional",
-    ],
+    title: "Focused worker access",
+    copy: "Workers focus on assigned jobs without the owner's full financial view.",
   },
   {
     icon: KeyRound,
-    title: "Individual sign-in",
-    copy: "Each team member uses an individual account instead of passing shared credentials around.",
-    bullets: [
-      "One identity per team member",
-      "Email verification in the signup flow",
-      "Session-based authenticated access",
-    ],
+    title: "Individual accounts",
+    copy: "Each person signs in with their own verified account.",
   },
   {
     icon: ClipboardCheck,
-    title: "Audit-friendly records",
-    copy: "Job activity, payouts, stubs, notes, and documents stay organized for later review.",
-    bullets: [
-      "Payout history remains attributable",
-      "Job documentation stays in context",
-      "Records are easier to reconcile",
-    ],
-  },
-  {
-    icon: FileDown,
-    title: "Portable documents",
-    copy: "Professional reports and records help keep important operational information usable.",
-    bullets: [
-      "Print-ready business documents",
-      "Structured records for reporting",
-      "Clearer handoff outside the app",
-    ],
-  },
-  {
-    icon: ShieldCheck,
-    title: "Practical access design",
-    copy: "Security is part of the workflow, not another complicated system crews have to learn.",
-    bullets: [
-      "Clear team boundaries",
-      "Organization isolation first",
-      "Access follows the work role",
-    ],
+    title: "Organized history",
+    copy: "Payouts, documents, and job activity remain available for review.",
   },
 ];
+
+const reveal = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.16 },
+  transition: { duration: 0.48, ease: [0.16, 1, 0.3, 1] as const },
+};
 
 export default function SecurityPage() {
   return (
     <main className="rz-page">
-      <section className="rz-page-hero rz-container">
+      <motion.section className="rz-page-hero rz-container" {...reveal}>
         <Eyebrow>Trust by design</Eyebrow>
-        <h1>
-          Owners keep control.
-          <br />
-          <span>Crews keep moving.</span>
-        </h1>
+        <h1>Owners stay in control. Workers stay focused.</h1>
         <p>
-          Roofing operations include pricing, profit, payouts, addresses, and
-          field documentation. Roof Zeus uses company workspaces, individual
-          accounts, and role-aware access to keep that information organized.
+          Company workspaces and role-aware access keep sensitive information
+          intentional.
         </p>
         <TrialActions
           secondaryTo="/privacy"
           secondaryLabel="Read our privacy policy"
         />
-      </section>
+      </motion.section>
 
       <section className="rz-container rz-page-section--tight">
-        <SectionHeading
-          eyebrow="How access works"
-          title="The right information for the right person."
-          copy="The owner needs the whole financial picture. A crew member needs the assigned roof, its schedule, and a simple way to add updates."
-        />
+        <motion.div {...reveal}>
+          <SectionHeading
+            eyebrow="How access works"
+            title="The right information for the right person."
+          />
+        </motion.div>
         <div className="rz-trust-grid">
-          {trustCards.map(({ icon: Icon, title, copy, bullets }) => (
-            <article className="rz-trust-card" key={title}>
+          {trustCards.map(({ icon: Icon, title, copy }) => (
+            <motion.article
+              className="rz-trust-card"
+              key={title}
+              {...reveal}
+            >
               <div className="rz-trust-card__icon">
                 <Icon aria-hidden="true" />
               </div>
               <h3>{title}</h3>
               <p>{copy}</p>
-              <ul>
-                {bullets.map((bullet) => (
-                  <li key={bullet}>{bullet}</li>
-                ))}
-              </ul>
-            </article>
+            </motion.article>
           ))}
         </div>
       </section>
 
       <FinalCta
-        title="A clearer system is a more controlled system."
-        copy="Try the complete Roof Zeus workspace for 30 days with no card required."
+        title="Keep the business view where it belongs."
+        copy="Try the complete workspace free for 30 days."
       />
     </main>
   );

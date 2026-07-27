@@ -42,8 +42,7 @@ export default function MarketingLayout() {
                 <img src={logo} alt="Roof Zeus" />
               </Link>
               <p>
-                Roofing operations software for jobs, schedules, crew payouts,
-                financial clarity, and professional documents.
+                Roofing software for jobs, finances, crews, and documents.
               </p>
             </div>
             {footerGroups.map((group) => (
@@ -60,8 +59,8 @@ export default function MarketingLayout() {
             ))}
           </div>
           <div className="rz-footer__bottom">
-            <span>© {new Date().getFullYear()} Roof Zeus. All rights reserved.</span>
-            <span>Built for roofing contractors who want a clearer operation.</span>
+            <span>© {new Date().getFullYear()} Roof Zeus.</span>
+            <span>Built for roofing contractors.</span>
           </div>
         </div>
       </footer>

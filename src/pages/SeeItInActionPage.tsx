@@ -1,6 +1,8 @@
+import { motion } from "framer-motion";
 import { Camera, CircleDollarSign, ClipboardCheck } from "lucide-react";
 import {
   CheckList,
+  DocumentsBoard,
   Eyebrow,
   FinalCta,
   OperationsBoard,
@@ -12,53 +14,64 @@ import {
 const steps = [
   {
     icon: ClipboardCheck,
-    title: "Set up the job",
-    copy: "Add the property, pricing, important details, and production stages so the team starts from one record.",
+    title: "Add the job",
+    copy: "Enter the property, pricing, and work details.",
   },
   {
     icon: Camera,
-    title: "Move the work forward",
-    copy: "Schedule dry-in, shingles, and punch, assign the crew, and collect notes and photos from the field.",
+    title: "Track the work",
+    copy: "Record progress, expenses, payouts, and optional assignments.",
   },
   {
     icon: CircleDollarSign,
-    title: "Close with clarity",
-    copy: "Record materials and payouts, understand the profit, then create the documents the office needs.",
+    title: "Close it cleanly",
+    copy: "See the profit and create the invoice and warranty packet.",
   },
 ];
+
+const reveal = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.18 },
+  transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+};
 
 export default function SeeItInActionPage() {
   return (
     <main className="rz-page">
-      <section className="rz-page-hero rz-container">
+      <motion.section className="rz-page-hero rz-container" {...reveal}>
         <Eyebrow>See the workflow</Eyebrow>
-        <h1>
-          From new roof to final numbers, <span>nothing gets lost.</span>
-        </h1>
+        <h1>From new job to clean closeout.</h1>
         <p>
-          Roof Zeus keeps production, field updates, costs, crew pay, and
-          paperwork moving through one connected job record.
+          The work, money, people, and documents move through one record.
         </p>
         <TrialActions
           secondaryTo="/features"
           secondaryLabel="Explore every feature"
         />
-      </section>
+      </motion.section>
 
       <section className="rz-container rz-page-section--tight">
-        <OperationsBoard />
+        <motion.div {...reveal}>
+          <OperationsBoard />
+        </motion.div>
       </section>
 
       <section className="rz-container rz-page-section">
-        <SectionHeading
-          eyebrow="A simpler daily rhythm"
-          title="Three moves from work won to work understood."
-          copy="The workflow stays simple for crews in the field while giving owners a much better operational and financial view."
-          align="center"
-        />
+        <motion.div {...reveal}>
+          <SectionHeading
+            eyebrow="A simple workflow"
+            title="Three steps. One complete record."
+            align="center"
+          />
+        </motion.div>
         <div className="rz-walkthrough-grid">
           {steps.map(({ icon: Icon, title, copy }, index) => (
-            <article className="rz-walkthrough-card" key={title}>
+            <motion.article
+              className="rz-walkthrough-card"
+              key={title}
+              {...reveal}
+            >
               <div className="rz-walkthrough-card__number">
                 {String(index + 1).padStart(2, "0")}
               </div>
@@ -67,36 +80,47 @@ export default function SeeItInActionPage() {
               </div>
               <h3>{title}</h3>
               <p>{copy}</p>
-            </article>
+            </motion.article>
           ))}
         </div>
       </section>
 
       <section className="rz-container">
-        <article className="rz-feature-split">
+        <motion.article className="rz-feature-split" {...reveal}>
           <div>
-            <Eyebrow>One job, one story</Eyebrow>
-            <h3>Production status and profit belong on the same page.</h3>
+            <Eyebrow>Closeout</Eyebrow>
+            <h3>Finish the job with professional documents.</h3>
             <p>
-              The operational story and financial story stop living in
-              different tools, giving owners a faster way to understand what
-              happened.
+              Create the invoice and warranty packet, then leave both attached
+              to the historical job.
             </p>
             <CheckList
               items={[
-                "Roofing stages and last activity",
-                "Job pricing, payouts, materials, and profit",
-                "Reports and warranty actions close at hand",
+                "Invoice ready to send",
+                "Warranty packet ready for the customer",
+                "Payout records and pay stubs kept together",
               ]}
             />
           </div>
+          <DocumentsBoard />
+        </motion.article>
+
+        <motion.article className="rz-feature-split" {...reveal}>
+          <div>
+            <Eyebrow>Reporting</Eyebrow>
+            <h3>Every finished job improves the financial picture.</h3>
+            <p>
+              Revenue, expenses, payouts, materials, and profit roll into clear
+              reports for any date range.
+            </p>
+          </div>
           <ProfitEquation />
-        </article>
+        </motion.article>
       </section>
 
       <FinalCta
-        title="Put your next roof through a clearer system."
-        copy="Start with the full platform for 30 days. No payment method required."
+        title="Try the workflow on your next job."
+        copy="Start free for 30 days. No payment method required."
       />
     </main>
   );

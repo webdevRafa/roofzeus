@@ -1,15 +1,14 @@
+import { motion } from "framer-motion";
 import {
   BarChart3,
-  CalendarDays,
-  Camera,
   FileText,
   HardHat,
   ReceiptText,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import {
   CheckList,
+  DocumentsBoard,
   Eyebrow,
   FinalCta,
   OperationsBoard,
@@ -21,131 +20,135 @@ import {
 const features = [
   {
     icon: HardHat,
-    title: "Job pages that hold the truth",
-    copy: "Keep stages, pricing, notes, photos, activity, payouts, materials, and profit connected to the job.",
+    title: "Job records",
+    copy: "Keep pricing, costs, activity, and documents together.",
     highlight: true,
   },
   {
-    icon: CalendarDays,
-    title: "Roofing-stage scheduling",
-    copy: "Plan dry-in, shingles, and punch work in a production view that matches the way roofs move.",
-  },
-  {
     icon: Users,
-    title: "Crew access without chaos",
-    copy: "Assign jobs, collect field updates, and keep sensitive owner-level information appropriately limited.",
+    title: "Crew access",
+    copy: "Assign work when useful. Keep access focused.",
   },
   {
     icon: BarChart3,
-    title: "Profit clarity by date range",
-    copy: "See earnings, expenses, payout totals, materials, average job profit, and the trend over time.",
+    title: "Financial reporting",
+    copy: "Understand expenses, payouts, materials, revenue, and profit.",
     highlight: true,
   },
   {
     icon: ReceiptText,
-    title: "Payouts that stay explainable",
-    copy: "Keep a clean history of who was paid, what the payment covered, and when it happened.",
-  },
-  {
-    icon: Camera,
-    title: "Photos and notes in context",
-    copy: "Capture field updates where the work lives instead of searching camera rolls and text threads.",
+    title: "Payouts and pay stubs",
+    copy: "Keep worker payments recorded and easy to explain.",
   },
   {
     icon: FileText,
-    title: "Professional documents",
-    copy: "Create invoices, job reports, warranty reports, and pay stubs from the records already in the system.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Organization-aware access",
-    copy: "Company workspaces and team roles help keep the right people inside the right operational context.",
+    title: "Invoices and warranties",
+    copy: "Create professional documents that remain with the job.",
   },
 ];
+
+const reveal = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.18 },
+  transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const },
+};
 
 export default function FeaturesPage() {
   return (
     <main className="rz-page">
-      <section className="rz-page-hero rz-container">
+      <motion.section className="rz-page-hero rz-container" {...reveal}>
         <Eyebrow>Roofing operations, connected</Eyebrow>
-        <h1>
-          The field, office, and numbers—<span>working together.</span>
-        </h1>
+        <h1>Jobs, money, crews, and documents. Together.</h1>
         <p>
-          Roof Zeus is built around the real path from scheduled roof to
-          completed job, paid crew, accurate profit, and finished paperwork.
+          Manage the job, understand the money, and create the paperwork.
         </p>
         <TrialActions />
-      </section>
+      </motion.section>
 
       <section className="rz-container rz-page-section--tight">
-        <SectionHeading
-          eyebrow="The complete toolkit"
-          title="Everything important stays close to the job."
-          copy="Fewer disconnected tools means less duplicate entry, fewer missing updates, and a much clearer picture of the operation."
-          align="center"
-        />
+        <motion.div {...reveal}>
+          <SectionHeading
+            eyebrow="The complete toolkit"
+            title="Five tools. One clear workflow."
+            align="center"
+          />
+        </motion.div>
         <div className="rz-feature-grid">
           {features.map(({ icon: Icon, title, copy, highlight }) => (
-            <article
+            <motion.article
               className={`rz-feature-card ${
                 highlight ? "rz-feature-card--highlight" : ""
               }`}
               key={title}
+              {...reveal}
             >
               <div className="rz-feature-card__icon">
                 <Icon aria-hidden="true" />
               </div>
               <h3>{title}</h3>
               <p>{copy}</p>
-            </article>
+            </motion.article>
           ))}
         </div>
       </section>
 
       <section className="rz-container rz-page-section">
-        <article className="rz-feature-split">
+        <motion.article className="rz-feature-split" {...reveal}>
           <div>
-            <Eyebrow>Production view</Eyebrow>
-            <h3>See what is moving, what is ready, and what needs attention.</h3>
+            <Eyebrow>Every job</Eyebrow>
+            <h3>The complete record stays in one place.</h3>
             <p>
-              Keep the active job list and roof-stage schedule visible without
-              building a separate spreadsheet every morning.
+              Open a job and find the work, pricing, costs, people, and
+              documents that belong to it.
             </p>
             <CheckList
               items={[
-                "Search and filter the entire job list",
-                "See dry-in and shingles schedules together",
-                "Move completed work into punch readiness",
+                "Pricing, materials, labor, and payouts",
+                "Optional worker assignments",
+                "Invoices and warranties attached",
               ]}
             />
           </div>
           <OperationsBoard />
-        </article>
+        </motion.article>
 
-        <article className="rz-feature-split">
+        <motion.article className="rz-feature-split" {...reveal}>
           <div>
-            <Eyebrow>Owner view</Eyebrow>
-            <h3>Understand the business behind the roofs.</h3>
+            <Eyebrow>Professional documents</Eyebrow>
+            <h3>Create it once. Find it from the job.</h3>
             <p>
-              Turn job records into a useful financial picture with income,
-              crew costs, material costs, and net profit in one view.
+              Send polished paperwork without rebuilding information that Roof
+              Zeus already knows.
+            </p>
+            <CheckList items={["Invoices", "Warranty packets", "Pay stubs"]} />
+          </div>
+          <DocumentsBoard />
+        </motion.article>
+
+        <motion.article className="rz-feature-split" {...reveal}>
+          <div>
+            <Eyebrow>Financial reports</Eyebrow>
+            <h3>Clear numbers all year. Easier taxes later.</h3>
+            <p>
+              Filter the period you need and see the totals behind every
+              recorded job.
             </p>
             <CheckList
               items={[
-                "Choose the reporting period that matters",
-                "See earnings, expenses, and net profit together",
-                "Spot payout or material changes before they become surprises",
+                "Expenses, payouts, materials, and profit",
+                "Charts and date-range reports",
+                "Cleaner records for tax season",
               ]}
             />
           </div>
           <ProfitEquation />
-        </article>
+        </motion.article>
       </section>
 
       <FinalCta
-        title="Run the roofing workflow in one place."
-        copy="Start with all features included for 30 days. No card required."
+        title="Start with one real job."
+        copy="Every feature is included for 30 days. No card required."
       />
     </main>
   );

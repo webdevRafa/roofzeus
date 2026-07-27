@@ -174,19 +174,18 @@ export default function LoginPage() {
             <img className="rz-auth-story__logo" src={logo} alt="Roof Zeus" />
           </a>
           <div>
-            <h1>Your roofing operation is waiting.</h1>
+            <h1>Your work is right where you left it.</h1>
             <p>
-              Pick up where you left off with jobs, schedules, crew updates,
-              payouts, documents, and the numbers behind the work.
+              Open your jobs, finances, payouts, and documents.
             </p>
             <div className="rz-auth-story__proof">
               <span>
                 <CheckCircle2 aria-hidden="true" />
-                Company-scoped access
+                Company workspace
               </span>
               <span>
                 <CheckCircle2 aria-hidden="true" />
-                Role-aware teams
+                Focused team access
               </span>
             </div>
           </div>

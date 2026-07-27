@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -53,40 +54,47 @@ export function TrialActions({
 }
 
 export function OperationsBoard() {
-  const rows = [
-    ["01", "Production", "Roofs moving today", "On track"],
-    ["02", "Crew", "Assignments and field updates", "Connected"],
-    ["03", "Money", "Costs, payouts, and profit", "Clear"],
-    ["04", "Closeout", "Invoices and warranties", "Ready"],
+  const metrics = [
+    ["Job price", "$18,420"],
+    ["Expenses", "$5,180"],
+    ["Payouts", "$4,650"],
+    ["Profit", "$8,590"],
   ];
 
   return (
     <div
       className="rz-operations-board"
-      aria-label="A conceptual overview of an organized roofing operation"
+      aria-label="A conceptual roofing job record with pricing, expenses, payouts, profit, crew, and documents"
     >
       <div className="rz-operations-board__header">
-        <span>Roofing day / organized</span>
+        <span>Job record</span>
         <span className="rz-operations-board__status">
           <i />
-          Business in view
+          Active
         </span>
       </div>
       <div className="rz-operations-board__body">
-        {rows.map(([number, label, copy, status]) => (
-          <div className="rz-operations-board__row" key={number}>
-            <span className="rz-operations-board__number">{number}</span>
-            <div>
+        <div className="rz-operations-board__job">
+          <span>545 Summer Lane</span>
+          <strong>Roof replacement</strong>
+        </div>
+        <div className="rz-operations-board__metrics">
+          {metrics.map(([label, value]) => (
+            <div key={label}>
               <small>{label}</small>
-              <strong>{copy}</strong>
+              <strong>{value}</strong>
             </div>
-            <span className="rz-operations-board__tag">{status}</span>
-          </div>
-        ))}
+          ))}
+        </div>
+        <div className="rz-operations-board__links">
+          <span>Optional crew assignment</span>
+          <span>Invoice ready</span>
+          <span>Warranty saved</span>
+        </div>
       </div>
       <div className="rz-operations-board__footer">
-        One connected operating rhythm
-        <span>From schedule to closeout</span>
+        Everything stays with the job
+        <span>Now and years from now</span>
       </div>
     </div>
   );
@@ -96,30 +104,60 @@ export function ProfitEquation() {
   return (
     <div
       className="rz-profit-equation"
-      aria-label="Revenue minus crew payouts and materials equals clear job profit"
+      aria-label="A conceptual financial report showing revenue, materials, payouts, and tax-ready totals"
     >
-      <div className="rz-profit-equation__header">
-        Know the job before closeout
-      </div>
+      <div className="rz-profit-equation__header">Financial reporting</div>
       <div className="rz-profit-equation__formula">
         <div>
-          <span>Contract value</span>
+          <span>All jobs</span>
           <strong>Revenue</strong>
         </div>
-        <b aria-hidden="true">&minus;</b>
-        <div>
-          <span>Labor</span>
-          <strong>Payouts</strong>
-        </div>
-        <b aria-hidden="true">&minus;</b>
+        <b aria-hidden="true">+</b>
         <div>
           <span>Job costs</span>
           <strong>Materials</strong>
         </div>
+        <b aria-hidden="true">+</b>
+        <div>
+          <span>Crew records</span>
+          <strong>Payouts</strong>
+        </div>
       </div>
       <div className="rz-profit-equation__result">
-        <span>Equals</span>
-        <strong>Clear job profit</strong>
+        <span>Filter any date range</span>
+        <strong>Tax-ready totals</strong>
+      </div>
+    </div>
+  );
+}
+
+export function DocumentsBoard() {
+  const documents = [
+    ["Invoice", "Ready to send"],
+    ["Warranty packet", "Saved to job"],
+    ["Pay stub", "Linked to payout"],
+  ];
+
+  return (
+    <div
+      className="rz-documents-board"
+      aria-label="Invoices, warranty packets, and pay stubs organized with their records"
+    >
+      <div className="rz-documents-board__header">
+        <span>Professional documents</span>
+        <span>Ready</span>
+      </div>
+      <div className="rz-documents-board__body">
+        {documents.map(([name, status], index) => (
+          <div className="rz-documents-board__row" key={name}>
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{name}</strong>
+            <small>{status}</small>
+          </div>
+        ))}
+      </div>
+      <div className="rz-documents-board__footer">
+        Clean records without rebuilding the paperwork
       </div>
     </div>
   );
@@ -139,14 +177,20 @@ export function CheckList({ items }: { items: string[] }) {
 }
 
 export function FinalCta({
-  title = "Trade the busywork for a business you can see clearly.",
-  copy = "Start with every Roof Zeus feature for 30 days. No card required.",
+  title = "Put your next job in one clear place.",
+  copy = "Try every Roof Zeus feature free for 30 days. No card required.",
 }: {
   title?: string;
   copy?: string;
 }) {
   return (
-    <section className="rz-final-cta rz-container">
+    <motion.section
+      className="rz-final-cta rz-container"
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
       <div className="rz-final-cta__inner">
         <div>
           <Eyebrow>Built for the next job</Eyebrow>
@@ -158,6 +202,6 @@ export function FinalCta({
           secondaryLabel="View simple pricing"
         />
       </div>
-    </section>
+    </motion.section>
   );
 }
