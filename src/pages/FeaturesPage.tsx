@@ -8,13 +8,12 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import financialOverview from "../assets/financial-overview.png";
-import productDemo from "../assets/roofzeus-demo.png";
 import {
   CheckList,
   Eyebrow,
   FinalCta,
-  ProductFrame,
+  OperationsBoard,
+  ProfitEquation,
   SectionHeading,
   TrialActions,
 } from "../components/marketing/MarketingPrimitives";
@@ -70,7 +69,7 @@ export default function FeaturesPage() {
       <section className="rz-page-hero rz-container">
         <Eyebrow>Roofing operations, connected</Eyebrow>
         <h1>
-          The field, the office, and the numbers—<span>finally in sync.</span>
+          The field, office, and numbers—<span>working together.</span>
         </h1>
         <p>
           Roof Zeus is built around the real path from scheduled roof to
@@ -121,10 +120,7 @@ export default function FeaturesPage() {
               ]}
             />
           </div>
-          <ProductFrame
-            src={productDemo}
-            alt="Roof Zeus job list and roof production schedule"
-          />
+          <OperationsBoard />
         </article>
 
         <article className="rz-feature-split">
@@ -143,10 +139,7 @@ export default function FeaturesPage() {
               ]}
             />
           </div>
-          <ProductFrame
-            src={financialOverview}
-            alt="Roof Zeus financial overview dashboard"
-          />
+          <ProfitEquation />
         </article>
       </section>
 

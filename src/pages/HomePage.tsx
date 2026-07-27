@@ -9,14 +9,12 @@ import {
   ReceiptText,
   Users,
 } from "lucide-react";
-import financialOverview from "../assets/financial-overview.png";
-import jobDetails from "../assets/jobdetails.png";
-import productDemo from "../assets/roofzeus-demo.png";
 import {
   CheckList,
   Eyebrow,
   FinalCta,
-  ProductFrame,
+  OperationsBoard,
+  ProfitEquation,
   SectionHeading,
   TrialActions,
 } from "../components/marketing/MarketingPrimitives";
@@ -47,13 +45,11 @@ export default function HomePage() {
           >
             <Eyebrow>Built for roofing contractors</Eyebrow>
             <h1>
-              Run every job.
-              <br />
-              <span>Know every dollar.</span>
+              A clearer way to run your <span>roofing business.</span>
             </h1>
             <p className="rz-hero__copy">
-              Roof Zeus brings jobs, schedules, crews, payouts, expenses, and
-              professional documents into one clear operating system.
+              Roof Zeus keeps jobs, schedules, crew activity, costs, payouts,
+              and documents organized from the first visit to final closeout.
             </p>
             <TrialActions />
             <div className="rz-trial-note" aria-label="Trial details">
@@ -82,14 +78,7 @@ export default function HomePage() {
               ease: [0.16, 1, 0.3, 1],
             }}
           >
-            <ProductFrame
-              src={productDemo}
-              alt="Roof Zeus job list and production schedule"
-            />
-            <div className="rz-hero__floating-card" aria-hidden="true">
-              <span>Profit on 545 Summer Ln</span>
-              <strong>$335.00</strong>
-            </div>
+            <OperationsBoard />
           </motion.div>
         </div>
       </section>
@@ -103,20 +92,17 @@ export default function HomePage() {
         ))}
       </div>
 
-      <section className="rz-container rz-page-section">
-        <motion.div {...reveal}>
-          <SectionHeading
-            eyebrow="One operating system"
-            title={
-              <>
-                Less chasing. <span>More control.</span>
-              </>
-            }
-            copy="A roofing company is hard enough to run. Roof Zeus keeps the field, office, and financial picture connected without turning your day into data entry."
-          />
-        </motion.div>
+      <section className="rz-section-band rz-section-band--paper">
+        <div className="rz-container rz-page-section">
+          <motion.div {...reveal}>
+            <SectionHeading
+              eyebrow="One operating system"
+              title="Less chasing. More control."
+              copy="A roofing company is hard enough to run. Roof Zeus keeps the field, office, and financial picture connected without turning your day into data entry."
+            />
+          </motion.div>
 
-        <div className="rz-bento">
+          <div className="rz-bento">
           <motion.article
             className="rz-bento-card rz-bento-card--wide"
             {...reveal}
@@ -182,6 +168,7 @@ export default function HomePage() {
               across the date range that matters.
             </p>
           </motion.article>
+          </div>
         </div>
       </section>
 
@@ -202,10 +189,26 @@ export default function HomePage() {
               ]}
             />
           </div>
-          <ProductFrame
-            src={jobDetails}
-            alt="Roof Zeus job detail page with stages, pricing, expenses, and profit"
-          />
+          <div className="rz-lifecycle-board">
+            <div className="rz-lifecycle-board__header">
+              <span>One job / one source of truth</span>
+              <span>From won to closed</span>
+            </div>
+            <div className="rz-lifecycle-board__steps">
+              {[
+                ["01", "Scheduled", "The plan is visible"],
+                ["02", "In progress", "The field stays connected"],
+                ["03", "Ready for punch", "The next move is clear"],
+                ["04", "Closed", "Costs and records are complete"],
+              ].map(([number, title, copy]) => (
+                <div key={number}>
+                  <span>{number}</span>
+                  <strong>{title}</strong>
+                  <small>{copy}</small>
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.article>
 
         <motion.article className="rz-feature-split" {...reveal}>
@@ -224,10 +227,7 @@ export default function HomePage() {
               ]}
             />
           </div>
-          <ProductFrame
-            src={financialOverview}
-            alt="Roof Zeus financial overview with earnings, payouts, expenses, and profit charts"
-          />
+          <ProfitEquation />
         </motion.article>
 
         <motion.article className="rz-feature-split" {...reveal}>

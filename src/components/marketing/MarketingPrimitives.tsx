@@ -52,24 +52,75 @@ export function TrialActions({
   );
 }
 
-export function ProductFrame({
-  src,
-  alt,
-  className = "",
-}: {
-  src: string;
-  alt: string;
-  className?: string;
-}) {
+export function OperationsBoard() {
+  const rows = [
+    ["01", "Production", "Roofs moving today", "On track"],
+    ["02", "Crew", "Assignments and field updates", "Connected"],
+    ["03", "Money", "Costs, payouts, and profit", "Clear"],
+    ["04", "Closeout", "Invoices and warranties", "Ready"],
+  ];
+
   return (
-    <div className={`rz-product-frame ${className}`}>
-      <div className="rz-product-frame__bar" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <div>app.roofzeus.com</div>
+    <div
+      className="rz-operations-board"
+      aria-label="A conceptual overview of an organized roofing operation"
+    >
+      <div className="rz-operations-board__header">
+        <span>Roofing day / organized</span>
+        <span className="rz-operations-board__status">
+          <i />
+          Business in view
+        </span>
       </div>
-      <img src={src} alt={alt} loading="lazy" />
+      <div className="rz-operations-board__body">
+        {rows.map(([number, label, copy, status]) => (
+          <div className="rz-operations-board__row" key={number}>
+            <span className="rz-operations-board__number">{number}</span>
+            <div>
+              <small>{label}</small>
+              <strong>{copy}</strong>
+            </div>
+            <span className="rz-operations-board__tag">{status}</span>
+          </div>
+        ))}
+      </div>
+      <div className="rz-operations-board__footer">
+        One connected operating rhythm
+        <span>From schedule to closeout</span>
+      </div>
+    </div>
+  );
+}
+
+export function ProfitEquation() {
+  return (
+    <div
+      className="rz-profit-equation"
+      aria-label="Revenue minus crew payouts and materials equals clear job profit"
+    >
+      <div className="rz-profit-equation__header">
+        Know the job before closeout
+      </div>
+      <div className="rz-profit-equation__formula">
+        <div>
+          <span>Contract value</span>
+          <strong>Revenue</strong>
+        </div>
+        <b aria-hidden="true">&minus;</b>
+        <div>
+          <span>Labor</span>
+          <strong>Payouts</strong>
+        </div>
+        <b aria-hidden="true">&minus;</b>
+        <div>
+          <span>Job costs</span>
+          <strong>Materials</strong>
+        </div>
+      </div>
+      <div className="rz-profit-equation__result">
+        <span>Equals</span>
+        <strong>Clear job profit</strong>
+      </div>
     </div>
   );
 }

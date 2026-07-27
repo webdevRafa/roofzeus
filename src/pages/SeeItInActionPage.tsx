@@ -1,11 +1,10 @@
 import { Camera, CircleDollarSign, ClipboardCheck } from "lucide-react";
-import jobDetails from "../assets/jobdetails.png";
-import productDemo from "../assets/roofzeus-demo.png";
 import {
   CheckList,
   Eyebrow,
   FinalCta,
-  ProductFrame,
+  OperationsBoard,
+  ProfitEquation,
   SectionHeading,
   TrialActions,
 } from "../components/marketing/MarketingPrimitives";
@@ -47,10 +46,7 @@ export default function SeeItInActionPage() {
       </section>
 
       <section className="rz-container rz-page-section--tight">
-        <ProductFrame
-          src={productDemo}
-          alt="Roof Zeus job management and scheduling workflow"
-        />
+        <OperationsBoard />
       </section>
 
       <section className="rz-container rz-page-section">
@@ -94,10 +90,7 @@ export default function SeeItInActionPage() {
               ]}
             />
           </div>
-          <ProductFrame
-            src={jobDetails}
-            alt="Roof Zeus job page showing production stages and profitability"
-          />
+          <ProfitEquation />
         </article>
       </section>
 
