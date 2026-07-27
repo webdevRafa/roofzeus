@@ -164,7 +164,7 @@ const item: Variants = {
 
 function Chip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+    <span className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-card-alt)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
       <span className="text-[var(--color-text)]/70">{label}</span>
       <span className="text-[var(--color-text)]">{value}</span>
     </span>
@@ -183,7 +183,7 @@ function StatCard({
   return (
     <div
       className={
-        "rounded-xl bg-white/60 p-4 shadow-md border border-[var(--color-border)]/40 " +
+        "rounded-xl bg-[var(--color-card)] p-4 shadow-sm border border-[var(--color-border)] " +
         className
       }
     >
@@ -439,10 +439,10 @@ export default function CrewDashboardPage() {
   }
 
   return (
-    <div className="pb-20">
+    <div className="pb-8">
       {/* Header */}
       <motion.header
-        className="mb-6 select-none flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-6 shadow-md hover:shadow-lg"
+        className="mb-4 flex flex-col gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-5"
         {...fadeUp(0)}
       >
         <div>
@@ -450,7 +450,7 @@ export default function CrewDashboardPage() {
             Crew portal
           </div>
           <h1 className="mt-1 text-2xl sm:text-3xl font-semibold text-[var(--color-text)]">
-            My Dashboard
+            My work
           </h1>
           <p className="mt-1 text-sm text-[var(--color-muted)]">
             Your assigned jobs and payout history in one place.
@@ -479,12 +479,12 @@ export default function CrewDashboardPage() {
         <StatCard
           label="Active / upcoming"
           value={counts.active}
-          className="bg-sky-50"
+          className="bg-[rgb(var(--color-blue-rgb)/0.10)]"
         />
         <StatCard
           label="Completed"
           value={counts.completed}
-          className="bg-emerald-50"
+          className="bg-emerald-500/10"
         />
 
         <StatCard label="Paid stubs" value={counts.paidPayoutStubs} />
@@ -492,7 +492,7 @@ export default function CrewDashboardPage() {
 
       {/* Jobs */}
       <motion.section
-        className="rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg"
+        className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm sm:p-5"
         {...fadeUp(0.08)}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -526,7 +526,7 @@ export default function CrewDashboardPage() {
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             {/* Tabs */}
-            <div className="inline-flex rounded-full border border-[var(--color-border)] bg-white/80 p-1 text-xs">
+            <div className="inline-flex rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] p-1 text-xs">
               {(
                 [
                   ["active", "Active"],
@@ -557,7 +557,7 @@ export default function CrewDashboardPage() {
                 value={jobSearch}
                 onChange={(e) => setJobSearch(e.target.value)}
                 placeholder="Search jobs…"
-                className="w-full sm:w-72 rounded-lg border border-[var(--color-border)] bg-white/80 pl-9 pr-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                className="w-full sm:w-72 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-alt)] pl-9 pr-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
               />
             </div>
           </div>
@@ -582,7 +582,7 @@ export default function CrewDashboardPage() {
               )}
 
               {!jobsLoading && !jobsError && filteredJobs.length === 0 && (
-                <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-white/60 px-4 py-6 text-center text-sm text-[var(--color-muted)]">
+                <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card-alt)] px-4 py-6 text-center text-sm text-[var(--color-muted)]">
                   No jobs match your current filters.
                 </div>
               )}
@@ -593,7 +593,7 @@ export default function CrewDashboardPage() {
                   <div className="hidden md:block rounded-2xl bg-[var(--color-card)] shadow-md">
                     <div className="relative overflow-auto section-scroll max-h-[520px]">
                       <table className="w-full text-xs border-separate border-spacing-0">
-                        <thead className="sticky top-0 z-30 bg-white/95 backdrop-blur text-[11px] uppercase tracking-wide text-[var(--color-muted)] border-b border-[var(--color-border)]/40">
+                        <thead className="sticky top-0 z-30 bg-[var(--color-card)] backdrop-blur text-[11px] uppercase tracking-wide text-[var(--color-muted)] border-b border-[var(--color-border)]">
                           <tr>
                             <th className="text-left px-4 py-3">Address</th>
                             <th className="text-left px-4 py-3">Status</th>
@@ -642,7 +642,7 @@ export default function CrewDashboardPage() {
                                 key={job.id}
                                 variants={item}
                                 className={
-                                  idx % 2 === 0 ? "bg-white/40" : "bg-white/20"
+                                  idx % 2 === 0 ? "bg-[var(--color-card-alt)]/70" : "bg-transparent"
                                 }
                               >
                                 <td className="px-4 py-3">
@@ -701,7 +701,7 @@ export default function CrewDashboardPage() {
                       </table>
 
                       {/* Sticky footer pagination */}
-                      <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/40 bg-white/95 px-4 py-2 backdrop-blur text-xs text-[var(--color-muted)]">
+                      <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)] bg-[var(--color-card)] px-4 py-2 backdrop-blur text-xs text-[var(--color-muted)]">
                         <span>
                           Showing {(jobsPage - 1) * JOBS_PER_PAGE + 1} –{" "}
                           {Math.min(
@@ -850,7 +850,7 @@ export default function CrewDashboardPage() {
 
       {/* Payout history */}
       <motion.section
-        className="mt-8 rounded-2xl bg-white/60 hover:bg-white transition duration-300 ease-in-out p-4 sm:p-6 shadow-md hover:shadow-lg"
+        className="mt-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-sm sm:p-5"
         {...fadeUp(0.12)}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -885,7 +885,7 @@ export default function CrewDashboardPage() {
               value={stubSearch}
               onChange={(e) => setStubSearch(e.target.value)}
               placeholder="Search stubs…"
-              className="w-full sm:w-72 rounded-lg border border-[var(--color-border)] bg-white/80 pl-9 pr-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              className="w-full sm:w-72 rounded-lg border border-[var(--color-border)] bg-[var(--color-card-alt)] pl-9 pr-3 py-2 text-sm text-[var(--color-text)] outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             />
           </div>
         </div>
@@ -909,7 +909,7 @@ export default function CrewDashboardPage() {
               )}
 
               {!stubsLoading && !stubsError && filteredStubs.length === 0 && (
-                <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-white/60 px-4 py-6 text-center text-sm text-[var(--color-muted)]">
+                <div className="rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-card-alt)] px-4 py-6 text-center text-sm text-[var(--color-muted)]">
                   No payout stubs yet.
                 </div>
               )}
@@ -917,7 +917,7 @@ export default function CrewDashboardPage() {
               {!stubsLoading && !stubsError && filteredStubs.length > 0 && (
                 <div className="relative overflow-auto section-scroll max-h-[460px]">
                   <motion.ul
-                    className="divide-y divide-[var(--color-border)] rounded-xl bg-white/70"
+                    className="divide-y divide-[var(--color-border)] rounded-xl bg-[var(--color-card-alt)]"
                     variants={staggerParent}
                     initial="initial"
                     animate="animate"
@@ -971,7 +971,7 @@ export default function CrewDashboardPage() {
                   </motion.ul>
 
                   {/* Sticky pagination footer */}
-                  <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/40 bg-white/95 px-4 py-2 backdrop-blur text-xs text-[var(--color-muted)]">
+                  <div className="sticky bottom-[-1px] z-30 flex items-center justify-between gap-3 border-t border-[var(--color-border)] bg-[var(--color-card)] px-4 py-2 backdrop-blur text-xs text-[var(--color-muted)]">
                     <span>
                       Showing {(stubsPage - 1) * STUBS_PER_PAGE + 1} –{" "}
                       {Math.min(

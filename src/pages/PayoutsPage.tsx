@@ -1035,11 +1035,11 @@ export default function PayoutsPage() {
   }
 
   return (
-    <div className="mx-auto w-[min(1450px,94vw)] bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]">
+    <div className="mx-auto w-full max-w-[1450px]">
       <motion.header {...fadeUp(0)} className="mb-3">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
-            <h1 className="text-xs md:text-md lg:text-lg font-semibold text-[var(--color-text)] uppercase font-poppins">
+            <h1 className="text-lg font-semibold text-[var(--color-text)] sm:text-xl">
               Payouts
             </h1>
             <p className="mt-0 max-w-2xl text-xs text-[rgb(var(--color-text-rgb)/0.58)]">

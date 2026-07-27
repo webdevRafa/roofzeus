@@ -2284,8 +2284,8 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)]">
-      <div className="mx-auto w-[min(1180px,94vw)] space-y-6 py-8">
+    <div>
+      <div className="mx-auto w-full max-w-[1280px] space-y-5">
         {/* Page Header */}
         <motion.div
           variants={stagger}
@@ -2295,7 +2295,7 @@ export default function InvoicesPage() {
         >
           <motion.header
             variants={fadeUp}
-            className="relative overflow-hidden rounded-2xl  bg-[var(--color-background)] px-4 py-1 shadow-md sm:px-6"
+            className="relative overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-4 shadow-sm sm:px-5"
           >
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
@@ -2305,7 +2305,7 @@ export default function InvoicesPage() {
                   </div>
 
                   <div className="min-w-0">
-                    <h1 className="text-2xl font-semibold tracking-wide text-[var(--color-text)]">
+                    <h1 className="text-lg font-semibold text-[var(--color-text)] sm:text-xl">
                       Invoices
                     </h1>
                     <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.62)]">

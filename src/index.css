@@ -666,3 +666,340 @@ select:autofill {
 .animate-ping-slow {
   animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
+
+/* =========================================================
+   ROOF ZEUS APPLICATION SYSTEM
+   A restrained, field-friendly workspace shared by admin and crew.
+   Marketing pages intentionally remain outside this scope.
+   ========================================================= */
+.rz-app-shell,
+.rz-crew-shell {
+  --color-background: #091220;
+  --color-background-rgb: 9 18 32;
+  --color-surface: #101c2e;
+  --color-surface-rgb: 16 28 46;
+  --color-card: #122137;
+  --color-card-rgb: 18 33 55;
+  --color-card-alt: #152640;
+  --color-card-hover: #1a2d49;
+  --color-border: rgba(148, 171, 202, 0.15);
+  --color-border-rgb: 148 171 202;
+  --color-text: #edf4ff;
+  --color-text-rgb: 237 244 255;
+  --color-muted: #93a5bb;
+  --color-blue: #62adf5;
+  --color-blue-rgb: 98 173 245;
+  --color-primary: #62adf5;
+  --color-primary-rgb: 98 173 245;
+  --color-accent: #62adf5;
+  --color-accent-gold: #d7a85d;
+  --color-logo: #edf4ff;
+  --color-bg: #091220;
+  --color-primary-600: #4b98df;
+  --color-brown: #233955;
+  --color-brown-hover: #2b486b;
+  --btn-bg: rgb(98 173 245 / 0.16);
+  --btn-hover-bg: rgb(98 173 245 / 0.24);
+  --btn-text: #edf4ff;
+  --rz-sidebar: #0b1627;
+  --rz-topbar: rgb(9 18 32 / 0.88);
+  --rz-mobile-nav: rgb(11 22 39 / 0.94);
+  --rz-nav-active: rgba(98, 173, 245, 0.09);
+  --rz-nav-hover: rgba(148, 171, 202, 0.07);
+  --rz-input: #0d1a2b;
+  background: var(--color-background);
+  color: var(--color-text);
+  color-scheme: dark;
+  font-family: Inter, Aptos, "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html[data-theme="light"] .rz-app-shell,
+html[data-theme="light"] .rz-crew-shell {
+  --color-background: #f3f6fa;
+  --color-background-rgb: 243 246 250;
+  --color-surface: #ffffff;
+  --color-surface-rgb: 255 255 255;
+  --color-card: #ffffff;
+  --color-card-rgb: 255 255 255;
+  --color-card-alt: #f6f8fb;
+  --color-card-hover: #edf3f9;
+  --color-border: rgba(35, 55, 82, 0.13);
+  --color-border-rgb: 35 55 82;
+  --color-text: #17253a;
+  --color-text-rgb: 23 37 58;
+  --color-muted: #617289;
+  --color-blue: #176fb9;
+  --color-blue-rgb: 23 111 185;
+  --color-primary: #176fb9;
+  --color-primary-rgb: 23 111 185;
+  --color-accent: #176fb9;
+  --color-accent-gold: #9a6c22;
+  --color-logo: #17253a;
+  --color-bg: #f3f6fa;
+  --color-primary-600: #125d9e;
+  --color-brown: #dce7f2;
+  --color-brown-hover: #cfddeb;
+  --btn-bg: rgb(23 111 185 / 0.12);
+  --btn-hover-bg: rgb(23 111 185 / 0.18);
+  --btn-text: #17253a;
+  --rz-sidebar: #ffffff;
+  --rz-topbar: rgb(255 255 255 / 0.9);
+  --rz-mobile-nav: rgb(255 255 255 / 0.95);
+  --rz-nav-active: rgba(23, 111, 185, 0.09);
+  --rz-nav-hover: rgba(23, 55, 92, 0.055);
+  --rz-input: #ffffff;
+  color-scheme: light;
+}
+
+.rz-app-shell h1,
+.rz-app-shell h2,
+.rz-app-shell h3,
+.rz-app-shell p,
+.rz-app-shell button,
+.rz-crew-shell h1,
+.rz-crew-shell h2,
+.rz-crew-shell h3,
+.rz-crew-shell p,
+.rz-crew-shell button {
+  font-family: inherit;
+}
+
+.rz-app-shell h1,
+.rz-app-shell h2,
+.rz-app-shell h3,
+.rz-crew-shell h1,
+.rz-crew-shell h2,
+.rz-crew-shell h3 {
+  letter-spacing: -0.018em;
+}
+
+.rz-app-shell button,
+.rz-app-shell a,
+.rz-crew-shell button,
+.rz-crew-shell a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rz-app-shell :focus-visible,
+.rz-crew-shell :focus-visible {
+  outline: 2px solid rgb(var(--color-blue-rgb) / 0.72);
+  outline-offset: 2px;
+}
+
+.rz-app-shell [class*="bg-gradient-to"],
+.rz-crew-shell [class*="bg-gradient-to"] {
+  background-image: none !important;
+}
+
+.rz-app-main {
+  min-height: calc(100dvh - 4.25rem);
+}
+
+.rz-app-main > [class*="min-h-screen"],
+.rz-app-main > [class*="min-h-[calc"] {
+  min-height: auto;
+}
+
+.rz-primary-action {
+  border: 1px solid rgb(var(--color-blue-rgb) / 0.36);
+  background: rgb(var(--color-blue-rgb) / 0.13);
+  color: var(--color-text);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.rz-primary-action:hover {
+  border-color: rgb(var(--color-blue-rgb) / 0.56);
+  background: rgb(var(--color-blue-rgb) / 0.2);
+}
+
+.rz-topbar-add {
+  border: 1px solid rgb(var(--color-blue-rgb) / 0.26);
+  background: rgb(var(--color-blue-rgb) / 0.12);
+  color: var(--color-text);
+}
+
+.rz-icon-button {
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  color: rgb(var(--color-text-rgb) / 0.6);
+  transition: 160ms ease;
+}
+
+.rz-icon-button:hover {
+  border-color: var(--color-border);
+  background: var(--color-card-alt);
+  color: var(--color-text);
+}
+
+.rz-compact-select {
+  height: 2.25rem;
+  appearance: none;
+  border: 1px solid var(--color-border);
+  border-radius: 0.65rem;
+  background: var(--color-card-alt);
+  padding: 0 1.8rem 0 0.75rem;
+  color: rgb(var(--color-text-rgb) / 0.76);
+  font-size: 0.7rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.rz-app-shell input:not([type="checkbox"]):not([type="radio"]),
+.rz-app-shell textarea,
+.rz-app-shell select,
+.rz-crew-shell input:not([type="checkbox"]):not([type="radio"]),
+.rz-crew-shell textarea,
+.rz-crew-shell select {
+  border-color: var(--color-border);
+}
+
+.rz-app-shell option,
+.rz-crew-shell option {
+  background: var(--color-card);
+  color: var(--color-text);
+}
+
+.rz-app-shell table,
+.rz-crew-shell table {
+  font-variant-numeric: tabular-nums;
+}
+
+.rz-app-shell .rz-dashboard-shell,
+.rz-crew-shell .rz-dashboard-shell {
+  background: transparent !important;
+}
+
+.rz-financial-page [class~="text-white"] {
+  color: var(--color-text) !important;
+}
+
+.rz-financial-page [class*="text-white/"] {
+  color: var(--color-muted) !important;
+}
+
+.rz-financial-page [class*="bg-white/"] {
+  background-color: var(--color-card-alt) !important;
+}
+
+.rz-financial-page [class*="ring-white/"] {
+  --tw-ring-color: var(--color-border) !important;
+}
+
+.rz-financial-page [class*="border-white/"] {
+  border-color: var(--color-border) !important;
+}
+
+.rz-app-shell .rz-dashboard-card,
+.rz-app-shell section.rounded-2xl,
+.rz-app-shell div.rounded-2xl.border {
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.08);
+}
+
+html[data-theme="light"] .rz-app-shell .rz-dashboard-card,
+html[data-theme="light"] .rz-app-shell section.rounded-2xl,
+html[data-theme="light"] .rz-app-shell div.rounded-2xl.border {
+  box-shadow: 0 8px 24px rgb(30 53 80 / 0.065);
+}
+
+@media (max-width: 767px) {
+  .rz-app-main {
+    min-height: calc(100dvh - 4.25rem - 4.25rem);
+  }
+
+  .rz-app-main table {
+    min-width: 680px;
+  }
+
+  .rz-app-main .overflow-x-auto,
+  .rz-app-main [class*="overflow-x-auto"] {
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rz-app-shell *,
+  .rz-crew-shell * {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@page {
+  size: letter;
+  margin: 0.45in;
+}
+
+@media print {
+  html,
+  body {
+    width: 100%;
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body.rz-document-open {
+    background: #ffffff !important;
+  }
+
+  .rz-print-document,
+  .rz-print-document * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .rz-print-document {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 10pt;
+    line-height: 1.35;
+    box-shadow: none !important;
+  }
+
+  .rz-print-document .rz-document-header,
+  .rz-print-keep,
+  .rz-print-document tr,
+  .rz-print-document img {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .rz-print-document thead {
+    display: table-header-group;
+  }
+
+  .rz-print-document tfoot {
+    display: table-footer-group;
+  }
+
+  .rz-print-document a {
+    color: #111827 !important;
+    text-decoration: none !important;
+  }
+
+  .warranty-print-document {
+    padding: 0 !important;
+  }
+
+  .warranty-print-document > div {
+    padding: 0 !important;
+  }
+
+  .warranty-print-document img {
+    max-width: 100%;
+  }
+
+  .invoice-print-document {
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+}

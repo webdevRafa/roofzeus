@@ -11,6 +11,7 @@ import type { JobStatus } from "../types/types";
 import { useOrgJobsData } from "../hooks/useOrgJobsData";
 import { DashboardJobsSection } from "../features/dashboard/DashboardJobsSection";
 import { Search, Filter } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 // A helper type for Firestore timestamps. See useOrgJobsData.ts.
 type FsTimestampLike = { toDate: () => Date };
 
@@ -99,7 +100,7 @@ function SortMenu({
         type="button"
         onClick={() => setOpen((s) => !s)}
         whileTap={{ scale: 0.98 }}
-        className="group inline-flex items-center gap-2   px-3 py-2   text-xs font-semibold outline-none transition shadow-xs hover:shadow-sm cursor-pointer"
+        className="group inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] px-3 py-2 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.74)] outline-none transition hover:bg-[var(--color-card-hover)] hover:text-[var(--color-text)] cursor-pointer"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -129,7 +130,7 @@ function SortMenu({
             animate={{ opacity: 1, y: 10, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: 8, scale: 0.985, filter: "blur(6px)" }}
             transition={{ duration: 0.18, ease }}
-            className="absolute right-0 z-50 mt-2 w-[240px] overflow-hidden  bg-[var(--color-background)] shadow-sm"
+            className="absolute right-0 z-50 mt-2 w-[240px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl"
             role="menu"
           >
             <div className="px-3 py-2 text-[11px] uppercase tracking-wide text-white/45">
@@ -198,6 +199,8 @@ const fadeUp = (delay = 0): MotionProps => ({
 // Main JobsPage component. This page consolidates the job list, search and
 // filter controls, a sticky header with a new job button, and sorting logic.
 export default function JobsPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     orgId,
     membershipLoading,
@@ -250,6 +253,14 @@ export default function JobsPage() {
 
   const [mobileHeaderVisible, setMobileHeaderVisible] = useState(true);
   const { scrollY } = useScroll();
+
+  useEffect(() => {
+    const state = location.state as { openNewJob?: boolean } | null;
+    if (!state?.openNewJob) return;
+
+    setOpenForm(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate, setOpenForm]);
   // Track the selected sort option. Default to 'recent'.
   const [sortOption, setSortOption] = useState<"recent" | "netDesc" | "netAsc">(
     "recent"
@@ -358,10 +369,10 @@ export default function JobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] relative">
+    <div className="relative">
       {/* Sticky header with page title, new job button, and sort controls */}
       <motion.header
-        className="sticky top-16 md:top-18 bg-[var(--color-background)] backdrop-blur px-4 pt-4 pb-2 max-w-8xl mx-auto z-80"
+        className="sticky top-17 z-20 mx-auto mb-4 rounded-2xl border border-[var(--color-border)] bg-[var(--rz-topbar)] px-4 py-4 shadow-sm backdrop-blur-xl"
         initial={false}
         animate={{
           y: mobileHeaderVisible ? 0 : -200,
@@ -371,7 +382,7 @@ export default function JobsPage() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-xs md:text-md lg:text-lg font-semibold text-[var(--color-text)] uppercase font-poppins">
+            <h1 className="text-lg font-semibold text-[var(--color-text)] sm:text-xl">
               Jobs
             </h1>
             <span className="ml-1 text-xs sm:text-sm text-[var(--color-muted)]">
@@ -458,7 +469,7 @@ export default function JobsPage() {
             <button
               type="button"
               onClick={() => setOpenForm(true)}
-              className="inline-flex items-center gap-2  px-3 py-2 text-xs    text-[var(--color-text)] shadow-xs hover:shadow-sm transition cursor-pointer "
+              className="rz-primary-action inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               New job

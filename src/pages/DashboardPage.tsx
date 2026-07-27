@@ -10,6 +10,8 @@ import {
   ChevronRight,
   ClipboardCheck,
   DollarSign,
+  FileText,
+  Plus,
   X,
   WalletCards,
 } from "lucide-react";
@@ -1332,37 +1334,101 @@ export default function DashboardPage() {
   return (
     <div className="rz-dashboard-shell w-full min-h-screen pb-10">
       <motion.div
-        className="mx-auto w-full max-w-[1400px] px-4 sm:px-6"
+        className="mx-auto w-full max-w-[1400px]"
         initial="initial"
         animate="animate"
       >
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div className="pt-5">
-            <h1 className="text-xl font-semibold tracking-wide text-[var(--color-text)] sm:text-2xl">
-              Command Center
-            </h1>
-            <p className="mt-1 text-sm text-[rgb(var(--color-text-rgb)/0.58)]">
-              Work queues for completion, payouts, scheduling, and payout
-              coverage.
-            </p>
+        <section className="mb-5 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-blue)]">
+                Today ·{" "}
+                {new Date().toLocaleDateString(undefined, {
+                  weekday: "long",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </div>
+              <h1 className="mt-2 text-xl font-semibold text-[var(--color-text)] sm:text-2xl">
+                What needs attention
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-[var(--color-muted)]">
+                The jobs, dates, and payouts most likely to slow down the day.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/jobs", { state: { openNewJob: true } })
+                }
+                className="rz-primary-action inline-flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold"
+              >
+                <Plus className="h-4 w-4" />
+                Add job
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/invoices-page")}
+                className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] px-3.5 py-2.5 text-xs font-semibold text-[rgb(var(--color-text-rgb)/0.76)] hover:text-[var(--color-text)]"
+              >
+                <FileText className="h-4 w-4" />
+                New invoice
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-[11px]">
-            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
-              Jobs:{" "}
-              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
-                {jobs.length}
-              </span>
-            </span>
-
-            <span className="rounded-full border border-[rgb(var(--color-border-rgb)/0.18)] bg-[rgb(var(--color-surface-rgb)/0.55)] px-3 py-1 text-[rgb(var(--color-text-rgb)/0.62)]">
-              Payouts:{" "}
-              <span className="font-semibold text-[rgb(var(--color-text-rgb)/0.90)]">
-                {payouts.length}
-              </span>
-            </span>
+          <div className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-4">
+            {[
+              {
+                label: "Behind schedule",
+                value: behindScheduleJobs.length,
+                hint: "Needs a production update",
+                tone: "text-red-300",
+                action: () => navigate("/pipeline"),
+              },
+              {
+                label: "Not scheduled",
+                value: unscheduledJobs.length,
+                hint: "Ready for dates",
+                tone: "text-[var(--color-blue)]",
+                action: () => navigate("/pipeline"),
+              },
+              {
+                label: "Pending payouts",
+                value: pendingPayouts.length,
+                hint: "Waiting to be paid",
+                tone: "text-amber-300",
+                action: () => navigate("/payouts"),
+              },
+              {
+                label: "All jobs",
+                value: jobs.length,
+                hint: "Open job records",
+                tone: "text-[var(--color-text)]",
+                action: () => navigate("/jobs"),
+              },
+            ].map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={item.action}
+                className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-card-alt)] p-3 text-left transition hover:border-[rgb(var(--color-blue-rgb)/0.28)] hover:bg-[var(--color-card-hover)] sm:p-4"
+              >
+                <div className={`text-xl font-semibold sm:text-2xl ${item.tone}`}>
+                  {item.value}
+                </div>
+                <div className="mt-1 text-[11px] font-semibold text-[rgb(var(--color-text-rgb)/0.78)]">
+                  {item.label}
+                </div>
+                <div className="mt-0.5 truncate text-[9px] text-[rgb(var(--color-text-rgb)/0.4)]">
+                  {item.hint}
+                </div>
+              </button>
+            ))}
           </div>
-        </div>
+        </section>
 
         {payoutsError && (
           <div className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
@@ -1376,7 +1442,21 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="space-y-5">
+        <div className="mb-3 flex items-end justify-between gap-3 px-1">
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--color-text)]">
+              Work queues
+            </h2>
+            <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">
+              Open a queue only when you need the details.
+            </p>
+          </div>
+          <span className="text-[10px] text-[rgb(var(--color-text-rgb)/0.4)]">
+            {payouts.length} payout records
+          </span>
+        </div>
+
+        <div className="space-y-3">
           <TableShell
             title="Jobs pending completion"
             subtitle="Jobs that still need final punch completion."

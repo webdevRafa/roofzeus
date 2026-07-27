@@ -9,11 +9,7 @@ export function ThemeToggleButton() {
     <button
       type="button"
       onClick={toggleTheme}
-      className={[
-        "inline-flex  items-center gap-2 rounded-xl p-2 text-sm font-semibold",
-        "text-[var(--color-text)] hover:text-[var(--color-blue)]",
-        "backdrop-blur-md hover:shadow-md",
-      ].join(" ")}
+      className="rz-icon-button inline-flex h-9 w-9 items-center justify-center"
       aria-label="Toggle theme"
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >

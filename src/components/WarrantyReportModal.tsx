@@ -29,7 +29,10 @@ type JobPhoto = {
   url?: string;
   caption?: string;
 };
-type OrgBranding = Pick<Org, "name" | "legalName" | "logoUrl" | "address">;
+type OrgBranding = Pick<
+  Org,
+  "name" | "legalName" | "logoUrl" | "address" | "phone" | "email"
+>;
 
 type FsTimestampLike = { toDate: () => Date };
 function isFsTimestamp(x: unknown): x is FsTimestampLike {
@@ -330,10 +333,10 @@ function WarrantyReportDocument({
   }
 
   return (
-    <div className="bg-[var(--color-card)] print:bg-white print:text-black">
-      <div className="px-5 py-5 print:px-4 print:py-1">
+    <div className="rz-print-document warranty-print-document bg-[var(--color-card)] print:bg-white print:text-black">
+      <div className="px-5 py-5 print:px-0 print:py-0">
         {/* ===== Print-first document header ===== */}
-        <div className="bg-[rgb(var(--color-background-rgb)/0.14)] p-4 print:bg-white print:p-3 mt-0">
+        <div className="rz-document-header bg-[rgb(var(--color-background-rgb)/0.14)] p-4 print:bg-white print:p-0 mt-0">
           <div className="flex flex-col gap-5 border-b border-[rgb(var(--color-border-rgb)/0.18)] pb-4 print:border-[#d1d5db] sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex items-start gap-4">
@@ -356,13 +359,20 @@ function WarrantyReportDocument({
                     </div>
                   ) : null}
 
-                  <h1 className="mt-1 text-[12px] font-semibold tracking-[-0.02em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-black">
+                  <h1 className="mt-1 text-xl font-semibold tracking-[-0.02em] text-[rgb(var(--color-text-rgb)/0.98)] print:text-2xl print:text-black">
                     Warranty Packet
                   </h1>
 
                   {orgAddress ? (
                     <div className="mt-1 max-w-[420px] text-[11px] leading-5 text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
                       {orgAddress}
+                    </div>
+                  ) : null}
+                  {orgBranding?.phone || orgBranding?.email ? (
+                    <div className="mt-0.5 max-w-[420px] text-[11px] leading-5 text-[rgb(var(--color-text-rgb)/0.58)] print:text-[#6b7280]">
+                      {[orgBranding.phone, orgBranding.email]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </div>
                   ) : null}
                 </div>
@@ -918,7 +928,7 @@ function WarrantyReportDocument({
               </div>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-2">
               {packetPhotos.map((p) => {
                 const src = safePhotoUrl(p);
                 return (
@@ -957,6 +967,13 @@ function WarrantyReportDocument({
             </div>
           </div>
         )}
+
+        <footer className="rz-print-keep mt-6 border-t border-[rgb(var(--color-border-rgb)/0.14)] pt-4 text-[10px] leading-5 text-[rgb(var(--color-text-rgb)/0.5)] print:border-[#d1d5db] print:text-[#6b7280]">
+          Keep this packet with the property records. Warranty service is
+          subject to the terms, coverage, exclusions, and claim procedures
+          listed above and in the attached manufacturer or administrator
+          documents.
+        </footer>
       </div>
     </div>
   );
@@ -1096,6 +1113,8 @@ export default function WarrantyReportModal({
           legalName: data.legalName ?? "",
           logoUrl: data.logoUrl ?? null,
           address: data.address ?? null,
+          phone: data.phone ?? "",
+          email: data.email ?? "",
         });
       },
       () => {
@@ -1120,7 +1139,7 @@ export default function WarrantyReportModal({
         />
 
         <div className="relative z-10 flex min-h-full items-start justify-center">
-          <div className="relative flex w-full max-w-5xl min-h-0 flex-col overflow-hidden border border-[rgb(var(--color-border-rgb)/0.34)] bg-[var(--color-card)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-72px-24px)] sm:max-h-[calc(100dvh-72px-32px)]">
+          <div className="relative flex w-full max-w-5xl min-h-0 flex-col overflow-hidden rounded-2xl border border-[rgb(var(--color-border-rgb)/0.34)] bg-[var(--color-card)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] max-h-[calc(100dvh-72px-24px)] sm:max-h-[calc(100dvh-72px-32px)]">
             {/* top bar */}
             <div className="border-b border-[rgb(var(--color-border-rgb)/0.26)] bg-[rgb(var(--color-background-rgb)/0.18)] px-4 py-4 sm:px-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
