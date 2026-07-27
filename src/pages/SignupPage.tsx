@@ -352,9 +352,6 @@ export default function SignupPage() {
               <h2>{current.title}</h2>
               <p>{current.copy}</p>
             </div>
-            <a className="rz-auth-back" href={marketingOrigin()}>
-              Website
-            </a>
           </div>
 
           <div className="rz-signup-progress">

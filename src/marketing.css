@@ -10,6 +10,10 @@
   --rz-blue-bright: #79c4ef;
   --rz-gold: #e2b24c;
   --rz-green: #7ac9ad;
+  --rz-action: #d8edf7;
+  --rz-action-hover: #f2f8fb;
+  --rz-action-border: #9bc8dd;
+  --rz-action-shadow: 0 12px 30px rgba(45, 122, 163, 0.18);
   --rz-paper: #f0ede5;
   --rz-paper-ink: #111b27;
   --rz-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
@@ -150,13 +154,26 @@ body {
 
 .rz-button--primary {
   color: #06101e;
-  background: var(--rz-gold);
-  box-shadow: none;
+  border-color: var(--rz-action-border);
+  background: var(--rz-action);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    var(--rz-action-shadow);
 }
 
 .rz-button--primary:hover {
-  background: #efc466;
-  box-shadow: none;
+  border-color: #c3e1ef;
+  background: var(--rz-action-hover);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 16px 38px rgba(45, 122, 163, 0.24);
+}
+
+.rz-button--primary:focus-visible,
+.rz-auth-submit:focus-visible,
+.rz-signup-controls button:last-child:focus-visible {
+  outline: 2px solid var(--rz-blue-bright);
+  outline-offset: 3px;
 }
 
 .rz-button--secondary {
@@ -433,7 +450,7 @@ body {
 }
 
 .rz-product-frame__bar > span:first-child {
-  background: var(--rz-gold);
+  background: var(--rz-blue-bright);
 }
 
 .rz-product-frame__bar div {
@@ -617,7 +634,7 @@ body {
 .rz-mini-bars span {
   flex: 1;
   border-radius: 2px 2px 0 0;
-  background: var(--rz-gold);
+  background: var(--rz-blue-bright);
 }
 
 .rz-mini-bars span:nth-child(1) { height: 34%; }
@@ -1669,15 +1686,28 @@ body {
   align-items: center;
   justify-content: center;
   gap: 9px;
-  border: 0;
+  border: 1px solid var(--rz-action-border);
   border-radius: 4px;
   margin-top: 8px;
   color: #06101e;
-  background: var(--rz-gold);
-  box-shadow: none;
+  background: var(--rz-action);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    var(--rz-action-shadow);
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease,
+    background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.rz-auth-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #c3e1ef;
+  background: var(--rz-action-hover);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 16px 38px rgba(45, 122, 163, 0.24);
 }
 
 .rz-auth-submit:disabled {
@@ -1751,7 +1781,7 @@ body {
 
 .rz-signup-progress__bar {
   height: 100%;
-  background: var(--rz-gold);
+  background: var(--rz-blue-bright);
 }
 
 .rz-signup-fields {
@@ -1810,13 +1840,27 @@ body {
   font-size: 0.76rem;
   font-weight: 650;
   cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease,
+    background-color 180ms ease, box-shadow 180ms ease;
 }
 
 .rz-signup-controls button:last-child {
   margin-left: auto;
   color: #06101e;
-  border-color: transparent;
-  background: var(--rz-gold);
+  border-color: var(--rz-action-border);
+  background: var(--rz-action);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    var(--rz-action-shadow);
+}
+
+.rz-signup-controls button:last-child:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #c3e1ef;
+  background: var(--rz-action-hover);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 16px 38px rgba(45, 122, 163, 0.24);
 }
 
 .rz-signup-controls button:disabled {
