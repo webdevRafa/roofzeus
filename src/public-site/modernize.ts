@@ -36,11 +36,13 @@ const gateway = (import.meta.env.VITE_MODERNIZE_GATEWAY_URL || "").replace(
   /\/$/,
   "",
 );
-export function useModernizeConfig() {
+export function useModernizeConfig(demo = false) {
   const [config, setConfig] = useState(closedConfig);
-  const [loading, setLoading] = useState(Boolean(gateway && modernizeMode));
+  const [loading, setLoading] = useState(
+    Boolean(!demo && gateway && modernizeMode),
+  );
   useEffect(() => {
-    if (!gateway || !modernizeMode) return;
+    if (demo || !gateway || !modernizeMode) return;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
     fetch(`${gateway}/config`, { signal: controller.signal, cache: "no-store" })
@@ -72,8 +74,11 @@ export function useModernizeConfig() {
       controller.abort();
       clearTimeout(timeout);
     };
-  }, []);
-  return { config, loading };
+  }, [demo]);
+  return {
+    config: demo ? closedConfig : config,
+    loading: demo ? false : loading,
+  };
 }
 export type ModernizeResult = {
   reference: string;

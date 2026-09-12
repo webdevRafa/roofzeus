@@ -72,6 +72,13 @@ export type PageMeta = {
 };
 export const pages: PageMeta[] = [
   {
+    path: "/demo",
+    title: "Roofing estimate demo | RoofZeus",
+    description:
+      "Review the RoofZeus estimate form with sample information. Demo only; no lead is submitted.",
+    index: false,
+  },
+  {
     path: "/",
     title: "Get a roofing estimate for your home | RoofZeus",
     description:

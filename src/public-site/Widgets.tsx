@@ -7,20 +7,23 @@ import type { Address } from "./location";
 export function ZipStart({
   compact = false,
   onStart,
+  demo = false,
 }: {
   compact?: boolean;
+  demo?: boolean;
   onStart?: (zip: string) => void;
 }) {
   const [zip, setZip] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
   useEffect(() => {
+    if (demo) return;
     try {
       setZip(localStorage.getItem("roofzeus.zip") || "");
     } catch {
       /* Storage is optional. */
     }
-  }, []);
+  }, [demo]);
   return (
     <form
       className={`rz-zip-start ${compact ? "compact" : ""}`}
@@ -31,7 +34,7 @@ export function ZipStart({
           return;
         }
         try {
-          localStorage.setItem("roofzeus.zip", zip);
+          if (!demo) localStorage.setItem("roofzeus.zip", zip);
         } catch {
           /* Storage is optional. */
         }
@@ -58,7 +61,7 @@ export function ZipStart({
           />
         </div>
         <button className="rz-button" type="submit">
-          Get my estimate <ArrowRight size={18} />
+          {demo ? "Start demo" : "Get my estimate"} <ArrowRight size={18} />
         </button>
       </div>
       {error && (

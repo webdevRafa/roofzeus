@@ -187,8 +187,12 @@ test("Unavailable matching and missing certificate never submit or invent permis
     .getByLabel("Street address", { exact: true })
     .fill("123 Example Lane");
   await page.getByLabel("I own this property").check();
-  await expect(page.getByLabel("City", { exact: true })).toHaveValue("San Antonio");
-  await expect(page.getByRole("combobox", { name: "State", exact: true })).toHaveValue("TX");
+  await expect(page.getByLabel("City", { exact: true })).toHaveValue(
+    "San Antonio",
+  );
+  await expect(
+    page.getByRole("combobox", { name: "State", exact: true }),
+  ).toHaveValue("TX");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Check my details", exact: true }),
@@ -517,3 +521,101 @@ test("Closed matching has a working format check and clearly says nothing is sub
   ).toHaveCount(0);
   expect(submits).toBe(0);
 });
+
+for (const addressEntry of [false, true]) {
+  test(`Demo route completes ${addressEntry ? "address" : "ZIP"} entry without live services, storage or delivery`, async ({
+    page,
+  }) => {
+    const serviceRequests: string[] = [];
+    page.on("request", (request) => {
+      if (
+        /modernize-test|trustedform|challenges.cloudflare|maps.googleapis|zippopotam/.test(
+          request.url(),
+        )
+      )
+        serviceRequests.push(request.url());
+    });
+    await page.goto("/demo?environment=production&enabled=true");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      "noindex,follow",
+    );
+    await expect(page.getByRole("note")).toContainText("Demo mode");
+    if (addressEntry) {
+      await page
+        .getByRole("button", { name: "Full address", exact: true })
+        .click();
+      await page
+        .getByLabel("Street address", { exact: true })
+        .fill("123 Example Lane");
+      await page.getByLabel("City", { exact: true }).fill("San Antonio");
+      await page
+        .getByRole("combobox", { name: "State", exact: true })
+        .selectOption("TX");
+      await page.getByLabel("ZIP code", { exact: true }).fill("78209");
+    } else await page.locator("#zip-start").fill("78209");
+    await page.getByRole("button", { name: "Start demo", exact: true }).click();
+    await page.getByLabel("Roof replacement", { exact: true }).check();
+    await page
+      .getByRole("combobox", { name: /What material/ })
+      .selectOption("asphalt");
+    await page
+      .getByRole("combobox", { name: "When do you need help?", exact: true })
+      .selectOption("Immediately");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    if (!addressEntry) {
+      await page
+        .getByLabel("Street address", { exact: true })
+        .fill("123 Example Lane");
+      await page.getByLabel("City", { exact: true }).fill("San Antonio");
+      await page
+        .getByRole("combobox", { name: "State", exact: true })
+        .selectOption("TX");
+    } else
+      await expect(
+        page.getByLabel("Street address", { exact: true }),
+      ).toHaveValue("123 Example Lane");
+    await page.getByLabel("I own this property").check();
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await page.getByLabel("First name", { exact: true }).fill("Sample");
+    await page.getByLabel("Last name", { exact: true }).fill("Homeowner");
+    await page
+      .getByLabel("Email address", { exact: true })
+      .fill("sample@example");
+    await page.getByLabel("Phone number", { exact: true }).fill("2105550123");
+    await page
+      .getByRole("button", { name: "Complete demo", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Demo completed successfully." }),
+    ).toHaveCount(0);
+    await page
+      .getByLabel("Email address", { exact: true })
+      .fill("sample@example.com");
+    await page
+      .getByRole("button", { name: "Complete demo", exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Demo completed successfully." }),
+    ).toBeFocused();
+    await expect(
+      page.getByText("No lead was saved or sent", { exact: false }),
+    ).toBeVisible();
+    expect(serviceRequests).toEqual([]);
+    expect(
+      await page.evaluate(() => ({
+        local: { ...localStorage },
+        session: { ...sessionStorage },
+      })),
+    ).toEqual({ local: {}, session: {} });
+    expect(page.url()).not.toMatch(/78209|Example|sample/);
+    await page.getByRole("button", { name: "Try the demo again" }).click();
+    await expect(page.locator("#zip-start")).toHaveValue("");
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  });
+}

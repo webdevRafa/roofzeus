@@ -7,17 +7,21 @@ import EstimateFunnel from "./EstimateFunnel";
 import ModernizeFunnel from "./ModernizeFunnel";
 import { modernizeMode, useModernizeConfig } from "./modernize";
 
-export default function LandingPage() {
+export default function LandingPage({ demo = false }: { demo?: boolean }) {
   const [params, setParams] = useSearchParams();
   const [started, setStarted] = useState(false);
   const [initialAddress, setInitialAddress] = useState<Address>();
-  const { config, loading } = useModernizeConfig();
+  const { config, loading } = useModernizeConfig(demo);
+  const [demoZip, setDemoZip] = useState("");
   useEffect(() => {
-    setStarted(params.get("estimate") === "1");
-  }, [params]);
+    if (!demo) setStarted(params.get("estimate") === "1");
+  }, [params, demo]);
   function start(zip: string, address?: Address) {
     setInitialAddress(address);
-    setParams({ zip, estimate: "1" });
+    if (demo) {
+      setDemoZip(zip);
+      setStarted(true);
+    } else setParams({ zip, estimate: "1" });
   }
   return (
     <>
@@ -52,18 +56,30 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="rz-estimate-panel" id="estimate-funnel">
-            {started && modernizeMode ? (
+            {demo && (
+              <p className="rz-note" role="note">
+                <strong>Demo mode.</strong> Use sample information. No estimate
+                request will be saved or sent. Address lookup and consent
+                recording are off.
+              </p>
+            )}
+            {started && (demo || modernizeMode) ? (
               loading ? (
                 <div className="rz-estimate-success" role="status">
                   Loading estimate options…
                 </div>
               ) : (
                 <ModernizeFunnel
+                  demo={demo}
                   config={config}
-                  zip={params.get("zip") || ""}
+                  zip={demo ? demoZip : params.get("zip") || ""}
                   initialAddress={initialAddress}
                   onBack={() => {
-                    if (config.enabled) window.location.assign("/");
+                    if (demo) {
+                      setInitialAddress(undefined);
+                      setDemoZip("");
+                      setStarted(false);
+                    } else if (config.enabled) window.location.assign("/");
                     else {
                       setInitialAddress(undefined);
                       setParams({});
@@ -89,7 +105,7 @@ export default function LandingPage() {
                   Enter your ZIP code or address to explore estimate options
                   near you.
                 </p>
-                <LocationStart onStart={start} />
+                <LocationStart onStart={start} demo={demo} />
                 <div className="rz-entry-privacy">
                   <LockKeyhole size={13} />
                   <span>You control your contact permission.</span>

@@ -5,6 +5,7 @@ import { states, type Address } from "./location";
 import { loadScript, lookupZip, track } from "./integrations";
 import {
   submitModernize,
+  closedConfig,
   SubmissionError,
   type ModernizeConfig,
   type ModernizeResult,
@@ -18,16 +19,21 @@ import {
 } from "../../functions/src/contact-validation";
 
 export default function ModernizeFunnel({
-  config,
+  config: suppliedConfig,
+  demo = false,
   zip,
   initialAddress,
   onBack,
 }: {
   config: ModernizeConfig;
+  demo?: boolean;
   zip: string;
   initialAddress?: Address;
   onBack: () => void;
 }) {
+  // The review route cannot inherit live delivery settings.
+  const config = demo ? closedConfig : suppliedConfig;
+  const [demoCompleted, setDemoCompleted] = useState(false);
   const [form, setForm] = useState({
     plan: "",
     material: "",
@@ -69,17 +75,17 @@ export default function ModernizeFunnel({
     setForm((current) => ({ ...current, [key]: value }));
   useEffect(() => {
     requestId.current = crypto.randomUUID();
-    track("estimate_started");
-  }, []);
+    if (!demo) track("estimate_started");
+  }, [demo]);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-    if (step > 0 || result)
+    if (step > 0 || result || demoCompleted)
       document
         .getElementById("estimate-funnel")
         ?.scrollIntoView({ block: "start" });
-  }, [step, result]);
+  }, [step, result, demoCompleted]);
   useEffect(() => {
-    if (!/^\d{5}$/.test(form.zip)) return;
+    if (demo || !/^\d{5}$/.test(form.zip)) return;
     const controller = new AbortController();
     const timer = setTimeout(
       () =>
@@ -99,7 +105,7 @@ export default function ModernizeFunnel({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [form.zip]);
+  }, [form.zip, demo]);
   useEffect(() => {
     if (!config.enabled || config.mode !== "api" || !formElement.current)
       return;
@@ -145,7 +151,7 @@ export default function ModernizeFunnel({
   }, [config]);
 
   async function send() {
-    if (busy || !config.enabled) return;
+    if (demo || busy || !config.enabled) return;
     if (
       !locked &&
       (!normalizeEmail(form.email) || !normalizePhone(form.phone))
@@ -204,6 +210,34 @@ export default function ModernizeFunnel({
     }
   }
 
+  if (demoCompleted)
+    return (
+      <div className="rz-estimate-success">
+        <CheckCircle2 size={44} aria-hidden="true" />
+        <h2 ref={heading} tabIndex={-1}>
+          Demo completed successfully.
+        </h2>
+        <p>
+          You’ve reached the end of the estimate form. In the live service, your
+          request would be checked for available roofing estimate options.
+        </p>
+        <p className="rz-note">
+          No lead was saved or sent to Modernize or contractors. This is a
+          demonstration, not an accepted request or a confirmed match.
+        </p>
+        <p className="rz-field-help">
+          Contact permission and verification will appear in the live flow after
+          the required setup and review.
+        </p>
+        <button
+          type="button"
+          className="rz-button rz-estimate-next"
+          onClick={onBack}
+        >
+          Try the demo again <ArrowRight size={18} />
+        </button>
+      </div>
+    );
   if (config.mode === "hosted")
     return (
       <div className="rz-estimate-success">
@@ -325,7 +359,20 @@ export default function ModernizeFunnel({
               form.firstName.trim() &&
               form.lastName.trim()
             ) {
-              setCheckedContact(contactSnapshot);
+              if (demo) {
+                setDemoCompleted(true);
+                setForm((current) => ({
+                  ...current,
+                  firstName: "",
+                  lastName: "",
+                  email: "",
+                  phone: "",
+                  address: "",
+                  city: "",
+                  state: "",
+                  zip: "",
+                }));
+              } else setCheckedContact(contactSnapshot);
               setError("");
             } else
               setError(
@@ -356,7 +403,7 @@ export default function ModernizeFunnel({
             Local test mode. Use synthetic details only.
           </p>
         )}
-        {!config.enabled && (
+        {!config.enabled && !demo && (
           <p className="rz-note">
             Preview only. Estimate requests aren’t open yet. You can check your
             details, but nothing will be submitted.
@@ -376,11 +423,13 @@ export default function ModernizeFunnel({
           {step === 1 && (
             <>
               <p>Confirm your property details. You can edit anything below.</p>
-              <AddressSearch
-                onSelect={(address) =>
-                  setForm((current) => ({ ...current, ...address }))
-                }
-              />
+              {!demo && (
+                <AddressSearch
+                  onSelect={(address) =>
+                    setForm((current) => ({ ...current, ...address }))
+                  }
+                />
+              )}
               <label className="rz-field">
                 Street address
                 <input
@@ -461,7 +510,9 @@ export default function ModernizeFunnel({
               <p>
                 {config.enabled
                   ? "Review your details and the contact permission below before submitting."
-                  : "Try the contact fields below to check their format."}
+                  : demo
+                    ? "Use sample details to complete the demo. No one will contact you."
+                    : "Try the contact fields below to check their format."}
               </p>
               <div className="rz-fields">
                 <label className="rz-field">
@@ -498,8 +549,9 @@ export default function ModernizeFunnel({
                 onChange={(value) => set("phone", value)}
               />
               <p className="rz-field-help">
-                RoofZeus may receive compensation for this referral.
-                Availability varies. Read our{" "}
+                {demo
+                  ? "This demo does not request permission for marketing contact. Read our "
+                  : "RoofZeus may receive compensation for this referral. Availability varies. Read our "}
                 <a href="/privacy" target="_blank" rel="noopener">
                   Privacy Policy
                 </a>{" "}
@@ -601,7 +653,9 @@ export default function ModernizeFunnel({
             <>
               {step === 2
                 ? !config.enabled
-                  ? "Check my details"
+                  ? demo
+                    ? "Complete demo"
+                    : "Check my details"
                   : locked
                     ? "Check submission status"
                     : "Get my estimate"

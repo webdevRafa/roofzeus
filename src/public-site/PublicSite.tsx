@@ -401,6 +401,7 @@ export default function PublicSite() {
       <main id="main-content">
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/demo" element={<LandingPage key="demo" demo />} />
           <Route path="/find-a-roofer" element={<LegacyFunnel />} />
           <Route path="/for-contractors" element={<Contractors />} />
           <Route path="/privacy" element={<Legal />} />

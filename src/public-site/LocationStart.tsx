@@ -5,8 +5,10 @@ import { states, type Address } from "./location";
 
 export default function LocationStart({
   onStart,
+  demo = false,
 }: {
   onStart: (zip: string, address?: Address) => void;
+  demo?: boolean;
 }) {
   const [mode, setMode] = useState("zip");
   const [address, setAddress] = useState<Address>({
@@ -40,7 +42,9 @@ export default function LocationStart({
           <House size={16} aria-hidden="true" /> Full address
         </button>
       </div>
-      {mode === "zip" && <ZipStart onStart={(zip) => onStart(zip)} />}
+      {mode === "zip" && (
+        <ZipStart demo={demo} onStart={(zip) => onStart(zip)} />
+      )}
       {mode === "address" && (
         <form
           className="rz-address-start"
@@ -53,7 +57,7 @@ export default function LocationStart({
             });
           }}
         >
-          <AddressSearch onSelect={setAddress} />
+          {!demo && <AddressSearch onSelect={setAddress} />}
           <label className="rz-field">
             Street address
             <input
@@ -113,7 +117,7 @@ export default function LocationStart({
             </label>
           </div>
           <button className="rz-button rz-estimate-next" type="submit">
-            Get my estimate <ArrowRight size={18} />
+            {demo ? "Start demo" : "Get my estimate"} <ArrowRight size={18} />
           </button>
         </form>
       )}
