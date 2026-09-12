@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { normalizeEmail, normalizePhone } from "./contact-validation";
 
 export const MATERIALS = {
   asphalt: "ROOFING_ASPHALT",
@@ -274,13 +275,10 @@ export function validateLead(
       "Estimate matching is not currently available in this ZIP code.",
       422,
     );
-  let phone = text("phone", 10, 25).replace(/\D/g, "");
-  if (phone.length === 11 && phone.startsWith("1")) phone = phone.slice(1);
-  if (!/^[2-9]\d{2}[2-9]\d{6}$/.test(phone))
-    throw new ModernizeError("Enter a valid U.S. phone number.");
-  const email = text("email", 5, 180).toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    throw new ModernizeError("Enter a valid email address.");
+  const phone = normalizePhone(text("phone", 10, 25));
+  if (!phone) throw new ModernizeError("Enter a valid U.S. phone number.");
+  const email = normalizeEmail(text("email", 5, 180));
+  if (!email) throw new ModernizeError("Enter a valid email address.");
   const trustedFormToken = text("trustedFormToken", 1, 250);
   if (
     !/^https:\/\/cert\.trustedform\.com\/[a-f0-9]{40}$/i.test(trustedFormToken)

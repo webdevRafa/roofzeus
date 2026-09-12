@@ -107,6 +107,14 @@ Homeowners who cannot identify or choose a material can read inline guidance wit
 
 Regression coverage exercises all 21 documented plan/material combinations in the browser and server mapper, conditional field visibility, empty and restricted service lists, reset/back behavior, and rejection of forged inspection/unknown/other values.
 
+### Contact input and preview behavior
+
+Phone entry formats national numbers as `(210) 555-0123`, accepts pasted +1 formats, preserves the caret during edits, and rejects letters, extensions, foreign country codes, and excess digits. The submission payload uses ten digits. Both browser and server use `functions/src/contact-validation.ts` to enforce phone structure and email syntax. Email normalization trims outer whitespace and lowercases the value; valid plus tags and common local-part punctuation remain intact. Malformed local parts, missing domain suffixes, empty/invalid domain labels, and excessive lengths are rejected. These checks do not verify a working inbox, line ownership, or reachability; any additional verification service must be separately configured and approved.
+
+When delivery is disabled, all steps identify the flow as a preview. The final `Check my details` button runs format validation and explicitly confirms that nothing was submitted; it never calls the gateway or creates a receipt. When API delivery is enabled, the final button requires bot and certificate verification, with an explanation when these are pending or failed. Native and shared contact validation plus the required consent still apply when clicking an enabled button. An enabled control alone is never evidence of partner acceptance.
+
+The server validator changed alongside the browser. Deploy the updated `modernizeGateway` function as part of the configured backend activation process above; a Vercel redeploy updates only the frontend. Do not enable live delivery merely to test the preview button.
+
 Local checks:
 
 ```powershell

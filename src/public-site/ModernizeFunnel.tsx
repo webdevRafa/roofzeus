@@ -11,6 +11,11 @@ import {
 } from "./modernize";
 import RoofingProjectFields from "./RoofingProjectFields";
 import { roofingProjectReady } from "./roofing-project";
+import { EmailField, PhoneField } from "./ContactInputs";
+import {
+  normalizeEmail,
+  normalizePhone,
+} from "../../functions/src/contact-validation";
 
 export default function ModernizeFunnel({
   config,
@@ -49,6 +54,13 @@ export default function ModernizeFunnel({
   const [certificateFailed, setCertificateFailed] = useState(false);
   const [result, setResult] = useState<ModernizeResult>();
   const [locked, setLocked] = useState(false);
+  const [checkedContact, setCheckedContact] = useState("");
+  const contactSnapshot = JSON.stringify([
+    form.firstName,
+    form.lastName,
+    form.email,
+    form.phone,
+  ]);
   const requestId = useRef("");
   const submitted = useRef<Record<string, unknown> | null>(null);
   const formElement = useRef<HTMLFormElement>(null),
@@ -134,6 +146,16 @@ export default function ModernizeFunnel({
 
   async function send() {
     if (busy || !config.enabled) return;
+    if (
+      !locked &&
+      (!normalizeEmail(form.email) || !normalizePhone(form.phone))
+    ) {
+      setError(
+        "Please enter a valid email address and a 10-digit U.S. phone number.",
+      );
+      formElement.current?.reportValidity();
+      return;
+    }
     if (!locked && !roofingProjectReady(form, config.materials)) {
       setError(
         "Please choose an available roofing project, material, and timing.",
@@ -146,6 +168,8 @@ export default function ModernizeFunnel({
     if (!submitted.current)
       submitted.current = {
         ...form,
+        email: normalizeEmail(form.email),
+        phone: normalizePhone(form.phone),
         requestId: requestId.current,
         configVersion: config.version,
         consentVersion: config.consentVersion,
@@ -294,7 +318,20 @@ export default function ModernizeFunnel({
         data-tf-element-role="offer"
         onSubmit={(event) => {
           event.preventDefault();
-          if (step === 2) void send();
+          if (step === 2 && !config.enabled) {
+            if (
+              normalizeEmail(form.email) &&
+              normalizePhone(form.phone) &&
+              form.firstName.trim() &&
+              form.lastName.trim()
+            ) {
+              setCheckedContact(contactSnapshot);
+              setError("");
+            } else
+              setError(
+                "Please check your name, email address, and phone number.",
+              );
+          } else if (step === 2) void send();
           else if (supported) {
             setError("");
             setStep(step + 1);
@@ -317,6 +354,12 @@ export default function ModernizeFunnel({
         {config.enabled && config.environment === "staging" && (
           <p className="rz-note">
             Local test mode. Use synthetic details only.
+          </p>
+        )}
+        {!config.enabled && (
+          <p className="rz-note">
+            Preview only. Estimate requests aren’t open yet. You can check your
+            details, but nothing will be submitted.
           </p>
         )}
         <fieldset disabled={busy || locked} className="rz-modernize-fields">
@@ -418,7 +461,7 @@ export default function ModernizeFunnel({
               <p>
                 {config.enabled
                   ? "Review your details and the contact permission below before submitting."
-                  : "Estimate matching is opening soon. You can explore the form, but we’re not accepting requests yet."}
+                  : "Try the contact fields below to check their format."}
               </p>
               <div className="rz-fields">
                 <label className="rz-field">
@@ -427,6 +470,7 @@ export default function ModernizeFunnel({
                     name="firstName"
                     autoComplete="given-name"
                     required
+                    pattern={".*\\S.*"}
                     maxLength={80}
                     value={form.firstName}
                     onChange={(event) => set("firstName", event.target.value)}
@@ -438,37 +482,21 @@ export default function ModernizeFunnel({
                     name="lastName"
                     autoComplete="family-name"
                     required
+                    pattern={".*\\S.*"}
                     maxLength={80}
                     value={form.lastName}
                     onChange={(event) => set("lastName", event.target.value)}
                   />
                 </label>
               </div>
-              <label className="rz-field">
-                Email address
-                <input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  maxLength={180}
-                  value={form.email}
-                  onChange={(event) => set("email", event.target.value)}
-                />
-              </label>
-              <label className="rz-field">
-                Phone number
-                <input
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  required
-                  pattern="[0-9+() .-]{10,25}"
-                  maxLength={25}
-                  value={form.phone}
-                  onChange={(event) => set("phone", event.target.value)}
-                />
-              </label>
+              <EmailField
+                value={form.email}
+                onChange={(value) => set("email", value)}
+              />
+              <PhoneField
+                value={form.phone}
+                onChange={(value) => set("phone", value)}
+              />
               <p className="rz-field-help">
                 RoofZeus may receive compensation for this referral.
                 Availability varies. Read our{" "}
@@ -521,6 +549,22 @@ export default function ModernizeFunnel({
             starting another request.
           </p>
         )}
+        {step === 2 &&
+          !config.enabled &&
+          checkedContact === contactSnapshot && (
+            <p role="status" className="rz-note">
+              Format checks passed. This is a preview; your details have not
+              been submitted. These checks don’t verify that an email inbox or
+              phone number is reachable.
+            </p>
+          )}
+        {step === 2 && config.enabled && (!token || !certificate) && (
+          <p role="status" className="rz-field-help">
+            {certificateFailed
+              ? "Submission is unavailable because form verification failed. Reload the page to try again."
+              : "Complete the security verification and allow form verification to finish to enable submission."}
+          </p>
+        )}
         {step === 2 && config.enabled && (
           <label
             className="rz-checkbox rz-modernize-consent"
@@ -546,7 +590,7 @@ export default function ModernizeFunnel({
           disabled={
             busy ||
             (step > 0 && !supported && !locked) ||
-            (step === 2 && (!config.enabled || !token || !certificate))
+            (step === 2 && config.enabled && (!token || !certificate))
           }
         >
           {busy ? (
@@ -556,9 +600,11 @@ export default function ModernizeFunnel({
           ) : (
             <>
               {step === 2
-                ? locked
-                  ? "Check submission status"
-                  : "Get my estimate"
+                ? !config.enabled
+                  ? "Check my details"
+                  : locked
+                    ? "Check submission status"
+                    : "Get my estimate"
                 : "Continue"}
               <ArrowRight size={18} />
             </>

@@ -187,10 +187,12 @@ test("Unavailable matching and missing certificate never submit or invent permis
     .getByLabel("Street address", { exact: true })
     .fill("123 Example Lane");
   await page.getByLabel("I own this property").check();
+  await expect(page.getByLabel("City", { exact: true })).toHaveValue("San Antonio");
+  await expect(page.getByRole("combobox", { name: "State", exact: true })).toHaveValue("TX");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Get my estimate", exact: true }),
-  ).toBeDisabled();
+    page.getByRole("button", { name: "Check my details", exact: true }),
+  ).toBeEnabled();
   await expect(
     page.locator('[data-tf-element-role="consent-language"]'),
   ).toHaveCount(0);
@@ -361,5 +363,157 @@ test("Unsupported materials are never offered and no available materials cannot 
     "choose a roofing project",
   );
   await expect(page.getByLabel("First name")).toHaveCount(0);
+  expect(submits).toBe(0);
+});
+
+test("Phone typing formats digits, blocks letters, supports +1 paste, and preserves middle edits", async ({
+  page,
+}) => {
+  await complete(page);
+  const phone = page.getByLabel("Phone number", { exact: true });
+  await phone.fill("");
+  await phone.pressSequentially("2105550123", { delay: 35 });
+  await expect(phone).toHaveValue("(210) 555-0123");
+  await phone.pressSequentially("abc");
+  await expect(phone).toHaveValue("(210) 555-0123");
+  await expect(page.locator("#modernize-phone-error")).toContainText("Letters");
+  await phone.fill("+1 (212) 555-0123");
+  await expect(phone).toHaveValue("(212) 555-0123");
+  // A real clipboard paste, including the country code and punctuation.
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.evaluate(() => navigator.clipboard.writeText("+1 (210) 555-0123"));
+  await phone.press("ControlOrMeta+A");
+  await phone.press("ControlOrMeta+V");
+  await expect(phone).toHaveValue("(210) 555-0123");
+  await phone.evaluate((el: HTMLInputElement) => el.setSelectionRange(2, 3));
+  await phone.pressSequentially("2");
+  await expect(phone).toHaveValue("(220) 555-0123");
+  await phone.evaluate((el: HTMLInputElement) => el.setSelectionRange(10, 10));
+  await phone.press("Backspace");
+  await expect(phone).toHaveValue("(220) 550-123");
+  await phone.pressSequentially("5");
+  await expect(phone).toHaveValue("(220) 555-0123");
+  await phone.press("ControlOrMeta+A");
+  await phone.press("Backspace");
+  await expect(phone).toHaveValue("");
+  await phone.fill("210555012");
+  await phone.blur();
+  await expect(phone).toHaveAttribute("aria-invalid", "true");
+  await phone.fill("2105550123");
+  await expect(phone).not.toHaveAttribute("aria-invalid", "true");
+  await phone.fill("210555012345");
+  await expect(phone).toHaveValue("(210) 555-0123");
+  await expect(page.locator("#modernize-phone-error")).toContainText(
+    "10 digits",
+  );
+});
+
+test("Invalid contacts block submission and valid contacts enable a confirmed request", async ({
+  page,
+}) => {
+  let submits = 0;
+  await page.route("**/modernize-test/submit", (route) => {
+    submits++;
+    const payload = route.request().postDataJSON();
+    expect(payload.phone).toBe("2105550123");
+    expect(payload.email).toBe("first.last+roof@example.com");
+    return route.fulfill({
+      json: {
+        reference: "RZM-0123456789ABCDEF",
+        status: "accepted",
+        environment: "staging",
+      },
+    });
+  });
+  await complete(page);
+  const email = page.getByLabel("Email address", { exact: true });
+  const phone = page.getByLabel("Phone number", { exact: true });
+  const submit = page.getByRole("button", {
+    name: "Get my estimate",
+    exact: true,
+  });
+  await expect(submit).toBeEnabled();
+  for (const invalid of [
+    "name@example",
+    "first..last@example.com",
+    "name@example..com",
+    "name@-example.com",
+    "name@@example.com",
+  ]) {
+    await email.fill(invalid);
+    await email.blur();
+    await expect(email).toHaveAttribute("aria-invalid", "true");
+    await submit.click();
+    expect(submits).toBe(0);
+  }
+  await email.fill(" First.Last+Roof@Example.COM ");
+  await email.blur();
+  await expect(email).toHaveValue("first.last+roof@example.com");
+  await expect(email).not.toHaveAttribute("aria-invalid", "true");
+  await phone.fill("2101550123");
+  await phone.blur();
+  await submit.click();
+  expect(submits).toBe(0);
+  await phone.fill("+1 210 555 0123");
+  await submit.click();
+  await expect(
+    page.getByRole("heading", { name: "Your request is on its way." }),
+  ).toBeVisible();
+  expect(submits).toBe(1);
+});
+
+test("Closed matching has a working format check and clearly says nothing is submitted", async ({
+  page,
+}) => {
+  let submits = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/submit")) submits++;
+  });
+  await page.route("**/modernize-test/config", (route) =>
+    route.fulfill({
+      json: {
+        ...config,
+        enabled: false,
+        consentText: "",
+        trustedFormScriptUrl: "",
+      },
+    }),
+  );
+  await start(page, true);
+  await expect(page.getByText("Preview only.", { exact: false })).toBeVisible();
+  await page.getByLabel("Roof replacement", { exact: true }).check();
+  await page
+    .getByLabel("What material would you like installed?")
+    .selectOption("asphalt");
+  await page.getByLabel("When do you need help?").selectOption("Immediately");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByLabel("I own this property").check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByLabel("First name", { exact: true }).fill("Synthetic");
+  await page.getByLabel("Last name", { exact: true }).fill("Homeowner");
+  await page.getByLabel("Email address", { exact: true }).fill("name@example");
+  await page.getByLabel("Phone number", { exact: true }).fill("2105550123");
+  const check = page.getByRole("button", {
+    name: "Check my details",
+    exact: true,
+  });
+  await expect(check).toBeEnabled();
+  await check.click();
+  await expect(
+    page.getByText("Format checks passed.", { exact: false }),
+  ).toHaveCount(0);
+  await page
+    .getByLabel("Email address", { exact: true })
+    .fill("name@example.com");
+  await check.click();
+  await expect(page.getByRole("status")).toContainText(
+    "your details have not been submitted",
+  );
+  await page
+    .getByLabel("Email address", { exact: true })
+    .fill("changed@example.com");
+  await expect(
+    page.getByText("Format checks passed.", { exact: false }),
+  ).toHaveCount(0);
   expect(submits).toBe(0);
 });
