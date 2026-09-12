@@ -1,39 +1,35 @@
-# Roof Zeus brand kit v2 — September 2026
+# Roof Zeus brand kit v3 — September 2026
 
-Open `index.html` for the visual brand guide, palette, typography, usage rules, and downloads. All assets work offline when this folder stays together.
+Open `board.html` for the compact brand board or `index.html` for the full guide. `brand-board.png` is a ready-to-share overview.
 
-## Design
+## Direction
 
-The emblem pairs a blue-eyed Zeus with a broad architectural roof. The roof has a central front gable, matched side planes, layered fascia, equal squared eaves, a centered four-pane window, and a straight base. Zeus sits behind the roof; his hair and beard stop above the eaves. The roof receives more visual weight than in v1.
+Inspired by the user-supplied “Untitled Project - artboard-1.png”: a long classical face, swept-back hair, a strong bust, piercing blue eyes, and an architectural three-gable roof. Broad ivory and slate planes give the face depth while keeping the overall treatment mostly flat. This is a new interpretation, not a copy of the reference's metallic rendering.
 
-## Files
+## Assets
 
 - `roof-zeus-emblem.png`: 1,254 × 1,254 transparent illustrated master.
-- `roof-zeus-logo-dark.*` / `roof-zeus-logo-light.*`: horizontal full logo. Dark/light indicates the intended background. PNG: 2,000 × 480. Website WebP: 800 × 192.
-- `roof-zeus-stacked-dark.*` / `roof-zeus-stacked-light.*`: stacked full logo. PNG: 1,920 × 2,000.
-- `roof-zeus-wordmark-dark.*` / `roof-zeus-wordmark-light.*`: standalone outlined lettering. PNG: 1,760 × 300.
-- `roof-zeus-icon.svg` / `.png`: simplified layered roof and lightning micro mark for browser icons. PNG: 192 × 192.
+- `roof-zeus-logo-dark/light.svg/png/webp`: horizontal full logos. Dark/light names describe the intended background. PNG 2,000 × 480; WebP 800 × 192.
+- `roof-zeus-stacked-dark/light.svg/png`: stacked logos. PNG 1,920 × 1,680.
+- `roof-zeus-wordmark-dark/light.svg/png`: outlined wordmarks. PNG 1,760 × 300.
+- `roof-zeus-icon.svg/png`: simplified three-gable roof micro mark. PNG 192 × 192.
+- `website-desktop-concept.png` and `website-mobile-concept.png`: previews of the identity in the existing website layout.
 
-The logo SVGs contain outlined Georgia Bold lettering and the embedded PNG emblem. They require no fonts or external image files, but the emblem remains raster artwork. Wordmark-only SVGs and the micro mark are true vector assets. Do not describe the full logos as fully vector masters. For large-format printing, commission a manual vector redraw of the approved emblem.
+Logo SVGs have outlined lettering and an embedded raster emblem; they are not fully vector illustrations. Wordmark-only SVGs and the micro icon are true vector. No fonts are required to display these assets, and no font files are distributed. Typography is based on outlined Georgia Bold, paired with the current site's Manrope and Poppins for UI use.
 
-Digital colors: Navy `#081827`, Gold `#D6AC58`, Ivory `#F5F1E8`, Blue `#43C8FF`. Shading in the generated illustration includes other tones. Existing website colors, typography, and content are retained.
+## Palette
 
-## Website integration
+Navy #081827 · Gold #D6AC58 · Ivory #F5F1E8 · Blue #43C8FF · Slate #6F8296.
+These are digital system colors; the illustrated emblem includes additional shading tones.
 
-Public marketing navigation, mobile menu, footer, and favicon use v2. Versioned asset URLs refresh the previously cached website logo. App assets, authentication pages, organization logos, reports, routes, and workflows remain unchanged. The guide is served at `/brand/index.html` and marked `noindex`.
+## Website
 
-## Research references
+Version 3 updates the public header, mobile navigation, footer, and favicon. Existing copy, layout, app branding, and app functionality are retained.
 
-- [99designs roofing logo collection](https://99designs.com/inspiration/logos/roofing): surveyed wordmarks, roof geometry, and combinations of characters and roof symbols.
-- [Active Roofing](https://www.activeroofingdublin.com/): reference for a gold residential roof identity with a secondary roof peak.
-- [K.H. Roofing](https://www.khroofs.com/): reference for residential roof and window symbolism.
+## Creation
 
-Design inference: layered roof planes, consistent line thickness, and matched eaves make the roofing portion more deliberate and legible. These references informed the architectural vocabulary; their logos were not used as image-generation inputs or copied into the artwork.
+The emblem was generated with the built-in image-generation tool using the supplied image as style inspiration. All full-logo variants use this same emblem with deterministic outlined lettering. Transparency and local desktop/mobile presentation were checked.
 
-## Production
+Final generation prompt:
 
-Emblem created with the built-in image-generation tool. Every full-logo variant uses the same emblem, with deterministic outlined lettering and transparent exports. No source font files are distributed.
-
-Final emblem prompt:
-
-> Create a BRAND NEW original Roof Zeus standalone logo emblem. Use case: logo-brand. One centered emblem, no text, on a transparent PNG background. Premium navy, warm gold, ivory and small electric blue eyes. A dignified classical Zeus head in three-quarter view looking right, noble face, flowing ivory hair with large elegant navy negative-space shapes and compact beard, a small gold lightning bolt tucked on left. Zeus should occupy ONLY the upper 60 percent and roughly 65 percent of the overall width. The bottom 40 percent is a prominent roof assembly, broader than Zeus: a precise, beautifully drawn residential roof with a main front-facing central gable and matching lower side roof planes, layered gold fascia bands with consistent thickness, navy triangular gable face, a small ivory four-pane window centered under the peak. The roof is geometrically bilateral and symmetrical; left and right slopes identical pitch, equal horizontal overhangs, identical straight squared vertical terminations at the SAME HEIGHT. No chimney. No pointed eave tips. No curved lower roof edges. Flat continuous straight horizontal baseline. Hair and beard stop behind the top of the roof and do not spill underneath it. Make the roof architectural and confidently constructed, not a single generic chevron. Art style: refined vector-style brand illustration, bold sharp shapes, restrained two-tone shading, no photorealism or metallic bevels. Colors navy #081827, gold #D6AC58, ivory #F5F1E8, eyes #43C8FF. Composition compact and clear, 6 percent margins, square canvas. Return the finished emblem with actual transparent alpha background.
+> Use case: logo-brand. Create a NEW original standalone Roof Zeus emblem, using the provided image ONLY as visual inspiration for Zeus's character, NOT as an edit target. The reference's best qualities: a long regal angular face, forceful classical brow, blue luminous narrow eyes, proud three-quarter gaze slightly upward to the right, long swept-back hair with elegant S-curves, carefully shaped flowing beard, and a calm powerful chest/bust. Translate these into refined FLAT graphic artwork: large solid ivory shapes, deep midnight-navy negative space, just ONE cool slate shadow tone for sculptural facial planes, and restrained flat gold accent edges. No gradients, metallic rendering, bevels, gloss, airbrush, or literal glowing effects. Eyes are piercing cyan slits with a tiny ivory center. Keep face lean and noble, not broad, cartoonish, angry or elderly. Zeus narrower and less dominant, occupying upper 65 percent of emblem, a single slim gold lightning bolt runs behind his left shoulder/hair. At the bottom create a balanced architectural roof motif inspired by the reference: one prominent central front gable with matching small flanking gables on left and right, clean 35-degree straight slopes, evenly weighted gold outer fascia, ivory inner fascia, deep navy roof plane, centered four-pane gold window. The entire roof is strictly bilaterally symmetric, equal eaves with identical short flat end cuts at exactly the same height and a clean level baseline. No chimney. Hair and beard stay behind roof. The roof is 30 percent wider than Zeus's bust. Premium coherent compact silhouette. Palette midnight #081827, ivory #F5F1E8, gold #D6AC58, slate #6F8296, eye blue #43C8FF. Square canvas, tightly composed with small even margins. TRANSPARENT BACKGROUND. No text, no wordmark, no tagline, no layout board, just one immaculate emblem. This is a flat premium brand mark with the reference's charismatic Zeus likeness and posture.
