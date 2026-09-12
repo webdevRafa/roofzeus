@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  ArrowRight,
-  Check,
-  LockKeyhole,
-  MapPin,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, Check, LockKeyhole, ShieldCheck } from "lucide-react";
 import LocationStart from "./LocationStart";
 import type { Address } from "./location";
 import EstimateFunnel from "./EstimateFunnel";
@@ -38,7 +32,6 @@ export default function LandingPage() {
         />
         <div className="rz-container rz-estimate-grid">
           <div className="rz-estimate-copy">
-            <p className="rz-estimate-kicker">ROOF REPAIR & REPLACEMENT</p>
             <h1>
               Get the right <br />
               estimate for <br />
@@ -88,10 +81,6 @@ export default function LandingPage() {
               />
             ) : (
               <div className="rz-estimate-entry">
-                <div className="rz-entry-icon">
-                  <MapPin size={26} />
-                </div>
-                <p className="rz-entry-eyebrow">LET’S START WITH YOUR AREA</p>
                 <h2>
                   Need help with <br />
                   your roof?

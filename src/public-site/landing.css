@@ -67,13 +67,6 @@
 .rz-estimate-copy {
   padding-block: 15px;
 }
-.rz-estimate-kicker {
-  color: #e3bf79 !important;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-  font-weight: 700;
-  margin-bottom: 25px;
-}
 .rz-estimates .rz-estimate-copy h1 {
   font:
     600 clamp(50px, 4.7vw, 70px)/1.08 "DM Sans",
@@ -117,23 +110,6 @@
 .rz-estimate-entry {
   padding: 38px 36px 28px;
 }
-.rz-entry-icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: #f6f0e5;
-  color: #a77b32;
-  margin-bottom: 24px;
-}
-.rz-entry-eyebrow {
-  color: #77818a !important;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  font-weight: 650;
-  margin-bottom: 11px;
-}
 .rz-estimates .rz-estimate-entry h2 {
   font:
     650 35px/1.16 "DM Sans",
@@ -141,7 +117,7 @@
   letter-spacing: -0.045em;
   margin-bottom: 15px;
 }
-.rz-estimate-entry > p:not(.rz-entry-eyebrow) {
+.rz-estimate-entry > p {
   font-size: 13px;
   line-height: 1.75;
   max-width: 290px;
