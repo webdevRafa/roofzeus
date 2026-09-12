@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import MarketingNav from "./MarketingNav";
 
-const logo = "/brand/roof-zeus-logo-dark.webp?v=4";
+const logo = "/brand/roof-zeus-logo-dark.webp?v=5";
 
 const footerGroups = [
   {
@@ -38,7 +38,7 @@ export default function MarketingLayout() {
     if (!icon) return;
     const previousHref = icon.href;
     const previousType = icon.type;
-    icon.href = "/brand/roof-zeus-icon.svg?v=4";
+    icon.href = "/brand/roof-zeus-icon.svg?v=5";
     icon.type = "image/svg+xml";
     return () => {
       icon.href = previousHref;
