@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
-import logo from "../../assets/rz-modern-white.svg";
 import MarketingNav from "./MarketingNav";
+
+const logo = "/brand/roof-zeus-logo-dark.webp";
 
 const footerGroups = [
   {
@@ -30,6 +32,20 @@ const footerGroups = [
 ];
 
 export default function MarketingLayout() {
+  useEffect(() => {
+    // Public-site identity only; retain the application's existing favicon.
+    const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!icon) return;
+    const previousHref = icon.href;
+    const previousType = icon.type;
+    icon.href = "/brand/roof-zeus-icon.svg";
+    icon.type = "image/svg+xml";
+    return () => {
+      icon.href = previousHref;
+      icon.type = previousType;
+    };
+  }, []);
+
   return (
     <div className="rz-marketing">
       <MarketingNav />
@@ -39,7 +55,7 @@ export default function MarketingLayout() {
           <div className="rz-footer__top">
             <div className="rz-footer__brand">
               <Link to="/" aria-label="Roof Zeus home">
-                <img src={logo} alt="Roof Zeus" />
+                <img src={logo} alt="Roof Zeus" width={1000} height={240} loading="lazy" />
               </Link>
               <p>
                 Roofing software for jobs, finances, crews, and documents.

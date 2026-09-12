@@ -211,8 +211,9 @@ body {
 }
 
 .rz-nav__brand img {
-  width: 158px;
-  max-height: 34px;
+  display: block;
+  width: 232px;
+  height: auto;
   object-fit: contain;
 }
 
@@ -320,7 +321,8 @@ body {
 }
 
 .rz-mobile-nav__head img {
-  width: 145px;
+  width: 210px;
+  height: auto;
 }
 
 .rz-mobile-nav__close {
@@ -1447,7 +1449,10 @@ body {
 }
 
 .rz-footer__brand img {
-  width: 165px;
+  display: block;
+  width: 252px;
+  max-width: 100%;
+  height: auto;
 }
 
 .rz-footer__brand p {
@@ -2010,7 +2015,7 @@ body {
   }
 
   .rz-nav__brand img {
-    width: 138px;
+    width: 190px;
   }
 
   .rz-hero {
