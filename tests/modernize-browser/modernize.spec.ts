@@ -61,7 +61,7 @@ async function complete(page: Page) {
   await start(page, true);
   await page.getByLabel("Roof replacement", { exact: true }).check();
   await page
-    .getByRole("combobox", { name: "Roof material", exact: true })
+    .getByRole("combobox", { name: /What material/ })
     .selectOption("asphalt");
   await page
     .getByRole("combobox", { name: "When do you need help?", exact: true })
@@ -177,7 +177,7 @@ test("Unavailable matching and missing certificate never submit or invent permis
   await start(page);
   await page.getByLabel("Roof repair", { exact: true }).check();
   await page
-    .getByRole("combobox", { name: "Roof material", exact: true })
+    .getByRole("combobox", { name: /What material/ })
     .selectOption("asphalt");
   await page
     .getByRole("combobox", { name: "When do you need help?", exact: true })
@@ -228,9 +228,7 @@ test("Hosted mode hands off an exact approved link without address or contact qu
   ).toBeVisible();
   await expect(page.getByLabel("First name")).toHaveCount(0);
 });
-test("Unsupported answers cannot advance and both entry modes fit desktop and mobile", async ({
-  page,
-}) => {
+test("Both entry modes fit desktop and mobile", async ({ page }) => {
   for (const width of [1440, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     await complete(page);
@@ -242,11 +240,126 @@ test("Unsupported answers cannot advance and both entry modes fit desktop and mo
     ).toBe(true);
   }
   await start(page);
-  await page.getByLabel("Inspection / not sure", { exact: true }).check();
+});
+
+test("Project questions reveal only applicable fields and reset answers when the scope changes", async ({
+  page,
+}) => {
+  await start(page);
+  await expect(page.locator('input[name="plan"]')).toHaveCount(3);
+  await expect(page.getByLabel("Inspection / not sure")).toHaveCount(0);
+  await expect(page.locator('select[name="material"]')).toHaveCount(0);
+  await expect(page.locator('select[name="timeframe"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Continue", exact: true }),
-  ).toBeDisabled();
-  await expect(page.getByRole("status")).toContainText(
-    "won’t submit an assumed answer",
+    page.getByRole("heading", { name: "What does your roof need?" }),
+  ).toBeVisible();
+  await page.getByLabel("Roof repair", { exact: true }).check();
+  const material = page.getByLabel("What material is on your roof now?");
+  await expect(material.locator("option")).toHaveText([
+    "Choose a material",
+    "Asphalt shingles",
+    "Metal",
+  ]);
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "What does your roof need?" }),
+  ).toBeVisible();
+  await material.selectOption("metal");
+  await page.getByLabel("When do you need help?").selectOption("Immediately");
+  await page.getByLabel("New construction", { exact: true }).check();
+  await expect(
+    page.getByLabel("What material would you like installed?"),
+  ).toHaveValue("");
+  await expect(page.locator('select[name="timeframe"]')).toHaveCount(0);
+  await page
+    .getByLabel("What material would you like installed?")
+    .selectOption("asphalt");
+  await expect(page.getByLabel("When do you need help?")).toHaveValue("");
+  await page.getByLabel("When do you need help?").selectOption("Don't know");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Which home is it for?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(
+    page.getByLabel("New construction", { exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByLabel("What material would you like installed?"),
+  ).toHaveValue("asphalt");
+  await expect(page.getByLabel("When do you need help?")).toHaveValue(
+    "Don't know",
   );
+});
+
+test("All documented roofing plan and material combinations can reach the property step", async ({
+  page,
+}) => {
+  const materials = [
+    "asphalt",
+    "composite",
+    "metal",
+    "tile",
+    "slate",
+    "cedar",
+    "tar",
+  ];
+  await page.route("**/modernize-test/config", (route) =>
+    route.fulfill({ json: { ...config, materials } }),
+  );
+  await start(page);
+  for (const plan of ["Roof repair", "Roof replacement", "New construction"]) {
+    for (const material of materials) {
+      await page.getByLabel(plan, { exact: true }).check();
+      await page.locator('select[name="material"]').selectOption(material);
+      await page
+        .getByLabel("When do you need help?")
+        .selectOption("1-6 months");
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
+      await expect(
+        page.getByRole("heading", { name: "Which home is it for?" }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Back", exact: true }).click();
+    }
+  }
+});
+
+test("Unsupported materials are never offered and no available materials cannot collect contact details", async ({
+  page,
+}) => {
+  let submits = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/submit")) submits++;
+  });
+  await page.route("**/modernize-test/config", (route) =>
+    route.fulfill({ json: { ...config, materials: ["tile"] } }),
+  );
+  await start(page, true);
+  await page.getByLabel("Roof replacement", { exact: true }).check();
+  await expect(page.locator('select[name="material"] option')).toHaveText([
+    "Choose a material",
+    "Tile",
+  ]);
+  await page.getByText("Not sure about the material?", { exact: true }).click();
+  await expect(
+    page.getByText("Inspection-only requests aren’t available", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.locator('option[value="unknown"],option[value="other"]'),
+  ).toHaveCount(0);
+  await page.route("**/modernize-test/config", (route) =>
+    route.fulfill({ json: { ...config, materials: [] } }),
+  );
+  await start(page);
+  await page.getByLabel("Roof repair", { exact: true }).check();
+  await expect(page.getByRole("status")).toContainText("aren’t available");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "choose a roofing project",
+  );
+  await expect(page.getByLabel("First name")).toHaveCount(0);
+  expect(submits).toBe(0);
 });

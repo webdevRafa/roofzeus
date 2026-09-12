@@ -47,3 +47,27 @@ test('Unconsented, stale, unsupported or unverified submissions cannot be mapped
   const restricted = settings({allowedZips:['02108']});
   assert.throws(() => validateLead(lead(restricted), restricted), /not currently available/);
 });
+
+test('Documented roofing combinations map exactly; unapproved and inspection-only requests are rejected', () => {
+  const materials = {
+    asphalt: 'ROOFING_ASPHALT', composite: 'ROOFING_COMPOSITE', metal: 'ROOFING_METAL',
+    tile: 'ROOFING_TILE', slate: 'ROOFING_NATURAL_SLATE', cedar: 'ROOFING_CEDAR_SHAKE', tar: 'ROOFING_TAR_TORCHDOWN',
+  };
+  const plans = { repair: 'Repair existing roof', replacement: 'Completely replace roof', new: 'Install roof on new construction' };
+  const config = settings({ approvedServices: Object.values(materials) });
+  for (const [material, service] of Object.entries(materials)) {
+    for (const [plan, RoofingPlan] of Object.entries(plans)) {
+      const valid = validateLead(lead(config, { material, plan, timeframe: "Don't know" }), config);
+      const ping = pingPayload(valid, config);
+      assert.equal(ping.service, service);
+      assert.equal(ping.RoofingPlan, RoofingPlan);
+      assert.equal(ping.buyTimeframe, "Don't know");
+    }
+  }
+  for (const patch of [{ plan: 'inspection' }, { plan: 'unsure' }, { plan: '' }, { material: 'unknown' }, { material: 'other' }, { material: '' }, { timeframe: '' }]) {
+    assert.throws(() => validateLead(lead(config, patch), config));
+  }
+  const restricted = settings({ approvedServices: ['ROOFING_TILE'] });
+  assert.throws(() => validateLead(lead(restricted, { material: 'asphalt' }), restricted), /not currently supported/);
+  assert.equal(pingPayload(validateLead(lead(restricted, { material: 'tile' }), restricted), restricted).service, 'ROOFING_TILE');
+});

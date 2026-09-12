@@ -97,6 +97,16 @@ For hosted mode, set `mode=hosted`, approved environment/account flags, `affilia
 
 ## Verification before activation
 
+### Roofing qualification and conditional questions
+
+The on-site API form offers only repair, complete replacement, and new construction. Inspection-only, unspecified scope, and unknown/other material values are not submission options. Modernize's published Ping/Post contract lists the same three `RoofingPlan` values for all seven roofing service codes; it does not define an inspection or unknown-material value. General marketing references to inspections are not an API mapping. Confirm any expanded scope with the account manager before adding it.
+
+Project type reveals the material question. Repairs ask for the current roof covering; replacement and new construction ask for the requested installation material. A material preference is not a final roofing specification. Confirm these field semantics with Modernize during account acceptance testing. Material options come from the public configuration's approved service list (the unconfigured, non-submitting preview uses all documented materials). Timing appears only after a supported material is selected. The documented `Don't know` timeframe remains valid. Project changes clear the material and timeframe; material changes clear the timeframe. Back navigation preserves otherwise unchanged answers.
+
+Homeowners who cannot identify or choose a material can read inline guidance without submitting an invented value. Contact fields are reached only after valid project answers. Browser validation supplements the server's exact plan/material/timeframe checks, approved-service restrictions, property authorization, certificate, consent, coverage, and delivery gates. Passing these checks is eligibility to attempt delivery, not a promise of acceptance or payment: only Modernize's successful Post response confirms acceptance.
+
+Regression coverage exercises all 21 documented plan/material combinations in the browser and server mapper, conditional field visibility, empty and restricted service lists, reset/back behavior, and rejection of forged inspection/unknown/other values.
+
 Local checks:
 
 ```powershell

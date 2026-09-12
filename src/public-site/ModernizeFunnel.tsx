@@ -4,12 +4,13 @@ import { AddressSearch, BotCheck, Busy } from "./Widgets";
 import { states, type Address } from "./location";
 import { loadScript, lookupZip, track } from "./integrations";
 import {
-  roofMaterials,
   submitModernize,
   SubmissionError,
   type ModernizeConfig,
   type ModernizeResult,
 } from "./modernize";
+import RoofingProjectFields from "./RoofingProjectFields";
+import { roofingProjectReady } from "./roofing-project";
 
 export default function ModernizeFunnel({
   config,
@@ -133,6 +134,13 @@ export default function ModernizeFunnel({
 
   async function send() {
     if (busy || !config.enabled) return;
+    if (!locked && !roofingProjectReady(form, config.materials)) {
+      setError(
+        "Please choose an available roofing project, material, and timing.",
+      );
+      setStep(0);
+      return;
+    }
     setBusy(true);
     setError("");
     if (!submitted.current)
@@ -256,7 +264,7 @@ export default function ModernizeFunnel({
       </div>
     );
   }
-  const supported = form.material !== "unknown" && form.plan !== "unsure";
+  const supported = roofingProjectReady(form, config.materials);
   return (
     <div className="rz-estimate-steps">
       <div className="rz-estimate-step-top">
@@ -290,6 +298,10 @@ export default function ModernizeFunnel({
           else if (supported) {
             setError("");
             setStep(step + 1);
+          } else {
+            setError(
+              "Please choose a roofing project, material, and timing to continue.",
+            );
           }
         }}
       >
@@ -309,82 +321,14 @@ export default function ModernizeFunnel({
         )}
         <fieldset disabled={busy || locked} className="rz-modernize-fields">
           {step === 0 && (
-            <>
-              <p>A few details help us find the right type of roofing help.</p>
-              <fieldset className="rz-choice-grid">
-                <legend className="rz-sr-only">Roofing need</legend>
-                {[
-                  ["repair", "Roof repair"],
-                  ["replacement", "Roof replacement"],
-                  ["new", "New construction"],
-                  ["unsure", "Inspection / not sure"],
-                ].map(([value, label]) => (
-                  <label
-                    key={value}
-                    className={form.plan === value ? "selected" : ""}
-                  >
-                    <input
-                      id={`modernize-plan-${value}`}
-                      name="plan"
-                      type="radio"
-                      value={value}
-                      required
-                      checked={form.plan === value}
-                      onChange={() => set("plan", value)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </fieldset>
-              <label className="rz-field">
-                Roof material
-                <select
-                  name="material"
-                  required
-                  value={form.material}
-                  onChange={(event) => set("material", event.target.value)}
-                >
-                  <option value="">Choose material</option>
-                  {Object.entries(roofMaterials)
-                    .filter(
-                      ([key]) =>
-                        !config.enabled || config.materials.includes(key),
-                    )
-                    .map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  <option value="unknown">Not sure / another material</option>
-                </select>
-              </label>
-              <label className="rz-field">
-                When do you need help?
-                <select
-                  name="timeframe"
-                  required
-                  value={form.timeframe}
-                  onChange={(event) => set("timeframe", event.target.value)}
-                >
-                  <option value="">Choose timing</option>
-                  <option value="Immediately">As soon as possible</option>
-                  <option value="1-6 months">Within 1–6 months</option>
-                  <option value="Don't know">Just planning / not sure</option>
-                </select>
-              </label>
-              {!supported && (
-                <p className="rz-note" role="status">
-                  This matching flow needs a known roof material and a repair,
-                  replacement, or new roof. If you’re unsure, a local roofer can
-                  help identify what you need. We won’t submit an assumed
-                  answer.
-                </p>
-              )}
-              <p className="rz-field-help">
-                For residential properties. This is not an emergency dispatch
-                service.
-              </p>
-            </>
+            <RoofingProjectFields
+              project={form}
+              materials={config.materials}
+              onChange={(patch) => {
+                setError("");
+                setForm((current) => ({ ...current, ...patch }));
+              }}
+            />
           )}
           {step === 1 && (
             <>
@@ -601,7 +545,7 @@ export default function ModernizeFunnel({
           data-tf-element-role={step === 2 ? "submit" : undefined}
           disabled={
             busy ||
-            !supported ||
+            (step > 0 && !supported && !locked) ||
             (step === 2 && (!config.enabled || !token || !certificate))
           }
         >
