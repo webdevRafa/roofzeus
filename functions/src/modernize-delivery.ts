@@ -42,6 +42,7 @@ export interface DeliveryStore {
 type Dependencies = {
   store: DeliveryStore;
   secret: string;
+  receiptSecret: string;
   fetcher?: typeof fetch;
   now?: () => number;
 };
@@ -63,11 +64,8 @@ export async function deliverModernize(
   context: { ip: string; hostname: string },
   dependencies: Dependencies,
 ) {
-  if (settings.mode !== "api" || readiness(settings).length)
-    throw new ModernizeError(
-      "Estimate matching is not open yet. Your details have not been submitted.",
-      503,
-    );
+  // Receipt lookup remains available after a launch gate or consent configuration changes.
+  // It requires the identical normalized payload and never sends anything externally.
   if (
     settings.environment === "staging" &&
     !["localhost", "127.0.0.1"].includes(context.hostname)
@@ -76,13 +74,18 @@ export async function deliverModernize(
       "Staging is available only on the local test site.",
       403,
     );
-  const lead = validateLead(input, settings);
-  const { store, secret } = dependencies;
+  const lead = validateLead(input, settings, false);
+  const { store, secret, receiptSecret } = dependencies;
+  if (receiptSecret.length < 32)
+    throw new ModernizeError(
+      "Estimate matching is temporarily unavailable.",
+      503,
+    );
   const fetcher = dependencies.fetcher || fetch;
   const now = (dependencies.now || Date.now)();
   const hash = (value: string) =>
-    createHmac("sha256", secret).update(value).digest("hex");
-  const receiptKey = `${settings.environment}-${lead.requestId}`;
+    createHmac("sha256", receiptSecret).update(value).digest("hex");
+  const receiptKey = lead.requestId;
   const payloadHash = hash(JSON.stringify(lead));
   const previous = await store.find(receiptKey);
   if (previous) {
@@ -93,6 +96,12 @@ export async function deliverModernize(
       );
     return receiptResult(previous, now);
   }
+  if (settings.mode !== "api" || readiness(settings).length)
+    throw new ModernizeError(
+      "Estimate matching is not open yet. Please check back later.",
+      503,
+    );
+  validateLead(input, settings);
   const token = (input as Record<string, unknown>).turnstileToken;
   if (typeof token !== "string" || !token || token.length > 2048)
     throw new ModernizeError("Complete the security check.");

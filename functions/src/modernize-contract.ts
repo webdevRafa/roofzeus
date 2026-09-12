@@ -208,7 +208,11 @@ export type Lead = {
   consentVersion: string;
   trustedFormToken: string;
 };
-export function validateLead(input: unknown, settings: Settings): Lead {
+export function validateLead(
+  input: unknown,
+  settings: Settings,
+  enforceCurrent = true,
+): Lead {
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new ModernizeError("Invalid request.");
   const data = input as Record<string, unknown>;
@@ -232,8 +236,9 @@ export function validateLead(input: unknown, settings: Settings): Lead {
   )
     throw new ModernizeError("Reload this page to start a new request.");
   if (
-    data.configVersion !== configVersion(settings) ||
-    data.consentVersion !== settings.consentVersion
+    enforceCurrent &&
+    (data.configVersion !== configVersion(settings) ||
+      data.consentVersion !== settings.consentVersion)
   )
     throw new ModernizeError(
       "Our contact permission has changed. Reload and review it before submitting.",
@@ -248,7 +253,7 @@ export function validateLead(input: unknown, settings: Settings): Lead {
   const timeframe = text("timeframe", 1, 30) as Lead["timeframe"];
   if (
     !Object.prototype.hasOwnProperty.call(MATERIALS, material) ||
-    !settings.approvedServices.includes(MATERIALS[material])
+    (enforceCurrent && !settings.approvedServices.includes(MATERIALS[material]))
   )
     throw new ModernizeError("This roof material is not currently supported.");
   if (
@@ -260,7 +265,11 @@ export function validateLead(input: unknown, settings: Settings): Lead {
     state = text("state", 2, 2);
   if (!/^\d{5}$/.test(zip) || !STATES.has(state))
     throw new ModernizeError("Check your ZIP code and state.");
-  if (settings.allowedZips.length && !settings.allowedZips.includes(zip))
+  if (
+    enforceCurrent &&
+    settings.allowedZips.length &&
+    !settings.allowedZips.includes(zip)
+  )
     throw new ModernizeError(
       "Estimate matching is not currently available in this ZIP code.",
       422,
@@ -281,8 +290,8 @@ export function validateLead(input: unknown, settings: Settings): Lead {
     );
   return {
     requestId,
-    configVersion: configVersion(settings),
-    consentVersion: settings.consentVersion,
+    configVersion: text("configVersion", 64, 64),
+    consentVersion: text("consentVersion", 1, 100),
     firstName: text("firstName", 1, 80),
     lastName: text("lastName", 1, 80),
     address: text("address", 5, 180),

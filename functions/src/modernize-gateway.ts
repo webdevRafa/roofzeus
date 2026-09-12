@@ -14,6 +14,7 @@ import {
 
 const MODERNIZE_SETTINGS = defineSecret("MODERNIZE_SETTINGS");
 const TURNSTILE_SECRET_KEY = defineSecret("TURNSTILE_SECRET_KEY");
+const MODERNIZE_RECEIPT_SECRET = defineSecret("MODERNIZE_RECEIPT_SECRET");
 const PUBLIC_ALLOWED_ORIGINS = defineString("PUBLIC_ALLOWED_ORIGINS", {
   default: "https://roofzeus.com,https://www.roofzeus.com",
 });
@@ -136,7 +137,11 @@ export const modernizeGateway = onRequest(
     memory: "256MiB",
     timeoutSeconds: 60,
     maxInstances: 10,
-    secrets: [MODERNIZE_SETTINGS, TURNSTILE_SECRET_KEY],
+    secrets: [
+      MODERNIZE_SETTINGS,
+      TURNSTILE_SECRET_KEY,
+      MODERNIZE_RECEIPT_SECRET,
+    ],
     invoker: "public",
   },
   async (req, res) => {
@@ -189,6 +194,7 @@ export const modernizeGateway = onRequest(
         {
           store: firestoreDeliveryStore(),
           secret: TURNSTILE_SECRET_KEY.value(),
+          receiptSecret: MODERNIZE_RECEIPT_SECRET.value(),
         },
       );
       res.status(result.status === "processing" ? 202 : 200).json(result);
@@ -199,12 +205,10 @@ export const modernizeGateway = onRequest(
       }
       // No request/partner response bodies, certificates, credentials or PII in logs.
       console.error("Modernize gateway unavailable");
-      res
-        .status(503)
-        .json({
-          error:
-            "We could not confirm the request. Please try again with the same details.",
-        });
+      res.status(503).json({
+        error:
+          "We could not confirm the request. Please try again with the same details.",
+      });
     }
   },
 );

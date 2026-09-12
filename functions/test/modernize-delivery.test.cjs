@@ -90,6 +90,7 @@ const context = { ip: "192.0.2.1", hostname: "localhost" };
 const deps = () => ({
   store: firestoreDeliveryStore(),
   secret: "test-secret",
+  receiptSecret: "stable-receipt-secret-for-tests-only-123456",
   fetcher,
 });
 test.beforeEach(() => {
@@ -162,6 +163,28 @@ test("A new request ID for the same project retrieves the first outcome without 
   );
   assert.equal(second.reference, first.reference);
   assert.equal(calls.filter((call) => call.url.endsWith("/posts")).length, 1);
+});
+
+test("Existing receipts survive consent changes, shutdown, and Turnstile key rotation", async () => {
+  const config = settings(),
+    input = { ...lead(config), turnstileToken: "test" };
+  const first = await deliverModernize(input, config, context, deps());
+  const before = calls.length;
+  const closed = settings({
+    environment: "disabled",
+    accountApproved: false,
+    consentVersion: "new",
+    consentText: "Updated permission unavailable for new submissions.",
+  });
+  const existing = await deliverModernize(
+    { ...input, turnstileToken: "" },
+    closed,
+    context,
+    { ...deps(), secret: "rotated-turnstile-secret" },
+  );
+  assert.equal(existing.reference, first.reference);
+  assert.equal(existing.status, "accepted");
+  assert.equal(calls.length, before);
 });
 test("No bid, low bid, or invalid ping never sends contact details", async () => {
   for (const ping of [

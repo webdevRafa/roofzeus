@@ -54,6 +54,7 @@ Get a publisher account, approved roofing service codes, approved source ID, sta
 | Modernize account manager | Written production sign-off after staging; coverage, traffic rules, payment and rejection terms | Approval flags only after sign-off; optional ZIP restriction and minimum bid |
 | ActiveProspect TrustedForm Certify | Account-provided script URL/snippet and certificate review | `trustedFormScriptUrl` in the server settings, then safely exposed to the browser. Never put a private TrustedForm API key in the snippet |
 | Cloudflare Turnstile | Site key, secret, approved domains | `VITE_TURNSTILE_SITE_KEY`; Firebase `TURNSTILE_SECRET_KEY` |
+| RoofZeus configuration | Generate a stable random secret of at least 32 characters for receipt and duplicate hashes | Firebase `MODERNIZE_RECEIPT_SECRET`; never a VITE variable. Keep stable independently of Turnstile key rotation |
 | Google Maps (optional) | Browser-restricted Maps JavaScript / Places access | `VITE_GOOGLE_MAPS_API_KEY` |
 | Firebase / Google Cloud | Existing project, named Firestore database, enabled billing/IAM | Deploy `modernizeGateway` only; retain app settings |
 | Modernize, hosted option | Exact affiliate link and expected hostname | `affiliateUrl`, `affiliateHostname`; no direct lead API or TrustedForm integration required in hosted mode |
@@ -74,6 +75,7 @@ From an authenticated terminal in the repository, after choosing the intended Fi
 ```powershell
 firebase functions:secrets:set MODERNIZE_SETTINGS --data-file C:\secure\modernize-settings.local.json --project YOUR_PROJECT_ID
 firebase functions:secrets:set TURNSTILE_SECRET_KEY --project YOUR_PROJECT_ID
+firebase functions:secrets:set MODERNIZE_RECEIPT_SECRET --project YOUR_PROJECT_ID
 npm run build --prefix functions
 firebase deploy --only functions:modernizeGateway --project YOUR_PROJECT_ID
 ```
@@ -117,9 +119,19 @@ Set `GOOGLE_CLOUD_PROJECT` and authenticate with Application Default Credentials
 - `unknown` or `processing` older than a minute: do not resend. Ask Modernize to check `lead.publisherSubId` (our requestId), the environment, timestamps, and any partner leadId stored privately. Use their approved support channel; don't put PII in GitHub or logs.
 - After confirmed resolution, create a private `modernize-evidence.local.json` containing `status` (`accepted` or `no_match`), `operator`, `evidence` (support ticket/reference, no PII), and `partnerLeadId` for accepted requests. Run `node operations/modernize.mjs reconcile RZM-REFERENCE <evidence-file>`. This updates the receipt outcome and creates a private audit entry. It never calls Modernize or resends a lead and refuses already-final outcomes or in-flight requests younger than two minutes.
 - Monitor Modernize publisher reporting for final payable amounts, returns, and payment reconciliation. The Ping price in our database is only an offer. No Stripe integration is needed for network payouts.
+- Original receipts remain retrievable with the exact original submission even after new intake is disabled or consent settings change. The receipt hash uses `MODERNIZE_RECEIPT_SECRET`, separate from Turnstile. Rotating the receipt secret requires a deliberate migration/retention plan; do not casually rotate it while receipts are in use.
 - Make `privacy@roofzeus.com` a working, monitored mailbox before enabling intake. Verify a withdrawal requester, record the request privately, and relay any already-shared request to Modernize through the agreed withdrawal channel. This code does not pretend that previously delivered contact details can be recalled automatically. Existing manual records remain under their old consent.
 - Keep form previews off until their correct environment/settings are available; never use public query parameters as a live-mode switch. Browser analytics contain only generic event names, not addresses, contact fields, URLs, or partner credentials.
 
 ## Remaining external decisions
 
 Approval, payout terms, the final consent/advertiser contract, TrustedForm account configuration and verification, real staging tests, production acceptance, and domain/mailbox configuration remain external prerequisites. If the account requires dynamic advertiser selection or Jornaya, request its current technical specification; the readiness gate stays closed until that additional account-specific work is implemented. There is no claim that setting a tagId alone makes this production-compliant.
+
+## Implementation verification, September 12, 2026
+
+- 42 backend tests passed, including the real Firestore store adapter exercised against a transaction fixture, concurrent retries, consent changes, shutdown, and separate Turnstile key rotation.
+- 5 Modernize browser tests passed, including consent/certificate capture, unknown delivery, disabled/missing-certificate behavior, hosted handoff, unsupported answers, and responsive layouts.
+- 8 existing public/manual/contractor browser tests passed.
+- 5 production/static checks passed; frontend production/SSR and functions builds passed. Targeted public-site ESLint passed.
+- Desktop and mobile production previews visually inspected; no browser errors; submission remains disabled with absent settings.
+- No live Modernize request, certificate issuance, Firebase deployment, account registration, email, or payment was performed. Real staging and production acceptance remain pending the external prerequisites above.
