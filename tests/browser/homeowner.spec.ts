@@ -198,3 +198,95 @@ test("App host still opens the existing contractor login", async ({ page }) => {
   await expect(page.locator('input[type="password"]')).toBeVisible();
   expect(await page.title()).toContain("Contractor");
 });
+
+test("Full address starts the funnel with Google details and keeps them out of browser storage and URLs", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  await page.getByRole("button", { name: "Choose example address" }).click();
+  await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
+    "123 Example Lane",
+  );
+  await page.getByRole("button", { name: "Get my estimate" }).click();
+  await page.getByLabel("Roof repair", { exact: true }).check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
+    "123 Example Lane",
+  );
+  await expect(page.getByLabel("City", { exact: true })).toHaveValue(
+    "San Antonio",
+  );
+  await expect(
+    page.getByRole("combobox", { name: "State", exact: true }),
+  ).toHaveValue("TX");
+  await expect(page.getByLabel("ZIP code", { exact: true })).toHaveValue(
+    "78209",
+  );
+  expect(new URL(page.url()).search).toBe("?zip=78209&estimate=1");
+  const storage = await page.evaluate(() =>
+    JSON.stringify([localStorage, sessionStorage]),
+  );
+  expect(storage).not.toContain("Example Lane");
+  expect(storage).not.toContain("San Antonio");
+  await page.getByLabel("I own this property").check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Where can we reach you?" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.locator("#zip-start").fill("02108");
+  await page.getByRole("button", { name: "Get my estimate" }).click();
+  await page.getByLabel("Roof repair", { exact: true }).check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
+    "",
+  );
+});
+
+test("Manual full address works during Google outage, validates required details, and fits small screens", async ({
+  page,
+}) => {
+  await page.route("https://maps.googleapis.com/**", (route) => route.abort());
+  await page.route("https://api.zippopotam.us/**", (route) => route.abort());
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  await page.getByRole("button", { name: "Get my estimate" }).click();
+  await expect(
+    page.getByLabel("Street address", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("123 Test Street");
+  await page.getByLabel("City", { exact: true }).fill("Boston");
+  await page
+    .getByRole("combobox", { name: "State", exact: true })
+    .selectOption("MA");
+  await page.getByLabel("ZIP code", { exact: true }).fill("021");
+  await page.getByRole("button", { name: "Get my estimate" }).click();
+  await expect(
+    page.getByLabel("Street address", { exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("ZIP code", { exact: true }).fill("02108");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.getByRole("button", { name: "Get my estimate" }).click();
+  await page.getByLabel("Roof inspection", { exact: true }).check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
+    "123 Test Street",
+  );
+  await expect(page.getByLabel("City", { exact: true })).toHaveValue("Boston");
+  await expect(
+    page.getByRole("combobox", { name: "State", exact: true }),
+  ).toHaveValue("MA");
+  await expect(page.getByLabel("ZIP code", { exact: true })).toHaveValue(
+    "02108",
+  );
+});

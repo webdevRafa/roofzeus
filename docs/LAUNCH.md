@@ -4,9 +4,9 @@ The public website now serves homeowners. The existing contractor workspace rema
 
 ## Current experience
 
-The public website is now a single estimate-focused landing page, with a ZIP-first funnel on the same URL. There is no main navigation, blog feed, guide directory, or service-page browsing. Previous guide/service/location links redirect to the landing page. Privacy, terms, contractor interest, and contractor login remain discreet footer links.
+The public website is now a single estimate-focused landing page, with a ZIP-code or full-address entry choice and a funnel on the same URL. There is no main navigation, blog feed, guide directory, or service-page browsing. Previous guide/service/location links redirect to the landing page. Privacy, terms, contractor interest, and contractor login remain discreet footer links.
 
-- Enter a ZIP code; a previously entered ZIP is remembered on this device.
+- Enter a ZIP code or a full address. A previously submitted ZIP is remembered on this device. Full-address entry supports Google suggestions when configured and always allows manual entry; the address carries into the property-confirmation step. Street address and city stay in React memory until submission, never in the URL, browser storage, or analytics. Reloading clears that address draft.
 - Complete three short steps: roof needs, property location, and contact permission.
 - Google address suggestions remain optional; manual address entry works without a key.
 - Private intake, spam protection, idempotent retries, and operator review are retained.

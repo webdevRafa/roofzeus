@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, MapPin, LoaderCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { loadScript, lookupZip } from "./integrations";
+import type { Address } from "./location";
 
 export function ZipStart({
   compact = false,
@@ -95,7 +96,6 @@ export function LocationInsight() {
     </p>
   ) : null;
 }
-type Address = { address: string; city: string; state: string; zip: string };
 type Place = {
   formattedAddress?: string;
   addressComponents?: {

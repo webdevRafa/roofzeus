@@ -7,16 +7,19 @@ import {
   MapPin,
   ShieldCheck,
 } from "lucide-react";
-import { ZipStart } from "./Widgets";
+import LocationStart from "./LocationStart";
+import type { Address } from "./location";
 import EstimateFunnel from "./EstimateFunnel";
 
 export default function LandingPage() {
   const [params, setParams] = useSearchParams();
   const [started, setStarted] = useState(false);
+  const [initialAddress, setInitialAddress] = useState<Address>();
   useEffect(() => {
     setStarted(params.get("estimate") === "1");
   }, [params]);
-  function start(zip: string) {
+  function start(zip: string, address?: Address) {
+    setInitialAddress(address);
     setParams({ zip, estimate: "1" });
   }
   return (
@@ -41,7 +44,7 @@ export default function LandingPage() {
             <p className="rz-estimate-subtitle">
               A better roof starts with knowing your options.
               <br className="rz-desktop-break" /> Let’s find out what you
-              need—starting with your ZIP.
+              need—starting with your ZIP code or address.
             </p>
             <div className="rz-estimate-checks">
               <span>
@@ -54,7 +57,13 @@ export default function LandingPage() {
           </div>
           <div className="rz-estimate-panel" id="estimate-funnel">
             {started ? (
-              <EstimateFunnel onBack={() => setParams({})} />
+              <EstimateFunnel
+                initialAddress={initialAddress}
+                onBack={() => {
+                  setInitialAddress(undefined);
+                  setParams({});
+                }}
+              />
             ) : (
               <div className="rz-estimate-entry">
                 <div className="rz-entry-icon">
@@ -65,8 +74,11 @@ export default function LandingPage() {
                   Need help with <br />
                   your roof?
                 </h2>
-                <p>Enter your ZIP code to explore estimate options near you.</p>
-                <ZipStart onStart={start} />
+                <p>
+                  Enter your ZIP code or address to explore estimate options
+                  near you.
+                </p>
+                <LocationStart onStart={start} />
                 <div className="rz-entry-privacy">
                   <LockKeyhole size={13} />
                   <span>Your information stays private.</span>

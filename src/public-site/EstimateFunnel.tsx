@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { CONTACT_CONSENT, CONSENT_VERSION, services } from "./content";
 import { AddressSearch, BotCheck, Busy } from "./Widgets";
+import { states, type Address } from "./location";
 import {
   intakeConfigured,
   lookupZip,
@@ -10,10 +11,6 @@ import {
   track,
 } from "./integrations";
 
-const states =
-  "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(
-    " ",
-  );
 const empty = {
   service: "",
   urgency: "Within a month",
@@ -32,9 +29,15 @@ const empty = {
   consent: false,
   website: "",
 };
-export default function EstimateFunnel({ onBack }: { onBack: () => void }) {
+export default function EstimateFunnel({
+  onBack,
+  initialAddress,
+}: {
+  onBack: () => void;
+  initialAddress?: Address;
+}) {
   const [params] = useSearchParams();
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(() => ({ ...empty, ...initialAddress }));
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

@@ -147,7 +147,63 @@
   max-width: 290px;
 }
 .rz-estimate-entry .rz-zip-start {
-  margin-top: 27px;
+  margin-top: 0;
+}
+.rz-location-start {
+  margin-top: 24px;
+}
+.rz-location-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 20px;
+  background: #f0f2f3;
+  border-radius: 7px;
+}
+.rz-location-choice button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #586672;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rz-location-choice button[aria-pressed="true"] {
+  background: white;
+  border-color: #e1d7c6;
+  color: #081827;
+  box-shadow: 0 2px 5px #0818270a;
+}
+.rz-location-choice button:focus-visible {
+  outline: 2px solid #9a742f;
+  outline-offset: 2px;
+}
+.rz-address-start .rz-field {
+  margin-block: 14px;
+  font-size: 11px;
+}
+.rz-address-start .rz-field input,
+.rz-address-start .rz-field select {
+  font-size: 16px;
+  padding: 11px 12px;
+}
+.rz-address-start .rz-fields {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.rz-address-start .rz-estimate-next {
+  margin-top: 8px;
+}
+.rz-address-start .rz-address-search p {
+  font-size: 11px;
 }
 .rz-estimate-entry .rz-zip-controls {
   display: block;
@@ -535,7 +591,7 @@
     max-width: none;
   }
   .rz-estimate-entry .rz-zip-start {
-    margin-top: 22px;
+    margin-top: 0;
   }
   .rz-estimate-benefits > .rz-container {
     grid-template-columns: 1fr;
@@ -584,6 +640,9 @@
   }
 }
 @media (max-width: 520px) {
+  .rz-location-start {
+    margin-top: 0;
+  }
   .rz-estimate-header > .rz-container {
     height: 75px;
   }
