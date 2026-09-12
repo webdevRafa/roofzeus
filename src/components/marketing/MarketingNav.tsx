@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, LogIn, Menu, X } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
-const logo = "/brand/roof-zeus-logo-dark.webp?v=5";
+const logo = "/brand/roof-zeus-logo-dark.webp?v=6";
 
 const navItems = [
   { label: "Home", to: "/" },

@@ -1,35 +1,40 @@
-# Roof Zeus brand kit v5 — September 2026
+# Roof Zeus brand kit v6 — September 2026
 
-Open `board.html` for the brand board or `index.html` for the full guide. `brand-board.png` is a ready-to-share overview.
+Open `board.html` for the brand board or `index.html` for the full guide.
 
-## Integrated composition
+## Final eye treatment
 
-Zeus is lowered behind the roof. The foreground gable covers the lower beard and hair across a broad overlap, joining the portrait and architecture in one continuous navy silhouette. The face remains visible. No exposed neck, chest, shoulders, or torso are shown.
+Both eyes are blank white: no blue irises or pupils. Every pixel outside the two eye regions matches the v5 master exactly. The original alpha channel is unchanged. The integrated head, roof, typography, and palette retain their previous appearance; blue remains an optional UI accent outside the logo.
 
-## Assets
+## Artwork
 
 - `roof-zeus-emblem.png`: 1,254 × 1,254 transparent master.
-- `roof-zeus-logo-dark/light.svg/png/webp`: horizontal full logos. Dark/light names describe the intended background. PNG 2,000 × 480; WebP 800 × 192.
-- `roof-zeus-stacked-dark/light.svg/png`: compact stacked logos. PNG 1,920 × 1,550.
-- `roof-zeus-wordmark-dark/light.svg/png`: outlined wordmarks. PNG 1,760 × 300.
-- `roof-zeus-icon.svg/png`: simplified three-gable roof micro mark. PNG 192 × 192.
-- Website screenshots show this identity in the existing public layout.
+- `roof-zeus-logo-dark/light.svg/png/webp`: horizontal full logos. Dark/light names describe intended backgrounds. PNG 2,000 × 480; WebP 800 × 192.
+- `roof-zeus-stacked-dark/light.svg/png`: stacked logos, PNG 1,920 × 1,550.
+- `roof-zeus-wordmark-dark/light.svg/png`: outlined wordmarks, PNG 1,760 × 300.
+- `roof-zeus-icon.svg/png`: alternate geometric three-gable micro mark.
 
-Logo SVGs contain outlined lettering and an embedded raster emblem; they are not fully vector illustrations. Wordmark-only SVGs and the micro icon are true vector. No fonts are required to display the assets. The outlined wordmark is based on Georgia Bold; the current site's UI typography remains Manrope and Poppins.
+Full-logo SVGs contain outlined lettering and an embedded raster emblem; they are not fully vector illustrations. Wordmark-only SVGs and the geometric micro mark are true vector. No font installation is required to use the supplied files.
+
+## Browser favicon
+
+The favicon uses the updated white-eyed emblem on a navy tile:
+- `roof-zeus-favicon.svg`: compact self-contained SVG with an embedded 128 px raster.
+- `roof-zeus-favicon.ico`: 16, 32, 48, and 64 px entries.
+- `roof-zeus-favicon-16/32/48/64/128/180/192.png`: raster exports.
+- 180 px PNG is provided for Apple touch icons.
+
+The site supplies the new shared PNG fallback in its document head, a matching root ICO, and the SVG on public marketing pages. Existing page content, layout, and application functionality are retained.
 
 ## Palette
 
-Navy #081827 · Gold #D6AC58 · Ivory #F5F1E8 · Blue #43C8FF · Slate #6F8296.
-Digital system colors; the illustration includes additional shading tones.
+Navy #081827 · Gold #D6AC58 · Ivory #F5F1E8 · White eyes · Slate #6F8296.
+Optional UI accent: Blue #43C8FF. The artwork includes additional shading tones.
 
-## Website
+## Production and verification
 
-Version 5 updates the public header, mobile navigation, footer, and favicon asset version. Existing copy, layout, app branding, and functionality are retained.
+Eye artwork edited with the built-in image-generation tool. Only the two generated eye patches were transferred to the original master to preserve every other pixel and the original transparency. Raw pixel comparison: 2,860 changed pixels inside eye regions; 0 changed pixels outside; 0 alpha changes; 0 remaining cyan pixels in either eye region. All full-logo variants use this master with deterministic outlined lettering. Favicon exports use the same artwork.
 
-## Creation
+Eye-edit prompt:
 
-Created with the built-in image-generation tool. Every full-logo variant uses the same integrated emblem with deterministic outlined lettering. Transparency and desktop/mobile presentation were verified.
-
-Final generation prompt:
-
-> Create a new Roof Zeus brand emblem, one integrated flat graphic, transparent PNG background. Main design requirement: ZEUS'S HEAD IS LOWERED BEHIND THE ROOF, with strong visual OVERLAP. The roof is the foreground shape and completely HIDES THE LOWER HALF OF HIS BEARD AND LOWER HAIR. Do not place a complete detached head on top of a roof. No floating head, no gap, no dangling beard tip, no point-contact at the roof peak. Think of a classical face emerging from behind the roof: face and roof are one compact interlocking crest. Composition on a square canvas: hair top at about 18 percent height; eyes around 38 percent; mouth around 49 percent; central roof ridge at 53 percent height; roof lower edge at 83 percent. The roof slopes overlap and mask the lower head across a BROAD area. Behind the roof, the head blends into the same navy silhouette. Hair flows into the roof's outer silhouette, ending against its upper edge rather than floating beside it. Face fully readable: regal mature Greek Zeus in three-quarter view looking slightly up and right, handsome strong angular brow, strong nose, focused electric-blue narrow eyes, swept-back ivory hair, a beard whose LOWER HALF IS OCCLUDED BY THE FOREGROUND ROOF. Show only face, upper beard and hair; NO exposed neck, shoulders, chest, torso, body. Roof: broad main centered front gable with a small matching lower gable each side, symmetrical gold outer fascia and ivory inner fascia of even width, dark navy roof plane, single four-pane gold window centered under main peak. Left and right eaves match exactly and share a straight level baseline. Roof is 1.35 times head width, so the overlap is substantial, not a tiny head atop a large building. Two small slim lightning accents tucked into side hair, no detached ornaments. Navy #081827, ivory #F5F1E8, gold #D6AC58, slate #6F8296 for restrained facial planes, eyes #43C8FF. Refined flat sculptural illustration, clean broad shapes, minimal shading, no 3D metallic finish, no gradients or glossy effects. Compact integrated silhouette with small even margins. No text, no typography, no border, no slogan. Actual transparent background. ONE emblem.
+> Edit ONLY the two eye interiors in this exact logo: replace the blue irises and dark pupils with solid pure white, creating completely blank white eyes. No iris, no pupil, no blue, no glow. Keep the current eyelid shapes and surrounding navy outlines. Preserve EVERY OTHER part of the image exactly: the face, hair, beard, roof, windows, colors, composition, dimensions, and existing alpha transparency. This is a tiny eye-color correction, NOT a redesign. Do not redraw or restyle anything outside the two eyes.

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import MarketingNav from "./MarketingNav";
 
-const logo = "/brand/roof-zeus-logo-dark.webp?v=5";
+const logo = "/brand/roof-zeus-logo-dark.webp?v=6";
 
 const footerGroups = [
   {
@@ -33,12 +33,12 @@ const footerGroups = [
 
 export default function MarketingLayout() {
   useEffect(() => {
-    // Public-site identity only; retain the application's existing favicon.
+    // Use the SVG on public pages; the document's PNG is the shared fallback.
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (!icon) return;
     const previousHref = icon.href;
     const previousType = icon.type;
-    icon.href = "/brand/roof-zeus-icon.svg?v=5";
+    icon.href = "/brand/roof-zeus-favicon.svg?v=6";
     icon.type = "image/svg+xml";
     return () => {
       icon.href = previousHref;
