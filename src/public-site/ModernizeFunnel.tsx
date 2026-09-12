@@ -11,6 +11,7 @@ import {
   type ModernizeResult,
 } from "./modernize";
 import RoofingProjectFields from "./RoofingProjectFields";
+import { useFunnelStep, revealFunnelStep } from "./useFunnelStep";
 import { roofingProjectReady } from "./roofing-project";
 import { EmailField, PhoneField } from "./ContactInputs";
 import {
@@ -51,8 +52,8 @@ export default function ModernizeFunnel({
     zip,
     ...initialAddress,
   });
-  const [step, setStep] = useState(0),
-    [error, setError] = useState("");
+  const { step, setStep, transitioning, motionRef } = useFunnelStep();
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false),
     [token, setToken] = useState("");
   const [reset, setReset] = useState(0),
@@ -79,10 +80,7 @@ export default function ModernizeFunnel({
   }, [demo]);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-    if (step > 0 || result || demoCompleted)
-      document
-        .getElementById("estimate-funnel")
-        ?.scrollIntoView({ block: "start" });
+    revealFunnelStep();
   }, [step, result, demoCompleted]);
   useEffect(() => {
     if (demo || !/^\d{5}$/.test(form.zip)) return;
@@ -324,11 +322,15 @@ export default function ModernizeFunnel({
   }
   const supported = roofingProjectReady(form, config.materials);
   return (
-    <div className="rz-estimate-steps">
+    <div
+      className="rz-estimate-steps"
+      ref={motionRef}
+      aria-busy={transitioning}
+    >
       <div className="rz-estimate-step-top">
         <button
           type="button"
-          disabled={busy || locked}
+          disabled={busy || locked || transitioning}
           onClick={() => {
             setError("");
             if (step > 0) setStep(step - 1);
@@ -352,6 +354,7 @@ export default function ModernizeFunnel({
         data-tf-element-role="offer"
         onSubmit={(event) => {
           event.preventDefault();
+          if (transitioning) return;
           if (step === 2 && !config.enabled) {
             if (
               normalizeEmail(form.email) &&
@@ -641,6 +644,7 @@ export default function ModernizeFunnel({
           data-tf-element-role={step === 2 ? "submit" : undefined}
           disabled={
             busy ||
+            transitioning ||
             (step > 0 && !supported && !locked) ||
             (step === 2 && config.enabled && (!token || !certificate))
           }

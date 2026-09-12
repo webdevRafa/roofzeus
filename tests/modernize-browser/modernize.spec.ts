@@ -619,3 +619,136 @@ for (const addressEntry of [false, true]) {
     ).toBe(true);
   });
 }
+
+test("Desktop hero, image, headline and footer stay fixed through long forms and navigation", async ({
+  page,
+}) => {
+  await page.route("**/modernize-test/config", (route) =>
+    route.fulfill({
+      json: {
+        ...config,
+        consentText:
+          consent +
+          " Additional approved-text fixture for layout testing.".repeat(90),
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.evaluate(() => document.fonts.ready);
+  const geometry = () =>
+    page.evaluate(() =>
+      Object.fromEntries(
+        [
+          ".rz-estimate-hero",
+          ".rz-estimate-house",
+          ".rz-estimate-copy",
+          ".rz-estimate-panel",
+          ".rz-estimate-footer",
+        ].map((selector) => {
+          const r = document.querySelector(selector)!.getBoundingClientRect();
+          return [
+            selector,
+            [
+              Math.round(r.top + scrollY),
+              Math.round(r.height),
+              Math.round(r.width),
+            ],
+          ];
+        }),
+      ),
+    );
+  const before = await geometry();
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  expect(await geometry()).toEqual(before);
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("123 Example Lane");
+  await page.getByLabel("City", { exact: true }).fill("San Antonio");
+  await page
+    .getByRole("combobox", { name: "State", exact: true })
+    .selectOption("TX");
+  await page.getByLabel("ZIP code", { exact: true }).fill("78209");
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  await page.getByLabel("Roof replacement", { exact: true }).check();
+  await page
+    .getByRole("combobox", { name: /What material/ })
+    .selectOption("asphalt");
+  await page
+    .getByRole("combobox", { name: "When do you need help?", exact: true })
+    .selectOption("Immediately");
+  await page.getByText("Not sure about the material?", { exact: true }).click();
+  expect(await geometry()).toEqual(before);
+  const formNode = await page
+    .locator('form[data-tf-element-role="offer"]')
+    .elementHandle();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.locator(".rz-estimate-steps")).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  expect(await geometry()).toEqual(before);
+  await page.getByLabel("I own this property").check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.locator(".rz-estimate-steps")).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  expect(await geometry()).toEqual(before);
+  expect(
+    await formNode!.evaluate(
+      (node) =>
+        node === document.querySelector('form[data-tf-element-role="offer"]'),
+    ),
+  ).toBe(true);
+  expect(
+    await page
+      .locator("#estimate-funnel")
+      .evaluate((el) => el.scrollHeight > el.clientHeight),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .scrollIntoViewIfNeeded();
+  await expect(
+    page.getByRole("button", { name: "Get my estimate", exact: true }),
+  ).toBeInViewport();
+  expect(await geometry()).toEqual(before);
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page.locator(".rz-estimate-steps")).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
+    "123 Example Lane",
+  );
+  expect(await geometry()).toEqual(before);
+});
+
+test("Reduced motion and mobile keep natural scrolling with a stable background size", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const imageHeight = await page
+    .locator(".rz-estimate-house")
+    .evaluate((el) => el.getBoundingClientRect().height);
+  await complete(page);
+  expect(
+    await page
+      .locator(".rz-estimate-house")
+      .evaluate((el) => el.getBoundingClientRect().height),
+  ).toBe(imageHeight);
+  expect(
+    await page
+      .locator("#estimate-funnel")
+      .evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+  ).toBe(true);
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});

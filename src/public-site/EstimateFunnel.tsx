@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { CONTACT_CONSENT, CONSENT_VERSION, services } from "./content";
 import { AddressSearch, BotCheck, Busy } from "./Widgets";
 import { states, type Address } from "./location";
+import { useFunnelStep, revealFunnelStep } from "./useFunnelStep";
 import {
   intakeConfigured,
   lookupZip,
@@ -38,7 +39,7 @@ export default function EstimateFunnel({
 }) {
   const [params] = useSearchParams();
   const [form, setForm] = useState(() => ({ ...empty, ...initialAddress }));
-  const [step, setStep] = useState(0);
+  const { step, setStep, transitioning, motionRef } = useFunnelStep();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [token, setToken] = useState("");
@@ -64,10 +65,7 @@ export default function EstimateFunnel({
   }, [params]);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
-    if (step > 0)
-      document
-        .getElementById("estimate-funnel")
-        ?.scrollIntoView({ block: "start" });
+    revealFunnelStep();
   }, [step, reference]);
   useEffect(() => {
     if (!/^\d{5}$/.test(form.zip)) return;
@@ -150,15 +148,19 @@ export default function EstimateFunnel({
       </div>
     );
   return (
-    <div className="rz-estimate-steps">
+    <div
+      className="rz-estimate-steps"
+      ref={motionRef}
+      aria-busy={transitioning}
+    >
       <div className="rz-estimate-step-top">
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || transitioning}
           onClick={() => {
             setError("");
             if (step === 0) onBack();
-            else setStep((s) => s - 1);
+            else void setStep(step - 1);
           }}
         >
           <ArrowLeft size={16} /> Back
@@ -176,10 +178,11 @@ export default function EstimateFunnel({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (transitioning) return;
           if (step === 2) void send();
           else {
             setError("");
-            setStep((s) => s + 1);
+            void setStep(step + 1);
             track("estimate_step_completed", { step: step + 1 });
           }
         }}
@@ -441,7 +444,11 @@ export default function EstimateFunnel({
         )}
         <button
           className="rz-button rz-estimate-next"
-          disabled={busy || (step === 2 && (!intakeConfigured || !token))}
+          disabled={
+            busy ||
+            transitioning ||
+            (step === 2 && (!intakeConfigured || !token))
+          }
         >
           {busy ? (
             <>

@@ -115,37 +115,35 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
           </div>
         </div>
       </section>
-      {!started && (
-        <section className="rz-estimate-benefits">
-          <div className="rz-container">
-            {[
-              [
-                "01",
-                "Tell us what you need",
-                "A repair, a replacement, or just not sure.",
-              ],
-              [
-                "02",
-                "Explore your options",
-                "We check whether local estimate help is available.",
-              ],
-              [
-                "03",
-                "Decide with confidence",
-                "Talk through the work. Choose what’s right for you.",
-              ],
-            ].map(([n, t, p]) => (
-              <div key={n}>
-                <span>{n}</span>
-                <div>
-                  <h2>{t}</h2>
-                  <p>{p}</p>
-                </div>
+      <section className="rz-estimate-benefits">
+        <div className="rz-container">
+          {[
+            [
+              "01",
+              "Tell us what you need",
+              "A repair, a replacement, or just not sure.",
+            ],
+            [
+              "02",
+              "Explore your options",
+              "We check whether local estimate help is available.",
+            ],
+            [
+              "03",
+              "Decide with confidence",
+              "Talk through the work. Choose what’s right for you.",
+            ],
+          ].map(([n, t, p]) => (
+            <div key={n}>
+              <span>{n}</span>
+              <div>
+                <h2>{t}</h2>
+                <p>{p}</p>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            </div>
+          ))}
+        </div>
+      </section>
     </>
   );
 }

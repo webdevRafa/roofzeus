@@ -449,14 +449,6 @@
 .rz-estimate-success button {
   margin-top: 20px;
 }
-.funnel-open .rz-estimate-grid {
-  align-items: start;
-}
-.funnel-open .rz-estimate-copy {
-  position: sticky;
-  top: 45px;
-  padding-top: 60px;
-}
 .rz-estimate-steps .rz-fields {
   gap: 16px;
 }
@@ -608,23 +600,6 @@
   .rz-estimate-footer nav {
     gap: 20px;
   }
-  .funnel-open .rz-estimate-copy {
-    position: static;
-    padding: 0;
-  }
-  .funnel-open .rz-estimate-copy h1 {
-    font-size: 31px;
-    margin-bottom: 10px;
-  }
-  .funnel-open .rz-estimate-kicker,
-  .funnel-open .rz-estimate-subtitle,
-  .funnel-open .rz-estimate-checks {
-    display: none;
-  }
-  .funnel-open .rz-estimate-grid {
-    padding-block: 26px;
-    gap: 10px;
-  }
 }
 @media (max-width: 520px) {
   .rz-location-start {
@@ -685,9 +660,6 @@
     padding: 12px 8px;
     font-size: 10px;
   }
-  .funnel-open .rz-estimate-copy h1 {
-    font-size: 28px;
-  }
   .rz-estimate-footer nav {
     gap: 14px;
     font-size: 9px;
@@ -716,5 +688,65 @@
   }
   .rz-estimate-entry .rz-zip-start {
     margin-top: 0;
+  }
+}
+
+/* Reserve a stable desktop stage; long steps scroll inside the form shell. */
+@media (min-width: 801px) {
+  .rz-estimate-grid {
+    height: clamp(700px, calc(100svh - 92px), 900px);
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+    padding-block: 40px;
+  }
+  .rz-estimate-panel {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #b7a279 #f3f4f4;
+  }
+}
+@media (max-width: 800px) {
+  .rz-estimate-grid {
+    align-items: start;
+    min-height: 0;
+  }
+  .rz-estimate-house {
+    /* Keep the roof at the same scale as the document grows. */
+    height: 900px;
+    object-position: 65% top;
+  }
+}
+.rz-estimate-steps[aria-busy="true"] {
+  pointer-events: none;
+}
+.rz-estimate-progress .complete {
+  transition: background-color 180ms ease;
+}
+.rz-estimate-entry,
+.rz-estimate-success {
+  animation: rz-step-appear 180ms ease-out;
+}
+@keyframes rz-step-appear {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rz-estimate-entry,
+  .rz-estimate-success {
+    animation: none;
+  }
+  .rz-estimate-progress .complete {
+    transition: none;
   }
 }
