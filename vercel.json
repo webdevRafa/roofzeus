@@ -7,25 +7,83 @@
   "redirects": [
     {
       "source": "/:path(pricing|features|see-it-in-action|security)",
-      "has": [{ "type": "host", "value": "roofzeus.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "roofzeus.com"
+        }
+      ],
       "destination": "/for-contractors#software",
       "permanent": true
+    },
+    {
+      "source": "/:path(services|guides|locations|roofers|how-it-works|faq)/:rest*",
+      "destination": "/",
+      "permanent": true,
+      "missing": [
+        {
+          "type": "host",
+          "value": "app.roofzeus.com"
+        },
+        {
+          "type": "host",
+          "value": "signup.roofzeus.com"
+        },
+        {
+          "type": "host",
+          "value": "app.roofzeus.vercel.app"
+        }
+      ]
+    },
+    {
+      "source": "/find-a-roofer",
+      "destination": "/?estimate=1",
+      "permanent": true,
+      "missing": [
+        {
+          "type": "host",
+          "value": "app.roofzeus.com"
+        },
+        {
+          "type": "host",
+          "value": "signup.roofzeus.com"
+        },
+        {
+          "type": "host",
+          "value": "app.roofzeus.vercel.app"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
       "source": "/:path((?!assets/|brand/|images/|favicon|roofzeus-favicon|apple-touch-icon).*)",
-      "has": [{ "type": "host", "value": "app.roofzeus.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "app.roofzeus.com"
+        }
+      ],
       "destination": "/app"
     },
     {
       "source": "/:path((?!assets/|brand/|images/|favicon|roofzeus-favicon|apple-touch-icon).*)",
-      "has": [{ "type": "host", "value": "signup.roofzeus.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "signup.roofzeus.com"
+        }
+      ],
       "destination": "/app"
     },
     {
       "source": "/:path((?!assets/|brand/|images/|favicon|roofzeus-favicon|apple-touch-icon).*)",
-      "has": [{ "type": "host", "value": "app.roofzeus.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "app.roofzeus.vercel.app"
+        }
+      ],
       "destination": "/app"
     },
     {
@@ -37,19 +95,45 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
     },
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "app.roofzeus.com" }],
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      "has": [
+        {
+          "type": "host",
+          "value": "app.roofzeus.com"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     },
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "signup.roofzeus.com" }],
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      "has": [
+        {
+          "type": "host",
+          "value": "signup.roofzeus.com"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ]
 }

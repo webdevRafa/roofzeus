@@ -1,6 +1,6 @@
-export const CONSENT_VERSION = "2026-09-12.1";
+export const CONSENT_VERSION = "2026-09-12.2";
 export const HOMEOWNER_CONSENT =
-  "I agree that RoofZeus may contact me by phone or email about this roofing request. My information will not be sent to a contractor until I agree to that introduction. I do not have to purchase anything.";
+  "I agree that RoofZeus may contact me by phone or email about roofing estimates for this property. My information will not be sent to a contractor until I agree to that introduction. I do not have to purchase anything.";
 export const PARTNER_CONSENT =
   "I agree that RoofZeus may contact me about joining its contractor network. Registration does not guarantee leads or approve my business for referrals.";
 const STATES = new Set(
@@ -67,7 +67,7 @@ export function validateIntake(input: unknown) {
     phone,
     notes: text("notes", 2000),
     consentVersion: CONSENT_VERSION,
-    sourcePath: kind === "homeowner" ? "/find-a-roofer" : "/for-contractors",
+    sourcePath: kind === "homeowner" ? "/" : "/for-contractors",
   };
   if (kind === "contractor") {
     if (!phone) throw new IntakeError("Enter a business phone number.");

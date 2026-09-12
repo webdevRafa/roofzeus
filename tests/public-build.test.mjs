@@ -36,7 +36,7 @@ test("Every public route has HTML content, one H1, unique metadata, and a canoni
     titles.add(title);
   }
 });
-test("Sitemap excludes forms, legal pages, and unapproved pilot coverage", async () => {
+test("Sitemap contains only the estimate landing page", async () => {
   const xml = await readFile("dist/sitemap.xml", "utf8");
   for (const p of pages)
     assert.equal(
@@ -45,6 +45,7 @@ test("Sitemap excludes forms, legal pages, and unapproved pilot coverage", async
       p.path,
     );
   assert.ok(!xml.includes("/roofers/tx/san-antonio"));
+  assert.equal((xml.match(/<loc>/g) || []).length, 1);
 });
 test("Contractor SPA document does not contain public marketing and is not indexable", async () => {
   const html = await readFile("dist/app.html", "utf8");

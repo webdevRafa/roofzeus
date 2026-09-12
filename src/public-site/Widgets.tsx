@@ -3,7 +3,13 @@ import { ArrowRight, MapPin, LoaderCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { loadScript, lookupZip } from "./integrations";
 
-export function ZipStart({ compact = false }: { compact?: boolean }) {
+export function ZipStart({
+  compact = false,
+  onStart,
+}: {
+  compact?: boolean;
+  onStart?: (zip: string) => void;
+}) {
   const [zip, setZip] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -28,12 +34,11 @@ export function ZipStart({ compact = false }: { compact?: boolean }) {
         } catch {
           /* Storage is optional. */
         }
-        navigate(`/find-a-roofer?zip=${zip}`);
+        if (onStart) onStart(zip);
+        else navigate(`/?zip=${zip}&estimate=1`);
       }}
     >
-      <label htmlFor={compact ? "zip-bottom" : "zip-start"}>
-        Where is your roofing project?
-      </label>
+      <label htmlFor={compact ? "zip-bottom" : "zip-start"}>ZIP code</label>
       <div className="rz-zip-controls">
         <div>
           <MapPin size={20} aria-hidden="true" />
@@ -52,7 +57,7 @@ export function ZipStart({ compact = false }: { compact?: boolean }) {
           />
         </div>
         <button className="rz-button" type="submit">
-          Get started <ArrowRight size={18} />
+          Get my estimate <ArrowRight size={18} />
         </button>
       </div>
       {error && (
@@ -102,9 +107,7 @@ type Place = {
 };
 type GoogleGlobal = {
   maps: {
-    importLibrary: (
-      name: string,
-    ) => Promise<{
+    importLibrary: (name: string) => Promise<{
       PlaceAutocompleteElement: new (options: object) => HTMLElement;
     }>;
   };

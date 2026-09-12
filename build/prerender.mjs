@@ -72,5 +72,5 @@ await writeFile(
   `User-agent: *\nAllow: /\nDisallow: /brand/\nSitemap: ${SITE_URL}/sitemap.xml\n`,
 );
 console.log(
-  `Prerendered ${pages.length} public pages; ${indexed.length} indexable URLs in sitemap. San Antonio remains noindex until coverage/editorial approval.`,
+  `Prerendered ${pages.length} public pages; ${indexed.length} indexable URLs in sitemap. The estimate landing page is the only indexed public entry point.`,
 );

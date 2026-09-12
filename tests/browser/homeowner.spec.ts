@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
   );
 });
 async function completeToReview(page: Page) {
-  await page.goto("/find-a-roofer?zip=78209&service=roof-repair");
+  await page.goto("/?zip=78209&estimate=1&service=roof-repair");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByRole("button", { name: "Choose example address" }).click();
   await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
@@ -30,9 +30,9 @@ async function completeToReview(page: Page) {
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Full name").fill("Synthetic Homeowner");
   await page.getByLabel("Email address").fill("homeowner@example.com");
-  await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("I agree that RoofZeus may contact me").check();
 }
+
 test("Homeowner flow retains details after failure and only confirms a saved request", async ({
   page,
 }) => {
@@ -60,12 +60,12 @@ test("Homeowner flow retains details after failure and only confirms a saved req
     }
   });
   await completeToReview(page);
-  await page.getByRole("button", { name: "Send my request" }).click();
+  await page.getByRole("button", { name: "Get my estimate" }).click();
   await expect(page.getByRole("alert")).toContainText("Temporary test outage");
-  await expect(page.locator(".rz-review")).toContainText("Synthetic Homeowner");
-  await page.getByRole("button", { name: "Send my request" }).click();
+  await expect(page.getByLabel("Full name")).toHaveValue("Synthetic Homeowner");
+  await page.getByRole("button", { name: "Get my estimate" }).click();
   await expect(
-    page.getByRole("heading", { name: "You’ve taken the first step." }),
+    page.getByRole("heading", { name: "You’re all set." }),
   ).toBeVisible();
   await expect(
     page.getByText("RZ-0123456789ABCDEF", { exact: true }),
@@ -79,8 +79,8 @@ test("Invalid ZIP and missing service cannot advance; manual location survives l
   await page.goto("/");
   await page.locator("#zip-start").fill("12");
   await page
-    .locator(".rz-hero")
-    .getByRole("button", { name: "Get started" })
+    .locator(".rz-estimate-hero")
+    .getByRole("button", { name: "Get my estimate" })
     .click();
   await expect(page.getByRole("alert")).toContainText("5-digit");
   await page.goto("/find-a-roofer");
@@ -102,7 +102,7 @@ test("Invalid ZIP and missing service cannot advance; manual location survives l
   await page.getByLabel("I own this property").check();
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "How can we reach you?" }),
+    page.getByRole("heading", { name: "Where can we reach you?" }),
   ).toBeVisible();
 });
 test("Contractor interest form submits pending application data", async ({
@@ -168,26 +168,29 @@ test("Public routes render without errors or horizontal overflow on desktop and 
   }
   expect(errors).toEqual([]);
 });
-test("Mobile navigation supports keyboard closing and service routes keep their intent", async ({
+test("Landing page has one clear funnel and remembers ZIP without extra navigation", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  const toggle = page.getByRole("button", { name: "Open navigation" });
-  await toggle.click();
-  await expect(
-    page.getByRole("navigation", { name: "Mobile navigation" }),
-  ).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(toggle).toBeFocused();
-  await page.goto("/services/roof-replacement");
+  await expect(page.locator("header nav")).toHaveCount(0);
+  await expect(page.getByText("Homeowner guides", { exact: true })).toHaveCount(
+    0,
+  );
+  await page.locator("#zip-start").fill("78209");
   await page
-    .getByRole("link", { name: "Start a request", exact: true })
+    .getByRole("button", { name: "Get my estimate", exact: true })
     .click();
   await expect(
-    page.getByLabel("Roof replacement", { exact: true }),
-  ).toBeChecked();
+    page.getByRole("heading", { name: "What does your roof need?" }),
+  ).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe("/");
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page.locator("#zip-start")).toHaveValue("78209");
+  await page.goto("/guides/choosing-a-roofer");
+  await expect(page.locator("h1")).toContainText("estimate");
 });
+
 test("App host still opens the existing contractor login", async ({ page }) => {
   await page.goto("http://app.localhost:5174/login");
   await expect(page.locator(".rz-public")).toHaveCount(0);

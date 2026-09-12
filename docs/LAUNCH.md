@@ -2,18 +2,18 @@
 
 The public website now serves homeowners. The existing contractor workspace remains on `app.roofzeus.com`; `signup.roofzeus.com` opens its signup flow. The approved white-eyed Zeus identity is retained.
 
-## What is ready
+## Current experience
 
-- Responsive homeowner homepage, service pages, three practical guides, FAQs, privacy/terms, coverage page, and San Antonio pilot resource page.
-- Four-step project intake: project, property, contact, explicit consent and review. Manual address entry works without Google. ZIP lookup suggests city/state, and the homeowner can correct them.
-- New Google Places autocomplete integration, loaded only during the address step.
-- Real server-side lead intake for Firebase, with Cloudflare Turnstile verification, origin allowlist, validation, rate limits, idempotent retries, and same-project daily deduplication.
-- Private homeowner and contractor-interest queues in a **separate Firestore database named `roofzeus-leads`**. No contractor account or browser client can read this database.
-- Operator commands for queue review and recording a named-contractor introduction permission. Nothing automatically sells or broadcasts a lead.
-- 19 prerendered public HTML pages. Fourteen approved core pages enter the sitemap. The San Antonio page is deliberately `noindex` until a real participating contractor and local editorial review are in place. Forms, legal pages, and the 404 page are excluded too.
-- Contractor app code is loaded separately from the public bundle. Existing dashboard routes and business workflows are preserved.
+The public website is now a single estimate-focused landing page, with a ZIP-first funnel on the same URL. There is no main navigation, blog feed, guide directory, or service-page browsing. Previous guide/service/location links redirect to the landing page. Privacy, terms, contractor interest, and contractor login remain discreet footer links.
 
-The code is ready for configuration. **The new intake backend has not been deployed, and no production API keys were supplied.** The public form shows an opening-soon state until its endpoint and Turnstile site key exist. It never displays a successful request without a server receipt. Google suggestions have been tested with an API fixture; a real restricted key is still needed to test Google's production service.
+- Enter a ZIP code; a previously entered ZIP is remembered on this device.
+- Complete three short steps: roof needs, property location, and contact permission.
+- Google address suggestions remain optional; manual address entry works without a key.
+- Private intake, spam protection, idempotent retries, and operator review are retained.
+- Only the landing page enters the sitemap. Five supporting HTML documents are prerendered, including the custom 404.
+- The existing contractor app remains on its subdomain with its own login and workflows.
+
+Live submissions still require the setup below. No new API service is required for this redesign. **Redeploy the intake function with this revision:** the contact-consent version is now 2026-09-12.2 and must match the browser. The site does not invent a roofing price or guarantee a contractor connection.
 
 ## Keys and services
 
@@ -106,13 +106,9 @@ node operations/leads.mjs record-introduction RZ_REFERENCE_FROM_QUEUE path/to/ap
 
 This command checks approval, exact business name, territory ZIP, and request status before recording permission and an audit event. It does **not** email, text, sell, or send the lead. Coordinate the agreed introduction privately. Recheck withdrawals immediately before any actual sharing. This gives you a manageable launch with one contractor before building automated distribution, billing, or a marketplace.
 
-## PSEO foundation and expansion
+## Search and routing
 
-Page metadata and content are in `src/public-site/content.ts`; the build produces readable HTML, canonical tags, structured data, and a sitemap. The visitor sees the same initial HTML as a crawler. Remembered ZIP information updates client-side after load and never forces a geographic redirect. [Google's rendering guidance](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics).
-
-Only the San Antonio pilot location exists. There are no mass-generated city or ZIP pages, fake ratings, provider counts, storm alerts, or roof-price promises. The city page links directly to [San Antonio Development Services](https://www.sa.gov/Directory/Departments/DSD) and [NWS Austin/San Antonio](https://www.weather.gov/ewx/). It does not invent current permit rules or weather events.
-
-Before enabling indexing on a new local page: confirm city/state geography, an actual participating contractor and supported ZIPs, meaningful original local content, current primary sources, a working lead flow, and an editorial review. Only then change its metadata `index` flag and rebuild. Submit `/sitemap.xml` in [Google Search Console](https://search.google.com/search-console/). Expand by real demand and contractor supply, not by the number of URLs that can be generated. [Google spam policies](https://developers.google.com/search/docs/essentials/spam-policies).
+The landing page has static HTML, a canonical URL, metadata, and structured data. It is the only indexed public page. Older service, guide, FAQ, and location URLs redirect home; the old form URL opens the inline estimate funnel and preserves ZIP/service parameters. Any later SEO expansion should be a separate decision, not part of this simple landing-page experience.
 
 ## Development and verification
 
@@ -127,9 +123,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-The browser suite starts an isolated dev server on port 5174, uses synthetic data and mocked Google/Turnstile/intake responses, and does not send homeowner information to a real backend. It covers request success/retry, manual address fallback, invalid fields, contractor interest, navigation, contractor app login, and public routes at 1440/768/390/320 pixels. Backend tests execute the intake handler with isolated persistence and network adapters; a real Firestore deployment test remains a launch step.
+The browser suite starts an isolated dev server on port 5174, uses synthetic data and mocked Google/Turnstile/intake responses, and does not send homeowner information to a real backend. It covers estimate success/retry, manual address fallback, invalid fields, contractor interest, navigation, contractor app login, and public routes at 1440/768/390/320 pixels. Backend tests execute the intake handler with isolated persistence and network adapters; a real Firestore deployment test remains a launch step.
 
-The initial public bundle is approximately 91 KB gzipped before network compression differences; the larger existing contractor bundle is loaded only on contractor hosts. Build warnings about that existing app bundle do not affect the homeowner entry point.
+The initial public bundle is approximately 84 KB gzipped before network compression differences; the larger existing contractor bundle is loaded only on contractor hosts. Build warnings about that existing app bundle do not affect the homeowner entry point.
 
 ## Intentional first-version boundaries
 
