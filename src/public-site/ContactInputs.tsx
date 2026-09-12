@@ -29,10 +29,12 @@ export function PhoneField({ value, onChange }: ContactProps) {
   const [touched, setTouched] = useState(false);
   const [editError, setEditError] = useState("");
   const valid = normalizePhone(value) !== null;
-  const error = editError || (touched && !valid ? phoneError : "");
+  // Rejected keystrokes/pastes do not change the retained phone number.
+  // Validate that value, not an attempted edit that was never accepted.
+  const error = valid ? "" : editError || (touched ? phoneError : "");
   const display = formatPhone(value);
   useEffect(() => {
-    input.current?.setCustomValidity(editError || (valid ? "" : phoneError));
+    input.current?.setCustomValidity(valid ? "" : editError || phoneError);
   }, [valid, editError]);
   function update(digits: string, digitPosition: number) {
     setEditError("");

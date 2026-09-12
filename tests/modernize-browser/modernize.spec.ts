@@ -380,7 +380,10 @@ test("Phone typing formats digits, blocks letters, supports +1 paste, and preser
   await expect(phone).toHaveValue("(210) 555-0123");
   await phone.pressSequentially("abc");
   await expect(phone).toHaveValue("(210) 555-0123");
-  await expect(page.locator("#modernize-phone-error")).toContainText("Letters");
+  await expect(page.locator("#modernize-phone-error")).toHaveCount(0);
+  expect(
+    await phone.evaluate((el: HTMLInputElement) => el.checkValidity()),
+  ).toBe(true);
   await phone.fill("+1 (212) 555-0123");
   await expect(phone).toHaveValue("(212) 555-0123");
   // A real clipboard paste, including the country code and punctuation.
@@ -407,9 +410,17 @@ test("Phone typing formats digits, blocks letters, supports +1 paste, and preser
   await expect(phone).not.toHaveAttribute("aria-invalid", "true");
   await phone.fill("210555012345");
   await expect(phone).toHaveValue("(210) 555-0123");
-  await expect(page.locator("#modernize-phone-error")).toContainText(
-    "10 digits",
-  );
+  await expect(page.locator("#modernize-phone-error")).toHaveCount(0);
+  expect(
+    await phone.evaluate((el: HTMLInputElement) => el.checkValidity()),
+  ).toBe(true);
+  // Rejected input must still leave an empty/incomplete number invalid.
+  await phone.fill("");
+  await phone.pressSequentially("abc");
+  await expect(page.locator("#modernize-phone-error")).toContainText("Letters");
+  expect(
+    await phone.evaluate((el: HTMLInputElement) => el.checkValidity()),
+  ).toBe(false);
 });
 
 test("Invalid contacts block submission and valid contacts enable a confirmed request", async ({
@@ -459,6 +470,13 @@ test("Invalid contacts block submission and valid contacts enable a confirmed re
   await submit.click();
   expect(submits).toBe(0);
   await phone.fill("+1 210 555 0123");
+  await phone.press("End");
+  await phone.pressSequentially("456789");
+  await expect(phone).toHaveValue("(210) 555-0123");
+  await expect(page.locator("#modernize-phone-error")).toHaveCount(0);
+  expect(
+    await phone.evaluate((el: HTMLInputElement) => el.checkValidity()),
+  ).toBe(true);
   await submit.click();
   await expect(
     page.getByRole("heading", { name: "Your request is on its way." }),
