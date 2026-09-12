@@ -33,18 +33,31 @@ function currentCertificate(form: HTMLFormElement | null): string {
 export default function ModernizeFunnel({
   config: suppliedConfig,
   demo = false,
+  certificateTest = false,
   zip,
   initialAddress,
   onBack,
 }: {
   config: ModernizeConfig;
   demo?: boolean;
+  certificateTest?: boolean;
   zip: string;
   initialAddress?: Address;
   onBack: () => void;
 }) {
   // The review route cannot inherit live delivery settings.
+  const testing =
+    import.meta.env.DEV &&
+    demo &&
+    certificateTest &&
+    typeof window !== "undefined" &&
+    ["localhost", "127.0.0.1"].includes(window.location.hostname);
   const config = demo ? closedConfig : suppliedConfig;
+  const captureEnabled = testing || config.enabled;
+  const captureUrl = testing
+    ? "https://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&use_tagged_consent=true&sandbox=true"
+    : config.trustedFormScriptUrl;
+  const [testCertificate, setTestCertificate] = useState("");
   const [demoCompleted, setDemoCompleted] = useState(false);
   const [form, setForm] = useState({
     plan: "",
@@ -116,12 +129,12 @@ export default function ModernizeFunnel({
     };
   }, [form.zip, demo]);
   useEffect(() => {
-    if (!config.enabled || config.mode !== "api" || !formElement.current)
+    if (!captureEnabled || config.mode !== "api" || !formElement.current)
       return;
     let active = true;
     // The single persistent form exists before loading the account-provided SDK.
     try {
-      const url = new URL(config.trustedFormScriptUrl);
+      const url = new URL(captureUrl);
       if (
         url.protocol !== "https:" ||
         url.hostname !== "api.trustedform.com" ||
@@ -147,7 +160,7 @@ export default function ModernizeFunnel({
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [config]);
+  }, [captureEnabled, captureUrl, config.mode]);
 
   async function send() {
     if (demo || busy || !config.enabled) return;
@@ -339,7 +352,7 @@ export default function ModernizeFunnel({
       <div className="rz-estimate-step-top">
         <button
           type="button"
-          disabled={busy || locked || transitioning}
+          disabled={busy || locked || transitioning || Boolean(testCertificate)}
           onClick={() => {
             setError("");
             if (step > 0) setStep(step - 1);
@@ -363,7 +376,34 @@ export default function ModernizeFunnel({
         data-tf-element-role="offer"
         onSubmit={(event) => {
           event.preventDefault();
-          if (transitioning) return;
+          if (transitioning || testCertificate) return;
+          if (step === 2 && testing) {
+            const value = currentCertificate(formElement.current);
+            if (!value) {
+              setError(
+                "No certificate is available. Reload and restart the test.",
+              );
+              return;
+            }
+            if (
+              !normalizeEmail(form.email) ||
+              !normalizePhone(form.phone) ||
+              !form.consent
+            ) {
+              setError("Check the sample contact details and test consent.");
+              return;
+            }
+            // Keep the persistent form mounted so the SDK can observe submission.
+            // This path never calls the gateway or stores a lead.
+            setTestCertificate(value);
+            setError("");
+            // Let the native submit event reach the SDK before finalizing the SPA session.
+            window.setTimeout(() => {
+              const stop = Reflect.get(window, "trustedFormStopRecording");
+              if (typeof stop === "function") stop();
+            }, 0);
+            return;
+          }
           if (step === 2 && !config.enabled) {
             if (
               normalizeEmail(form.email) &&
@@ -421,7 +461,10 @@ export default function ModernizeFunnel({
             details, but nothing will be submitted.
           </p>
         )}
-        <fieldset disabled={busy || locked} className="rz-modernize-fields">
+        <fieldset
+          disabled={busy || locked || Boolean(testCertificate)}
+          className="rz-modernize-fields"
+        >
           {step === 0 && (
             <RoofingProjectFields
               project={form}
@@ -508,9 +551,11 @@ export default function ModernizeFunnel({
               <p>
                 {config.enabled
                   ? "Review your details and the contact permission below before submitting."
-                  : demo
-                    ? "Use sample details to complete the demo. No one will contact you."
-                    : "Try the contact fields below to check their format."}
+                  : testing
+                    ? "Use Synthetic Homeowner, synthetic@example.com and (210) 555-0123. This test is recorded by TrustedForm."
+                    : demo
+                      ? "Use sample details to complete the demo. No one will contact you."
+                      : "Try the contact fields below to check their format."}
               </p>
               <div className="rz-fields">
                 <label className="rz-field">
@@ -572,9 +617,9 @@ export default function ModernizeFunnel({
             onChange={(event) => set("website", event.target.value)}
           />
         </label>
-        {step === 2 && config.enabled && !locked && (
+        {step === 2 && captureEnabled && !locked && (
           <>
-            <BotCheck onToken={setToken} resetKey={reset} />
+            {!testing && <BotCheck onToken={setToken} resetKey={reset} />}
             {certificateFailed && (
               <p role="alert" className="rz-error">
                 Form verification could not load. Please reload or check your
@@ -618,7 +663,7 @@ export default function ModernizeFunnel({
                 : "Complete the security verification and allow form verification to finish to enable submission."}
             </p>
           )}
-        {step === 2 && config.enabled && (
+        {step === 2 && captureEnabled && (
           <label
             className="rz-checkbox rz-modernize-consent"
             data-tf-element-role="consent-language"
@@ -627,14 +672,18 @@ export default function ModernizeFunnel({
               name="consent"
               type="checkbox"
               required
-              disabled={busy || locked}
+              disabled={busy || locked || Boolean(testCertificate)}
               checked={form.consent}
               onChange={(event) => set("consent", event.target.checked)}
               data-tf-element-role="consent-opt-in"
             />
             <ConsentText
-              text={config.consentText}
-              advertiser={config.consentAdvertiserName}
+              text={
+                testing
+                  ? "TEST ONLY: I acknowledge this sample form records interactions for RoofZeus testing. This is not marketing consent or an estimate request."
+                  : config.consentText
+              }
+              advertiser={testing ? "RoofZeus" : config.consentAdvertiserName}
             />
           </label>
         )}
@@ -645,6 +694,8 @@ export default function ModernizeFunnel({
           data-tf-element-role={step === 2 ? "submit" : undefined}
           disabled={
             busy ||
+            Boolean(testCertificate) ||
+            (testing && step === 2 && !certificate) ||
             transitioning ||
             (step > 0 && !supported && !locked) ||
             (step === 2 &&
@@ -660,19 +711,37 @@ export default function ModernizeFunnel({
           ) : (
             <>
               {step === 2
-                ? !config.enabled
-                  ? demo
-                    ? "Complete demo"
-                    : "Check my details"
-                  : locked
-                    ? "Check submission status"
-                    : "Get my estimate"
+                ? testing
+                  ? "Finish certificate test"
+                  : !config.enabled
+                    ? demo
+                      ? "Complete demo"
+                      : "Check my details"
+                    : locked
+                      ? "Check submission status"
+                      : "Get my estimate"
                 : "Continue"}
               <ArrowRight size={18} />
             </>
           )}
         </button>
       </form>
+      {testCertificate && (
+        <div role="status" className="rz-note">
+          <strong>Sandbox certificate generated.</strong>
+          <p>
+            No lead was saved in Firebase or sent to Modernize. This is not
+            buyer approval.
+          </p>
+          <a href={testCertificate} target="_blank" rel="noreferrer">
+            Open test certificate
+          </a>
+          <p>
+            Review the replay and test consent. Localhost ownership may limit
+            viewing in your account. For another session, reload this page.
+          </p>
+        </div>
+      )}
       {config.enabled && (
         <p className="rz-field-help rz-verification-notice">
           This form uses TrustedForm to document your interaction and contact

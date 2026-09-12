@@ -974,3 +974,114 @@ for (const url of ["/", "/demo"]) {
     await expect(page.getByLabel("First name", { exact: true })).toBeVisible();
   });
 }
+
+async function completeCertificateTest(page: Page) {
+  await page.goto("/trustedform-test");
+  await page.getByRole("button", { name: "Start sandbox recording" }).click();
+  await page.getByLabel("Roof replacement", { exact: true }).check();
+  await page
+    .getByRole("combobox", { name: /What material/ })
+    .selectOption("asphalt");
+  await page
+    .getByRole("combobox", { name: "When do you need help?", exact: true })
+    .selectOption("Immediately");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("123 Example Lane");
+  await page.getByLabel("City", { exact: true }).fill("San Antonio");
+  await page
+    .getByRole("combobox", { name: "State", exact: true })
+    .selectOption("TX");
+  await page.getByLabel("I own this property").check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByLabel("First name", { exact: true }).fill("Synthetic");
+  await page.getByLabel("Last name", { exact: true }).fill("Homeowner");
+  await page
+    .getByLabel("Email address", { exact: true })
+    .fill("synthetic@example.com");
+  await page.getByLabel("Phone number", { exact: true }).fill("2105550123");
+  await page.getByLabel(/TEST ONLY: I acknowledge/).check();
+}
+
+test("Local certificate test is opt-in, sandbox-only and never delivers or stores a lead", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) => requests.push(request.url()));
+  await page.goto("/trustedform-test");
+  await expect(
+    page.getByRole("button", { name: "Start sandbox recording" }),
+  ).toBeVisible();
+  expect(requests.some((url) => url.includes("api.trustedform.com"))).toBe(
+    false,
+  );
+  await page.route("https://api.trustedform.com/**", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `const form=document.querySelector('form[data-tf-element-role="offer"]');const field=document.createElement('input');field.type='hidden';field.name='xxTrustedFormCertUrl';field.value='${certificate}';form.append(field);window.testStopped=false;window.trustedFormStopRecording=()=>{window.testStopped=true};`,
+    }),
+  );
+  await completeCertificateTest(page);
+  const scripts = requests.filter((url) => url.includes("api.trustedform.com"));
+  expect(scripts).toHaveLength(1);
+  expect(new URL(scripts[0]).searchParams.get("sandbox")).toBe("true");
+  await page.getByRole("button", { name: "Finish certificate test" }).click();
+  await expect(
+    page.getByRole("link", { name: "Open test certificate" }),
+  ).toHaveAttribute("href", certificate);
+  await expect(page.locator('form[data-tf-element-role="offer"]')).toHaveCount(
+    1,
+  );
+  await expect(
+    page.getByRole("button", { name: "Finish certificate test" }),
+  ).toBeDisabled();
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "testStopped")))
+    .toBe(true);
+  expect(
+    requests.filter((url) =>
+      /modernize-test|quinstage|qnst\.com|firestore|zippopotam|challenges.cloudflare|maps.googleapis/.test(
+        url,
+      ),
+    ),
+  ).toEqual([]);
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+});
+
+test("Local certificate test blocks completion if the SDK fails", async ({
+  page,
+}) => {
+  await page.route("https://api.trustedform.com/**", (route) => route.abort());
+  await completeCertificateTest(page);
+  await expect(
+    page.getByText("Form verification could not load.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Finish certificate test" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("link", { name: "Open test certificate" }),
+  ).toHaveCount(0);
+});
+
+test("Local certificate test rereads the hidden field at submission", async ({
+  page,
+}) => {
+  await completeCertificateTest(page);
+  await page.evaluate(() => {
+    const form = document.querySelector<HTMLFormElement>(
+      'form[data-tf-element-role="offer"]',
+    )!;
+    form.querySelector<HTMLInputElement>(
+      'input[name="xxTrustedFormCertUrl"]',
+    )!.value = "";
+    form.requestSubmit();
+  });
+  await expect(
+    page.getByText("No certificate is available. Reload and restart the test."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open test certificate" }),
+  ).toHaveCount(0);
+});

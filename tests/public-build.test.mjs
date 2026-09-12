@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { pages } from "../dist-ssr/entry-public-server.js";
 test("Every public route has HTML content, one H1, unique metadata, and a canonical URL", async () => {
   const titles = new Set();
@@ -82,5 +82,15 @@ test("App host rewrites use clean destinations and exclude public assets", async
     assert.ok(matcher.test("/job/example-id"));
     assert.ok(!matcher.test("/assets/example.js"));
     assert.ok(!matcher.test("/brand/roof-zeus-emblem.png"));
+  }
+});
+
+
+test("Production assets exclude the local TrustedForm test route", async () => {
+  const files = (await readdir("dist/assets")).filter(name => name.endsWith(".js"));
+  for (const file of files) {
+    const text = await readFile(`dist/assets/${file}`, "utf8");
+    assert.ok(!text.includes("/trustedform-test"), file);
+    assert.ok(!text.includes("Start sandbox recording"), file);
   }
 });

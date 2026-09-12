@@ -11,6 +11,7 @@ import { contractorUrl } from "./integrations";
 import { structuredData } from "./seo";
 import { PartnerForm } from "./RequestForm";
 import LandingPage from "./LandingPage";
+import TrustedFormTest from "./TrustedFormTest";
 import { modernizeMode } from "./modernize";
 import "./public.css";
 import "./landing.css";
@@ -384,6 +385,14 @@ function LegacyFunnel() {
   return <Navigate replace to={"/?" + query.toString()} />;
 }
 export default function PublicSite() {
+  const location = useLocation();
+  // A standalone local test has no SPA links to other forms while the SDK runs.
+  if (import.meta.env.DEV && location.pathname === "/trustedform-test")
+    return (
+      <div className="rz-public rz-estimates">
+        <TrustedFormTest />
+      </div>
+    );
   return (
     <div className="rz-public rz-estimates">
       <a className="rz-skip" href="#main-content">
