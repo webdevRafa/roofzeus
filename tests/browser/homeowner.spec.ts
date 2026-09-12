@@ -5,12 +5,17 @@ test.beforeEach(async ({ page }) => {
   await page.route("https://challenges.cloudflare.com/**", (route) =>
     route.fulfill({ contentType: "application/javascript", body: turnstile }),
   );
-  await page.route("https://maps.googleapis.com/**", (route) =>
-    route.fulfill({
+  await page.route("https://maps.googleapis.com/**", (route) => {
+    const callback = new URL(route.request().url()).searchParams.get(
+      "callback",
+    );
+    return route.fulfill({
       contentType: "application/javascript",
-      body: `(async()=>{${google}})()`,
-    }),
-  );
+      // Reproduce Google's async bootstrap: the script load event precedes
+      // importLibrary becoming available and the readiness callback firing.
+      body: `window.google={maps:{}};setTimeout(()=>{${google};window[${JSON.stringify(callback)}]?.()},300);`,
+    });
+  });
   await page.route("https://api.zippopotam.us/us/**", (route) =>
     route.fulfill({
       json: {
@@ -197,6 +202,31 @@ test("App host still opens the existing contractor login", async ({ page }) => {
   await expect(page.locator('input[type="email"]')).toBeVisible();
   await expect(page.locator('input[type="password"]')).toBeVisible();
   expect(await page.title()).toContain("Contractor");
+});
+
+test("Google address search waits for SDK readiness and reuses it after switching entry modes", async ({
+  page,
+}) => {
+  let loads = 0;
+  page.on("request", (request) => {
+    if (request.url().startsWith("https://maps.googleapis.com/maps/api/js?"))
+      loads++;
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Choose example address" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Address search is unavailable.", { exact: false }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "ZIP code", exact: true }).click();
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  await page.getByRole("button", { name: "Choose example address" }).click();
+  await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
+    "123 Example Lane",
+  );
+  expect(loads).toBe(1);
 });
 
 test("Full address starts the funnel with Google details and keeps them out of browser storage and URLs", async ({

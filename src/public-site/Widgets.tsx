@@ -127,7 +127,8 @@ export function AddressSearch({
     let active = true;
     let widget: HTMLElement | undefined;
     loadScript(
-      `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&loading=async&v=weekly`,
+      `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&loading=async&v=weekly&callback=__roofzeusMapsReady`,
+      "__roofzeusMapsReady",
     )
       .then(async () => {
         const google = (window as unknown as { google: GoogleGlobal }).google;

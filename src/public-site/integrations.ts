@@ -26,24 +26,33 @@ export function contractorUrl(path = "/login") {
   return `https://app.roofzeus.com${path}`;
 }
 const scripts = new Map<string, Promise<void>>();
-export function loadScript(src: string): Promise<void> {
+export function loadScript(src: string, readyCallback?: string): Promise<void> {
   const existing = scripts.get(src);
   if (existing) return existing;
   const promise = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = src;
     script.async = true;
+    const cleanup = () => {
+      clearTimeout(timer);
+      if (readyCallback) Reflect.deleteProperty(window, readyCallback);
+    };
     const timer = setTimeout(() => {
+      cleanup();
       scripts.delete(src);
       script.remove();
       reject(new Error("Loading timed out"));
     }, 15000);
-    script.onload = () => {
-      clearTimeout(timer);
+    const ready = () => {
+      cleanup();
       resolve();
     };
+    // Async SDKs such as Google Maps finish initialization after script.onload.
+    // Their documented callback is the signal that the API can actually be used.
+    if (readyCallback) Reflect.set(window, readyCallback, ready);
+    else script.onload = ready;
     script.onerror = () => {
-      clearTimeout(timer);
+      cleanup();
       scripts.delete(src);
       script.remove();
       reject(new Error("Could not load service"));
