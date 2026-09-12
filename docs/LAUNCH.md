@@ -2,6 +2,8 @@
 
 The public website now serves homeowners. The existing contractor workspace remains on `app.roofzeus.com`; `signup.roofzeus.com` opens its signup flow. The approved white-eyed Zeus identity is retained.
 
+**Modernize is now the default homeowner flow. Start with [MODERNIZE.md](MODERNIZE.md) for its settings, approval requirements, deployment, and verification.** This document retains the separate manual intake/contractor-interest setup. Set `VITE_LEAD_DELIVERY=manual` only when intentionally operating that manual service. No existing manual-intake record is forwarded to Modernize.
+
 ## Current experience
 
 The public website is now a single estimate-focused landing page, with a ZIP-code or full-address entry choice and a funnel on the same URL. There is no main navigation, blog feed, guide directory, or service-page browsing. Previous guide/service/location links redirect to the landing page. Privacy, terms, contractor interest, and contractor login remain discreet footer links.

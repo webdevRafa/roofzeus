@@ -10,11 +10,14 @@ import {
 import LocationStart from "./LocationStart";
 import type { Address } from "./location";
 import EstimateFunnel from "./EstimateFunnel";
+import ModernizeFunnel from "./ModernizeFunnel";
+import { modernizeMode, useModernizeConfig } from "./modernize";
 
 export default function LandingPage() {
   const [params, setParams] = useSearchParams();
   const [started, setStarted] = useState(false);
   const [initialAddress, setInitialAddress] = useState<Address>();
+  const { config, loading } = useModernizeConfig();
   useEffect(() => {
     setStarted(params.get("estimate") === "1");
   }, [params]);
@@ -56,7 +59,26 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="rz-estimate-panel" id="estimate-funnel">
-            {started ? (
+            {started && modernizeMode ? (
+              loading ? (
+                <div className="rz-estimate-success" role="status">
+                  Loading estimate options…
+                </div>
+              ) : (
+                <ModernizeFunnel
+                  config={config}
+                  zip={params.get("zip") || ""}
+                  initialAddress={initialAddress}
+                  onBack={() => {
+                    if (config.enabled) window.location.assign("/");
+                    else {
+                      setInitialAddress(undefined);
+                      setParams({});
+                    }
+                  }}
+                />
+              )
+            ) : started ? (
               <EstimateFunnel
                 initialAddress={initialAddress}
                 onBack={() => {
@@ -81,7 +103,7 @@ export default function LandingPage() {
                 <LocationStart onStart={start} />
                 <div className="rz-entry-privacy">
                   <LockKeyhole size={13} />
-                  <span>Your information stays private.</span>
+                  <span>You control your contact permission.</span>
                 </div>
               </div>
             )}
@@ -125,8 +147,9 @@ export default function LandingPage() {
           <div>
             <h2>Your home. Your budget. Your choice.</h2>
             <p>
-              You choose who to hire. We ask before sharing your details with a
-              named contractor.
+              {modernizeMode
+                ? "You choose who to hire. Review who may contact you before submitting your details."
+                : "You choose who to hire. We ask before sharing your details with a named contractor."}
             </p>
           </div>
           <a href="#estimate-funnel">

@@ -11,6 +11,7 @@ import { contractorUrl } from "./integrations";
 import { structuredData } from "./seo";
 import { PartnerForm } from "./RequestForm";
 import LandingPage from "./LandingPage";
+import { modernizeMode } from "./modernize";
 import "./public.css";
 import "./landing.css";
 function Brand({ dark = false }: { dark?: boolean }) {
@@ -113,7 +114,7 @@ function Contractors() {
       <PageIntro
         eyebrow="FOR ROOFING PROFESSIONALS"
         title="Good roofs start with good people."
-        text="We’re building a network of roofing professionals, starting in San Antonio. Tell us about your business and the communities you serve."
+        text="Explore the RoofZeus contractor tools or tell us about your interest in future homeowner introductions."
       />
       <section className="rz-container rz-detail-layout" id="join">
         <div className="rz-prose">
@@ -212,11 +213,13 @@ function Legal({ terms = false }: { terms?: boolean }) {
             </p>
             <h2>Independent contractors</h2>
             <p>
-              We ask for your agreement before sharing information with a named
-              contractor. You are responsible for evaluating the business,
-              confirming applicable credentials and insurance, and agreeing
-              directly on scope, fees, scheduling, and warranties. Any contract
-              for work is between you and that contractor.
+              {modernizeMode
+                ? "If partner matching is enabled, your request is sent to Modernize according to the contact permission shown on the form. Modernize manages its contractor matching. "
+                : "We ask for your agreement before sharing information with a named contractor. "}
+              You are responsible for evaluating the business, confirming
+              applicable credentials and insurance, and agreeing directly on
+              scope, fees, scheduling, and warranties. Any contract for work is
+              between you and that contractor.
             </p>
             <h2>Network registration</h2>
             <p>
@@ -227,6 +230,19 @@ function Legal({ terms = false }: { terms?: boolean }) {
               contractors when a future introduction is made; homeowners are not
               charged to submit a request.
             </p>
+            {modernizeMode && (
+              <>
+                <h2>Referral partners</h2>
+                <p>
+                  RoofZeus may receive compensation for qualifying referrals to
+                  Modernize. A referral does not guarantee the lowest price, an
+                  appointment, or an available contractor. Where a link takes
+                  you to Modernize, you complete its form under its terms and
+                  privacy notice. Following the link is not a RoofZeus form
+                  submission.
+                </p>
+              </>
+            )}
             <h2>Questions</h2>
             <p>
               For questions about these terms or a request, contact{" "}
@@ -247,21 +263,52 @@ function Legal({ terms = false }: { terms?: boolean }) {
             <h2>How we use it</h2>
             <p>
               We use this information to review requests, check possible local
-              availability, follow up, and prevent abuse. We store an
-              irreversible daily hash of the requesting IP address for rate
-              limiting, rather than putting the raw IP address in the lead
-              record. Infrastructure providers may separately process network
-              information for security.
+              availability, follow up, and prevent abuse. We store an keyed
+              daily hash of the requesting IP address for rate limiting, rather
+              than putting the raw IP address in the lead record. Infrastructure
+              providers may separately process network information for security.
             </p>
             <h2>Sharing and contractor introductions</h2>
             <p>
               We use service providers for hosting, private data storage,
               security checks, and optional operational email notifications. We
-              do not publish your contact details. Your initial consent permits
-              RoofZeus to contact you. Before sending your project to a named
-              contractor, we ask for your agreement. A future contractor
-              introduction may result in compensation to RoofZeus.
+              do not publish your contact details.{" "}
+              {modernizeMode
+                ? "When Modernize matching is enabled, the form displays the applicable contact permission. After you agree and submit, we send project information to Modernize to check availability and, if available, send contact details and your consent certificate. Modernize may share the request with contractors under that permission. RoofZeus may be compensated for qualifying referrals. Earlier requests collected with a promise of a separately approved introduction remain subject to that original permission."
+                : "Your initial consent permits RoofZeus to contact you. Before sending your project to a named contractor, we ask for your agreement. A future contractor introduction may result in compensation to RoofZeus."}
             </p>
+            {modernizeMode && (
+              <>
+                <h2>Form verification and external referrals</h2>
+                <p>
+                  When direct partner matching is enabled, ActiveProspect
+                  TrustedForm documents the form interaction and consent,
+                  including information entered and browser/session data. Its
+                  certificate is sent with the lead to Modernize for
+                  verification. These tools remain off while matching is
+                  disabled. If you instead follow a hosted Modernize referral
+                  link, RoofZeus does not append your address or contact
+                  details; Modernize handles information you enter on its site.
+                  See{" "}
+                  <a
+                    href="https://activeprospect.com/trustedform-privacy-notice/"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    ActiveProspect’s privacy policy
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="https://modernize.com/privacy-policy"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Modernize’s privacy policy
+                  </a>
+                  .
+                </p>
+              </>
+            )}
             <h2>Location and third-party tools</h2>
             <p>
               The site remembers only a ZIP code on your device when you enter
@@ -285,10 +332,10 @@ function Legal({ terms = false }: { terms?: boolean }) {
             </p>
             <h2>Analytics and the contractor app</h2>
             <p>
-              This version does not load advertising trackers or transmit form
-              details to analytics. The contractor app uses separate account and
-              business data flows. These public-site privacy details apply to
-              homeowner requests and network interest registration.
+              We do not transmit form details to analytics. Enabled form
+              verification is described above. The contractor app uses separate
+              account and business data flows. These public-site privacy details
+              apply to homeowner requests and network interest registration.
             </p>
           </>
         )}

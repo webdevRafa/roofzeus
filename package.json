@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build && vite build --ssr src/entry-public-server.tsx --outDir dist-ssr && node build/prerender.mjs",
     "test:public": "node --test tests/public-build.test.mjs",
     "test:e2e": "playwright test",
+    "test:modernize": "playwright test --config playwright.modernize.config.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

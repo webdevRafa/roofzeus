@@ -1061,3 +1061,4 @@ export const onInvoiceCreated = onDocumentCreated(
 
 
 export { submitPublicIntake } from './public-intake';
+export { modernizeGateway } from './modernize-gateway';

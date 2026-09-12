@@ -491,6 +491,32 @@
   min-width: 0;
   overflow: hidden;
 }
+.rz-modernize-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.rz-modernize-fields > p {
+  font-size: 12px;
+  line-height: 1.7;
+}
+.rz-estimate-steps .rz-modernize-consent {
+  margin-top: 20px;
+  align-items: flex-start;
+  font-size: 11px;
+}
+.rz-modernize-consent + .rz-estimate-next {
+  margin-top: 12px;
+}
+.rz-verification-notice {
+  font-size: 10px;
+  margin-top: 16px;
+}
+.rz-modernize-fields .rz-field input,
+.rz-modernize-fields .rz-field select {
+  font-size: 16px;
+}
 @media (max-width: 1100px) {
   .rz-estimate-grid {
     gap: 40px;

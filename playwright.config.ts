@@ -14,6 +14,7 @@ export default defineConfig({
     url: "http://127.0.0.1:5174",
     reuseExistingServer: false,
     env: {
+      VITE_LEAD_DELIVERY: "manual",
       VITE_PUBLIC_INTAKE_URL: "http://127.0.0.1:5174/test-intake",
       VITE_TURNSTILE_SITE_KEY: "browser-test-only",
       VITE_GOOGLE_MAPS_API_KEY: "browser-test-only",

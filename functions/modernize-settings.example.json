@@ -1,0 +1,19 @@
+{
+  "mode": "api",
+  "environment": "disabled",
+  "accountApproved": false,
+  "productionApproved": false,
+  "consentApproved": false,
+  "staticConsentApproved": false,
+  "jornayaRequired": true,
+  "tagId": "",
+  "sourceId": "",
+  "consentText": "",
+  "consentVersion": "",
+  "trustedFormScriptUrl": "",
+  "approvedServices": [],
+  "allowedZips": [],
+  "minimumPrice": 0,
+  "affiliateUrl": "",
+  "affiliateHostname": ""
+}

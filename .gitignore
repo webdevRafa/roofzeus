@@ -27,6 +27,8 @@ dist-ssr
 !.env.example
 !functions/.env.example
 **/approval*.json
+**/modernize-settings.local.json
+**/modernize-evidence.local.json
 playwright-report/
 test-results/
 
