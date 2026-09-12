@@ -320,3 +320,48 @@ test("Manual full address works during Google outage, validates required details
     "02108",
   );
 });
+
+test("Google street-only results require a property number in entry and manual property steps", async ({
+  page,
+}) => {
+  await page.route("https://maps.googleapis.com/**", (route) => {
+    const callback = new URL(route.request().url()).searchParams.get(
+      "callback",
+    );
+    const streetOnly = google.replace(
+      "{longText:'123',shortText:'123',types:['street_number']},",
+      "",
+    );
+    return route.fulfill({
+      contentType: "application/javascript",
+      body: `${streetOnly};window[${JSON.stringify(callback)}]?.();`,
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  await page.getByRole("button", { name: "Choose example address" }).click();
+  const address = page.getByLabel("Street address", { exact: true });
+  await expect(address).toHaveValue("Example Lane");
+  await expect(
+    page.getByText(/Enter the house or building number/),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  await expect(address).toBeVisible();
+  await address.fill("123 Example Lane");
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  await page.getByLabel("Roof repair", { exact: true }).check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("button", { name: "Choose example address" }).click();
+  await page.getByLabel("I own this property").check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(address).toBeVisible();
+  await address.fill("123 Example Lane");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Where can we reach you?" }),
+  ).toBeVisible();
+});

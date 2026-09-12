@@ -167,6 +167,18 @@ export function AddressSearch({
               state: component("administrative_area_level_1", true),
               zip: component("postal_code"),
             });
+            if (!component("street_number")) {
+              // A route prediction is useful context, but is not a property.
+              // Wait for the controlled address field to receive the selection.
+              requestAnimationFrame(() => {
+                if (!active) return;
+                const addressInput = ref.current
+                  ?.closest("form")
+                  ?.querySelector<HTMLInputElement>('input[name="address"]');
+                addressInput?.focus();
+                addressInput?.reportValidity();
+              });
+            }
           } catch {
             setFailed(true);
           }

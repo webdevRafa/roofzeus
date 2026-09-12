@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
 import { normalizeEmail, normalizePhone } from "./contact-validation";
+import {
+  isCompletePropertyAddress,
+  PROPERTY_ADDRESS_ERROR,
+} from "./property-validation";
 
 export const MATERIALS = {
   asphalt: "ROOFING_ASPHALT",
@@ -236,6 +240,12 @@ export function validateLead(
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new ModernizeError("Invalid request.");
   const data = input as Record<string, unknown>;
+  if (
+    enforceCurrent &&
+    (typeof data.address !== "string" ||
+      !isCompletePropertyAddress(data.address))
+  )
+    throw new ModernizeError(PROPERTY_ADDRESS_ERROR);
   const text = (key: string, min: number, max: number) => {
     const value =
       typeof data[key] === "string" ? (data[key] as string).trim() : "";

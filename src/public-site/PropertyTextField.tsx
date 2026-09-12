@@ -1,4 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import {
+  isCompletePropertyAddress,
+  PROPERTY_ADDRESS_ERROR,
+} from "../../functions/src/property-validation";
 
 /** Match the server's trimmed address/city limits, including autofilled values. */
 export default function PropertyTextField({
@@ -11,6 +15,8 @@ export default function PropertyTextField({
   onChange: (value: string) => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
+  const id = useId();
+  const [touched, setTouched] = useState(false);
   const street = name === "address";
   const minimum = street ? 5 : 2;
   const maximum = street ? 180 : 80;
@@ -19,18 +25,21 @@ export default function PropertyTextField({
     value.trim().length <= maximum &&
     // Reject control characters, matching the gateway's text validation.
     // eslint-disable-next-line no-control-regex
-    !/[\u0000-\u001f]/.test(value);
+    !/[\u0000-\u001f\u007f]/.test(value) &&
+    (!street || isCompletePropertyAddress(value));
+  const message = street
+    ? PROPERTY_ADDRESS_ERROR
+    : `Enter a city with at least ${minimum} characters, excluding surrounding spaces.`;
   useEffect(() => {
-    input.current?.setCustomValidity(
-      valid
-        ? ""
-        : `Enter a ${street ? "street address" : "city"} with at least ${minimum} characters, excluding surrounding spaces.`,
-    );
-  }, [valid, street, minimum]);
+    input.current?.setCustomValidity(valid ? "" : message);
+  }, [valid, message]);
   return (
-    <label className="rz-field">
-      {street ? "Street address" : "City"}
+    <div className="rz-field">
+      <label htmlFor={`${id}-input`}>
+        {street ? "Street address" : "City"}
+      </label>
       <input
+        id={`${id}-input`}
         ref={input}
         name={name}
         autoComplete={street ? "street-address" : "address-level2"}
@@ -40,9 +49,20 @@ export default function PropertyTextField({
         minLength={minimum}
         maxLength={maximum}
         value={value}
+        aria-invalid={touched && !valid ? true : undefined}
+        aria-describedby={touched && !valid ? id : undefined}
+        onInvalid={() => setTouched(true)}
         onChange={(event) => onChange(event.target.value)}
-        onBlur={() => onChange(value.trim())}
+        onBlur={() => {
+          setTouched(true);
+          onChange(value.trim());
+        }}
       />
-    </label>
+      {touched && !valid && (
+        <span id={id} className="rz-error" role="alert">
+          {message}
+        </span>
+      )}
+    </div>
   );
 }

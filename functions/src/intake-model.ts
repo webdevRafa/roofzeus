@@ -1,3 +1,8 @@
+import {
+  isCompletePropertyAddress,
+  PROPERTY_ADDRESS_ERROR,
+} from "./property-validation";
+
 export const CONSENT_VERSION = "2026-09-12.2";
 export const HOMEOWNER_CONSENT =
   "I agree that RoofZeus may contact me by phone or email about roofing estimates for this property. My information will not be sent to a contractor until I agree to that introduction. I do not have to purchase anything.";
@@ -101,12 +106,15 @@ export function validateIntake(input: unknown) {
       "Confirm that you are authorized to request work for this property.",
     );
   const contactMethod = choice("contactMethod", ["email", "phone"]);
+  const address = text("address", 180, 5);
+  if (!isCompletePropertyAddress(address))
+    throw new IntakeError(PROPERTY_ADDRESS_ERROR);
   if (contactMethod === "phone" && !phone)
     throw new IntakeError("A phone number is required for phone contact.");
   return {
     ...common,
     kind: "homeowner" as const,
-    address: text("address", 180, 5),
+    address,
     city: text("city", 80, 2),
     state,
     zip,

@@ -849,3 +849,128 @@ test("An older or incomplete gateway config cannot enable untagged consent submi
   await expect(page.getByText(/Preview only/)).toBeVisible();
   expect(certificateLoads).toBe(0);
 });
+
+test("A cleared or malformed certificate cannot reuse the last valid certificate", async ({
+  page,
+}) => {
+  let submissions = 0;
+  await page.route("**/modernize-test/submit", (route) => {
+    submissions++;
+    return route.abort();
+  });
+  await complete(page);
+  const button = page.getByRole("button", {
+    name: "Get my estimate",
+    exact: true,
+  });
+  await expect(button).toBeEnabled();
+  const hidden = page.locator('input[name="xxTrustedFormCertUrl"]');
+  await hidden.evaluate((input: HTMLInputElement) => {
+    input.value = "";
+  });
+  await expect(button).toBeDisabled();
+  await hidden.evaluate((input: HTMLInputElement) => {
+    input.value = "https://example.com/invalid";
+  });
+  await expect(button).toBeDisabled();
+  expect(submissions).toBe(0);
+  await hidden.evaluate((input: HTMLInputElement, value: string) => {
+    input.value = value;
+  }, certificate);
+  await expect(button).toBeEnabled();
+  // SDK field changes can occur after polling but before the submit event.
+  await page.evaluate(() => {
+    const form = document.querySelector<HTMLFormElement>(
+      'form[data-tf-element-role="offer"]',
+    )!;
+    form.querySelector<HTMLInputElement>(
+      'input[name="xxTrustedFormCertUrl"]',
+    )!.value = "";
+    form.requestSubmit();
+  });
+  await expect(
+    page.getByText(
+      "Complete security and form verification before submitting.",
+    ),
+  ).toBeVisible();
+  expect(submissions).toBe(0);
+});
+
+test("A lost response can be checked without a replacement security token", async ({
+  page,
+}) => {
+  await page.route("https://challenges.cloudflare.com/**", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: "let renders=0;window.turnstile={render(el,o){if(++renders===1)setTimeout(()=>o.callback('first-token'),10);return 'fixture'},remove(){}}",
+    }),
+  );
+  let original: Record<string, unknown> | undefined;
+  let attempts = 0;
+  await page.route("**/modernize-test/submit", (route) => {
+    const payload = route.request().postDataJSON();
+    if (++attempts === 1) {
+      original = payload;
+      return route.abort();
+    }
+    expect(payload.requestId).toBe(original!.requestId);
+    expect(payload.trustedFormToken).toBe(original!.trustedFormToken);
+    expect(payload.turnstileToken).toBe("");
+    return route.fulfill({
+      json: {
+        reference: "RZM-0123456789ABCDEF",
+        status: "accepted",
+        environment: "staging",
+      },
+    });
+  });
+  await complete(page);
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  const retry = page.getByRole("button", { name: "Check submission status" });
+  await expect(retry).toBeEnabled();
+  await retry.click();
+  await expect(
+    page.getByRole("heading", { name: "Your request is on its way." }),
+  ).toBeVisible();
+  expect(attempts).toBe(2);
+});
+
+for (const url of ["/", "/demo"]) {
+  test(`Street-only addresses cannot advance in the Modernize property step: ${url}`, async ({
+    page,
+  }) => {
+    await page.goto(url);
+    await page.locator("#zip-start").fill("78209");
+    await page
+      .getByRole("button", {
+        name: url === "/demo" ? "Start demo" : "Get my estimate",
+        exact: true,
+      })
+      .click();
+    await page.getByLabel("Roof repair", { exact: true }).check();
+    await page
+      .getByRole("combobox", { name: /What material/ })
+      .selectOption("asphalt");
+    await page
+      .getByRole("combobox", { name: "When do you need help?", exact: true })
+      .selectOption("Immediately");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    const address = page.getByLabel("Street address", { exact: true });
+    await address.fill("Morning Star Street");
+    await page.getByLabel("City", { exact: true }).fill("San Antonio");
+    await page
+      .getByRole("combobox", { name: "State", exact: true })
+      .selectOption("TX");
+    await page.getByLabel("I own this property").check();
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(address).toBeVisible();
+    await expect(
+      page.getByText(/Enter the house or building number/),
+    ).toBeVisible();
+    await address.fill("123 Morning Star Street");
+    await page.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(page.getByLabel("First name", { exact: true })).toBeVisible();
+  });
+}

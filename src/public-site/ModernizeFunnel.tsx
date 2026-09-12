@@ -21,6 +21,15 @@ import {
   normalizePhone,
 } from "../../functions/src/contact-validation";
 
+function currentCertificate(form: HTMLFormElement | null): string {
+  const value =
+    form?.querySelector<HTMLInputElement>('input[name="xxTrustedFormCertUrl"]')
+      ?.value || "";
+  return /^https:\/\/cert\.trustedform\.com\/[a-f0-9]{40}$/i.test(value)
+    ? value
+    : "";
+}
+
 export default function ModernizeFunnel({
   config: suppliedConfig,
   demo = false,
@@ -126,22 +135,12 @@ export default function ModernizeFunnel({
       setCertificateFailed(true);
     }
     const interval = setInterval(() => {
-      const value =
-        formElement.current?.querySelector<HTMLInputElement>(
-          'input[name="xxTrustedFormCertUrl"]',
-        )?.value || "";
-      if (/^https:\/\/cert\.trustedform\.com\/[a-f0-9]{40}$/i.test(value)) {
-        setCertificate(value);
-        setCertificateFailed(false);
-      }
+      const value = currentCertificate(formElement.current);
+      setCertificate(value);
+      if (value) setCertificateFailed(false);
     }, 250);
     const timeout = setTimeout(() => {
-      if (
-        !formElement.current?.querySelector<HTMLInputElement>(
-          'input[name="xxTrustedFormCertUrl"]',
-        )?.value
-      )
-        setCertificateFailed(true);
+      if (!currentCertificate(formElement.current)) setCertificateFailed(true);
     }, 20000);
     return () => {
       active = false;
@@ -152,6 +151,14 @@ export default function ModernizeFunnel({
 
   async function send() {
     if (demo || busy || !config.enabled) return;
+    // Read the SDK field again at submission, closing the gap between polling
+    // and the click. A receipt retry always keeps its original certificate.
+    const liveCertificate = currentCertificate(formElement.current);
+    if (!locked && (!token || !liveCertificate)) {
+      setCertificate(liveCertificate);
+      setError("Complete security and form verification before submitting.");
+      return;
+    }
     if (
       !locked &&
       (!normalizeEmail(form.email) || !normalizePhone(form.phone))
@@ -179,7 +186,7 @@ export default function ModernizeFunnel({
         requestId: requestId.current,
         configVersion: config.version,
         consentVersion: config.consentVersion,
-        trustedFormToken: certificate,
+        trustedFormToken: liveCertificate,
       };
     setLocked(true);
     try {
@@ -565,7 +572,7 @@ export default function ModernizeFunnel({
             onChange={(event) => set("website", event.target.value)}
           />
         </label>
-        {step === 2 && config.enabled && (
+        {step === 2 && config.enabled && !locked && (
           <>
             <BotCheck onToken={setToken} resetKey={reset} />
             {certificateFailed && (
@@ -601,13 +608,16 @@ export default function ModernizeFunnel({
               phone number is reachable.
             </p>
           )}
-        {step === 2 && config.enabled && (!token || !certificate) && (
-          <p role="status" className="rz-field-help">
-            {certificateFailed
-              ? "Submission is unavailable because form verification failed. Reload the page to try again."
-              : "Complete the security verification and allow form verification to finish to enable submission."}
-          </p>
-        )}
+        {step === 2 &&
+          config.enabled &&
+          !locked &&
+          (!token || !certificate) && (
+            <p role="status" className="rz-field-help">
+              {certificateFailed
+                ? "Submission is unavailable because form verification failed. Reload the page to try again."
+                : "Complete the security verification and allow form verification to finish to enable submission."}
+            </p>
+          )}
         {step === 2 && config.enabled && (
           <label
             className="rz-checkbox rz-modernize-consent"
@@ -637,7 +647,10 @@ export default function ModernizeFunnel({
             busy ||
             transitioning ||
             (step > 0 && !supported && !locked) ||
-            (step === 2 && config.enabled && (!token || !certificate))
+            (step === 2 &&
+              config.enabled &&
+              !locked &&
+              (!token || !certificate))
           }
         >
           {busy ? (

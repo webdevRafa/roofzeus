@@ -1,3 +1,4 @@
+import PropertyTextField from "./PropertyTextField";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -267,17 +268,11 @@ export default function EstimateFunnel({
             <AddressSearch
               onSelect={(address) => setForm((f) => ({ ...f, ...address }))}
             />
-            <label className="rz-field">
-              Street address
-              <input
-                autoComplete="street-address"
-                required
-                minLength={5}
-                maxLength={180}
-                value={form.address}
-                onChange={(e) => set("address", e.target.value)}
-              />
-            </label>
+            <PropertyTextField
+              name="address"
+              value={form.address}
+              onChange={(value) => set("address", value)}
+            />
             <div className="rz-fields">
               <label className="rz-field">
                 ZIP code
@@ -315,17 +310,11 @@ export default function EstimateFunnel({
             <p className="rz-field-help" role="status">
               {zipStatus}
             </p>
-            <label className="rz-field">
-              City
-              <input
-                required
-                autoComplete="address-level2"
-                minLength={2}
-                maxLength={80}
-                value={form.city}
-                onChange={(e) => set("city", e.target.value)}
-              />
-            </label>
+            <PropertyTextField
+              name="city"
+              value={form.city}
+              onChange={(value) => set("city", value)}
+            />
             <label className="rz-checkbox">
               <input
                 required
