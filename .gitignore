@@ -23,6 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 .env.local
+**/.env*
+!.env.example
+!functions/.env.example
+**/approval*.json
+playwright-report/
+test-results/
 
 
 # Service account / credentials (NEVER commit these)

@@ -1,0 +1,197 @@
+import { test, expect, type Page } from "@playwright/test";
+const turnstile = `window.turnstile={render(el,options){el.textContent='Security verified (test fixture)';setTimeout(()=>options.callback('synthetic-token'),10);return 'test-widget'},remove(){}};`;
+const google = `window.google={maps:{importLibrary:async()=>({PlaceAutocompleteElement:class {constructor(){const el=document.createElement('div');const button=document.createElement('button');button.type='button';button.textContent='Choose example address';button.addEventListener('click',()=>{const event=new Event('gmp-select');event.placePrediction={toPlace:()=>({fetchFields:async()=>{},addressComponents:[{longText:'123',shortText:'123',types:['street_number']},{longText:'Example Lane',shortText:'Example Lane',types:['route']},{longText:'San Antonio',shortText:'San Antonio',types:['locality']},{longText:'Texas',shortText:'TX',types:['administrative_area_level_1']},{longText:'78209',shortText:'78209',types:['postal_code']}]})};el.dispatchEvent(event)});el.append(button);return el}}})}};`;
+test.beforeEach(async ({ page }) => {
+  await page.route("https://challenges.cloudflare.com/**", (route) =>
+    route.fulfill({ contentType: "application/javascript", body: turnstile }),
+  );
+  await page.route("https://maps.googleapis.com/**", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `(async()=>{${google}})()`,
+    }),
+  );
+  await page.route("https://api.zippopotam.us/us/**", (route) =>
+    route.fulfill({
+      json: {
+        places: [{ "place name": "San Antonio", "state abbreviation": "TX" }],
+      },
+    }),
+  );
+});
+async function completeToReview(page: Page) {
+  await page.goto("/find-a-roofer?zip=78209&service=roof-repair");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("button", { name: "Choose example address" }).click();
+  await expect(page.getByLabel("Street address", { exact: true })).toHaveValue(
+    "123 Example Lane",
+  );
+  await page.getByLabel("I own this property").check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByLabel("Full name").fill("Synthetic Homeowner");
+  await page.getByLabel("Email address").fill("homeowner@example.com");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByLabel("I agree that RoofZeus may contact me").check();
+}
+test("Homeowner flow retains details after failure and only confirms a saved request", async ({
+  page,
+}) => {
+  let attempts = 0;
+  let previousId = "";
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.route("**/test-intake", async (route) => {
+    const payload = route.request().postDataJSON();
+    expect(payload.consent).toBe(true);
+    expect(payload.address).toBe("123 Example Lane");
+    expect(payload.kind).toBe("homeowner");
+    if (attempts++ === 0) {
+      previousId = payload.requestId;
+      await route.fulfill({
+        status: 503,
+        json: { error: "Temporary test outage. Please try again." },
+      });
+    } else {
+      expect(payload.requestId).toBe(previousId);
+      await route.fulfill({
+        status: 201,
+        json: { reference: "RZ-0123456789ABCDEF" },
+      });
+    }
+  });
+  await completeToReview(page);
+  await page.getByRole("button", { name: "Send my request" }).click();
+  await expect(page.getByRole("alert")).toContainText("Temporary test outage");
+  await expect(page.locator(".rz-review")).toContainText("Synthetic Homeowner");
+  await page.getByRole("button", { name: "Send my request" }).click();
+  await expect(
+    page.getByRole("heading", { name: "You’ve taken the first step." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("RZ-0123456789ABCDEF", { exact: true }),
+  ).toBeVisible();
+  expect(attempts).toBe(2);
+  expect(errors).toEqual([]);
+});
+test("Invalid ZIP and missing service cannot advance; manual location survives lookup outage", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator("#zip-start").fill("12");
+  await page
+    .locator(".rz-hero")
+    .getByRole("button", { name: "Get started" })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("5-digit");
+  await page.goto("/find-a-roofer");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "What does your roof need?" }),
+  ).toBeVisible();
+  await page.getByLabel("Roof inspection", { exact: true }).check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.route("https://api.zippopotam.us/**", (route) => route.abort());
+  await page.getByLabel("ZIP code", { exact: true }).fill("02108");
+  await page
+    .getByLabel("Street address", { exact: true })
+    .fill("123 Test Street");
+  await page.getByLabel("City", { exact: true }).fill("Boston");
+  await page
+    .getByRole("combobox", { name: "State", exact: true })
+    .selectOption("MA");
+  await page.getByLabel("I own this property").check();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "How can we reach you?" }),
+  ).toBeVisible();
+});
+test("Contractor interest form submits pending application data", async ({
+  page,
+}) => {
+  let submitted = false;
+  await page.route("**/test-intake", (route) => {
+    const body = route.request().postDataJSON();
+    expect(body.kind).toBe("contractor");
+    expect(body.territoryZips).toBe("78209,78201");
+    expect(body.consent).toBe(true);
+    submitted = true;
+    return route.fulfill({
+      status: 201,
+      json: { reference: "RZ-0123456789ABCDEF" },
+    });
+  });
+  await page.goto("/for-contractors");
+  await page.getByLabel("Business name").fill("Example Roofing");
+  await page.getByLabel("Your name").fill("Synthetic Contractor");
+  await page.getByLabel("Business email").fill("contractor@example.com");
+  await page.getByLabel("Phone", { exact: true }).fill("2105550123");
+  await page.getByLabel("Service ZIP codes").fill("78209,78201");
+  await page.getByLabel("I agree that RoofZeus may contact me").check();
+  await page.getByRole("button", { name: "Register interest" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Your interest is registered." }),
+  ).toBeVisible();
+  expect(submitted).toBe(true);
+});
+test("Public routes render without errors or horizontal overflow on desktop and mobile", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of [
+      "/",
+      "/services",
+      "/services/roof-repair",
+      "/how-it-works",
+      "/guides",
+      "/guides/choosing-a-roofer",
+      "/locations",
+      "/roofers/tx/san-antonio",
+      "/for-contractors",
+      "/faq",
+      "/privacy",
+      "/terms",
+      "/find-a-roofer",
+      "/does-not-exist",
+    ]) {
+      await page.goto(path);
+      await expect(page.locator("h1")).toHaveCount(1);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+        `${path} at ${width}`,
+      ).toBe(true);
+    }
+  }
+  expect(errors).toEqual([]);
+});
+test("Mobile navigation supports keyboard closing and service routes keep their intent", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const toggle = page.getByRole("button", { name: "Open navigation" });
+  await toggle.click();
+  await expect(
+    page.getByRole("navigation", { name: "Mobile navigation" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(toggle).toBeFocused();
+  await page.goto("/services/roof-replacement");
+  await page
+    .getByRole("link", { name: "Start a request", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Roof replacement", { exact: true }),
+  ).toBeChecked();
+});
+test("App host still opens the existing contractor login", async ({ page }) => {
+  await page.goto("http://app.localhost:5174/login");
+  await expect(page.locator(".rz-public")).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toBeVisible();
+  await expect(page.locator('input[type="password"]')).toBeVisible();
+  expect(await page.title()).toContain("Contractor");
+});

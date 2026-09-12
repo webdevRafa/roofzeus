@@ -1,6 +1,55 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/:path(pricing|features|see-it-in-action|security)",
+      "has": [{ "type": "host", "value": "roofzeus.com" }],
+      "destination": "/for-contractors#software",
+      "permanent": true
+    }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/:path((?!assets/|brand/|images/|favicon|roofzeus-favicon|apple-touch-icon).*)",
+      "has": [{ "type": "host", "value": "app.roofzeus.com" }],
+      "destination": "/app"
+    },
+    {
+      "source": "/:path((?!assets/|brand/|images/|favicon|roofzeus-favicon|apple-touch-icon).*)",
+      "has": [{ "type": "host", "value": "signup.roofzeus.com" }],
+      "destination": "/app"
+    },
+    {
+      "source": "/:path((?!assets/|brand/|images/|favicon|roofzeus-favicon|apple-touch-icon).*)",
+      "has": [{ "type": "host", "value": "app.roofzeus.vercel.app" }],
+      "destination": "/app"
+    },
+    {
+      "source": "/:path(login|signup|dashboard|crew|accept-invite|complete-signup|verify-email|pricing|features|see-it-in-action|security)",
+      "destination": "/app"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "app.roofzeus.com" }],
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "signup.roofzeus.com" }],
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
   ]
 }

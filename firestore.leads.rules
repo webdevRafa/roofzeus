@@ -1,0 +1,8 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // All access goes through server-side Admin SDK / authorized operator IAM.
+    // Contractor app users must never read homeowner leads directly.
+    match /{document=**} { allow read, write: if false; }
+  }
+}
