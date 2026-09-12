@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowRight, Check, LockKeyhole, ShieldCheck } from "lucide-react";
+import { Check, LockKeyhole } from "lucide-react";
 import LocationStart from "./LocationStart";
 import type { Address } from "./location";
 import EstimateFunnel from "./EstimateFunnel";
@@ -144,22 +144,6 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
               </div>
             ))}
           </div>
-        </section>
-      )}
-      {!started && (
-        <section className="rz-estimate-reassurance rz-container">
-          <ShieldCheck size={25} />
-          <div>
-            <h2>Your home. Your budget. Your choice.</h2>
-            <p>
-              {modernizeMode
-                ? "You choose who to hire. Review who may contact you before submitting your details."
-                : "You choose who to hire. We ask before sharing your details with a named contractor."}
-            </p>
-          </div>
-          <a href="#estimate-funnel">
-            Get started <ArrowRight size={17} />
-          </a>
         </section>
       )}
     </>

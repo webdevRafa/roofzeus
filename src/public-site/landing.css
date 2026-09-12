@@ -288,34 +288,6 @@
   max-width: 240px;
   margin: 0;
 }
-.rz-estimate-reassurance {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding-block: 33px;
-}
-.rz-estimate-reassurance > svg {
-  color: #a78449;
-}
-.rz-estimates .rz-estimate-reassurance h2 {
-  font:
-    600 17px/1.4 "DM Sans",
-    sans-serif;
-  letter-spacing: -0.025em;
-  margin: 0 0 6px;
-}
-.rz-estimate-reassurance p {
-  font-size: 11px;
-  margin: 0;
-}
-.rz-estimate-reassurance > a {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  font-size: 12px;
-  white-space: nowrap;
-}
 .rz-estimate-footer {
   border-top: 1px solid #e7e9e9;
   background: #f8f9fa;
@@ -629,18 +601,6 @@
   .rz-estimate-benefits p {
     max-width: none;
   }
-  .rz-estimate-reassurance {
-    max-width: 570px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .rz-estimate-reassurance > div {
-    flex: 1;
-  }
-  .rz-estimate-reassurance > a {
-    margin-left: 37px;
-    width: 100%;
-  }
   .rz-estimate-footer > .rz-container {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -708,12 +668,6 @@
   }
   .rz-estimate-entry .rz-zip-controls .rz-button {
     padding: 16px;
-  }
-  .rz-estimates .rz-estimate-reassurance h2 {
-    font-size: 15px;
-  }
-  .rz-estimate-reassurance p {
-    font-size: 10px;
   }
   .rz-estimate-steps {
     padding: 23px 20px;
