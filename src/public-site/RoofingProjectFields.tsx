@@ -37,6 +37,7 @@ export default function RoofingProjectFields({
             className={project.plan === value ? "selected" : ""}
           >
             <input
+              id={`roofing-plan-${value}`}
               name="plan"
               type="radio"
               value={value}

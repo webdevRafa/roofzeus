@@ -1,3 +1,4 @@
+import PropertyTextField from "./PropertyTextField";
 import { useState } from "react";
 import { ArrowRight, House, MapPin } from "lucide-react";
 import { AddressSearch, ZipStart } from "./Widgets";
@@ -58,32 +59,16 @@ export default function LocationStart({
           }}
         >
           {!demo && <AddressSearch onSelect={setAddress} />}
-          <label className="rz-field">
-            Street address
-            <input
-              required
-              autoComplete="street-address"
-              placeholder="123 Main Street"
-              minLength={5}
-              maxLength={180}
-              pattern=".*\S.*"
-              value={address.address}
-              onChange={(event) => update("address", event.target.value)}
-            />
-          </label>
-          <label className="rz-field">
-            City
-            <input
-              required
-              autoComplete="address-level2"
-              placeholder="City"
-              minLength={2}
-              maxLength={80}
-              pattern=".*\S.*"
-              value={address.city}
-              onChange={(event) => update("city", event.target.value)}
-            />
-          </label>
+          <PropertyTextField
+            name="address"
+            value={address.address}
+            onChange={(value) => update("address", value)}
+          />
+          <PropertyTextField
+            name="city"
+            value={address.city}
+            onChange={(value) => update("city", value)}
+          />
           <div className="rz-fields">
             <label className="rz-field">
               State

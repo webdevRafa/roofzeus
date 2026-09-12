@@ -29,10 +29,12 @@ export type Settings = {
   productionApproved: boolean;
   consentApproved: boolean;
   staticConsentApproved: boolean;
+  singleAdvertiserConsentApproved: boolean;
   jornayaRequired: boolean;
   tagId: string;
   sourceId: string;
   consentText: string;
+  consentAdvertiserName: string;
   consentVersion: string;
   trustedFormScriptUrl: string;
   approvedServices: string[];
@@ -68,11 +70,14 @@ export function readSettings(raw: string): Settings {
     productionApproved: data.productionApproved === true,
     consentApproved: data.consentApproved === true,
     staticConsentApproved: data.staticConsentApproved === true,
+    singleAdvertiserConsentApproved:
+      data.singleAdvertiserConsentApproved === true,
     jornayaRequired: data.jornayaRequired !== false,
     tagId: string("tagId"),
     sourceId: string("sourceId"),
     // Preserve the approved text byte-for-byte, including intentional whitespace.
     consentText: typeof data.consentText === "string" ? data.consentText : "",
+    consentAdvertiserName: string("consentAdvertiserName"),
     consentVersion: string("consentVersion"),
     trustedFormScriptUrl: string("trustedFormScriptUrl"),
     approvedServices: strings("approvedServices"),
@@ -117,6 +122,18 @@ export function readiness(settings: Settings): string[] {
     missing.push("sourceId");
   if (!settings.consentApproved || !settings.staticConsentApproved)
     missing.push("approved static consent flow");
+  // This tag represents one actual, always-consented advertiser. A network or
+  // generic partner list must not be mislabeled as a single advertiser.
+  if (
+    !settings.singleAdvertiserConsentApproved ||
+    !settings.consentAdvertiserName ||
+    settings.consentAdvertiserName.length > 200 ||
+    /[<>\u0000-\u001f]/.test(settings.consentAdvertiserName) ||
+    settings.consentText.split(settings.consentAdvertiserName).length !== 2
+  )
+    missing.push(
+      "approved single advertiser named exactly once in consent, or additional consent integration",
+    );
   if (settings.jornayaRequired)
     missing.push(
       "confirmation that Jornaya is not required, or additional integration",
@@ -180,6 +197,8 @@ export function publicConfig(settings: Settings) {
     environment: settings.environment,
     version: configVersion(settings),
     consentText: enabled && settings.mode === "api" ? settings.consentText : "",
+    consentAdvertiserName:
+      enabled && settings.mode === "api" ? settings.consentAdvertiserName : "",
     consentVersion: enabled ? settings.consentVersion : "",
     trustedFormScriptUrl:
       enabled && settings.mode === "api" ? settings.trustedFormScriptUrl : "",

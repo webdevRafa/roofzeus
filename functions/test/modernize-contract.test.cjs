@@ -37,6 +37,29 @@ test('Ping contains only project data and Post carries exact case-sensitive fiel
   assert.equal(post.firstName, 'Synthetic');
   assert.equal(post.phone, '2105550123');
   assert.equal(post.trustedFormToken, data.trustedFormToken);
+  assert.deepEqual(Object.keys(post).sort(), [...Object.keys(ping), 'pingToken', 'homePhoneConsentLanguage', 'trustedFormToken', 'firstName', 'lastName', 'address', 'city', 'state', 'phone', 'email'].sort());
+});
+
+test('Single-advertiser tagging requires explicit approval and an unambiguous exact name; consent remains verbatim', () => {
+  for (const patch of [
+    { singleAdvertiserConsentApproved: false }, { consentAdvertiserName: '' },
+    { consentAdvertiserName: 'Not in the consent' },
+    { consentText: settings().consentText + ' Example Test Advertiser' },
+  ]) assert.equal(publicConfig(settings(patch)).enabled, false);
+  const config = settings({ consentText: '  ' + settings().consentText + '\n' });
+  assert.equal(publicConfig(config).enabled, true);
+  assert.equal(publicConfig(config).consentAdvertiserName, 'Example Test Advertiser');
+  const data = validateLead(lead(config), config);
+  assert.equal(postPayload(data, config, 'test').homePhoneConsentLanguage, config.consentText);
+});
+
+test('Property fields reject blanks and padding that conceals a too-short address or city', () => {
+  const config = settings();
+  for (const patch of [{address:'     '}, {address:'  abc  '}, {city:'  '}, {city:' X '}])
+    assert.throws(() => validateLead(lead(config, patch), config));
+  const valid = validateLead(lead(config, {address:' 123 Example Lane ', city:' San Antonio '}), config);
+  assert.equal(valid.address, '123 Example Lane');
+  assert.equal(valid.city, 'San Antonio');
 });
 test('Unconsented, stale, unsupported or unverified submissions cannot be mapped', () => {
   const config = settings();

@@ -16,6 +16,7 @@ export type ModernizeConfig = {
   environment: string;
   version: string;
   consentText: string;
+  consentAdvertiserName: string;
   consentVersion: string;
   trustedFormScriptUrl: string;
   materials: string[];
@@ -27,6 +28,7 @@ export const closedConfig: ModernizeConfig = {
   environment: "disabled",
   version: "",
   consentText: "",
+  consentAdvertiserName: "",
   consentVersion: "",
   trustedFormScriptUrl: "",
   materials: Object.keys(roofMaterials),
@@ -62,7 +64,12 @@ export function useModernizeConfig(demo = false) {
           enabled:
             value.enabled === true &&
             (value.mode === "hosted" ||
-              Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY)),
+              (Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY) &&
+                typeof value.consentAdvertiserName === "string" &&
+                value.consentAdvertiserName.length > 0 &&
+                typeof value.consentText === "string" &&
+                value.consentText.split(value.consentAdvertiserName).length ===
+                  2)),
         });
       })
       .catch(() => setConfig(closedConfig))

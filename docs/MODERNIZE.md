@@ -1,5 +1,7 @@
 # RoofZeus / Modernize implementation plan
 
+Current audit and additional consent settings: see [MODERNIZE-READINESS.md](MODERNIZE-READINESS.md). The audit addendum supersedes older setup examples where noted.
+
 Status: contract, homeowner flow, secure delivery, hosted handoff, and operator review implemented; mocked verification in place. No publisher approval or credentials supplied. Live delivery remains disabled. This integration is based on public documentation, not a certification or endorsement by Modernize. Live staging, certificate review, and production acceptance require the account manager.
 
 ## Milestones

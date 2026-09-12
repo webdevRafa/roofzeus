@@ -10,6 +10,8 @@ import {
   type ModernizeConfig,
   type ModernizeResult,
 } from "./modernize";
+import PropertyTextField from "./PropertyTextField";
+import ConsentText from "./ConsentText";
 import RoofingProjectFields from "./RoofingProjectFields";
 import { useFunnelStep, revealFunnelStep } from "./useFunnelStep";
 import { roofingProjectReady } from "./roofing-project";
@@ -433,30 +435,16 @@ export default function ModernizeFunnel({
                   }
                 />
               )}
-              <label className="rz-field">
-                Street address
-                <input
-                  name="address"
-                  autoComplete="street-address"
-                  required
-                  minLength={5}
-                  maxLength={180}
-                  value={form.address}
-                  onChange={(event) => set("address", event.target.value)}
-                />
-              </label>
-              <label className="rz-field">
-                City
-                <input
-                  name="city"
-                  autoComplete="address-level2"
-                  required
-                  minLength={2}
-                  maxLength={80}
-                  value={form.city}
-                  onChange={(event) => set("city", event.target.value)}
-                />
-              </label>
+              <PropertyTextField
+                name="address"
+                value={form.address}
+                onChange={(value) => set("address", value)}
+              />
+              <PropertyTextField
+                name="city"
+                value={form.city}
+                onChange={(value) => set("city", value)}
+              />
               <div className="rz-fields">
                 <label className="rz-field">
                   State
@@ -634,7 +622,10 @@ export default function ModernizeFunnel({
               onChange={(event) => set("consent", event.target.checked)}
               data-tf-element-role="consent-opt-in"
             />
-            <span>{config.consentText}</span>
+            <ConsentText
+              text={config.consentText}
+              advertiser={config.consentAdvertiserName}
+            />
           </label>
         )}
         <button

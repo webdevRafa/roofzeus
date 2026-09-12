@@ -9,6 +9,7 @@ const config = {
   version: "fixture-version",
   consentVersion: "fixture-v1",
   consentText: consent,
+  consentAdvertiserName: "Modernize",
   trustedFormScriptUrl:
     "https://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&use_tagged_consent=true&sandbox=true",
   materials: ["asphalt", "metal"],
@@ -110,6 +111,15 @@ test("New form carries address, certificate and exact consent version; only conf
   await expect(
     page.locator('[data-tf-element-role="consent-language"]'),
   ).toHaveText(consent);
+  await expect(
+    page.locator('[data-tf-element-role="consent-advertiser-name"]'),
+  ).toHaveText("Modernize");
+  await expect(
+    page.locator('[data-tf-element-role="consent-grantor-phone"]'),
+  ).toHaveValue("(210) 555-0123");
+  await expect(
+    page.locator('[data-tf-element-role="consent-grantor-email"]'),
+  ).toHaveValue("synthetic@example.com");
   await page
     .getByRole("button", { name: "Get my estimate", exact: true })
     .click();
@@ -769,4 +779,73 @@ test("Reduced motion and mobile keep natural scrolling with a stable background 
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+});
+
+test("Padded or blank property fields cannot advance in either address entry step", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  const street = page.getByLabel("Street address", { exact: true });
+  const city = page.getByLabel("City", { exact: true });
+  await street.fill("  abc  ");
+  await city.fill(" X ");
+  await page
+    .getByRole("combobox", { name: "State", exact: true })
+    .selectOption("TX");
+  await page.getByLabel("ZIP code", { exact: true }).fill("78209");
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  await expect(street).toBeVisible();
+  expect(
+    await street.evaluate((input: HTMLInputElement) => input.checkValidity()),
+  ).toBe(false);
+  await street.fill(" 123 Example Lane ");
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  expect(
+    await city.evaluate((input: HTMLInputElement) => input.checkValidity()),
+  ).toBe(false);
+  await city.fill(" San Antonio ");
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  await page.getByLabel("Roof replacement", { exact: true }).check();
+  await page
+    .getByRole("combobox", { name: /What material/ })
+    .selectOption("asphalt");
+  await page
+    .getByRole("combobox", { name: "When do you need help?", exact: true })
+    .selectOption("Immediately");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(street).toHaveValue("123 Example Lane");
+  await expect(city).toHaveValue("San Antonio");
+  await page.getByLabel("I own this property").check();
+  await street.fill("     ");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(street).toBeVisible();
+  await street.fill("123 Example Lane");
+  await city.fill(" X ");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(city).toBeVisible();
+  await city.fill("San Antonio");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.getByLabel("First name", { exact: true })).toBeVisible();
+});
+
+test("An older or incomplete gateway config cannot enable untagged consent submission", async ({
+  page,
+}) => {
+  let certificateLoads = 0;
+  page.on("request", (request) => {
+    if (request.url().includes("api.trustedform.com")) certificateLoads++;
+  });
+  await page.route("**/modernize-test/config", (route) =>
+    route.fulfill({ json: { ...config, consentAdvertiserName: "" } }),
+  );
+  await start(page);
+  await expect(page.getByText(/Preview only/)).toBeVisible();
+  expect(certificateLoads).toBe(0);
 });

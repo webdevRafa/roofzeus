@@ -54,6 +54,7 @@ export function PhoneField({ value, onChange }: ContactProps) {
         id="modernize-phone"
         ref={input}
         name="phone"
+        data-tf-element-role="consent-grantor-phone"
         type="tel"
         inputMode="tel"
         autoComplete="tel-national"
@@ -148,6 +149,7 @@ export function EmailField({ value, onChange }: ContactProps) {
         id="modernize-email"
         ref={input}
         name="email"
+        data-tf-element-role="consent-grantor-email"
         type="email"
         inputMode="email"
         autoComplete="email"
