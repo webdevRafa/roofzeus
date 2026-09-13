@@ -43,7 +43,7 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
               setFadingOut(true);
             }
           },
-          Math.max(0, 800 - (performance.now() - started)),
+          Math.max(0, 2800 - (performance.now() - started)),
         );
       });
     return () => {
