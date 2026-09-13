@@ -37,7 +37,6 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
         />
         <div className="rz-container rz-estimate-grid">
           <div className="rz-estimate-copy">
-            <AreaLabel demo={demo} />
             <h1>
               Get the right <br />
               estimate for <br />
@@ -58,6 +57,9 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
             </div>
           </div>
           <div className="rz-estimate-panel" id="estimate-funnel">
+            <header className="rz-area-banner" hidden={started}>
+              <AreaLabel demo={demo} />
+            </header>
             {demo && (
               <p className="rz-note" role="note">
                 <strong>Demo mode.</strong> Use sample information. No estimate
@@ -99,10 +101,6 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
               />
             ) : (
               <div className="rz-estimate-entry">
-                <h2>
-                  Need help with <br />
-                  your roof?
-                </h2>
                 <p>
                   Enter your ZIP code or address to explore estimate options
                   near you.

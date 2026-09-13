@@ -33,20 +33,21 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
     };
   }, [demo]);
   return (
-    <p
-      className="rz-area-label"
+    <div
+      className="rz-area-banner-content"
       title={
         area
           ? "Approximate area. Enter your property ZIP or address to confirm its location."
           : undefined
       }
     >
-      <MapPin size={15} aria-hidden="true" />
-      <span>
-        {area && !demo
-          ? `Exploring roofing estimates near ${area}`
-          : "Explore roofing estimates in your area"}
+      <span className="rz-area-banner-icon" aria-hidden="true">
+        <MapPin size={22} />
       </span>
-    </p>
+      <h2>
+        Explore roofing estimates{" "}
+        <span>{area && !demo ? `near ${area}` : "in your area"}</span>
+      </h2>
+    </div>
   );
 }
