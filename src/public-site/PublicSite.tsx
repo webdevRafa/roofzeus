@@ -23,23 +23,71 @@ function Brand({ dark = false }: { dark?: boolean }) {
 }
 
 function EstimateHeader() {
-  const [compact, setCompact] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    // Only the document's top restores the full logo, not a change in direction.
-    const syncScroll = () => setCompact(window.scrollY > 0);
-    syncScroll();
+    // Clamp elastic overscroll so bouncing at either edge isn't a direction change.
+    const scrollPosition = () =>
+      Math.max(
+        0,
+        Math.min(
+          window.scrollY,
+          document.documentElement.scrollHeight - window.innerHeight,
+        ),
+      );
+    let previousY = scrollPosition();
+    let direction = 0;
+    let travel = 0;
+    const resetTracking = () => {
+      previousY = scrollPosition();
+      direction = 0;
+      travel = 0;
+    };
+    const resetScroll = () => {
+      resetTracking();
+      setHidden(false);
+    };
+    const syncResize = () => {
+      // Mobile browser chrome resizing must not reveal a deliberately hidden bar.
+      resetTracking();
+      if (previousY <= 8) setHidden(false);
+    };
+    const syncScroll = () => {
+      const y = scrollPosition();
+      const delta = y - previousY;
+      previousY = y;
+      if (y <= 8) {
+        resetScroll();
+        return;
+      }
+      if (delta === 0) return;
+      const nextDirection = Math.sign(delta);
+      // Accumulate deliberate movement, including small trackpad/touch events.
+      travel =
+        nextDirection === direction
+          ? travel + Math.abs(delta)
+          : Math.abs(delta);
+      direction = nextDirection;
+      if (travel >= 12) {
+        setHidden(direction > 0);
+        travel = 0;
+      }
+    };
+    resetScroll();
     window.addEventListener("scroll", syncScroll, { passive: true });
-    window.addEventListener("pageshow", syncScroll);
+    window.addEventListener("pageshow", resetScroll);
+    window.addEventListener("resize", syncResize);
     return () => {
       window.removeEventListener("scroll", syncScroll);
-      window.removeEventListener("pageshow", syncScroll);
+      window.removeEventListener("pageshow", resetScroll);
+      window.removeEventListener("resize", syncResize);
     };
-  }, []);
+  }, [pathname]);
 
   return (
     <div className="rz-estimate-header-space">
-      <header className={`rz-estimate-header${compact ? " is-compact" : ""}`}>
+      <header className={`rz-estimate-header${hidden ? " is-hidden" : ""}`}>
         <div className="rz-container">
           <Brand />
           <span>

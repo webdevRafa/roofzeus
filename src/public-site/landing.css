@@ -14,7 +14,19 @@
   inset: 0 0 auto;
   z-index: 30;
   background: white;
-  transition: box-shadow 300ms ease-out;
+  box-shadow:
+    0 1px 0 #0818270d,
+    0 6px 18px #0818270a;
+  transform: translateY(0);
+  transition: transform 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.rz-estimate-header.is-hidden {
+  transform: translateY(calc(-100% - 20px));
+}
+.rz-estimate-header:has(:focus-visible) {
+  /* Keyboard navigation must never focus a link outside the viewport. */
+  transform: translateY(0);
+  transition: none;
 }
 .rz-estimate-header > .rz-container {
   height: var(--rz-estimate-header-height);
@@ -22,23 +34,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 25px;
-  transition: height 300ms ease-out;
 }
 .rz-estimate-header .rz-brand {
   width: 260px;
-  transform-origin: left center;
-  transition: transform 300ms ease-out;
-}
-.rz-estimate-header.is-compact {
-  box-shadow:
-    0 1px 0 #0818270d,
-    0 6px 18px #0818270a;
-}
-.rz-estimate-header.is-compact > .rz-container {
-  height: calc(var(--rz-estimate-header-height) * 0.9);
-}
-.rz-estimate-header.is-compact .rz-brand {
-  transform: scale(0.9);
 }
 .rz-estimates #main-content,
 .rz-estimates .rz-estimate-panel {
@@ -48,9 +46,7 @@
   position: fixed;
 }
 @media (prefers-reduced-motion: reduce) {
-  .rz-estimate-header,
-  .rz-estimate-header > .rz-container,
-  .rz-estimate-header .rz-brand {
+  .rz-estimate-header {
     transition: none;
   }
 }
