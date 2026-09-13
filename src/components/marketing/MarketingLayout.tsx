@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import MarketingNav from "./MarketingNav";
 
-const logo = "/brand/v7/logo-dark.svg?v=7.1";
+const logo = "/brand/v8/logo-dark.svg";
 
 const footerGroups = [
   {
@@ -38,7 +38,7 @@ export default function MarketingLayout() {
     if (!icon) return;
     const previousHref = icon.href;
     const previousType = icon.type;
-    icon.href = "/brand/v7/favicon.svg";
+    icon.href = "/brand/v8/favicon.svg";
     icon.type = "image/svg+xml";
     return () => {
       icon.href = previousHref;
@@ -58,8 +58,8 @@ export default function MarketingLayout() {
                 <img
                   src={logo}
                   alt="Roof Zeus"
-                  width={545}
-                  height={116}
+                  width={686}
+                  height={230}
                   loading="lazy"
                 />
               </Link>

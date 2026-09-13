@@ -8,14 +8,14 @@
   background: white;
 }
 .rz-estimate-header > .rz-container {
-  height: 92px;
+  height: 116px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 25px;
 }
 .rz-estimate-header .rz-brand {
-  width: 236.51px;
+  width: 260px;
 }
 .rz-estimate-header span {
   display: flex;
@@ -613,10 +613,10 @@
 }
 @media (max-width: 800px) {
   .rz-estimate-header > .rz-container {
-    height: 80px;
+    height: 104px;
   }
   .rz-estimate-header .rz-brand {
-    width: 205.66px;
+    width: 220px;
   }
   .rz-estimate-header span {
     font-size: 10px;
@@ -704,10 +704,10 @@
     margin-top: 0;
   }
   .rz-estimate-header > .rz-container {
-    height: 75px;
+    height: 100px;
   }
   .rz-estimate-header .rz-brand {
-    width: 190.24px;
+    width: 210px;
   }
   .rz-estimate-header span {
     font-size: 0;
@@ -792,7 +792,7 @@
 /* Reserve a stable desktop stage; long steps scroll inside the form shell. */
 @media (min-width: 801px) {
   .rz-estimate-grid {
-    height: clamp(700px, calc(100svh - 92px), 900px);
+    height: clamp(700px, calc(100svh - 116px), 900px);
     min-height: 0;
     grid-template-rows: minmax(0, 1fr);
     padding-block: 40px;

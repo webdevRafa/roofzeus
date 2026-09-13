@@ -1,6 +1,6 @@
 # RoofZeus brand kit
 
-The active identity is **[v7](v7/README.md)**, approved September 13, 2026. The public website uses its true-vector logos and updated favicon. All earlier artwork below is preserved as the v6 archive.
+The active identity is **[v8](v8/README.md)**, restoring the original approved concept's proportions. The public website uses its true-vector logos and matching favicon. Previous v7 lockups remain available in their versioned folder; earlier artwork below is the v6 archive.
 
 ## Archived v6 — September 2026
 

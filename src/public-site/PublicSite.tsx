@@ -13,10 +13,10 @@ function Brand({ dark = false }: { dark?: boolean }) {
   return (
     <Link to="/" className="rz-brand" aria-label="RoofZeus home">
       <img
-        src={`/brand/v7/logo-${dark ? "dark" : "light"}.svg?v=7.1`}
+        src={`/brand/v8/logo-${dark ? "dark" : "light"}.svg`}
         alt="RoofZeus"
-        width={545}
-        height={116}
+        width={dark ? 686 : 1420}
+        height={dark ? 230 : 500}
       />
     </Link>
   );

@@ -9,7 +9,7 @@ export function structuredData(page: PageMeta) {
         "@id": `${SITE_URL}/#organization`,
         name: "RoofZeus",
         url: SITE_URL,
-        logo: `${SITE_URL}/brand/v7/emblem.png`,
+        logo: `${SITE_URL}/brand/v8/emblem.png`,
       },
       {
         "@type": "WebSite",
