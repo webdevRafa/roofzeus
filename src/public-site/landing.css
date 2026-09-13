@@ -75,6 +75,28 @@
   width: fit-content;
   max-width: 100%;
 }
+.rz-area-fade-out {
+  animation: rz-area-fade-out 240ms ease-in forwards;
+}
+.rz-area-fade-in {
+  animation: rz-area-fade-in 320ms ease-out both;
+}
+@keyframes rz-area-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes rz-area-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .rz-area-dots {
   display: inline-flex;
   margin-left: 2px;
@@ -100,6 +122,10 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .rz-area-fade-out,
+  .rz-area-fade-in {
+    animation-duration: 1ms;
+  }
   .rz-area-dots span {
     animation: none;
   }
@@ -112,6 +138,14 @@
     sans-serif;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
+}
+.rz-estimates .rz-area-banner h2.rz-area-result {
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 10px;
+  background: #081827;
+  color: #fff;
+  border-radius: 0;
 }
 @media (max-width: 700px) {
   .rz-area-banner {

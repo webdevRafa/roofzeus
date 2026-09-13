@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 export default function AreaLabel({ demo }: { demo: boolean }) {
   const [area, setArea] = useState<string | null>(null);
   const [checking, setChecking] = useState(!demo);
+  const [fadingOut, setFadingOut] = useState(false);
   useEffect(() => {
     if (demo) return;
     const controller = new AbortController();
@@ -35,7 +36,12 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
         // Avoid a flash of loading text on fast responses without delaying input.
         reveal = window.setTimeout(
           () => {
-            if (active) setChecking(false);
+            if (!active) return;
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+              setChecking(false);
+            } else {
+              setFadingOut(true);
+            }
           },
           Math.max(0, 800 - (performance.now() - started)),
         );
@@ -56,7 +62,28 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
           : undefined
       }
     >
-      <h2 aria-live="polite" aria-atomic="true">
+      <h2
+        aria-live="polite"
+        aria-atomic="true"
+        className={
+          demo
+            ? "rz-area-result"
+            : checking
+              ? fadingOut
+                ? "rz-area-fade-out"
+                : undefined
+              : "rz-area-result rz-area-fade-in"
+        }
+        onAnimationEnd={(event) => {
+          // Ignore the animated dots bubbling up from inside this heading.
+          if (
+            event.target === event.currentTarget &&
+            event.animationName === "rz-area-fade-out"
+          ) {
+            setChecking(false);
+          }
+        }}
+      >
         {checking && !demo ? (
           <>
             Checking your area
