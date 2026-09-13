@@ -62,6 +62,10 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
           : undefined
       }
     >
+      <span className="rz-area-size" aria-hidden="true">
+        Explore roofing estimates{" "}
+        {area && !demo ? `near ${area}` : "in your area"}
+      </span>
       <h2
         aria-live="polite"
         aria-atomic="true"

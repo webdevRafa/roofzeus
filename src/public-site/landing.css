@@ -72,8 +72,15 @@
   padding: 32px 36px 0;
 }
 .rz-area-banner-content {
+  display: grid;
+  justify-items: center;
+  margin-inline: auto;
   width: fit-content;
   max-width: 100%;
+}
+.rz-area-size {
+  visibility: hidden;
+  pointer-events: none;
 }
 .rz-area-fade-out {
   animation: rz-area-fade-out 240ms ease-in forwards;
@@ -130,7 +137,14 @@
     animation: none;
   }
 }
-.rz-estimates .rz-area-banner h2 {
+.rz-estimates .rz-area-banner h2,
+.rz-area-size {
+  text-align: center;
+  grid-area: 1 / 1;
+  align-self: start;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 10px;
   margin: 0;
   color: #081827;
   font:
@@ -142,7 +156,6 @@
 .rz-estimates .rz-area-banner h2.rz-area-result {
   width: fit-content;
   max-width: 100%;
-  padding: 6px 10px;
   background: #081827;
   color: #fff;
   border-radius: 0;
