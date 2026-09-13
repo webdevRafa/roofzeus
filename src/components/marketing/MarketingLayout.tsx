@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import MarketingNav from "./MarketingNav";
 
-const logo = "/brand/roof-zeus-logo-dark.webp?v=6";
+const logo = "/brand/v7/logo-dark.svg";
 
 const footerGroups = [
   {
@@ -38,7 +38,7 @@ export default function MarketingLayout() {
     if (!icon) return;
     const previousHref = icon.href;
     const previousType = icon.type;
-    icon.href = "/brand/roof-zeus-favicon.svg?v=6";
+    icon.href = "/brand/v7/favicon.svg";
     icon.type = "image/svg+xml";
     return () => {
       icon.href = previousHref;
@@ -55,7 +55,7 @@ export default function MarketingLayout() {
           <div className="rz-footer__top">
             <div className="rz-footer__brand">
               <Link to="/" aria-label="Roof Zeus home">
-                <img src={logo} alt="Roof Zeus" width={1000} height={240} loading="lazy" />
+                <img src={logo} alt="Roof Zeus" width={530} height={102} loading="lazy" />
               </Link>
               <p>
                 Roofing software for jobs, finances, crews, and documents.

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, LogIn, Menu, X } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 
-const logo = "/brand/roof-zeus-logo-dark.webp?v=6";
+const logo = "/brand/v7/logo-dark.svg";
 
 const navItems = [
   { label: "Home", to: "/" },
@@ -37,7 +37,7 @@ export default function MarketingNav() {
       <header className="rz-nav">
         <div className="rz-container rz-nav__inner">
           <Link className="rz-nav__brand" to="/" aria-label="Roof Zeus home">
-            <img src={logo} alt="Roof Zeus" width={1000} height={240} />
+            <img src={logo} alt="Roof Zeus" width={530} height={102} />
           </Link>
 
           <nav className="rz-nav__links" aria-label="Primary navigation">
@@ -94,7 +94,7 @@ export default function MarketingNav() {
               onClick={(event) => event.stopPropagation()}
             >
               <div className="rz-mobile-nav__head">
-                <img src={logo} alt="Roof Zeus" width={1000} height={240} />
+                <img src={logo} alt="Roof Zeus" width={530} height={102} />
                 <button
                   className="rz-mobile-nav__close"
                   type="button"

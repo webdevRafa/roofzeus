@@ -1,4 +1,8 @@
-# Roof Zeus brand kit v6 — September 2026
+# RoofZeus brand kit
+
+The active identity is **[v7](v7/README.md)**, approved September 13, 2026. The public website uses its true-vector logos and updated favicon. All earlier artwork below is preserved as the v6 archive.
+
+## Archived v6 — September 2026
 
 Open `board.html` for the brand board or `index.html` for the full guide.
 
