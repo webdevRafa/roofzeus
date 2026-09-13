@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import MarketingNav from "./MarketingNav";
 
-const logo = "/brand/v7/logo-dark.svg";
+const logo = "/brand/v7/logo-dark.svg?v=7.1";
 
 const footerGroups = [
   {
@@ -55,11 +55,15 @@ export default function MarketingLayout() {
           <div className="rz-footer__top">
             <div className="rz-footer__brand">
               <Link to="/" aria-label="Roof Zeus home">
-                <img src={logo} alt="Roof Zeus" width={530} height={102} loading="lazy" />
+                <img
+                  src={logo}
+                  alt="Roof Zeus"
+                  width={545}
+                  height={116}
+                  loading="lazy"
+                />
               </Link>
-              <p>
-                Roofing software for jobs, finances, crews, and documents.
-              </p>
+              <p>Roofing software for jobs, finances, crews, and documents.</p>
             </div>
             {footerGroups.map((group) => (
               <div className="rz-footer__column" key={group.label}>

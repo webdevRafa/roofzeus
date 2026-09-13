@@ -11,3 +11,5 @@ The public navbar, footer, browser icons and organization metadata now use this 
 SVG artwork contains actual outlined paths, no embedded raster image, no fonts, and no external dependencies. The approved concept was generated with the built-in image tool, then color-separated and traced into vector paths. Production lockup proportions were adjusted to keep lettering legible at navbar size. Colors: navy #081827, gold #D6AC58, ivory #F5F1E8.
 
 The original concept remains an approval reference; these production assets remove its paper texture and shading. Small raster icons are rendered from the SVG masters.
+
+Lockup revision 7.1: the emblem is 15% larger and its artwork bottom aligns with the lettering. The wordmark shapes, on-screen lettering size and roof color are preserved. Horizontal SVG dimensions are now 545 × 116. Standalone emblems and favicon artwork are unchanged.
