@@ -58,6 +58,12 @@ export default function ModernizeFunnel({
     ? "https://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&use_tagged_consent=true&sandbox=true"
     : config.trustedFormScriptUrl;
   const [testCertificate, setTestCertificate] = useState("");
+  const testResult = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!testCertificate) return;
+    testResult.current?.focus({ preventScroll: true });
+    testResult.current?.scrollIntoView({ block: "center", behavior: "instant" });
+  }, [testCertificate]);
   const [demoCompleted, setDemoCompleted] = useState(false);
   const [form, setForm] = useState({
     plan: "",
@@ -727,7 +733,7 @@ export default function ModernizeFunnel({
         </button>
       </form>
       {testCertificate && (
-        <div role="status" className="rz-note">
+        <div ref={testResult} tabIndex={-1} role="status" className="rz-note">
           <strong>Sandbox certificate generated.</strong>
           <p>
             No lead was saved in Firebase or sent to Modernize. This is not
@@ -737,8 +743,10 @@ export default function ModernizeFunnel({
             Open test certificate
           </a>
           <p>
-            Review the replay and test consent. Localhost ownership may limit
-            viewing in your account. For another session, reload this page.
+            Review the replay and test consent. If TrustedForm shows Unauthorized
+            when revealing inputs, keep sandbox mode enabled and report the
+            certificate to ActiveProspect support. For another session, reload
+            this page.
           </p>
         </div>
       )}

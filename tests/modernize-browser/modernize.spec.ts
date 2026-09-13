@@ -1033,6 +1033,13 @@ test("Local certificate test is opt-in, sandbox-only and never delivers or store
   await expect(page.locator('form[data-tf-element-role="offer"]')).toHaveCount(
     1,
   );
+  await expect(page.locator('input[name="firstName"]')).toHaveCount(1);
+  await expect(page.locator('input[name="lastName"]')).toHaveCount(1);
+  const completion = page.getByRole("status").filter({
+    hasText: "Sandbox certificate generated.",
+  });
+  await expect(completion).toBeFocused();
+  await expect(completion).toBeInViewport();
   await expect(
     page.getByRole("button", { name: "Finish certificate test" }),
   ).toBeDisabled();

@@ -66,3 +66,39 @@ launch checks; no partner lead was sent.
 
 References: [SDK implementation](https://developers.activeprospect.com/pages/trustedform/implementing-trustedform-certify)
 and [Certify / SPA stop recording](https://support.activeprospect.com/hc/en-us/articles/44098177422996-TrustedForm-Certify).
+
+## September 12, 2026 investigation
+
+- Fresh real-SDK RoofZeus recordings (bulk input and character-by-character typing)
+  produced valid sandbox certificates. The live contact step and completed replay
+  each contained one first-name input, one last-name input, and one form.
+- The originally reported certificate also showed one contact section when played
+  from start to finish in a fresh diagnostic browser. The screenshot duplication
+  was not reproduced; its cause remains unresolved. Timeline-seeking inspection
+  was inconclusive because the player's overlays intercepted the test clicks.
+- One native final submit event was observed in the live RoofZeus form, while
+  TrustedForm's event log displayed two submitted-form entries. A separate plain
+  HTML form with no React, gateway, Firebase, or explicit stop-recording call also
+  produced two entries from one native submit. These entries do not establish
+  duplicate lead delivery. Continue buttons also generate native submit events
+  for step validation, which appear in the log.
+- Entering the exact synthetic email in the certificate viewer returned HTTP 401
+  from `POST /<certificate>/unlock/`, with `Unauthorized` in the JSON response.
+  This reproduced in both RoofZeus and the independent plain HTML sandbox test.
+  The diagnostic browser was not account-authenticated. The user independently
+  reported the same error in their normal Chrome session. We have not established
+  whether this is an account requirement, localhost/sandbox restriction, or a
+  service defect. Do not infer the cause from the status code alone.
+- RoofZeus diagnostic network traffic allowed only localhost and TrustedForm;
+  no Modernize or Firebase requests occurred. Keep delivery disabled pending
+  approvals and a successful end-to-end acceptance test.
+
+Ask ActiveProspect support to explain sandbox/localhost manual-unlock behavior
+and the duplicate event entries. Supply a fresh synthetic certificate privately
+before its three-day expiry. Do not publish personal-data certificate links or
+buy Retain to work around this. See their
+[manual lead matching instructions](https://support.activeprospect.com/hc/en-us/articles/44098376178836-Lead-Matching-When-Viewing-A-Certificate).
+
+The local test now focuses and scrolls to its completion message. Three targeted
+browser checks cover successful isolated completion, SDK failure, and a missing
+certificate at submission.
