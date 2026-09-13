@@ -105,6 +105,25 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
                   Enter your ZIP code or address to explore estimate options
                   near you.
                 </p>
+                {modernizeMode && !demo && !loading && !config.enabled && (
+                  <p className="rz-form-disclosure rz-entry-notice" role="note">
+                    Estimate requests are not open yet. You can explore the form
+                    using sample details; nothing will be submitted.
+                  </p>
+                )}
+                {modernizeMode &&
+                  !demo &&
+                  config.enabled &&
+                  config.mode === "api" && (
+                    <p className="rz-form-disclosure rz-entry-notice">
+                      When you continue, TrustedForm records your form session,
+                      including information you enter. Read our{" "}
+                      <a href="/privacy" target="_blank" rel="noopener">
+                        Privacy Policy
+                      </a>
+                      .
+                    </p>
+                  )}
                 <LocationStart onStart={start} demo={demo} />
                 <div className="rz-entry-privacy">
                   <LockKeyhole size={13} />

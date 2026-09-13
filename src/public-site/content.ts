@@ -1,4 +1,6 @@
 export const SITE_URL = "https://roofzeus.com";
+export const SITE_OPERATOR = "Devnetiks LLC";
+export const SUPPORT_EMAIL = "support@roofzeus.com";
 export const CONSENT_VERSION = "2026-09-12.2";
 export const CONTACT_CONSENT =
   "I agree that RoofZeus may contact me by phone or email about roofing estimates for this property. My information will not be sent to a contractor until I agree to that introduction. I do not have to purchase anything.";

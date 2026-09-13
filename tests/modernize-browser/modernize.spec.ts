@@ -99,6 +99,7 @@ async function complete(page: Page) {
     .getByLabel("Email address", { exact: true })
     .fill("synthetic@example.com");
   await page.getByLabel("Phone number", { exact: true }).fill("2105550123");
+  await expect(page.getByLabel(consent, { exact: true })).not.toBeChecked();
   await page.getByLabel(consent, { exact: true }).check();
 }
 test("New form carries address, certificate and exact consent version; only confirmed partner success is shown", async ({

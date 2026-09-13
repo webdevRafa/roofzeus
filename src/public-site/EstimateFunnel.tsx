@@ -398,7 +398,7 @@ export default function EstimateFunnel({
               {CONTACT_CONSENT}
             </label>
             <p className="rz-field-help">
-              By continuing, you accept our{" "}
+              Review our{" "}
               <a href="/terms" target="_blank" rel="noopener">
                 Terms
               </a>{" "}

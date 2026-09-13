@@ -12,6 +12,7 @@ import {
 } from "./modernize";
 import PropertyTextField from "./PropertyTextField";
 import ConsentText from "./ConsentText";
+import { SITE_OPERATOR, SUPPORT_EMAIL } from "./content";
 import RoofingProjectFields from "./RoofingProjectFields";
 import { useFunnelStep, revealFunnelStep } from "./useFunnelStep";
 import { roofingProjectReady } from "./roofing-project";
@@ -400,8 +401,8 @@ export default function ModernizeFunnel({
         )}
         <p className="rz-field-help">
           For help or to withdraw your request, email{" "}
-          <a href="mailto:privacy@roofzeus.com">privacy@roofzeus.com</a> with
-          this reference.
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> with this
+          reference.
         </p>
         <a className="rz-text-link" href="/">
           Back to home
@@ -438,6 +439,16 @@ export default function ModernizeFunnel({
           <span key={i} className={i <= step ? "complete" : ""} />
         ))}
       </div>
+      {captureEnabled && !testing && step === 0 && (
+        <p className="rz-form-disclosure">
+          ActiveProspect’s TrustedForm records this form session, including what
+          you enter, even if you do not submit. Read our{" "}
+          <a href="/privacy" target="_blank" rel="noopener">
+            Privacy Policy
+          </a>
+          .
+        </p>
+      )}
       <form
         ref={formElement}
         data-tf-element-role="offer"
@@ -633,7 +644,7 @@ export default function ModernizeFunnel({
             <>
               <p>
                 {config.enabled
-                  ? "Review your details and the contact permission below before submitting."
+                  ? "Use your own phone number and email address. Review your details and the contact permission below before submitting."
                   : testing
                     ? "Use Synthetic Homeowner, synthetic@example.com and (210) 555-0123. This test is recorded by TrustedForm."
                     : demo
@@ -674,10 +685,11 @@ export default function ModernizeFunnel({
                 value={form.phone}
                 onChange={(value) => set("phone", value)}
               />
-              <p className="rz-field-help">
-                {demo
-                  ? "This demo does not request permission for marketing contact. Read our "
-                  : "RoofZeus may receive compensation for this referral. Availability varies. Read our "}
+              <p className="rz-form-disclosure">
+                RoofZeus is owned and operated by {SITE_OPERATOR}.{" "}
+                {config.enabled
+                  ? "RoofZeus may receive compensation for this referral. Availability varies; an estimate is not guaranteed. Read our "
+                  : "This preview does not request permission for marketing contact. Read our "}
                 <a href="/privacy" target="_blank" rel="noopener">
                   Privacy Policy
                 </a>{" "}
@@ -747,28 +759,31 @@ export default function ModernizeFunnel({
             </p>
           )}
         {step === 2 && captureEnabled && (
-          <label
-            className="rz-checkbox rz-modernize-consent"
-            data-tf-element-role="consent-language"
-          >
-            <input
-              name="consent"
-              type="checkbox"
-              required
-              disabled={busy || locked || Boolean(testCertificate)}
-              checked={form.consent}
-              onChange={(event) => set("consent", event.target.checked)}
-              data-tf-element-role="consent-opt-in"
-            />
-            <ConsentText
-              text={
-                testing
-                  ? "TEST ONLY: I acknowledge this sample form records interactions for RoofZeus testing. This is not marketing consent or an estimate request."
-                  : config.consentText
-              }
-              advertiser={testing ? "RoofZeus" : config.consentAdvertiserName}
-            />
-          </label>
+          <div className="rz-consent-review">
+            <h3>{testing ? "Test acknowledgment" : "Contact permission"}</h3>
+            <label
+              className="rz-checkbox rz-modernize-consent"
+              data-tf-element-role="consent-language"
+            >
+              <input
+                name="consent"
+                type="checkbox"
+                required
+                disabled={busy || locked || Boolean(testCertificate)}
+                checked={form.consent}
+                onChange={(event) => set("consent", event.target.checked)}
+                data-tf-element-role="consent-opt-in"
+              />
+              <ConsentText
+                text={
+                  testing
+                    ? "TEST ONLY: I acknowledge this sample form records interactions for RoofZeus testing. This is not marketing consent or an estimate request."
+                    : config.consentText
+                }
+                advertiser={testing ? "RoofZeus" : config.consentAdvertiserName}
+              />
+            </label>
+          </div>
         )}
         <button
           key={step === 2 ? "submit" : "continue"}

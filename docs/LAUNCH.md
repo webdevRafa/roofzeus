@@ -35,7 +35,7 @@ No provider-directory, paid geolocation, weather, SMS, payment, or AI API is nee
 
 ## Deployment order
 
-1. Confirm the intended Firebase project and Vercel project. Keep all existing contractor app environment values. Create a monitored `privacy@roofzeus.com` inbox or alias; it is linked in the new privacy/terms pages. Have the business owner review the contact/sharing copy and establish a daily queue-review routine before accepting requests.
+1. Confirm the intended Firebase project and Vercel project. Keep all existing contractor app environment values. Use the existing monitored `support@roofzeus.com` inbox for service and privacy requests; it is linked in the footer, forms, and legal pages. RoofZeus is owned and operated by Devnetiks LLC. Have the business owner review the contact/sharing copy and establish a daily queue-review routine before accepting requests.
 2. In the same Firebase project, create a **named Firestore Native database** with ID `roofzeus-leads` in a suitable U.S. location such as `nam5`. Do not reuse or replace the contractor app's `(default)` database. Use the Google Cloud CLI, for example:
 
    ```powershell

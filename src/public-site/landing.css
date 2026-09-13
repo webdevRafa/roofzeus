@@ -434,26 +434,81 @@
   margin-bottom: 12px;
 }
 .rz-estimate-footer p {
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.7;
   max-width: 580px;
   margin: 0;
+}
+.rz-estimate-footer .rz-footer-ownership {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rz-ink);
+  margin-bottom: 8px;
+}
+.rz-footer-contact {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+.rz-footer-contact > a {
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .rz-estimate-footer nav {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .rz-estimate-footer nav a {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  min-height: 32px;
 }
 .rz-estimate-footer small {
-  font-size: 9px;
-  color: #7c8790;
+  font-size: 11px;
+  color: #586672;
   grid-column: 1/-1;
+  border-top: 1px solid #e7e9e9;
+  padding-top: 16px;
+}
+.rz-legal-owner {
+  padding: 20px;
+  border-left: 3px solid #d6ac58;
+  background: #f8f9fa;
+}
+.rz-estimates #privacy-choices {
+  scroll-margin-top: calc(var(--rz-estimate-header-height) + 22px);
+}
+.rz-estimates .rz-form-disclosure {
+  font-size: 13px !important;
+  line-height: 1.65;
+  color: #435361;
+}
+.rz-form-disclosure a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.rz-estimate-entry .rz-entry-notice {
+  max-width: none;
+  padding: 12px;
+  border-left: 2px solid #d6ac58;
+  background: #f8f9fa;
+  margin-bottom: 20px;
+}
+.rz-consent-review {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #dce2e5;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+.rz-consent-review h3 {
+  font-size: 14px;
+  letter-spacing: normal;
+  margin: 0 0 10px;
 }
 .rz-estimate-steps,
 .rz-estimate-success {
@@ -597,11 +652,13 @@
   line-height: 1.7;
 }
 .rz-estimate-steps .rz-modernize-consent {
-  margin-top: 20px;
+  margin-top: 0;
   align-items: flex-start;
-  font-size: 11px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #081827;
 }
-.rz-modernize-consent + .rz-estimate-next {
+.rz-consent-review + .rz-estimate-next {
   margin-top: 12px;
 }
 .rz-verification-notice {
@@ -730,6 +787,9 @@
   .rz-estimate-footer nav {
     gap: 20px;
   }
+  .rz-footer-contact {
+    justify-items: start;
+  }
 }
 @media (max-width: 520px) {
   .rz-location-start {
@@ -792,7 +852,6 @@
   }
   .rz-estimate-footer nav {
     gap: 14px;
-    font-size: 9px;
   }
 }
 @media (max-width: 360px) {
@@ -813,7 +872,7 @@
 @media (max-width: 520px) {
   .rz-estimate-entry > .rz-entry-eyebrow,
   .rz-estimate-entry > h2,
-  .rz-estimate-entry > p {
+  .rz-estimate-entry > p:not(.rz-entry-notice) {
     display: none;
   }
   .rz-estimate-entry .rz-zip-start {

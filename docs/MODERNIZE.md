@@ -2,6 +2,8 @@
 
 Current audit and additional consent settings: see [MODERNIZE-READINESS.md](MODERNIZE-READINESS.md). The audit addendum supersedes older setup examples where noted.
 
+Ownership, public disclosures, and remaining copy approval requirements: see [PUBLISHER-COPY-REVIEW.md](PUBLISHER-COPY-REVIEW.md).
+
 Status: contract, homeowner flow, secure delivery, hosted handoff, and operator review implemented; mocked verification in place. No publisher approval or credentials supplied. Live delivery remains disabled. This integration is based on public documentation, not a certification or endorsement by Modernize. Live staging, certificate review, and production acceptance require the account manager.
 
 ## Milestones
@@ -140,7 +142,7 @@ Set `GOOGLE_CLOUD_PROJECT` and authenticate with Application Default Credentials
 - After confirmed resolution, create a private `modernize-evidence.local.json` containing `status` (`accepted` or `no_match`), `operator`, `evidence` (support ticket/reference, no PII), and `partnerLeadId` for accepted requests. Run `node operations/modernize.mjs reconcile RZM-REFERENCE <evidence-file>`. This updates the receipt outcome and creates a private audit entry. It never calls Modernize or resends a lead and refuses already-final outcomes or in-flight requests younger than two minutes.
 - Monitor Modernize publisher reporting for final payable amounts, returns, and payment reconciliation. The Ping price in our database is only an offer. No Stripe integration is needed for network payouts.
 - Original receipts remain retrievable with the exact original submission even after new intake is disabled or consent settings change. The receipt hash uses `MODERNIZE_RECEIPT_SECRET`, separate from Turnstile. Rotating the receipt secret requires a deliberate migration/retention plan; do not casually rotate it while receipts are in use.
-- Make `privacy@roofzeus.com` a working, monitored mailbox before enabling intake. Verify a withdrawal requester, record the request privately, and relay any already-shared request to Modernize through the agreed withdrawal channel. This code does not pretend that previously delivered contact details can be recalled automatically. Existing manual records remain under their old consent.
+- Use the existing `support@roofzeus.com` mailbox for service, privacy, and withdrawal requests. Devnetiks LLC operates RoofZeus. Monitor this inbox, record requests privately, and coordinate already-shared requests with Modernize through the agreed withdrawal channel. Verify identity before disclosing or changing personal records; do not require unnecessary identity documents for a simple opt-out. This code does not pretend that previously delivered contact details can be recalled automatically. Existing manual records remain under their old consent.
 - Keep form previews off until their correct environment/settings are available; never use public query parameters as a live-mode switch. Browser analytics contain only generic event names, not addresses, contact fields, URLs, or partner credentials.
 
 ## Remaining external decisions

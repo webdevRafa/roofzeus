@@ -1,4 +1,9 @@
-import { SITE_URL, type PageMeta } from "./content";
+import {
+  SITE_URL,
+  SITE_OPERATOR,
+  SUPPORT_EMAIL,
+  type PageMeta,
+} from "./content";
 export function structuredData(page: PageMeta) {
   const url = `${SITE_URL}${page.path}`;
   return {
@@ -8,6 +13,8 @@ export function structuredData(page: PageMeta) {
         "@type": "Organization",
         "@id": `${SITE_URL}/#organization`,
         name: "RoofZeus",
+        legalName: SITE_OPERATOR,
+        email: SUPPORT_EMAIL,
         url: SITE_URL,
         logo: `${SITE_URL}/brand/v8/emblem.png`,
       },
