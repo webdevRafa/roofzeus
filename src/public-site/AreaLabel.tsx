@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { MapPin } from "lucide-react";
 
 export default function AreaLabel({ demo }: { demo: boolean }) {
   const [area, setArea] = useState<string | null>(null);
+  const [checking, setChecking] = useState(!demo);
   useEffect(() => {
     if (demo) return;
     const controller = new AbortController();
+    let active = true;
+    let reveal: number | undefined;
+    const started = performance.now();
     const timeout = window.setTimeout(() => controller.abort(), 3000);
     void fetch("/api/visitor-area", {
       signal: controller.signal,
@@ -26,10 +29,22 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
       .catch(() => {
         /* The generic label remains useful if lookup fails. */
       })
-      .finally(() => window.clearTimeout(timeout));
+      .finally(() => {
+        window.clearTimeout(timeout);
+        if (!active) return;
+        // Avoid a flash of loading text on fast responses without delaying input.
+        reveal = window.setTimeout(
+          () => {
+            if (active) setChecking(false);
+          },
+          Math.max(0, 800 - (performance.now() - started)),
+        );
+      });
     return () => {
+      active = false;
       controller.abort();
       window.clearTimeout(timeout);
+      window.clearTimeout(reveal);
     };
   }, [demo]);
   return (
@@ -41,12 +56,22 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
           : undefined
       }
     >
-      <span className="rz-area-banner-icon" aria-hidden="true">
-        <MapPin size={22} />
-      </span>
-      <h2>
-        Explore roofing estimates{" "}
-        <span>{area && !demo ? `near ${area}` : "in your area"}</span>
+      <h2 aria-live="polite" aria-atomic="true">
+        {checking && !demo ? (
+          <>
+            Checking your area
+            <span className="rz-area-dots" aria-hidden="true">
+              <span>.</span>
+              <span>.</span>
+              <span>.</span>
+            </span>
+          </>
+        ) : (
+          <>
+            Explore roofing estimates{" "}
+            {area && !demo ? `near ${area}` : "in your area"}
+          </>
+        )}
       </h2>
     </div>
   );
