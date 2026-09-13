@@ -16,13 +16,33 @@ const config = {
   affiliateUrl: "",
 };
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    Reflect.set(window, "funnelSubmitCount", 0);
+    document.addEventListener(
+      "submit",
+      (event) => {
+        if (
+          (event.target as Element).matches(
+            'form[data-tf-element-role="offer"]',
+          )
+        ) {
+          Reflect.set(
+            window,
+            "funnelSubmitCount",
+            Reflect.get(window, "funnelSubmitCount") + 1,
+          );
+        }
+      },
+      true,
+    );
+  });
   await page.route("**/modernize-test/config", (route) =>
     route.fulfill({ json: config }),
   );
   await page.route("https://api.trustedform.com/**", (route) =>
     route.fulfill({
       contentType: "application/javascript",
-      body: `const form=document.querySelector('form[data-tf-element-role="offer"]');if(!form)throw Error('Form must exist first');const field=document.createElement('input');field.type='hidden';field.name='xxTrustedFormCertUrl';field.value='${certificate}';form.append(field);`,
+      body: `const form=document.querySelector('form[data-tf-element-role="offer"]');if(!form)throw Error('Form must exist first');const field=document.createElement('input');field.type='hidden';field.name='xxTrustedFormCertUrl';field.value='${certificate}';form.append(field);window.testStopCount=0;window.trustedFormStopRecording=()=>{window.testStopCount++;window.testFormPresentAtStop=!!document.querySelector('form[data-tf-element-role="offer"]')};`,
     }),
   );
   await page.route("https://challenges.cloudflare.com/**", (route) =>
@@ -107,6 +127,9 @@ test("New form carries address, certificate and exact consent version; only conf
     });
   });
   await complete(page);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "funnelSubmitCount")),
+  ).toBe(0);
   expect(page.url()).not.toContain("Example");
   await expect(
     page.locator('[data-tf-element-role="consent-language"]'),
@@ -130,6 +153,15 @@ test("New form carries address, certificate and exact consent version; only conf
     page.getByText("Test submission only.", { exact: false }),
   ).toBeVisible();
   expect(count).toBe(1);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "funnelSubmitCount")),
+  ).toBe(1);
+  expect(await page.evaluate(() => Reflect.get(window, "testStopCount"))).toBe(
+    1,
+  );
+  expect(
+    await page.evaluate(() => Reflect.get(window, "testFormPresentAtStop")),
+  ).toBe(true);
   expect(errors).toEqual([]);
 });
 test("Uncertain network response freezes submitted details and retries the same receipt", async ({
@@ -157,13 +189,25 @@ test("Uncertain network response freezes submitted details and retries the same 
     .getByRole("button", { name: "Get my estimate", exact: true })
     .click();
   await expect(page.getByLabel("First name", { exact: true })).toBeDisabled();
-  await page.getByRole("button", { name: "Check submission status" }).click();
+  const checkStatus = page.getByRole("button", {
+    name: "Check submission status",
+  });
+  await expect(checkStatus).toHaveAttribute("type", "button");
+  await expect(checkStatus).not.toHaveAttribute(
+    "data-tf-element-role",
+    "submit",
+  );
+  await expect(page.locator('[data-tf-element-role="submit"]')).toBeDisabled();
+  await checkStatus.click();
   await expect(
     page.getByRole("heading", { name: "We’re checking your request." }),
   ).toBeVisible();
   await expect(
     page.getByText("Your request is on its way.", { exact: true }),
   ).toHaveCount(0);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "funnelSubmitCount")),
+  ).toBe(1);
 });
 test("Unavailable matching and missing certificate never submit or invent permission", async ({
   page,
@@ -556,9 +600,11 @@ for (const addressEntry of [false, true]) {
   }) => {
     const serviceRequests: string[] = [];
     page.on("request", (request) => {
+      const url = new URL(request.url());
       if (
-        /modernize-test|trustedform|challenges.cloudflare|maps.googleapis|zippopotam/.test(
-          request.url(),
+        url.pathname.startsWith("/modernize-test/") ||
+        /(^|\.)(trustedform\.com|challenges\.cloudflare\.com|maps\.googleapis\.com|zippopotam\.us)$/.test(
+          url.hostname,
         )
       )
         serviceRequests.push(request.url());
@@ -1026,6 +1072,9 @@ test("Local certificate test is opt-in, sandbox-only and never delivers or store
   const scripts = requests.filter((url) => url.includes("api.trustedform.com"));
   expect(scripts).toHaveLength(1);
   expect(new URL(scripts[0]).searchParams.get("sandbox")).toBe("true");
+  expect(
+    await page.evaluate(() => Reflect.get(window, "funnelSubmitCount")),
+  ).toBe(0);
   await page.getByRole("button", { name: "Finish certificate test" }).click();
   await expect(
     page.getByRole("link", { name: "Open test certificate" }),
@@ -1054,6 +1103,222 @@ test("Local certificate test is opt-in, sandbox-only and never delivers or store
     ),
   ).toEqual([]);
   expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([]);
+  expect(
+    await page.evaluate(() => Reflect.get(window, "funnelSubmitCount")),
+  ).toBe(1);
+});
+
+test("Earlier steps validate and advance by keyboard without submitting, including reduced motion", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/trustedform-test");
+  await page.getByRole("button", { name: "Start sandbox recording" }).click();
+  const next = page.getByRole("button", { name: "Continue", exact: true });
+  await expect(next).toHaveAttribute("type", "button");
+  await next.click();
+  await expect(
+    page.getByRole("heading", { name: "What does your roof need?" }),
+  ).toBeVisible();
+  await page.getByLabel("Roof replacement", { exact: true }).check();
+  await page
+    .getByRole("combobox", { name: /What material/ })
+    .selectOption("asphalt");
+  await page
+    .getByRole("combobox", { name: "When do you need help?", exact: true })
+    .selectOption("Immediately");
+  await next.focus();
+  await next.press("Enter");
+  const street = page.getByLabel("Street address", { exact: true });
+  await street.press("Enter");
+  await expect(street).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "Which home is it for?" }),
+  ).toBeVisible();
+  await street.fill("123 Example Lane");
+  await page.getByLabel("City", { exact: true }).fill("San Antonio");
+  await page
+    .getByRole("combobox", { name: "State", exact: true })
+    .selectOption("TX");
+  await street.press("Enter");
+  const authorized = page.getByLabel("I own this property");
+  await expect(authorized).toBeFocused();
+  await authorized.press("Space");
+  await expect(authorized).toBeChecked();
+  await street.dispatchEvent("keydown", { key: "Enter", isComposing: true });
+  await street.dispatchEvent("keydown", { key: "Enter", repeat: true });
+  await expect(street).toBeVisible();
+  await street.press("Enter");
+  await expect(
+    page.getByRole("heading", { name: "Where can we reach you?" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => Reflect.get(window, "funnelSubmitCount")),
+  ).toBe(0);
+  await page.getByLabel("First name", { exact: true }).fill("Synthetic");
+  await page.getByLabel("Last name", { exact: true }).fill("Homeowner");
+  await page
+    .getByLabel("Email address", { exact: true })
+    .fill("synthetic@example.com");
+  await page.getByLabel("Phone number", { exact: true }).fill("2105550123");
+  await page.getByLabel(/TEST ONLY: I acknowledge/).check();
+  await expect(
+    page.getByRole("button", { name: "Finish certificate test" }),
+  ).toBeEnabled();
+  await page.getByLabel("Phone number", { exact: true }).press("Enter");
+  await expect(
+    page.getByRole("link", { name: "Open test certificate" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(() => Reflect.get(window, "funnelSubmitCount")),
+  ).toBe(1);
+});
+
+test("Repeated same-task submit events cannot start two delivery requests", async ({
+  page,
+}) => {
+  let requests = 0;
+  await page.route("**/modernize-test/submit", async (route) => {
+    requests++;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await route.fulfill({
+      json: {
+        reference: "RZM-0123456789ABCDEF",
+        status: "accepted",
+        environment: "staging",
+      },
+    });
+  });
+  await complete(page);
+  await expect(
+    page.getByRole("button", { name: "Get my estimate", exact: true }),
+  ).toBeEnabled();
+  await page.evaluate(() => {
+    const form = document.querySelector<HTMLFormElement>(
+      'form[data-tf-element-role="offer"]',
+    )!;
+    form.requestSubmit();
+    form.requestSubmit();
+  });
+  await expect(
+    page.getByRole("heading", { name: "Your request is on its way." }),
+  ).toBeVisible();
+  expect(requests).toBe(1);
+});
+
+test("Validation failures keep recording available for a corrected submission", async ({
+  page,
+}) => {
+  let attempts = 0;
+  await page.route("**/modernize-test/submit", (route) => {
+    if (++attempts === 1)
+      return route.fulfill({
+        status: 422,
+        json: { error: "Check the test details." },
+      });
+    return route.fulfill({
+      json: {
+        reference: "RZM-0123456789ABCDEF",
+        status: "accepted",
+        environment: "staging",
+      },
+    });
+  });
+  await complete(page);
+  const finish = page.getByRole("button", {
+    name: "Get my estimate",
+    exact: true,
+  });
+  await finish.click();
+  await expect(
+    page.getByText("Check the test details.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("First name", { exact: true })).toBeEnabled();
+  expect(await page.evaluate(() => Reflect.get(window, "testStopCount"))).toBe(
+    0,
+  );
+  await expect(finish).toBeEnabled();
+  await finish.click();
+  await expect(
+    page.getByRole("heading", { name: "Your request is on its way." }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => Reflect.get(window, "testStopCount"))).toBe(
+    1,
+  );
+  expect(attempts).toBe(2);
+});
+
+test("Leaving a recording stops it and browser Forward requires a fresh document", async ({
+  page,
+}) => {
+  let scripts = 0;
+  page.on("request", (request) => {
+    if (request.url().includes("api.trustedform.com")) scripts++;
+  });
+  await start(page);
+  await expect(page.locator('[name="xxTrustedFormCertUrl"]')).toHaveValue(
+    certificate,
+  );
+  expect(await page.evaluate(() => Reflect.get(window, "testStopCount"))).toBe(
+    0,
+  );
+  await page.goBack();
+  await expect(page.locator("#zip-start")).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "testStopCount")))
+    .toBe(1);
+  await page.goForward();
+  await expect(
+    page.getByRole("heading", { name: "Start a fresh form" }),
+  ).toBeVisible();
+  await expect(page.locator('form[data-tf-element-role="offer"]')).toHaveCount(
+    0,
+  );
+  expect(scripts).toBe(1);
+  await page.getByRole("button", { name: "Reload page" }).click();
+  await expect(
+    page.getByRole("heading", { name: "What does your roof need?" }),
+  ).toBeVisible();
+  await expect(page.locator('[name="xxTrustedFormCertUrl"]')).toHaveValue(
+    certificate,
+  );
+  expect(scripts).toBe(2);
+  expect(await page.evaluate(() => Reflect.get(window, "testStopCount"))).toBe(
+    0,
+  );
+});
+
+test("A late TrustedForm script is stopped after the form has been left", async ({
+  page,
+}) => {
+  let release!: () => void;
+  let requested!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const seen = new Promise<void>((resolve) => {
+    requested = resolve;
+  });
+  await page.route("https://api.trustedform.com/**", async (route) => {
+    requested();
+    await held;
+    await route.fulfill({
+      contentType: "application/javascript",
+      body: "window.testStopCount=0;window.trustedFormStopRecording=()=>window.testStopCount++;",
+    });
+  });
+  await start(page);
+  await seen;
+  await page.goBack();
+  await expect(page.locator("#zip-start")).toBeVisible();
+  release();
+  await expect
+    .poll(() => page.evaluate(() => Reflect.get(window, "testStopCount")))
+    .toBe(1);
+  await page.goForward();
+  await expect(
+    page.getByRole("heading", { name: "Start a fresh form" }),
+  ).toBeVisible();
 });
 
 test("Local certificate test blocks completion if the SDK fails", async ({

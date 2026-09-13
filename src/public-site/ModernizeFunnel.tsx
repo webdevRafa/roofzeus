@@ -17,6 +17,12 @@ import { useFunnelStep, revealFunnelStep } from "./useFunnelStep";
 import { roofingProjectReady } from "./roofing-project";
 import { EmailField, PhoneField } from "./ContactInputs";
 import {
+  acquireTrustedFormSession,
+  releaseTrustedFormSession,
+  stopTrustedFormSession,
+  finalizeReleasedTrustedFormSession,
+} from "./trustedform-session";
+import {
   normalizeEmail,
   normalizePhone,
 } from "../../functions/src/contact-validation";
@@ -58,11 +64,16 @@ export default function ModernizeFunnel({
     ? "https://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&use_tagged_consent=true&sandbox=true"
     : config.trustedFormScriptUrl;
   const [testCertificate, setTestCertificate] = useState("");
+  const recordingOwner = useRef(Symbol("TrustedForm recording"));
+  const [requiresReload, setRequiresReload] = useState(false);
   const testResult = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!testCertificate) return;
     testResult.current?.focus({ preventScroll: true });
-    testResult.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    testResult.current?.scrollIntoView({
+      block: "center",
+      behavior: "instant",
+    });
   }, [testCertificate]);
   const [demoCompleted, setDemoCompleted] = useState(false);
   const [form, setForm] = useState({
@@ -86,6 +97,8 @@ export default function ModernizeFunnel({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false),
     [token, setToken] = useState("");
+  const sending = useRef(false);
+  const testFinished = useRef(false);
   const [reset, setReset] = useState(0),
     [certificate, setCertificate] = useState("");
   const [certificateFailed, setCertificateFailed] = useState(false);
@@ -135,8 +148,19 @@ export default function ModernizeFunnel({
     };
   }, [form.zip, demo]);
   useEffect(() => {
-    if (!captureEnabled || config.mode !== "api" || !formElement.current)
+    if (
+      !captureEnabled ||
+      config.mode !== "api" ||
+      !formElement.current ||
+      result ||
+      testCertificate
+    )
       return;
+    const owner = recordingOwner.current;
+    if (acquireTrustedFormSession(owner).requiresReload) {
+      setRequiresReload(true);
+      return;
+    }
     let active = true;
     // The single persistent form exists before loading the account-provided SDK.
     try {
@@ -147,9 +171,11 @@ export default function ModernizeFunnel({
         url.pathname !== "/trustedform.js"
       )
         throw Error();
-      void loadScript(url.href).catch(() => {
-        if (active) setCertificateFailed(true);
-      });
+      void loadScript(url.href)
+        .then(() => finalizeReleasedTrustedFormSession(owner))
+        .catch(() => {
+          if (active) setCertificateFailed(true);
+        });
     } catch {
       setCertificateFailed(true);
     }
@@ -165,11 +191,12 @@ export default function ModernizeFunnel({
       active = false;
       clearInterval(interval);
       clearTimeout(timeout);
+      releaseTrustedFormSession(owner);
     };
-  }, [captureEnabled, captureUrl, config.mode]);
+  }, [captureEnabled, captureUrl, config.mode, result, testCertificate]);
 
   async function send() {
-    if (demo || busy || !config.enabled) return;
+    if (demo || sending.current || !config.enabled) return;
     // Read the SDK field again at submission, closing the gap between polling
     // and the click. A receipt retry always keeps its original certificate.
     const liveCertificate = currentCertificate(formElement.current);
@@ -195,6 +222,8 @@ export default function ModernizeFunnel({
       setStep(0);
       return;
     }
+    // Protect against repeated events before React commits the disabled controls.
+    sending.current = true;
     setBusy(true);
     setError("");
     if (!submitted.current)
@@ -213,6 +242,9 @@ export default function ModernizeFunnel({
         ...submitted.current,
         turnstileToken: token,
       });
+      // Finalize while the original consent form is still present. Receipt-only
+      // checks can continue after recording ends; validation failures can edit.
+      stopTrustedFormSession(recordingOwner.current);
       setResult(response);
       if (response.status === "accepted") track("estimate_partner_accepted");
     } catch (failure) {
@@ -232,10 +264,39 @@ export default function ModernizeFunnel({
       setToken("");
       setReset((value) => value + 1);
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }
 
+  function advanceStep() {
+    if (step >= 2 || transitioning || busy || locked || testFinished.current)
+      return;
+    if (!formElement.current?.reportValidity()) return;
+    if (!roofingProjectReady(form, config.materials)) {
+      setError(
+        "Please choose a roofing project, material, and timing to continue.",
+      );
+      return;
+    }
+    setError("");
+    setStep(step + 1);
+  }
+
+  if (requiresReload)
+    return (
+      <div className="rz-estimate-success">
+        <h2>Start a fresh form</h2>
+        <p>Reload this page to start a new form with fresh verification.</p>
+        <button
+          type="button"
+          className="rz-button"
+          onClick={() => window.location.reload()}
+        >
+          Reload page
+        </button>
+      </div>
+    );
   if (demoCompleted)
     return (
       <div className="rz-estimate-success">
@@ -380,9 +441,32 @@ export default function ModernizeFunnel({
       <form
         ref={formElement}
         data-tf-element-role="offer"
+        onKeyDown={(event) => {
+          // Enter in an earlier step's text input advances without emitting a
+          // submit event. Leave select, checkbox, button and IME behavior native.
+          if (
+            step >= 2 ||
+            event.key !== "Enter" ||
+            event.defaultPrevented ||
+            event.nativeEvent.isComposing ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.shiftKey ||
+            !(event.target instanceof HTMLInputElement) ||
+            event.target.disabled ||
+            event.target.readOnly ||
+            !["text", "search", "email", "tel", "url", "number"].includes(
+              event.target.type,
+            )
+          )
+            return;
+          event.preventDefault();
+          if (!event.repeat) advanceStep();
+        }}
         onSubmit={(event) => {
           event.preventDefault();
-          if (transitioning || testCertificate) return;
+          if (transitioning || testFinished.current) return;
           if (step === 2 && testing) {
             const value = currentCertificate(formElement.current);
             if (!value) {
@@ -401,12 +485,12 @@ export default function ModernizeFunnel({
             }
             // Keep the persistent form mounted so the SDK can observe submission.
             // This path never calls the gateway or stores a lead.
+            testFinished.current = true;
             setTestCertificate(value);
             setError("");
             // Let the native submit event reach the SDK before finalizing the SPA session.
             window.setTimeout(() => {
-              const stop = Reflect.get(window, "trustedFormStopRecording");
-              if (typeof stop === "function") stop();
+              stopTrustedFormSession(recordingOwner.current);
             }, 0);
             return;
           }
@@ -437,14 +521,7 @@ export default function ModernizeFunnel({
                 "Please check your name, email address, and phone number.",
               );
           } else if (step === 2) void send();
-          else if (supported) {
-            setError("");
-            setStep(step + 1);
-          } else {
-            setError(
-              "Please choose a roofing project, material, and timing to continue.",
-            );
-          }
+          else advanceStep();
         }}
       >
         <h2 ref={heading} tabIndex={-1}>
@@ -694,12 +771,22 @@ export default function ModernizeFunnel({
           </label>
         )}
         <button
-          name="submit"
-          type="submit"
+          key={step === 2 ? "submit" : "continue"}
+          name={step === 2 ? "submit" : "continue"}
+          type={step === 2 ? "submit" : "button"}
+          onClick={
+            step === 2
+              ? undefined
+              : (event) => {
+                  event.preventDefault();
+                  advanceStep();
+                }
+          }
           className="rz-button rz-estimate-next"
           data-tf-element-role={step === 2 ? "submit" : undefined}
           disabled={
             busy ||
+            locked ||
             Boolean(testCertificate) ||
             (testing && step === 2 && !certificate) ||
             transitioning ||
@@ -723,14 +810,23 @@ export default function ModernizeFunnel({
                     ? demo
                       ? "Complete demo"
                       : "Check my details"
-                    : locked
-                      ? "Check submission status"
-                      : "Get my estimate"
+                    : "Get my estimate"
                 : "Continue"}
               <ArrowRight size={18} />
             </>
           )}
         </button>
+        {locked && (
+          <button
+            type="button"
+            name="checkStatus"
+            className="rz-button rz-estimate-next"
+            disabled={busy}
+            onClick={() => void send()}
+          >
+            Check submission status <ArrowRight size={18} />
+          </button>
+        )}
       </form>
       {testCertificate && (
         <div ref={testResult} tabIndex={-1} role="status" className="rz-note">
@@ -743,10 +839,10 @@ export default function ModernizeFunnel({
             Open test certificate
           </a>
           <p>
-            Review the replay and test consent. If TrustedForm shows Unauthorized
-            when revealing inputs, keep sandbox mode enabled and report the
-            certificate to ActiveProspect support. For another session, reload
-            this page.
+            Review the replay and test consent. If TrustedForm shows
+            Unauthorized when revealing inputs, keep sandbox mode enabled and
+            report the certificate to ActiveProspect support. For another
+            session, reload this page.
           </p>
         </div>
       )}

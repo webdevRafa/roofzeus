@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   normalizeEmail,
   normalizePhone,
@@ -26,6 +26,10 @@ function caretForDigits(display: string, count: number) {
 
 export function PhoneField({ value, onChange }: ContactProps) {
   const input = useRef<HTMLInputElement>(null);
+  const pendingCaret = useRef<{ digits: string; digitPosition: number } | null>(
+    null,
+  );
+  const [editVersion, setEditVersion] = useState(0);
   const [touched, setTouched] = useState(false);
   const [editError, setEditError] = useState("");
   const valid = normalizePhone(value) !== null;
@@ -36,16 +40,25 @@ export function PhoneField({ value, onChange }: ContactProps) {
   useEffect(() => {
     input.current?.setCustomValidity(valid ? "" : editError || phoneError);
   }, [valid, editError]);
+  useLayoutEffect(() => {
+    const caret = pendingCaret.current;
+    pendingCaret.current = null;
+    if (
+      caret &&
+      caret.digits === value &&
+      document.activeElement === input.current
+    ) {
+      const position = caretForDigits(formatPhone(value), caret.digitPosition);
+      input.current?.setSelectionRange(position, position);
+    }
+  }, [value, editVersion]);
   function update(digits: string, digitPosition: number) {
     setEditError("");
+    pendingCaret.current = { digits, digitPosition };
+    // Commit the caret with the formatted value before another input action.
+    // A new revision also handles edits that retain the same digit string.
+    setEditVersion((version) => version + 1);
     onChange(digits);
-    // Set the caret after React has applied the controlled, formatted value.
-    requestAnimationFrame(() => {
-      if (document.activeElement === input.current) {
-        const position = caretForDigits(formatPhone(digits), digitPosition);
-        input.current?.setSelectionRange(position, position);
-      }
-    });
   }
   return (
     <div className="rz-field">
