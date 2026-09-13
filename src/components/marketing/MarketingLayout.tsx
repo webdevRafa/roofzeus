@@ -38,7 +38,7 @@ export default function MarketingLayout() {
     if (!icon) return;
     const previousHref = icon.href;
     const previousType = icon.type;
-    icon.href = "/brand/v8/favicon.svg";
+    icon.href = "/brand/v8/favicon-navy.svg";
     icon.type = "image/svg+xml";
     return () => {
       icon.href = previousHref;

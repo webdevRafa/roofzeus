@@ -7,6 +7,8 @@ The primary logo was traced as one composition directly from the original approv
 - High-resolution PNG and lossless WebP versions accompany both.
 - The board's standalone emblem and favicon exports are carried forward unchanged.
 
+The website now uses `favicon-navy.svg` and its PNG/ICO exports: a navy tile with the exact ivory Zeus and gold roof paths from `logo-dark.svg`, matching the approved Facebook artwork. The original gold-background favicon files remain archived unchanged. Root favicon and touch-icon fallbacks use the navy version too.
+
 SVGs contain actual vector paths with no embedded raster or font dependencies. Original navy and gold colors are flattened to #081827 and #D6AC58; reversed ivory is #F5F1E8. Presentation captions, background and texture are excluded. Vector tracing approximates pixel edges while preserving the source composition's positions and proportions.
 
 Previous production v7 artwork remains intact. Navbar dimensions accommodate this taller composition without distorting the logo.
