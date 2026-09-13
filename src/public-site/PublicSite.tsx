@@ -1,15 +1,9 @@
 import { useEffect } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import {
-  ArrowRight,
-  ArrowUpRight,
-  ClipboardCheck,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { pages, SITE_URL } from "./content";
 import { contractorUrl } from "./integrations";
 import { structuredData } from "./seo";
-import { PartnerForm } from "./RequestForm";
 import LandingPage from "./LandingPage";
 import TrustedFormTest from "./TrustedFormTest";
 import { modernizeMode } from "./modernize";
@@ -106,77 +100,6 @@ function PageIntro({
       <h1>{title}</h1>
       <p>{text}</p>
     </section>
-  );
-}
-
-function Contractors() {
-  return (
-    <>
-      <PageIntro
-        eyebrow="FOR ROOFING PROFESSIONALS"
-        title="Good roofs start with good people."
-        text="Explore the RoofZeus contractor tools or tell us about your interest in future homeowner introductions."
-      />
-      <section className="rz-container rz-detail-layout" id="join">
-        <div className="rz-prose">
-          <h2>Let’s build this together.</h2>
-          <p>
-            Register your interest in future homeowner introductions. We will
-            review service areas, business details, and project fit before
-            discussing participation.
-          </p>
-          <ul>
-            <li>Tell us the ZIP codes you actually serve.</li>
-            <li>Discuss the project types your team handles.</li>
-            <li>Agree on lead terms before any paid participation.</li>
-          </ul>
-          <div className="rz-note">
-            No subscription or payment is required to register interest.
-            Registration does not approve your business, reserve a territory, or
-            guarantee leads.
-          </div>
-        </div>
-        <div className="rz-form-card">
-          <h2>Join the conversation.</h2>
-          <PartnerForm />
-        </div>
-      </section>
-      <section className="rz-software rz-container" id="software">
-        <div>
-          <p className="rz-eyebrow">ALREADY RUNNING A ROOFING BUSINESS?</p>
-          <h2>
-            The tools behind
-            <br />
-            <em>the work are still here.</em>
-          </h2>
-          <p>
-            Keep jobs, expenses, crews, invoices, and project documents
-            organized in the RoofZeus contractor app.
-          </p>
-          <div className="rz-button-row">
-            <a className="rz-button" href={contractorUrl()}>
-              Open contractor app <ArrowUpRight size={18} />
-            </a>
-            <a className="rz-text-link" href={contractorUrl("/signup")}>
-              Create an account <ArrowRight size={18} />
-            </a>
-          </div>
-        </div>
-        <div className="rz-software-note">
-          <ClipboardCheck size={42} />
-          <span>JOBS · PEOPLE · MONEY</span>
-          <h3>
-            Your business.
-            <br />
-            All in one place.
-          </h3>
-          <p>
-            The contractor app is separate from homeowner requests and network
-            registration.
-          </p>
-        </div>
-      </section>
-    </>
   );
 }
 
@@ -412,11 +335,14 @@ export default function PublicSite() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/demo" element={<LandingPage key="demo" demo />} />
           <Route path="/find-a-roofer" element={<LegacyFunnel />} />
-          <Route path="/for-contractors" element={<Contractors />} />
+          <Route
+            path="/for-contractors"
+            element={<Navigate to="/" replace />}
+          />
+          <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/privacy" element={<Legal />} />
           <Route path="/terms" element={<Legal terms />} />
           {[
-            "/login",
             "/signup",
             "/dashboard",
             "/crew",
@@ -445,7 +371,7 @@ export default function PublicSite() {
               <Route
                 key={path}
                 path={path}
-                element={<Navigate to="/for-contractors#software" replace />}
+                element={<Navigate to="/" replace />}
               />
             ),
           )}
@@ -465,10 +391,6 @@ export default function PublicSite() {
           <nav aria-label="Footer">
             <Link to="/privacy">Privacy</Link>
             <Link to="/terms">Terms</Link>
-            <Link to="/for-contractors">
-              For contractors <ArrowUpRight size={13} />
-            </Link>
-            <a href={contractorUrl()}>Contractor login</a>
           </nav>
           <small>© {new Date().getFullYear()} RoofZeus</small>
         </div>

@@ -6,15 +6,23 @@
   "trailingSlash": false,
   "redirects": [
     {
-      "source": "/:path(pricing|features|see-it-in-action|security)",
-      "has": [
+      "source": "/:path(for-contractors|login|pricing|features|see-it-in-action|security)",
+      "destination": "/",
+      "permanent": false,
+      "missing": [
         {
           "type": "host",
-          "value": "roofzeus.com"
+          "value": "app.roofzeus.com"
+        },
+        {
+          "type": "host",
+          "value": "signup.roofzeus.com"
+        },
+        {
+          "type": "host",
+          "value": "app.roofzeus.vercel.app"
         }
-      ],
-      "destination": "/for-contractors#software",
-      "permanent": true
+      ]
     },
     {
       "source": "/:path(services|guides|locations|roofers|how-it-works|faq)/:rest*",
@@ -87,7 +95,7 @@
       "destination": "/app"
     },
     {
-      "source": "/:path(login|signup|dashboard|crew|accept-invite|complete-signup|verify-email|pricing|features|see-it-in-action|security)",
+      "source": "/:path(signup|dashboard|crew|accept-invite|complete-signup|verify-email|pricing|features|see-it-in-action|security)",
       "destination": "/app"
     }
   ],

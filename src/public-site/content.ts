@@ -85,13 +85,6 @@ export const pages: PageMeta[] = [
       "Need roof repair or replacement? Enter your ZIP code to explore roofing estimate options. Free to get started, with no obligation to hire.",
   },
   {
-    path: "/for-contractors",
-    title: "Contractor network & software | RoofZeus",
-    description:
-      "Register interest in the RoofZeus contractor network or access your existing contractor workspace.",
-    index: false,
-  },
-  {
     path: "/privacy",
     title: "Privacy | RoofZeus",
     description:

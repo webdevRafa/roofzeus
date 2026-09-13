@@ -13,6 +13,8 @@ test("Every public route has HTML content, one H1, unique metadata, and a canoni
     assert.ok(html.includes(`data-prerender="${page.path}"`));
     assert.ok(html.includes(`href="https://roofzeus.com${page.path}"`));
     assert.ok(html.includes("application/ld+json"));
+    assert.ok(!html.includes('href="/for-contractors"'), page.path);
+    assert.ok(!html.includes("Contractor login"), page.path);
     const description = html.match(
       /<meta\s+name="description"\s+content="([^"]*)"/,
     )[1];
@@ -37,6 +39,8 @@ test("Every public route has HTML content, one H1, unique metadata, and a canoni
   }
 });
 test("Sitemap contains only the estimate landing page", async () => {
+  assert.ok(!pages.some((page) => page.path === "/for-contractors"));
+  assert.ok(!(await readdir("dist")).includes("for-contractors.html"));
   const xml = await readFile("dist/sitemap.xml", "utf8");
   for (const p of pages)
     assert.equal(
@@ -79,9 +83,14 @@ test("App host rewrites use clean destinations and exclude public assets", async
     assert.equal(rule.destination, "/app");
     const matcher = new RegExp("^" + rule.source.replace(":path", "") + "$");
     assert.ok(matcher.test("/jobs"));
+    assert.ok(matcher.test("/login"));
     assert.ok(matcher.test("/job/example-id"));
     assert.ok(!matcher.test("/assets/example.js"));
     assert.ok(!matcher.test("/brand/roof-zeus-emblem.png"));
+    const retired = config.redirects.find((r) => r.source.includes("for-contractors"));
+    assert.equal(retired.destination, "/");
+    assert.equal(retired.permanent, false);
+    assert.ok(retired.missing.some((h) => h.type === "host" && h.value === host));
   }
 });
 

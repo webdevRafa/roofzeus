@@ -110,34 +110,24 @@ test("Invalid ZIP and missing service cannot advance; manual location survives l
     page.getByRole("heading", { name: "Where can we reach you?" }),
   ).toBeVisible();
 });
-test("Contractor interest form submits pending application data", async ({
+test("Removed public contractor routes return home without contractor navigation", async ({
   page,
 }) => {
-  let submitted = false;
-  await page.route("**/test-intake", (route) => {
-    const body = route.request().postDataJSON();
-    expect(body.kind).toBe("contractor");
-    expect(body.territoryZips).toBe("78209,78201");
-    expect(body.consent).toBe(true);
-    submitted = true;
-    return route.fulfill({
-      status: 201,
-      json: { reference: "RZ-0123456789ABCDEF" },
-    });
-  });
-  await page.goto("/for-contractors");
-  await page.getByLabel("Business name").fill("Example Roofing");
-  await page.getByLabel("Your name").fill("Synthetic Contractor");
-  await page.getByLabel("Business email").fill("contractor@example.com");
-  await page.getByLabel("Phone", { exact: true }).fill("2105550123");
-  await page.getByLabel("Service ZIP codes").fill("78209,78201");
-  await page.getByLabel("I agree that RoofZeus may contact me").check();
-  await page.getByRole("button", { name: "Register interest" }).click();
-  await expect(
-    page.getByRole("heading", { name: "Your interest is registered." }),
-  ).toBeVisible();
-  expect(submitted).toBe(true);
+  for (const path of ["/for-contractors", "/login", "/pricing", "/features"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL("http://127.0.0.1:5174/");
+    await expect(
+      page.getByRole("link", { name: "For contractors", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", { name: "Contractor login", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Register interest" }),
+    ).toHaveCount(0);
+  }
 });
+
 test("Public routes render without errors or horizontal overflow on desktop and mobile", async ({
   page,
 }) => {
