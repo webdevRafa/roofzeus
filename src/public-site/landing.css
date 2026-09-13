@@ -2,20 +2,57 @@
   --rz-ink: #081827;
   --rz-muted: #586672;
   --rz-paper: #fff;
+  --rz-estimate-header-height: 116px;
   background: white;
+}
+.rz-estimate-header-space {
+  /* Keep document geometry stable while the fixed bar animates. */
+  height: var(--rz-estimate-header-height);
 }
 .rz-estimate-header {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 30;
   background: white;
+  transition: box-shadow 300ms ease-out;
 }
 .rz-estimate-header > .rz-container {
-  height: 116px;
+  height: var(--rz-estimate-header-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 25px;
+  transition: height 300ms ease-out;
 }
 .rz-estimate-header .rz-brand {
   width: 260px;
+  transform-origin: left center;
+  transition: transform 300ms ease-out;
+}
+.rz-estimate-header.is-compact {
+  box-shadow:
+    0 1px 0 #0818270d,
+    0 6px 18px #0818270a;
+}
+.rz-estimate-header.is-compact > .rz-container {
+  height: calc(var(--rz-estimate-header-height) * 0.9);
+}
+.rz-estimate-header.is-compact .rz-brand {
+  transform: scale(0.9);
+}
+.rz-estimates #main-content,
+.rz-estimates .rz-estimate-panel {
+  scroll-margin-top: calc(var(--rz-estimate-header-height) + 22px);
+}
+.rz-estimates .rz-skip {
+  position: fixed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rz-estimate-header,
+  .rz-estimate-header > .rz-container,
+  .rz-estimate-header .rz-brand {
+    transition: none;
+  }
 }
 .rz-estimate-header span {
   display: flex;
@@ -203,7 +240,6 @@
   color: var(--rz-ink);
   box-shadow: 0 20px 70px #0003;
   min-width: 0;
-  scroll-margin-top: 22px;
 }
 .rz-estimate-entry {
   padding: 38px 36px 28px;
@@ -612,8 +648,8 @@
   }
 }
 @media (max-width: 800px) {
-  .rz-estimate-header > .rz-container {
-    height: 104px;
+  .rz-estimates {
+    --rz-estimate-header-height: 104px;
   }
   .rz-estimate-header .rz-brand {
     width: 220px;
@@ -703,8 +739,8 @@
   .rz-location-start {
     margin-top: 0;
   }
-  .rz-estimate-header > .rz-container {
-    height: 100px;
+  .rz-estimates {
+    --rz-estimate-header-height: 100px;
   }
   .rz-estimate-header .rz-brand {
     width: 210px;
@@ -792,7 +828,11 @@
 /* Reserve a stable desktop stage; long steps scroll inside the form shell. */
 @media (min-width: 801px) {
   .rz-estimate-grid {
-    height: clamp(700px, calc(100svh - 116px), 900px);
+    height: clamp(
+      700px,
+      calc(100svh - var(--rz-estimate-header-height)),
+      900px
+    );
     min-height: 0;
     grid-template-rows: minmax(0, 1fr);
     padding-block: 40px;

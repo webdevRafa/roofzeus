@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { pages, SITE_URL } from "./content";
@@ -19,6 +19,35 @@ function Brand({ dark = false }: { dark?: boolean }) {
         height={dark ? 230 : 500}
       />
     </Link>
+  );
+}
+
+function EstimateHeader() {
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    // Only the document's top restores the full logo, not a change in direction.
+    const syncScroll = () => setCompact(window.scrollY > 0);
+    syncScroll();
+    window.addEventListener("scroll", syncScroll, { passive: true });
+    window.addEventListener("pageshow", syncScroll);
+    return () => {
+      window.removeEventListener("scroll", syncScroll);
+      window.removeEventListener("pageshow", syncScroll);
+    };
+  }, []);
+
+  return (
+    <div className="rz-estimate-header-space">
+      <header className={`rz-estimate-header${compact ? " is-compact" : ""}`}>
+        <div className="rz-container">
+          <Brand />
+          <span>
+            <ShieldCheck size={16} /> Free to get started. No obligation.
+          </span>
+        </div>
+      </header>
+    </div>
   );
 }
 
@@ -330,14 +359,7 @@ export default function PublicSite() {
         Skip to content
       </a>
       <Metadata />
-      <header className="rz-estimate-header">
-        <div className="rz-container">
-          <Brand />
-          <span>
-            <ShieldCheck size={16} /> Free to get started. No obligation.
-          </span>
-        </div>
-      </header>
+      <EstimateHeader />
       <main id="main-content">
         <Routes>
           <Route path="/" element={<LandingPage />} />
