@@ -6,6 +6,7 @@ import type { Address } from "./location";
 import EstimateFunnel from "./EstimateFunnel";
 import ModernizeFunnel from "./ModernizeFunnel";
 import { modernizeMode, useModernizeConfig } from "./modernize";
+import AreaLabel from "./AreaLabel";
 
 export default function LandingPage({ demo = false }: { demo?: boolean }) {
   const [params, setParams] = useSearchParams();
@@ -36,6 +37,7 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
         />
         <div className="rz-container rz-estimate-grid">
           <div className="rz-estimate-copy">
+            <AreaLabel demo={demo} />
             <h1>
               Get the right <br />
               estimate for <br />

@@ -192,6 +192,14 @@ function Legal({ terms = false }: { terms?: boolean }) {
               than putting the raw IP address in the lead record. Infrastructure
               providers may separately process network information for security.
             </p>
+            <p>
+              Our hosting provider may supply an approximate city and state
+              based on your internet connection to personalize the area label.
+              This does not use precise device location, confirm service
+              availability, or replace the property address you enter. We do not
+              add this approximate location to your lead record or browser
+              storage.
+            </p>
             <h2>Sharing and contractor introductions</h2>
             <p>
               We use service providers for hosting, private data storage,
