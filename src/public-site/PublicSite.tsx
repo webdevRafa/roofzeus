@@ -6,6 +6,7 @@ import { contractorUrl } from "./integrations";
 import { structuredData } from "./seo";
 import LandingPage from "./LandingPage";
 import TrustedFormTest from "./TrustedFormTest";
+import { Analytics } from "@vercel/analytics/react";
 import "./public.css";
 import "./landing.css";
 function Brand({ dark = false }: { dark?: boolean }) {
@@ -517,6 +518,8 @@ export default function PublicSite() {
           </small>
         </div>
       </footer>
+
+      <Analytics />
     </div>
   );
 }
