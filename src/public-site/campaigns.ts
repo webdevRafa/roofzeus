@@ -50,10 +50,6 @@ export const campaigns = {
         "Does it cost anything to submit a request?",
         "RoofZeus does not charge you to submit a request, and you have no obligation to hire. Ask the contractor about any inspection or service fees before arranging a visit.",
       ],
-      [
-        "Can I try the form now?",
-        "Yes. While requests are closed, use sample information to preview the steps. Nothing is sent to a lead buyer or contractor. The page will make it clear when live requests become available.",
-      ],
     ],
   },
   replacement: {
