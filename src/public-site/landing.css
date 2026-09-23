@@ -36,7 +36,7 @@
   gap: 25px;
 }
 .rz-estimate-header .rz-brand {
-  width: 260px;
+  width: 221px;
 }
 .rz-estimates #main-content,
 .rz-estimates .rz-estimate-panel {
@@ -705,7 +705,7 @@
     --rz-estimate-header-height: 104px;
   }
   .rz-estimate-header .rz-brand {
-    width: 220px;
+    width: 187px;
   }
   .rz-estimate-header span {
     font-size: 10px;
@@ -799,7 +799,7 @@
     --rz-estimate-header-height: 100px;
   }
   .rz-estimate-header .rz-brand {
-    width: 210px;
+    width: 178.5px;
   }
   .rz-estimate-header span {
     font-size: 0;
