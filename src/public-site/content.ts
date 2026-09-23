@@ -74,6 +74,27 @@ export type PageMeta = {
 };
 export const pages: PageMeta[] = [
   {
+    path: "/roof-replacement",
+    title: "Roof replacement estimates | RoofZeus",
+    description:
+      "Thinking about a new roof? Plan your next step, know what to ask, and explore roof replacement estimates for your home.",
+    index: false,
+  },
+  {
+    path: "/roof-repair",
+    title: "Roof repair estimates | RoofZeus",
+    description:
+      "A leak, missing shingles, or a recurring roof problem? Start with what you’ve noticed and explore your roof repair options.",
+    index: false,
+  },
+  {
+    path: "/partner-preview",
+    title: "Publisher preview | RoofZeus",
+    description:
+      "Review RoofZeus’s owned-and-operated landing pages, sample homeowner flow, and proposed roofing advertising creatives.",
+    index: false,
+  },
+  {
     path: "/demo",
     title: "Roofing estimate demo | RoofZeus",
     description:

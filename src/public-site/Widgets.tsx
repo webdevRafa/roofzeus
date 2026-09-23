@@ -8,9 +8,13 @@ export function ZipStart({
   compact = false,
   onStart,
   demo = false,
+  buttonLabel,
+  onZipChange,
 }: {
   compact?: boolean;
   demo?: boolean;
+  buttonLabel?: string;
+  onZipChange?: (zip: string) => void;
   onStart?: (zip: string) => void;
 }) {
   const [zip, setZip] = useState("");
@@ -19,11 +23,13 @@ export function ZipStart({
   useEffect(() => {
     if (demo) return;
     try {
-      setZip(localStorage.getItem("roofzeus.zip") || "");
+      const saved = localStorage.getItem("roofzeus.zip") || "";
+      setZip(saved);
+      onZipChange?.(saved);
     } catch {
       /* Storage is optional. */
     }
-  }, [demo]);
+  }, [demo, onZipChange]);
   return (
     <form
       className={`rz-zip-start ${compact ? "compact" : ""}`}
@@ -55,13 +61,16 @@ export function ZipStart({
             value={zip}
             aria-describedby={error ? "zip-error" : undefined}
             onChange={(e) => {
-              setZip(e.target.value.replace(/\D/g, ""));
+              const value = e.target.value.replace(/\D/g, "");
+              setZip(value);
+              onZipChange?.(value);
               setError("");
             }}
           />
         </div>
         <button className="rz-button" type="submit">
-          {demo ? "Start demo" : "Get my estimate"} <ArrowRight size={18} />
+          {buttonLabel || (demo ? "Start demo" : "Get my estimate")}{" "}
+          <ArrowRight size={18} />
         </button>
       </div>
       {error && (

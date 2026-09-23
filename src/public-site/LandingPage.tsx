@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Check, LockKeyhole } from "lucide-react";
 import LocationStart from "./LocationStart";
 import type { Address } from "./location";
@@ -7,9 +7,25 @@ import EstimateFunnel from "./EstimateFunnel";
 import ModernizeFunnel from "./ModernizeFunnel";
 import { modernizeMode, useModernizeConfig } from "./modernize";
 import AreaLabel from "./AreaLabel";
+import LandingDetails from "./LandingDetails";
+import { campaigns, type LandingVariant } from "./campaigns";
+import { captureAttribution } from "./attribution";
 
-export default function LandingPage({ demo = false }: { demo?: boolean }) {
+export default function LandingPage({
+  demo: forcedDemo = false,
+  variant = "general",
+}: {
+  demo?: boolean;
+  variant?: LandingVariant;
+}) {
   const [params, setParams] = useSearchParams();
+  const location = useLocation();
+  const demo = forcedDemo || params.get("preview") === "1";
+  const copy = campaigns[variant];
+  const [attribution] = useState(() =>
+    captureAttribution(location.pathname, location.search, demo),
+  );
+  const [propertyZip, setPropertyZip] = useState("");
   const [started, setStarted] = useState(false);
   const [initialAddress, setInitialAddress] = useState<Address>();
   const { config, loading } = useModernizeConfig(demo);
@@ -29,7 +45,7 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
       <section className={`rz-estimate-hero ${started ? "funnel-open" : ""}`}>
         <img
           className="rz-estimate-house"
-          src="/images/roof-home.webp"
+          src={copy.image}
           alt=""
           width={1400}
           height={933}
@@ -37,16 +53,25 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
         />
         <div className="rz-container rz-estimate-grid">
           <div className="rz-estimate-copy">
+            {variant !== "general" && (
+              <p className="rz-campaign-eyebrow">{copy.eyebrow}</p>
+            )}
             <h1>
-              Get the right <br />
-              estimate for <br />
-              <span>your roof.</span>
+              {variant === "general" ? (
+                <>
+                  Get the right <br />
+                  estimate for <br />
+                  <span>your roof.</span>
+                </>
+              ) : (
+                <>
+                  {copy.headline}
+                  <br />
+                  <span>{copy.accent}</span>
+                </>
+              )}
             </h1>
-            <p className="rz-estimate-subtitle">
-              A better roof starts with knowing your options.
-              <br className="rz-desktop-break" /> Let’s find out what you
-              need—starting with your ZIP code or address.
-            </p>
+            <p className="rz-estimate-subtitle">{copy.intro}</p>
             <div className="rz-estimate-checks">
               <span>
                 <Check size={17} /> Free to get started
@@ -58,7 +83,7 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
           </div>
           <div className="rz-estimate-panel" id="estimate-funnel">
             <header className="rz-area-banner" hidden={started}>
-              <AreaLabel demo={demo} />
+              <AreaLabel demo={demo} propertyZip={propertyZip} />
             </header>
             {demo && (
               <p className="rz-note" role="note">
@@ -78,12 +103,15 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
                   config={config}
                   zip={demo ? demoZip : params.get("zip") || ""}
                   initialAddress={initialAddress}
+                  initialPlan={copy.initialPlan}
+                  attribution={attribution}
                   onBack={() => {
                     if (demo) {
                       setInitialAddress(undefined);
                       setDemoZip("");
                       setStarted(false);
-                    } else if (config.enabled) window.location.assign("/");
+                    } else if (config.enabled)
+                      window.location.assign(location.pathname);
                     else {
                       setInitialAddress(undefined);
                       setParams({});
@@ -94,6 +122,8 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
             ) : started ? (
               <EstimateFunnel
                 initialAddress={initialAddress}
+                initialService={variant === "general" ? "" : copy.path.slice(1)}
+                attribution={attribution}
                 onBack={() => {
                   setInitialAddress(undefined);
                   setParams({});
@@ -124,7 +154,18 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
                       .
                     </p>
                   )}
-                <LocationStart onStart={start} demo={demo} />
+                <LocationStart
+                  onStart={start}
+                  demo={demo}
+                  onZipChange={setPropertyZip}
+                  buttonLabel={
+                    demo
+                      ? "Start demo"
+                      : modernizeMode && !config.enabled
+                        ? "Preview the form"
+                        : "Get my estimate"
+                  }
+                />
                 <div className="rz-entry-privacy">
                   <LockKeyhole size={13} />
                   <span>You control your contact permission.</span>
@@ -140,12 +181,12 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
             [
               "01",
               "Tell us what you need",
-              "A repair, a replacement, or just not sure.",
+              "Your roof, your project, and your timing.",
             ],
             [
               "02",
               "Explore your options",
-              "We check whether local estimate help is available.",
+              "When requests are open, we check for available estimate help.",
             ],
             [
               "03",
@@ -163,6 +204,7 @@ export default function LandingPage({ demo = false }: { demo?: boolean }) {
           ))}
         </div>
       </section>
+      <LandingDetails variant={variant} demo={demo} />
     </>
   );
 }

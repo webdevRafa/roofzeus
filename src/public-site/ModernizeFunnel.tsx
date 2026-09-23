@@ -13,6 +13,7 @@ import {
 import PropertyTextField from "./PropertyTextField";
 import ConsentText from "./ConsentText";
 import { SITE_OPERATOR, SUPPORT_EMAIL } from "./content";
+import type { LeadAttribution } from "./attribution";
 import RoofingProjectFields from "./RoofingProjectFields";
 import { useFunnelStep, revealFunnelStep } from "./useFunnelStep";
 import { roofingProjectReady } from "./roofing-project";
@@ -43,6 +44,8 @@ export default function ModernizeFunnel({
   certificateTest = false,
   zip,
   initialAddress,
+  initialPlan = "",
+  attribution,
   onBack,
 }: {
   config: ModernizeConfig;
@@ -50,6 +53,8 @@ export default function ModernizeFunnel({
   certificateTest?: boolean;
   zip: string;
   initialAddress?: Address;
+  initialPlan?: string;
+  attribution?: LeadAttribution;
   onBack: () => void;
 }) {
   // The review route cannot inherit live delivery settings.
@@ -78,7 +83,7 @@ export default function ModernizeFunnel({
   }, [testCertificate]);
   const [demoCompleted, setDemoCompleted] = useState(false);
   const [form, setForm] = useState({
-    plan: "",
+    plan: ["repair", "replacement"].includes(initialPlan) ? initialPlan : "",
     material: "",
     timeframe: "",
     authorized: false,
@@ -120,8 +125,8 @@ export default function ModernizeFunnel({
     setForm((current) => ({ ...current, [key]: value }));
   useEffect(() => {
     requestId.current = crypto.randomUUID();
-    if (!demo) track("estimate_started");
-  }, [demo]);
+    if (!demo && config.enabled) track("estimate_started");
+  }, [demo, config.enabled]);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     revealFunnelStep();
@@ -236,6 +241,7 @@ export default function ModernizeFunnel({
         configVersion: config.version,
         consentVersion: config.consentVersion,
         trustedFormToken: liveCertificate,
+        ...(attribution ? { attribution } : {}),
       };
     setLocked(true);
     try {
@@ -281,6 +287,8 @@ export default function ModernizeFunnel({
       return;
     }
     setError("");
+    if (!demo && !certificateTest && config.enabled)
+      track("estimate_step_completed", { step });
     setStep(step + 1);
   }
 
@@ -310,7 +318,7 @@ export default function ModernizeFunnel({
           request would be checked for available roofing estimate options.
         </p>
         <p className="rz-note">
-          No lead was saved or sent to Modernize or contractors. This is a
+          No lead was saved or sent to a lead buyer or contractors. This is a
           demonstration, not an accepted request or a confirmed match.
         </p>
         <p className="rz-field-help">

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { sanitizeAttribution, type LeadAttribution } from "./lead-attribution";
 import { normalizeEmail, normalizePhone } from "./contact-validation";
 import {
   isCompletePropertyAddress,
@@ -214,6 +215,7 @@ export function publicConfig(settings: Settings) {
   };
 }
 export type Lead = {
+  attribution?: LeadAttribution;
   requestId: string;
   configVersion: string;
   firstName: string;
@@ -315,8 +317,10 @@ export function validateLead(
     throw new ModernizeError(
       "Form verification is unavailable. Please reload and try again.",
     );
+  const attribution = sanitizeAttribution(data.attribution);
   return {
     requestId,
+    ...(attribution ? { attribution } : {}),
     configVersion: text("configVersion", 64, 64),
     consentVersion: text("consentVersion", 1, 100),
     firstName: text("firstName", 1, 80),

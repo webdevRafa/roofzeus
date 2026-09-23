@@ -1,7 +1,52 @@
 import { useEffect, useState } from "react";
+import { lookupZip } from "./integrations";
 
-export default function AreaLabel({ demo }: { demo: boolean }) {
+export default function AreaLabel({
+  demo,
+  propertyZip = "",
+}: {
+  demo: boolean;
+  propertyZip?: string;
+}) {
   const [area, setArea] = useState<string | null>(null);
+  const [zipArea, setZipArea] = useState<{ zip: string; label: string } | null>(
+    null,
+  );
+  // An entered property location takes precedence over approximate IP location.
+  // While editing or if lookup fails, never keep showing the previous ZIP's city.
+  const displayArea = propertyZip
+    ? zipArea?.zip === propertyZip
+      ? zipArea.label
+      : null
+    : area;
+  useEffect(() => {
+    if (demo || !/^\d{5}$/.test(propertyZip)) return;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 4000);
+    const timer = window.setTimeout(() => {
+      lookupZip(propertyZip, controller.signal)
+        .then((place) => {
+          if (
+            !controller.signal.aborted &&
+            place &&
+            typeof place.city === "string" &&
+            /^[\p{L}\p{M} .'-]{1,80}$/u.test(place.city) &&
+            /^[A-Z]{2}$/.test(place.state)
+          )
+            setZipArea({
+              zip: propertyZip,
+              label: `${place.city}, ${place.state}`,
+            });
+        })
+        .catch(() => {})
+        .finally(() => window.clearTimeout(timeout));
+    }, 350);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+      window.clearTimeout(timeout);
+    };
+  }, [demo, propertyZip]);
   const [checking, setChecking] = useState(!demo);
   const [fadingOut, setFadingOut] = useState(false);
   useEffect(() => {
@@ -57,14 +102,16 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
     <div
       className="rz-area-banner-content"
       title={
-        area
-          ? "Approximate area. Enter your property ZIP or address to confirm its location."
+        displayArea
+          ? propertyZip
+            ? "Area associated with your property ZIP. Availability is not yet confirmed."
+            : "Approximate area. Enter your property ZIP or address to confirm its location."
           : undefined
       }
     >
       <span className="rz-area-size" aria-hidden="true">
         Explore roofing estimates{" "}
-        {area && !demo ? `near ${area}` : "in your area"}
+        {displayArea && !demo ? `near ${displayArea}` : "in your area"}
       </span>
       <h2
         aria-live="polite"
@@ -100,7 +147,7 @@ export default function AreaLabel({ demo }: { demo: boolean }) {
         ) : (
           <>
             Explore roofing estimates{" "}
-            {area && !demo ? `near ${area}` : "in your area"}
+            {displayArea && !demo ? `near ${displayArea}` : "in your area"}
           </>
         )}
       </h2>

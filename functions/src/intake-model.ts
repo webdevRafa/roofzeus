@@ -3,6 +3,8 @@ import {
   PROPERTY_ADDRESS_ERROR,
 } from "./property-validation";
 
+import { sanitizeAttribution } from "./lead-attribution";
+
 export const CONSENT_VERSION = "2026-09-12.2";
 export const HOMEOWNER_CONSENT =
   "I agree that RoofZeus may contact me by phone or email about roofing estimates for this property. My information will not be sent to a contractor until I agree to that introduction. I do not have to purchase anything.";
@@ -64,6 +66,8 @@ export function validateIntake(input: unknown) {
   const phone = text("phone", 25).replace(/\D/g, "");
   if (phone && !/^(1)?[2-9]\d{9}$/.test(phone))
     throw new IntakeError("Enter a valid U.S. phone number.");
+  const attribution =
+    kind === "homeowner" ? sanitizeAttribution(data.attribution) : undefined;
   const common = {
     kind,
     requestId,
@@ -73,6 +77,12 @@ export function validateIntake(input: unknown) {
     notes: text("notes", 2000),
     consentVersion: CONSENT_VERSION,
     sourcePath: kind === "homeowner" ? "/" : "/for-contractors",
+    ...(attribution
+      ? {
+          attribution,
+          sourcePath: attribution.landingPath,
+        }
+      : {}),
   };
   if (kind === "contractor") {
     if (!phone) throw new IntakeError("Enter a business phone number.");

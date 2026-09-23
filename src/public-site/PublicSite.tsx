@@ -5,10 +5,13 @@ import { pages, SITE_URL, SITE_OPERATOR, SUPPORT_EMAIL } from "./content";
 import { contractorUrl } from "./integrations";
 import { structuredData } from "./seo";
 import LandingPage from "./LandingPage";
+import PartnerPreview from "./PartnerPreview";
+import { analyticsBeforeSend } from "./attribution";
 import TrustedFormTest from "./TrustedFormTest";
 import { Analytics } from "@vercel/analytics/react";
 import "./public.css";
 import "./landing.css";
+import "./campaigns.css";
 function Brand({ dark = false }: { dark?: boolean }) {
   return (
     <Link to="/" className="rz-brand" aria-label="RoofZeus home">
@@ -33,8 +36,8 @@ function EstimateHeader() {
         0,
         Math.min(
           window.scrollY,
-          document.documentElement.scrollHeight - window.innerHeight
-        )
+          document.documentElement.scrollHeight - window.innerHeight,
+        ),
       );
     let previousY = scrollPosition();
     let direction = 0;
@@ -100,7 +103,8 @@ function EstimateHeader() {
 }
 
 function Metadata() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const preview = new URLSearchParams(search).get("preview") === "1";
   useEffect(() => {
     const path = pathname.replace(/\/$/, "") || "/";
     const meta = pages.find((p) => p.path === path) || pages[pages.length - 1];
@@ -109,7 +113,7 @@ function Metadata() {
       selector: string,
       key: string,
       name: string,
-      value: string
+      value: string,
     ) => {
       let el = document.head.querySelector(selector);
       if (!el) {
@@ -123,13 +127,13 @@ function Metadata() {
       'meta[name="description"]',
       "name",
       "description",
-      meta.description
+      meta.description,
     );
     setMeta(
       'meta[name="robots"]',
       "name",
       "robots",
-      meta.index === false ? "noindex,follow" : "index,follow"
+      meta.index === false || preview ? "noindex,follow" : "index,follow",
     );
     for (const [name, value] of [
       ["og:title", meta.title],
@@ -154,9 +158,11 @@ function Metadata() {
     if (!window.location.hash) window.scrollTo(0, 0);
     else
       requestAnimationFrame(() =>
-        document.getElementById(window.location.hash.slice(1))?.scrollIntoView()
+        document
+          .getElementById(window.location.hash.slice(1))
+          ?.scrollIntoView(),
       );
-  }, [pathname]);
+  }, [pathname, preview]);
   return null;
 }
 
@@ -182,7 +188,7 @@ function Legal({ terms = false }: { terms?: boolean }) {
   return (
     <>
       <PageIntro
-        eyebrow="LAST UPDATED · SEPTEMBER 13, 2026"
+        eyebrow="LAST UPDATED · SEPTEMBER 23, 2026"
         title={terms ? "Terms of Use" : "Privacy Policy"}
         text={
           terms
@@ -373,6 +379,15 @@ function Legal({ terms = false }: { terms?: boolean }) {
             </p>
             <h2>Analytics and policy updates</h2>
             <p>
+              We use Vercel Web Analytics to understand page visits and form
+              progress. We remove query strings and fragments from analytics
+              page URLs and exclude sample-only previews from event reporting.
+              If you arrive from a campaign, we may keep its campaign codes and
+              landing-page identifier with an enabled request to understand
+              which advertising led to it. We do not use these fields for your
+              contact information, and we do not save them in browser storage.
+            </p>
+            <p>
               Our form analytics events do not include names, contact details,
               addresses, or query strings. Form-session recording is separate
               and described above. This policy covers the public RoofZeus
@@ -409,7 +424,7 @@ function AppRedirect() {
   const location = useLocation();
   useEffect(() => {
     window.location.replace(
-      contractorUrl(`${location.pathname}${location.search}${location.hash}`)
+      contractorUrl(`${location.pathname}${location.search}${location.hash}`),
     );
   }, [location]);
   return (
@@ -447,6 +462,15 @@ export default function PublicSite() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/demo" element={<LandingPage key="demo" demo />} />
+          <Route
+            path="/roof-replacement"
+            element={<LandingPage key="replacement" variant="replacement" />}
+          />
+          <Route
+            path="/roof-repair"
+            element={<LandingPage key="repair" variant="repair" />}
+          />
+          <Route path="/partner-preview" element={<PartnerPreview />} />
           <Route path="/find-a-roofer" element={<LegacyFunnel />} />
           <Route
             path="/for-contractors"
@@ -486,7 +510,7 @@ export default function PublicSite() {
                 path={path}
                 element={<Navigate to="/" replace />}
               />
-            )
+            ),
           )}
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -511,6 +535,8 @@ export default function PublicSite() {
               <Link to="/privacy">Privacy</Link>
               <Link to="/terms">Terms</Link>
               <Link to="/privacy#privacy-choices">Privacy choices</Link>
+              <Link to="/roof-repair">Roof repair</Link>
+              <Link to="/roof-replacement">Roof replacement</Link>
             </nav>
           </div>
           <small>
@@ -519,7 +545,11 @@ export default function PublicSite() {
         </div>
       </footer>
 
-      <Analytics />
+      {location.pathname !== "/demo" &&
+        location.pathname !== "/partner-preview" &&
+        new URLSearchParams(location.search).get("preview") !== "1" && (
+          <Analytics beforeSend={analyticsBeforeSend} />
+        )}
     </div>
   );
 }

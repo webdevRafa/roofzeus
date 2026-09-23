@@ -14,6 +14,8 @@ export async function lookupZip(
     ? { zip, city: place["place name"], state: place["state abbreviation"] }
     : null;
 }
+import { track as trackEvent } from "@vercel/analytics";
+
 export function contractorUrl(path = "/login") {
   if (
     import.meta.env.DEV &&
@@ -94,7 +96,40 @@ export function track(
   name: string,
   attributes: Record<string, string | number> = {},
 ) {
+  const path = window.location.pathname;
+  if (
+    path === "/demo" ||
+    path === "/partner-preview" ||
+    new URLSearchParams(window.location.search).get("preview") === "1"
+  )
+    return;
+  if (
+    ![
+      "estimate_started",
+      "estimate_completed",
+      "estimate_step_completed",
+      "estimate_partner_accepted",
+    ].includes(name)
+  )
+    return;
+  const clean: Record<string, string | number> = {
+    page: ["/", "/roof-repair", "/roof-replacement"].includes(path)
+      ? path
+      : "other",
+  };
+  if (
+    typeof attributes.step === "number" &&
+    Number.isInteger(attributes.step) &&
+    attributes.step >= 0 &&
+    attributes.step <= 3
+  )
+    clean.step = attributes.step;
   window.dispatchEvent(
-    new CustomEvent("roofzeus:analytics", { detail: { name, ...attributes } }),
+    new CustomEvent("roofzeus:analytics", { detail: { name, ...clean } }),
   );
+  try {
+    trackEvent(name, clean);
+  } catch {
+    /* Analytics must never block a request. */
+  }
 }

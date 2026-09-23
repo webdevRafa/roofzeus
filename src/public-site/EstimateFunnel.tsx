@@ -6,6 +6,7 @@ import { CONTACT_CONSENT, CONSENT_VERSION, services } from "./content";
 import { AddressSearch, BotCheck, Busy } from "./Widgets";
 import { states, type Address } from "./location";
 import { useFunnelStep, revealFunnelStep } from "./useFunnelStep";
+import type { LeadAttribution } from "./attribution";
 import {
   intakeConfigured,
   lookupZip,
@@ -34,9 +35,13 @@ const empty = {
 export default function EstimateFunnel({
   onBack,
   initialAddress,
+  initialService = "",
+  attribution,
 }: {
   onBack: () => void;
   initialAddress?: Address;
+  initialService?: string;
+  attribution?: LeadAttribution;
 }) {
   const [params] = useSearchParams();
   const [form, setForm] = useState(() => ({ ...empty, ...initialAddress }));
@@ -56,14 +61,14 @@ export default function EstimateFunnel({
   useEffect(() => {
     id.current = crypto.randomUUID();
     const zip = params.get("zip") || "";
-    const service = params.get("service") || "";
+    const service = params.get("service") || initialService;
     setForm((f) => ({
       ...f,
       zip: /^\d{5}$/.test(zip) ? zip : "",
       service: services.some((s) => s.slug === service) ? service : "",
     }));
     track("estimate_started");
-  }, [params]);
+  }, [params, initialService]);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     revealFunnelStep();
@@ -108,7 +113,8 @@ export default function EstimateFunnel({
         requestId: id.current,
         consentVersion: CONSENT_VERSION,
         turnstileToken: token,
-        sourcePath: "/",
+        sourcePath: attribution?.landingPath || "/",
+        ...(attribution ? { attribution } : {}),
       });
       setReference(result.reference);
       setForm(empty);

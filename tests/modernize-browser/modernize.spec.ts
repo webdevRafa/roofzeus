@@ -1,4 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
+import {
+  analyticsBeforeSend,
+  captureAttribution,
+} from "../../src/public-site/attribution";
 const consent =
   "TEST FIXTURE ONLY: I agree to this synthetic Modernize referral and test contact permission. No real lead is delivered.";
 const certificate = "https://cert.trustedform.com/" + "a".repeat(40);
@@ -59,8 +63,8 @@ test.beforeEach(async ({ page }) => {
     }),
   );
 });
-async function start(page: Page, address = false) {
-  await page.goto("/");
+async function start(page: Page, address = false, path = "/") {
+  await page.goto(path);
   if (address) {
     await page
       .getByRole("button", { name: "Full address", exact: true })
@@ -75,11 +79,11 @@ async function start(page: Page, address = false) {
     await page.getByLabel("ZIP code", { exact: true }).fill("78209");
   } else await page.locator("#zip-start").fill("78209");
   await page
-    .getByRole("button", { name: "Get my estimate", exact: true })
+    .getByRole("button", { name: /^(Get my estimate|Preview the form)$/ })
     .click();
 }
-async function complete(page: Page) {
-  await start(page, true);
+async function complete(page: Page, path = "/") {
+  await start(page, true, path);
   await page.getByLabel("Roof replacement", { exact: true }).check();
   await page
     .getByRole("combobox", { name: /What material/ })
@@ -102,6 +106,153 @@ async function complete(page: Page) {
   await expect(page.getByLabel(consent, { exact: true })).not.toBeChecked();
   await page.getByLabel(consent, { exact: true }).check();
 }
+
+test("Campaign attribution survives form navigation and excludes arbitrary URL data", async ({
+  page,
+}) => {
+  let submitted = false;
+  await page.route("**/modernize-test/submit", (route) => {
+    const body = route.request().postDataJSON();
+    expect(body.attribution).toEqual({
+      landingPath: "/roof-replacement",
+      variant: "replacement",
+      utm_source: "facebook",
+      utm_campaign: "roofing-review",
+      creative_id: "replacement-01",
+    });
+    submitted = true;
+    return route.fulfill({
+      json: {
+        reference: "RZM-0123456789ABCDEF",
+        status: "accepted",
+        environment: "staging",
+      },
+    });
+  });
+  await complete(
+    page,
+    "/roof-replacement?utm_source=facebook&utm_campaign=roofing-review&creative_id=replacement-01&utm_content=someone%40example.com",
+  );
+  expect(page.url()).not.toContain("utm_");
+  await page
+    .getByRole("button", { name: "Get my estimate", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Your request is on its way." }),
+  ).toBeVisible();
+  expect(submitted).toBe(true);
+});
+
+for (const [path, selection] of [
+  ["/roof-repair", "Roof repair"],
+  ["/roof-replacement", "Roof replacement"],
+]) {
+  test(`Campaign sample flow is isolated and project is editable: ${path}`, async ({
+    page,
+  }) => {
+    const requests: string[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (
+        url.pathname.startsWith("/modernize-test/") ||
+        url.pathname === "/api/visitor-area" ||
+        url.pathname.startsWith("/_vercel/insights/") ||
+        /(^|\.)(trustedform\.com|challenges\.cloudflare\.com|maps\.googleapis\.com|zippopotam\.us)$/.test(
+          url.hostname,
+        )
+      )
+        requests.push(request.url());
+    });
+    await page.goto(path + "?preview=1");
+    await page.locator("#zip-start").fill("78209");
+    await page.getByRole("button", { name: "Start demo", exact: true }).click();
+    await expect(page.getByLabel(selection, { exact: true })).toBeChecked();
+    const other =
+      selection === "Roof repair" ? "Roof replacement" : "Roof repair";
+    await page.getByLabel(other, { exact: true }).check();
+    await expect(page.getByLabel(other, { exact: true })).toBeChecked();
+    await expect(page.getByLabel(selection, { exact: true })).not.toBeChecked();
+    expect(requests).toEqual([]);
+    expect(
+      await page.evaluate(() => ({
+        local: { ...localStorage },
+        session: { ...sessionStorage },
+      })),
+    ).toEqual({ local: {}, session: {} });
+  });
+}
+
+test("Property ZIP overrides visitor area and stale city is removed during edits", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/visitor-area", (route) =>
+    route.fulfill({ json: { area: "Austin, TX" } }),
+  );
+  await page.goto("/roof-repair");
+  const label = page.locator(".rz-area-banner h2");
+  await expect(label).toHaveText("Explore roofing estimates near Austin, TX", {
+    timeout: 7000,
+  });
+  await page.locator("#zip-start").fill("78209");
+  await expect(label).toHaveText(
+    "Explore roofing estimates near San Antonio, TX",
+  );
+  await page.locator("#zip-start").fill("7820");
+  await expect(label).toHaveText("Explore roofing estimates in your area");
+  await page.getByRole("button", { name: "Full address", exact: true }).click();
+  await expect(label).toHaveText("Explore roofing estimates near Austin, TX");
+  await page.getByLabel("ZIP code", { exact: true }).fill("78209");
+  await expect(label).toHaveText(
+    "Explore roofing estimates near San Antonio, TX",
+  );
+});
+
+test("Review downloads exist and campaign pages fit narrow screens", async ({
+  page,
+}) => {
+  for (const path of [
+    "/roof-repair",
+    "/roof-replacement",
+    "/partner-preview",
+  ]) {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      "noindex,follow",
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
+  const downloads = await page
+    .locator("a[download]")
+    .evaluateAll((links) => links.map((a) => (a as HTMLAnchorElement).href));
+  expect(downloads).toHaveLength(10);
+  for (const url of downloads) {
+    const response = await page.request.get(url);
+    expect(response.ok()).toBe(true);
+    expect(response.headers()["content-type"]).not.toContain("text/html");
+  }
+});
+
+test("Analytics strips URL fields and excludes reviewer and demo activity", () => {
+  expect(
+    analyticsBeforeSend({
+      url: "https://roofzeus.com/roof-repair?zip=78209&email=a%40b.com#private",
+    }),
+  ).toEqual({ url: "https://roofzeus.com/roof-repair" });
+  for (const path of ["/demo", "/partner-preview", "/roof-repair?preview=1"])
+    expect(
+      analyticsBeforeSend({ url: "https://roofzeus.com" + path }),
+    ).toBeNull();
+  expect(
+    captureAttribution("/roof-repair", "?utm_source=facebook", true),
+  ).toBeUndefined();
+});
 test("New form carries address, certificate and exact consent version; only confirmed partner success is shown", async ({
   page,
 }) => {
